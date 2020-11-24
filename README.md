@@ -7,12 +7,12 @@ Tealer is a static analyzer for Teal code. It parses the Teal program, and build
 
 ## Features
 ### Detectors
-- Detect paths with a missing RekeyTo check (group transaction) 
-- Detect paths with a missing GroupSize check (group transaction) 
+- Detect paths with a missing RekeyTo check (group transaction)
+- Detect paths with a missing GroupSize check (group transaction)
 
 All the detectors are run by default
 
-### Printers 
+### Printers
 - Print CFG (`--print-cfg`)
 - Print paths that can delete the application (`--print-delete`)
 - Print paths that can update the application (`--print-update`)
@@ -22,20 +22,20 @@ Use `xdot` to open the files  (`sudo apt install xdot`).
 
 ## How to install
 Run
-```
+```bash
 python3 setup.py install
 ```
 
 We recommend to install the tool in a [virtualenv](https://virtualenvwrapper.readthedocs.io/en/latest/).
 
 ## How to run
-```
+```bash
 tealer code.teal
 ```
 
-### Example:
+### Example
 The following show the CFG from [algorand/smart-contracts](https://github.com/algorand/smart-contracts.git).
-```
+```bash
 git clone https://github.com/algorand/smart-contracts.git
 cd smart-contracts
 tealer ./devrel/permission-less-voting/vote_opt_out.teal --print-cfg
