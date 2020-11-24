@@ -34,7 +34,7 @@ tealer code.teal
 ```
 
 ### Example
-The following show the CFG from [algorand/smart-contracts](https://github.com/algorand/smart-contracts.git).
+The following shows the CFG from [algorand/smart-contracts](https://github.com/algorand/smart-contracts.git).
 ```bash
 git clone https://github.com/algorand/smart-contracts.git
 cd smart-contracts
