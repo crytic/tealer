@@ -1,5 +1,5 @@
 # Tealer
-Tealer is a static analyzer for Teal code. It parses the Teal program, and builds its CFG. The analyzer comes with a set of vulnerabilities detectors and printers allowing to quickly review the contracts.
+Tealer is a static analyzer for [Teal](https://developer.algorand.org/docs/features/asc1/) code. It parses the Teal program, and builds its CFG. The analyzer comes with a set of vulnerabilities detectors and printers allowing to quickly review the contracts.
 
 - [Features](#features)
 - [How to install](#how-to-install)
