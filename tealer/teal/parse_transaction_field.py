@@ -1,4 +1,4 @@
-from teal_analyzer.teal.transaction_field import (
+from tealer.teal.transaction_field import (
     ApplicationArgs,
     Accounts,
     TransactionField,

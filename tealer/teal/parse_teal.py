@@ -1,9 +1,9 @@
 from typing import Optional, Dict, List
 
-from teal_analyzer.teal.basic_blocks import BasicBlock
-from teal_analyzer.teal.instructions import Instruction, Label, B, Err, BNZ, BZ, Return
-from teal_analyzer.teal.parse_instruction import parse_line
-from teal_analyzer.teal.teal import Teal
+from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.instructions import Instruction, Label, B, Err, BNZ, BZ, Return
+from tealer.teal.parse_instruction import parse_line
+from tealer.teal.teal import Teal
 
 
 def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]):

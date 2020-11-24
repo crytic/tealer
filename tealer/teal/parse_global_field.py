@@ -1,4 +1,4 @@
-from teal_analyzer.teal.global_field import (
+from tealer.teal.global_field import (
     GroupSize,
     ZeroAddress,
     MinTxnFee,

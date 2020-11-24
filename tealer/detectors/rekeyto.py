@@ -3,11 +3,11 @@ from copy import copy
 from pathlib import Path
 from typing import Dict, Set, List
 
-from teal_analyzer.detectors.abstract_detector import AbstractDetector
-from teal_analyzer.teal.basic_blocks import BasicBlock
-from teal_analyzer.teal.instructions import Gtxn, Return, Int
-from teal_analyzer.teal.teal import Teal
-from teal_analyzer.teal.transaction_field import RekeyTo
+from tealer.detectors.abstract_detector import AbstractDetector
+from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.instructions import Gtxn, Return, Int
+from tealer.teal.teal import Teal
+from tealer.teal.transaction_field import RekeyTo
 
 
 class Result:

@@ -2,11 +2,11 @@ import argparse
 import sys
 from pathlib import Path
 
-from teal_analyzer.detectors.groupsize import MissingGroupSize
-from teal_analyzer.detectors.rekeyto import MissingRekeyTo
-from teal_analyzer.printers.can_delete import DeleteApplication
-from teal_analyzer.printers.can_update import UpdateApplication
-from teal_analyzer.teal.parse_teal import parse_teal
+from tealer.detectors.groupsize import MissingGroupSize
+from tealer.detectors.rekeyto import MissingRekeyTo
+from tealer.printers.can_delete import DeleteApplication
+from tealer.printers.can_update import UpdateApplication
+from tealer.teal.parse_teal import parse_teal
 
 
 def parse_args():

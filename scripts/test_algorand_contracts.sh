@@ -5,7 +5,7 @@ cd smart-contracts || exit 255
 
 for target in $(find . -name "*.teal");
 do
-    if ! teal-analyzer $target; then
+    if ! tealer $target; then
         echo "tests failed"
         exit 1
     fi

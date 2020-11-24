@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import List, Optional
 
-from teal_analyzer.teal.basic_blocks import BasicBlock
-from teal_analyzer.teal.instructions import Instruction
+from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.instructions import Instruction
 
 
 class Teal:

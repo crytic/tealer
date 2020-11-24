@@ -1,6 +1,6 @@
 import abc
 
-from teal_analyzer.teal.teal import Teal
+from tealer.teal.teal import Teal
 
 
 class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public-methods

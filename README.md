@@ -30,7 +30,7 @@ We recommend to install the tool in a [virtualenv](https://virtualenvwrapper.rea
 
 ## How to run
 ```
-teal-analyzer code.teal
+tealer code.teal
 ```
 
 ### Example:
@@ -38,7 +38,7 @@ The following show the CFG from [algorand/smart-contracts](https://github.com/al
 ```
 git clone https://github.com/algorand/smart-contracts.git
 cd smart-contracts
-teal-analyzer ./devrel/permission-less-voting/vote_opt_out.teal --print-cfg
+tealer ./devrel/permission-less-voting/vote_opt_out.teal --print-cfg
 ```
 
 <img src="./examples/vote_opt_out.png" alt="Example" width="500"/>

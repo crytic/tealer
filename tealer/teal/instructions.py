@@ -1,10 +1,10 @@
 from typing import Union, List, TYPE_CHECKING, Optional
 
-from teal_analyzer.teal.global_field import GlobalField
-from teal_analyzer.teal.transaction_field import TransactionField
+from tealer.teal.global_field import GlobalField
+from tealer.teal.transaction_field import TransactionField
 
 if TYPE_CHECKING:
-    from teal_analyzer.teal.basic_blocks import BasicBlock
+    from tealer.teal.basic_blocks import BasicBlock
 
 
 class Instruction:

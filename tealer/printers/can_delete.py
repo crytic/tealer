@@ -1,19 +1,19 @@
 from pathlib import Path
 from typing import List
 
-from teal_analyzer.printers.abstract_printer import AbstractPrinter
-from teal_analyzer.teal.basic_blocks import BasicBlock
-from teal_analyzer.teal.instructions import Return, Int, Txn, Eq, BNZ
-from teal_analyzer.teal.teal import Teal
-from teal_analyzer.teal.transaction_field import OnCompletion
+from tealer.printers.abstract_printer import AbstractPrinter
+from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.instructions import Return, Int, Txn, Eq, BNZ
+from tealer.teal.teal import Teal
+from tealer.teal.transaction_field import OnCompletion
 
 
-class UpdateApplication(AbstractPrinter):  # pylint: disable=too-few-public-methods
+class DeleteApplication(AbstractPrinter):  # pylint: disable=too-few-public-methods
     def __init__(self, teal: Teal):
         super().__init__(teal)
         self.results_number = 0
 
-    def _check_update(
+    def _check_delete(
         self,
         bb: BasicBlock,
         current_path: List[BasicBlock],
@@ -27,7 +27,7 @@ class UpdateApplication(AbstractPrinter):  # pylint: disable=too-few-public-meth
         skip_false = False
 
         for ins in bb.instructions:
-            if isinstance(ins, Int) and prev_was_oncompletion and ins.value == "UpdateApplication":
+            if isinstance(ins, Int) and prev_was_oncompletion and ins.value == "DeleteApplication":
                 return
 
             if isinstance(ins, Return):
@@ -50,7 +50,7 @@ class UpdateApplication(AbstractPrinter):  # pylint: disable=too-few-public-meth
             if (
                 isinstance(ins, Int)
                 and prev_was_oncompletion
-                and ins.value in ["DeleteApplication", "NoOp", "OptIn", "CloseOut"]
+                and ins.value in ["UpdateApplication", "NoOp", "OptIn", "CloseOut"]
             ):
                 prev_was_int = True
 
@@ -59,17 +59,17 @@ class UpdateApplication(AbstractPrinter):  # pylint: disable=too-few-public-meth
                 prev_was_oncompletion = True
 
         if skip_false:
-            self._check_update(bb.next[0], current_path, paths_without_check)
+            self._check_delete(bb.next[0], current_path, paths_without_check)
         else:
             for next_bb in bb.next:
-                self._check_update(next_bb, current_path, paths_without_check)
+                self._check_delete(next_bb, current_path, paths_without_check)
 
     def print(self):
 
-        filename = Path("can_update.dot")
+        filename = Path("can_delete.dot")
 
         paths_without_check: List[List[BasicBlock]] = []
-        self._check_update(self.teal.bbs[0], [], paths_without_check)
+        self._check_delete(self.teal.bbs[0], [], paths_without_check)
 
         self.teal.bbs_to_dot(
             filename, list({p for sublist in paths_without_check for p in sublist})

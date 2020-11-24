@@ -1,6 +1,6 @@
 from typing import Optional
 
-from teal_analyzer.teal.instructions import (
+from tealer.teal.instructions import (
     Err,
     Gtxn,
     Pragma,
@@ -78,8 +78,8 @@ from teal_analyzer.teal.instructions import (
     Arg3,
     AppLocalDel,
 )
-from teal_analyzer.teal.parse_global_field import parse_global_field
-from teal_analyzer.teal.parse_transaction_field import parse_transaction_field
+from tealer.teal.parse_global_field import parse_global_field
+from tealer.teal.parse_transaction_field import parse_transaction_field
 
 
 def handle_gtnx(x: str) -> Gtxn:

@@ -1,6 +1,6 @@
 from typing import List
 
-from teal_analyzer.teal.instructions import Instruction
+from tealer.teal.instructions import Instruction
 
 
 class BasicBlock:

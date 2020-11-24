@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="teal-analyzer",
+    name="tealer",
     description="Teal analyzer.",
     url="https://github.com/crytic/tealer",
     author="Trail of Bits",
@@ -10,5 +10,5 @@ setup(
     python_requires=">=3.6",
     license="AGPL-3.0",
     long_description=open("README.md").read(),
-    entry_points={"console_scripts": ["teal-analyzer = teal_analyzer.__main__:main"]},
+    entry_points={"console_scripts": ["tealer = tealer.__main__:main"]},
 )

@@ -1,11 +1,11 @@
 from pathlib import Path
 from typing import Dict, List
 
-from teal_analyzer.detectors.abstract_detector import AbstractDetector
-from teal_analyzer.teal.basic_blocks import BasicBlock
-from teal_analyzer.teal.global_field import GroupSize
-from teal_analyzer.teal.instructions import Gtxn, Return, Int, Global
-from teal_analyzer.teal.teal import Teal
+from tealer.detectors.abstract_detector import AbstractDetector
+from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.global_field import GroupSize
+from tealer.teal.instructions import Gtxn, Return, Int, Global
+from tealer.teal.teal import Teal
 
 
 class Result:
