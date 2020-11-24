@@ -23,10 +23,10 @@ Use `xdot` to open the files  (`sudo apt install xdot`).
 ## How to install
 Run
 ```
-python3 setup.py develop
+python3 setup.py install
 ```
 
-This project is at a beta stage, we recommend to install the tool in a virtualenv
+We recommend to install the tool in a [virtualenv](https://virtualenvwrapper.readthedocs.io/en/latest/).
 
 ## How to run
 ```
