@@ -4,13 +4,13 @@ git clone https://github.com/algorand/smart-contracts.git
 
 cd smart-contracts || exit 255
 
-for target in $(find . -name "*.teal");
+while IFS= read -r -d '' target
 do
-    if ! tealer $target; then
+    if ! tealer "$target"; then
         echo "tests failed"
         exit 1
     fi
-done
+done < <(find . -name "*.teal" -print0)
 exit 0
 
 
