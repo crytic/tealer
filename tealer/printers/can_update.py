@@ -3,9 +3,9 @@ from typing import List
 
 from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions import Return, Int, Txn, Eq, BNZ
+from tealer.teal.instructions.instructions import Return, Int, Txn, Eq, BNZ
 from tealer.teal.teal import Teal
-from tealer.teal.transaction_field import OnCompletion
+from tealer.teal.instructions.transaction_field import OnCompletion
 
 
 class UpdateApplication(AbstractPrinter):  # pylint: disable=too-few-public-methods

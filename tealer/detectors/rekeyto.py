@@ -5,9 +5,9 @@ from typing import Dict, Set, List
 
 from tealer.detectors.abstract_detector import AbstractDetector
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions import Gtxn, Return, Int
+from tealer.teal.instructions.instructions import Gtxn, Return, Int
 from tealer.teal.teal import Teal
-from tealer.teal.transaction_field import RekeyTo
+from tealer.teal.instructions.transaction_field import RekeyTo
 
 
 class Result:

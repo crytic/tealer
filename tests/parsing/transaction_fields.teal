@@ -1,0 +1,53 @@
+#pragma version 2
+
+// https://developer.algorand.org/docs/reference/teal/opcodes/#txn
+txn Sender
+txn Fee
+txn FirstValid
+txn FirstValidTime
+txn LastValid
+txn Note
+txn Lease
+txn Receiver
+txn Amount
+txn CloseRemainderTo
+txn VotePK
+txn SelectionPK
+txn VoteFirst
+txn VoteLast
+txn VoteKeyDilution
+txn Type
+txn TypeEnum
+txn XferAsset
+txn AssetAmount
+txn AssetSender
+txn AssetReceiver
+txn AssetCloseTo
+txn GroupIndex
+txn TxID
+txn ApplicationID
+txn OnCompletion
+txn ApplicationArgs 1
+txn NumAppArgs
+txn Accounts 1
+txn NumAccounts
+txn ApprovalProgram
+txn ClearStateProgram
+txn RekeyTo
+txn ConfigAsset
+txn ConfigAssetTotal
+txn ConfigAssetDecimals
+txn ConfigAssetDefaultFrozen
+txn ConfigAssetUnitName
+txn ConfigAssetName
+txn ConfigAssetURL
+txn ConfigAssetMetadataHash
+txn ConfigAssetManager
+txn ConfigAssetReserve
+txn ConfigAssetFreeze
+txn ConfigAssetClawback
+txn FreezeAsset
+txn FreezeAssetAccount
+txn FreezeAssetFrozen
+
+

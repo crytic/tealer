@@ -4,7 +4,7 @@ from typing import Dict, List
 from tealer.detectors.abstract_detector import AbstractDetector
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import GroupSize
-from tealer.teal.instructions import Gtxn, Return, Int, Global
+from tealer.teal.instructions.instructions import Gtxn, Return, Int, Global
 from tealer.teal.teal import Teal
 
 
