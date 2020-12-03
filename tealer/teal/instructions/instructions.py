@@ -1,7 +1,7 @@
 from typing import Union, List, TYPE_CHECKING, Optional
 
 from tealer.teal.global_field import GlobalField
-from tealer.teal.transaction_field import TransactionField
+from tealer.teal.instructions.transaction_field import TransactionField
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -96,10 +96,6 @@ class Txna(Instruction):
     def __str__(self):
         return f"txna {self._field}"
 
-    # def __init__(self, field: TransactionField, idx: int):
-    #     self._field: TransactionField = field
-    #     self._idx = idx
-
 
 class Gtxn(Instruction):
     def __init__(self, idx: int, field: TransactionField):
@@ -117,6 +113,24 @@ class Gtxn(Instruction):
 
     def __str__(self):
         return f"gtxn {self._idx} {self._field}"
+
+
+class Gtxna(Instruction):
+    def __init__(self, idx: int, field: TransactionField):
+        super().__init__()
+        self._idx = idx
+        self._field: TransactionField = field
+
+    @property
+    def idx(self) -> int:
+        return self._idx
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self):
+        return f"gtxna {self._idx} {self._field}"
 
 
 class Load(Instruction):
@@ -538,3 +552,28 @@ class Byte(Instruction):
 
     def __str__(self):
         return f"byte {self._bytes}"
+
+
+class Len(Instruction):
+    def __str__(self):
+        return "len"
+
+
+class Bytecblock(Instruction):
+    def __str__(self):
+        return "bytecblock"
+
+
+class Substring(Instruction):
+    def __init__(self, start: int, stop: int):
+        super().__init__()
+        self._start = int(start)
+        self._stop = int(stop)
+
+    def __str__(self):
+        return f"substring {self._start} {self._stop}"
+
+
+class Substring3(Instruction):
+    def __str__(self):
+        return "substring3"

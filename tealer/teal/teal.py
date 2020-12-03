@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions import Instruction
+from tealer.teal.instructions.instructions import Instruction
 
 
 class Teal:

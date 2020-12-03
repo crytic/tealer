@@ -1,8 +1,8 @@
 from typing import Optional, Dict, List
 
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions import Instruction, Label, B, Err, BNZ, BZ, Return
-from tealer.teal.parse_instruction import parse_line
+from tealer.teal.instructions.instructions import Instruction, Label, B, Err, BNZ, BZ, Return
+from tealer.teal.instructions.parse_instruction import parse_line
 from tealer.teal.teal import Teal
 
 
@@ -18,7 +18,7 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]):
                 bb.add_next(next_bb)
                 next_bb.add_prev(bb)
             bb = next_bb
-
+        print(ins)
         bb.add_instruction(ins)
         ins.bb = bb
 

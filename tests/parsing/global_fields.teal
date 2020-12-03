@@ -1,0 +1,12 @@
+#pragma version 2
+
+// https://developer.algorand.org/docs/reference/teal/opcodes/#global
+global MinTxnFee
+global MinBalance
+global MaxTxnLife
+global ZeroAddress
+global GroupSize
+global LogicSigVersion
+global Round
+global LatestTimestamp
+global CurrentApplicationID

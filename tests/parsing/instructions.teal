@@ -1,0 +1,124 @@
+#pragma version 2
+
+// https://developer.algorand.org/docs/reference/teal/opcodes/
+// byte/int are added to make the compilation works
+
+byte "A"
+sha256
+keccak256
+sha512_256
+byte "A"
+byte "A"
+ed25519verify
+int 0
+int 0
+int 0
+int 0
+int 0
+int 0
+int 0
+int 0
+int 0
+int 0
++
+-
+/
+*
+<
+>
+<=
+>=
+&&
+||
+==
+!=
+!
+pop
+byte "A"
+len
+itob
+btoi
+int 0
+int 0
+int 0
+int 0
+%
+|
+&
+^
+~
+pop
+int 0
+int 0
+mulw
+int 0
+int 0
+addw
+intcblock
+// intc
+intc_0
+intc_1
+intc_2
+intc_3
+bytecblock
+// bytec
+bytec_0
+bytec_1
+bytec_2
+bytec_3
+arg 0
+arg_0
+arg_1
+arg_2
+arg_3
+txn Fee
+global MinTxnFee
+gtxn 1 Fee
+load 1
+store 1
+txna ApplicationArgs 1
+gtxna 1 ApplicationArgs 1
+int 0
+bnz random_label
+int 0
+bz random_label
+b other_label
+other_label:
+pop
+dup
+dup2
+concat
+substring 0 0
+int 0
+int 0
+substring3
+int 0
+int 0
+balance
+app_opted_in
+pop
+app_local_get
+app_local_get_ex
+app_global_get
+app_global_get_ex
+pop
+pop
+pop
+byte "A"
+int 0
+app_local_put
+app_global_put
+int 0
+byte "A"
+app_local_del
+app_global_del
+int 0
+asset_holding_get AssetBalance
+asset_params_get AssetTotal
+// addr is not documented in https://developer.algorand.org/docs/reference/teal/opcodes
+addr OWQEGN2AZIA77YIE7YZEZLUN2JKVRUCTSFY3U3YH7PXWIDIQIPRA4IUKII
+byte base64 QQ==
+err
+random_label:
+int 0
+return
