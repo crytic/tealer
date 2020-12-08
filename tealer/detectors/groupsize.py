@@ -1,14 +1,14 @@
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import GroupSize
-from tealer.teal.instructions.instructions import Gtxn, Return, Int, Global, Instruction
+from tealer.teal.instructions.instructions import Return, Int, Global
 from tealer.teal.teal import Teal
 
 
-class Result:
+class Result:  # pylint: disable=too-few-public-methods
     def __init__(self, filename: Path, path_initial: List[BasicBlock], idx: int):
         self.filename = filename
         self.paths = [path_initial]
@@ -17,6 +17,7 @@ class Result:
     @property
     def all_bbs_in_paths(self):
         return [p for sublist in self.paths for p in sublist]
+
 
 class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-methods
 
@@ -65,9 +66,11 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
 
         all_results_txt: List[str] = []
         for res in all_results:
-            description = f"Lack of groupSize check found\n"
-            description += f"\tFix the paths in {res.filename}\n"
-            description += "\tOr ensure it is used with stateless contracts that check for GroupSize\n"
+            description = "Lack of groupSize check found\n"
+            description += "\tFix the paths in {res.filename}\n"
+            description += (
+                "\tOr ensure it is used with stateless contracts that check for GroupSize\n"
+            )
 
             all_results_txt.append(description)
             self.teal.bbs_to_dot(res.filename, res.all_bbs_in_paths)

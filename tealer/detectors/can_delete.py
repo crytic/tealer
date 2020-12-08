@@ -1,13 +1,9 @@
-from collections import defaultdict
-from copy import copy
 from pathlib import Path
-from typing import Dict, Set, List
+from typing import List
 
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions.instructions import Gtxn, Return, Int, BZ, Instruction
-from tealer.teal.teal import Teal
-from tealer.teal.instructions.transaction_field import RekeyTo
+from tealer.teal.instructions.instructions import BZ, Instruction
 from tealer.teal.instructions.instructions import Return, Int, Txn, Eq, BNZ
 from tealer.teal.instructions.transaction_field import OnCompletion
 
@@ -20,23 +16,25 @@ def _is_delete(ins1: Instruction, ins2: Instruction):
 
 def _is_oncompletion_check(ins1: Instruction, ins2: Instruction):
     if isinstance(ins1, Txn) and isinstance(ins1.field, OnCompletion):
-        return isinstance(ins2, Int) and ins2.value in ["UpdateApplication", "NoOp", "OptIn", "CloseOut"]
+        return isinstance(ins2, Int) and ins2.value in [
+            "UpdateApplication",
+            "NoOp",
+            "OptIn",
+            "CloseOut",
+        ]
     return False
 
 
-class CanDelete(AbstractDetector):
+class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
     NAME = "canDelete"
     DESCRIPTION = "Detect paths that can delete the application"
     TYPE = DetectorType.STATEFULL
 
-    def __init__(self, teal: Teal):
-        super().__init__(teal)
-
     def _check_delete(
-            self,
-            bb: BasicBlock,
-            current_path: List[BasicBlock],
-            paths_without_check: List[List[BasicBlock]],
+        self,
+        bb: BasicBlock,
+        current_path: List[BasicBlock],
+        paths_without_check: List[List[BasicBlock]],
     ):
         current_path = current_path + [bb]
 
@@ -77,12 +75,12 @@ class CanDelete(AbstractDetector):
 
         if skip_false:
             self._check_delete(bb.next[0], current_path, paths_without_check)
-        elif skip_true:
-            if len(bb.next) > 1:
-                self._check_delete(bb.next[1], current_path, paths_without_check)
-        else:
-            for next_bb in bb.next:
-                self._check_delete(next_bb, current_path, paths_without_check)
+            return
+        if skip_true:
+            self._check_delete(bb.next[1], current_path, paths_without_check)
+            return
+        for next_bb in bb.next:
+            self._check_delete(next_bb, current_path, paths_without_check)
 
     def detect(self):
 
@@ -94,7 +92,7 @@ class CanDelete(AbstractDetector):
         for path in paths_without_check:
             filename = Path(f"can_delete_{idx}.dot")
             idx += 1
-            description = f"Lack of OnCompletion check allows to delete the app\n"
+            description = "Lack of OnCompletion check allows to delete the app\n"
             description += f"\tCheck the path in {filename}\n"
             all_results_txt.append(description)
             self.teal.bbs_to_dot(filename, path)

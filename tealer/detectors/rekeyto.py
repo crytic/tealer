@@ -6,7 +6,6 @@ from typing import Dict, Set, List
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import Gtxn, Return, Int
-from tealer.teal.teal import Teal
 from tealer.teal.instructions.transaction_field import RekeyTo
 
 
@@ -29,9 +28,6 @@ class MissingRekeyTo(AbstractDetector):
     NAME = "rekeyTo"
     DESCRIPTION = "Detect paths with a missing RekeyTo check"
     TYPE = DetectorType.STATEFULLGROUP
-
-    def __init__(self, teal: Teal):
-        super().__init__(teal)
 
     def check_rekey_to(  # pylint: disable=too-many-arguments
         self,
@@ -81,7 +77,9 @@ class MissingRekeyTo(AbstractDetector):
         for idx, res in all_results.items():
             description = f"Potential lack of RekeyTo check on transaction {idx}\n"
             description += f"\tFix the paths in {res.filename}\n"
-            description += "\tOr ensure it is used with stateless contracts that check for ReKeyTo\n"
+            description += (
+                "\tOr ensure it is used with stateless contracts that check for ReKeyTo\n"
+            )
             all_results_txt.append(description)
             self.teal.bbs_to_dot(res.filename, res.all_bbs_in_paths)
 
