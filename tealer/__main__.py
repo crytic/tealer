@@ -11,16 +11,13 @@ from tealer.utils.command_line import output_detectors
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="TealAnalyzer",
-        usage="teal_analyazer program.teal [flag]",
+        description="TealAnalyzer", usage="teal_analyazer program.teal [flag]",
     )
 
     parser.add_argument("program", help="program.teal")
 
     parser.add_argument(
-        "--print-cfg",
-        help="Print the cfg",
-        action="store_true",
+        "--print-cfg", help="Print the cfg", action="store_true",
     )
 
     parser.add_argument(
