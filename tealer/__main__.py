@@ -1,12 +1,14 @@
 import argparse
+import inspect
 import sys
 from pathlib import Path
 
-from tealer.detectors.groupsize import MissingGroupSize
-from tealer.detectors.rekeyto import MissingRekeyTo
+from tealer.detectors import all_detectors
+from tealer.detectors.abstract_detector import AbstractDetector
 from tealer.printers.can_delete import DeleteApplication
 from tealer.printers.can_update import UpdateApplication
 from tealer.teal.parse_teal import parse_teal
+from tealer.utils.command_line import output_detectors
 
 
 def parse_args():
@@ -34,6 +36,14 @@ def parse_args():
         action="store_true",
     )
 
+    parser.add_argument(
+        "--list-detectors",
+        help="List available detectors",
+        action=ListDetectors,
+        nargs=0,
+        default=False,
+    )
+
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -41,6 +51,19 @@ def parse_args():
     args = parser.parse_args()
 
     return args
+
+
+class ListDetectors(argparse.Action):  # pylint: disable=too-few-public-methods
+    def __call__(self, parser, *args, **kwargs):  # pylint: disable=signature-differs
+        detectors = get_detectors()
+        output_detectors(detectors)
+        parser.exit()
+
+
+def get_detectors():
+    detectors = [getattr(all_detectors, name) for name in dir(all_detectors)]
+    detectors = [d for d in detectors if inspect.isclass(d) and issubclass(d, AbstractDetector)]
+    return detectors
 
 
 def main():
@@ -64,7 +87,7 @@ def main():
         d.print()
 
     else:
-        for Cls in [MissingGroupSize, MissingRekeyTo]:
+        for Cls in get_detectors():
             d = Cls(teal)
             for r in d.detect():
                 print(r)
