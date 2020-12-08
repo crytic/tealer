@@ -18,7 +18,6 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]):
                 bb.add_next(next_bb)
                 next_bb.add_prev(bb)
             bb = next_bb
-        print(ins)
         bb.add_instruction(ins)
         ins.bb = bb
 

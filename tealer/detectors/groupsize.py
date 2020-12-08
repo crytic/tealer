@@ -1,20 +1,18 @@
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import GroupSize
-from tealer.teal.instructions.instructions import Gtxn, Return, Int, Global
+from tealer.teal.instructions.instructions import Return, Int, Global
 from tealer.teal.teal import Teal
 
 
-class Result:
-    def __init__(self, filename: Path, path_initial: List[BasicBlock]):
+class Result:  # pylint: disable=too-few-public-methods
+    def __init__(self, filename: Path, path_initial: List[BasicBlock], idx: int):
         self.filename = filename
         self.paths = [path_initial]
-
-    def add_path(self, path: List[BasicBlock]):
-        self.paths.append(path)
+        self.idx = idx
 
     @property
     def all_bbs_in_paths(self):
@@ -36,7 +34,7 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
         bb: BasicBlock,
         current_path: List[BasicBlock],
         # use_gtnx: bool,
-        all_results: Dict[str, Result],
+        all_results: List[Result],
     ):
         current_path = current_path + [bb]
 
@@ -53,31 +51,28 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
                         if prev.value == 0:
                             return
 
-                filename = Path(f"group_size{self.results_number}.dot")
-                res = f"Bug found {ins.line}: {ins} does not check group_size\n"
-
-                if res not in all_results:
-                    self.results_number += 1
-
-                    all_results[res] = Result(filename, current_path)
-                else:
-                    all_results[res].add_path(current_path)
+                filename = Path(f"group_size_{self.results_number}.dot")
+                self.results_number += 1
+                all_results.append(Result(filename, current_path, self.results_number))
 
         for next_bb in bb.next:
             self._check_groupsize(next_bb, current_path, all_results)
 
     def detect(self):
 
-        all_results: Dict[str, Result] = dict()
+        all_results: List[Result] = []
 
-        # Only applicable if there is a group instruction
-        use_gtnx = [ins for ins in self.teal.instructions if isinstance(ins, Gtxn)]
-        if use_gtnx:
-            self._check_groupsize(self.teal.bbs[0], [], all_results)
+        self._check_groupsize(self.teal.bbs[0], [], all_results)
 
         all_results_txt: List[str] = []
-        for desc, res in all_results.items():
-            all_results_txt.append(f"Result in {res.filename}:\n{desc}")
+        for res in all_results:
+            description = "Lack of groupSize check found\n"
+            description += "\tFix the paths in {res.filename}\n"
+            description += (
+                "\tOr ensure it is used with stateless contracts that check for GroupSize\n"
+            )
+
+            all_results_txt.append(description)
             self.teal.bbs_to_dot(res.filename, res.all_bbs_in_paths)
 
         return all_results_txt

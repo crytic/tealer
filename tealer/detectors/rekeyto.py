@@ -6,7 +6,6 @@ from typing import Dict, Set, List
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import Gtxn, Return, Int
-from tealer.teal.teal import Teal
 from tealer.teal.instructions.transaction_field import RekeyTo
 
 
@@ -29,10 +28,6 @@ class MissingRekeyTo(AbstractDetector):
     NAME = "rekeyTo"
     DESCRIPTION = "Detect paths with a missing RekeyTo check"
     TYPE = DetectorType.STATEFULLGROUP
-
-    def __init__(self, teal: Teal):
-        super().__init__(teal)
-        self.results_number = 0
 
     def check_rekey_to(  # pylint: disable=too-many-arguments
         self,
@@ -63,19 +58,12 @@ class MissingRekeyTo(AbstractDetector):
 
                 for idx, bbs in group_tx.items():
                     bbs = sorted(bbs, key=lambda x: x.instructions[0].line)
-                    filename = Path(f"rekeyto_{self.results_number}_tx_{idx}.dot")
-                    res = (
-                        f"Bug found {ins.line}: {ins} does not check rekeyto on transaction {idx}\n"
-                    )
-                    for bb_bug in bbs:
-                        res += f"{bb_bug}\n"
+                    filename = Path(f"rekeyto_tx_{idx}.dot")
 
-                    if res not in all_results:
-                        self.results_number += 1
-
-                        all_results[res] = Result(filename, bbs + [bb], current_path)
+                    if idx not in all_results:
+                        all_results[idx] = Result(filename, bbs + [bb], current_path)
                     else:
-                        all_results[res].add_path(current_path)
+                        all_results[idx].add_path(current_path)
 
         for next_bb in bb.next:
             self.check_rekey_to(next_bb, group_tx, idx_fitlered, current_path, all_results)
@@ -86,8 +74,13 @@ class MissingRekeyTo(AbstractDetector):
         self.check_rekey_to(self.teal.bbs[0], defaultdict(set), set(), [], all_results)
 
         all_results_txt: List[str] = []
-        for desc, res in all_results.items():
-            all_results_txt.append(f"Result in {res.filename}:\n{desc}")
+        for idx, res in all_results.items():
+            description = f"Potential lack of RekeyTo check on transaction {idx}\n"
+            description += f"\tFix the paths in {res.filename}\n"
+            description += (
+                "\tOr ensure it is used with stateless contracts that check for ReKeyTo\n"
+            )
+            all_results_txt.append(description)
             self.teal.bbs_to_dot(res.filename, res.all_bbs_in_paths)
 
         return all_results_txt
