@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict, List
 
-from tealer.detectors.abstract_detector import AbstractDetector
+from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import GroupSize
 from tealer.teal.instructions.instructions import Gtxn, Return, Int, Global
@@ -22,6 +22,11 @@ class Result:
 
 
 class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-methods
+
+    NAME = "groupSize"
+    DESCRIPTION = "Detect paths with a missing GroupSize check"
+    TYPE = DetectorType.STATEFULLGROUP
+
     def __init__(self, teal: Teal):
         super().__init__(teal)
         self.results_number = 0

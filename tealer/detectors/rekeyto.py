@@ -3,7 +3,7 @@ from copy import copy
 from pathlib import Path
 from typing import Dict, Set, List
 
-from tealer.detectors.abstract_detector import AbstractDetector
+from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import Gtxn, Return, Int
 from tealer.teal.teal import Teal
@@ -25,6 +25,11 @@ class Result:
 
 
 class MissingRekeyTo(AbstractDetector):
+
+    NAME = "rekeyTo"
+    DESCRIPTION = "Detect paths with a missing RekeyTo check"
+    TYPE = DetectorType.STATEFULLGROUP
+
     def __init__(self, teal: Teal):
         super().__init__(teal)
         self.results_number = 0
