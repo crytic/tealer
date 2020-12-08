@@ -5,8 +5,6 @@ from pathlib import Path
 
 from tealer.detectors import all_detectors
 from tealer.detectors.abstract_detector import AbstractDetector
-from tealer.printers.can_delete import DeleteApplication
-from tealer.printers.can_update import UpdateApplication
 from tealer.teal.parse_teal import parse_teal
 from tealer.utils.command_line import output_detectors
 
@@ -20,20 +18,6 @@ def parse_args():
 
     parser.add_argument(
         "--print-cfg", help="Print the cfg", action="store_true",
-    )
-
-    parser.add_argument(
-        "--print-delete", help="Print all the paths that can delete the app", action="store_true",
-    )
-
-    parser.add_argument(
-        "--print-update", help="Print all the paths that can update the app", action="store_true",
-    )
-
-    parser.add_argument(
-        "--check-rekeyto",
-        help="Check if some paths use a group transaction without checking for rekeyto",
-        action="store_true",
     )
 
     parser.add_argument(
@@ -78,13 +62,6 @@ def main():
         print("CFG exported: cfg.dot")
         teal.bbs_to_dot(Path("cfg.dot"))
 
-    elif args.print_update:
-        d = UpdateApplication(teal)
-        d.print()
-
-    elif args.print_delete:
-        d = DeleteApplication(teal)
-        d.print()
 
     else:
         for Cls in get_detectors():
