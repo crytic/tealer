@@ -7,15 +7,18 @@ Tealer is a static analyzer for [Teal](https://developer.algorand.org/docs/featu
 
 ## Features
 ### Detectors
-- Detect paths with a missing RekeyTo check (group transaction)
-- Detect paths with a missing GroupSize check (group transaction)
+ Num |   Check   |               What it Detects                |      Type
+--- | --- | --- | ---
+  1  | canDelete | Detect paths that can delete the application |    Stateful
+  2  | canUpdate | Detect paths that can update the application |    Stateful
+  3  | groupSize | Detect paths with a missing GroupSize check  | StatefulGroup
+  4  |  rekeyTo  |  Detect paths with a missing RekeyTo check   | StatefulGroup
+
 
 All the detectors are run by default
 
 ### Printers
 - Print CFG (`--print-cfg`)
-- Print paths that can delete the application (`--print-delete`)
-- Print paths that can update the application (`--print-update`)
 
 Printers output [`dot`](https://graphviz.org/) files.
 Use `xdot` to open the files  (`sudo apt install xdot`).
