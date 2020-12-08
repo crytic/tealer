@@ -63,7 +63,7 @@ class CanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
                 skip_true = True
 
             prev_was_equal = False
-            if isinstance(ins, Eq):
+            if isinstance(ins, Eq) and len(stack) >= 2:
                 one = stack[-1]
                 two = stack[-2]
                 if _is_update(one, two) or _is_update(two, one):
