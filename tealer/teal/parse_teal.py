@@ -41,7 +41,7 @@ def parse_teal(source_code: str) -> Teal:
     lines = source_code.splitlines()
     idx = 0
     for line in lines:
-        ins = parse_line(line)
+        ins = parse_line(line.strip())
         idx = idx + 1
         if not ins:
             continue
