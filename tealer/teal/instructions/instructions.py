@@ -156,6 +156,40 @@ class Store(Instruction):
         return f"store {self._idx}"
 
 
+class Dig(Instruction):
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+
+    def __str__(self):
+        return f"dig {self._idx}"
+
+
+class Swap(Instruction):
+    def __str__(self):
+        return "swap"
+
+
+class GetBit(Instruction):
+    def __str__(self):
+        return "getbit"
+
+
+class SetBit(Instruction):
+    def __str__(self):
+        return "setbit"
+
+
+class GetByte(Instruction):
+    def __str__(self):
+        return "getbyte"
+
+
+class SetByte(Instruction):
+    def __str__(self):
+        return "setbyte"
+
+
 class Sha256(Instruction):
     def __str__(self):
         return "sha256"
@@ -197,6 +231,11 @@ class Dup(Instruction):
 class Dup2(Instruction):
     def __str__(self):
         return "dup2"
+
+
+class Select(Instruction):
+    def __str__(self):
+        return "select"
 
 
 class Concat(Instruction):
