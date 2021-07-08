@@ -277,3 +277,23 @@ class FreezeAssetAccount(TransactionField):
 class FreezeAssetFrozen(TransactionField):
     def __str__(self):
         return "FreezeAssetFrozen"
+
+
+class GlobalNumUint(TransactionField):
+    def __str__(self):
+        return "GlobalNumUint"
+
+
+class GlobalNumByteSlice(TransactionField):
+    def __str__(self):
+        return "GlobalNumByteSlice"
+
+
+class LocalNumUint(TransactionField):
+    def __str__(self):
+        return "LocalNumUint"
+
+
+class LocalNumByteSlice(TransactionField):
+    def __str__(self):
+        return "LocalNumByteSlice"

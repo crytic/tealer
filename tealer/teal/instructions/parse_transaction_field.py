@@ -49,6 +49,10 @@ TX_FIELD_TXT_TO_OBJECT = {
     "FreezeAsset": transaction_field.FreezeAsset,
     "FreezeAssetAccount": transaction_field.FreezeAssetAccount,
     "FreezeAssetFrozen": transaction_field.FreezeAssetFrozen,
+    "GlobalNumUint": transaction_field.GlobalNumUint,
+    "GlobalNumByteSlice": transaction_field.GlobalNumByteSlice,
+    "LocalNumUint": transaction_field.LocalNumUint,
+    "LocalNumByteSlice": transaction_field.LocalNumByteSlice,
 }
 
 
