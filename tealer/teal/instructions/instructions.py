@@ -80,6 +80,22 @@ class Int(Instruction):
         return f"int {self._value}"
 
 
+class PushInt(Instruction):
+    def __init__(self, value: str):
+        super().__init__()
+        if value.isdigit():
+            self._value: Union[int, str] = int(value)
+        else:
+            self._value = value
+
+    @property
+    def value(self) -> Union[str, int]:
+        return self._value
+
+    def __str__(self):
+        return f"pushint {self._value}"
+
+
 class Txn(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
@@ -364,6 +380,11 @@ class Balance(Instruction):
         return "balance"
 
 
+class MinBalance(Instruction):
+    def __str__(self):
+        return "min_balance"
+
+
 class Itob(Instruction):
     def __str__(self):
         return "itob"
@@ -596,6 +617,15 @@ class Byte(Instruction):
 
     def __str__(self):
         return f"byte {self._bytes}"
+
+
+class PushByte(Instruction):
+    def __init__(self, bytesb: str):
+        super().__init__()
+        self._bytes = bytesb
+
+    def __str__(self):
+        return f"pushbyte {self._bytes}"
 
 
 class Len(Instruction):
