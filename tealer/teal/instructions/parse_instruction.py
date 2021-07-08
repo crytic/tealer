@@ -23,6 +23,7 @@ def handle_gtnxa(x: str) -> instructions.Gtxna:
 parser_rules = [
     ("#pragma version ", lambda x: instructions.Pragma(x)),
     ("err", lambda _x: instructions.Err()),
+    ("assert", lambda _x: instructions.Assert()),
     ("int ", lambda x: instructions.Int(x)),
     ("txn ", lambda x: instructions.Txn(parse_transaction_field(x))),
     ("txna ", lambda x: instructions.Txna(parse_transaction_field(x))),

@@ -1,7 +1,7 @@
 from typing import Optional, Dict, List
 
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions.instructions import Instruction, Label, B, Err, BNZ, BZ, Return
+from tealer.teal.instructions.instructions import Instruction, Label, B, Err, Assert, BNZ, BZ, Return
 from tealer.teal.instructions.parse_instruction import parse_line
 from tealer.teal.teal import Teal
 

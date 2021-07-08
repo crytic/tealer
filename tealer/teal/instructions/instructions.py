@@ -59,6 +59,11 @@ class Err(Instruction):
         return "err"
 
 
+class Assert(Instruction):
+    def __str__(self):
+        return "assert"
+
+
 class Int(Instruction):
     def __init__(self, value: str):
         super().__init__()
