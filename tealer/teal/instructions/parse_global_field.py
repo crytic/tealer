@@ -9,6 +9,7 @@ from tealer.teal.global_field import (
     Round,
     LatestTimestamp,
     CurrentApplicationID,
+    CreatorAddress,
 )
 
 GLOBAL_FIELD_TXT_TO_OBJECT = {
@@ -21,6 +22,7 @@ GLOBAL_FIELD_TXT_TO_OBJECT = {
     "Round": Round,
     "LatestTimestamp": LatestTimestamp,
     "CurrentApplicationID": CurrentApplicationID,
+    "CreatorAddress": CreatorAddress,
 }
 
 
