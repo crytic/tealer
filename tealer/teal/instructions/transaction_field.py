@@ -163,6 +163,32 @@ class NumAccounts(TransactionField):
         return "NumAccounts"
 
 
+class Applications(TransactionField):
+    def __init__(self, idx: int):
+        self._idx = idx
+
+    def __str__(self):
+        return f"Applications {self._idx}"
+
+
+class NumApplications(TransactionField):
+    def __str__(self):
+        return "NumApplications"
+
+
+class Assets(TransactionField):
+    def __init__(self, idx: int):
+        self._idx = idx
+
+    def __str__(self):
+        return f"Assets {self._idx}"
+
+
+class NumAssets(TransactionField):
+    def __str__(self):
+        return "NumAssets"
+
+
 class ApprovalProgram(TransactionField):
     def __str__(self):
         return "ApprovalProgram"

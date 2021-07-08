@@ -27,10 +27,10 @@ TX_FIELD_TXT_TO_OBJECT = {
     "TxID": transaction_field.TxID,
     "ApplicationID": transaction_field.ApplicationID,
     "OnCompletion": transaction_field.OnCompletion,
-    # "ApplicationArgs": transaction_field.ApplicationArgs,
     "NumAppArgs": transaction_field.NumAppArgs,
-    # "Accounts": transaction_field.Accounts,
     "NumAccounts": transaction_field.NumAccounts,
+    "NumApplications": transaction_field.NumApplications,
+    "NumAssets": transaction_field.NumAssets,
     "ApprovalProgram": transaction_field.ApprovalProgram,
     "ClearStateProgram": transaction_field.ClearStateProgram,
     "RekeyTo": transaction_field.RekeyTo,
@@ -57,5 +57,9 @@ def parse_transaction_field(tx_field: str) -> transaction_field.TransactionField
         return transaction_field.Accounts(int(tx_field[len("Accounts ") :]))
     if tx_field.startswith("ApplicationArgs "):
         return transaction_field.ApplicationArgs(int(tx_field[len("ApplicationArgs ") :]))
+    if tx_field.startswith("Applications "):
+        return transaction_field.Applications(int(tx_field[len("Applications ") :]))
+    if tx_field.startswith("Assets "):
+        return transaction_field.Assets(int(tx_field[len("Assets ") :]))
     tx_field = tx_field.replace(" ", "")
     return TX_FIELD_TXT_TO_OBJECT[tx_field]()
