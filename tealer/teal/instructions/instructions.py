@@ -154,6 +154,32 @@ class Gtxna(Instruction):
         return f"gtxna {self._idx} {self._field}"
 
 
+class Gtxns(Instruction):
+    def __init__(self, field: TransactionField):
+        super().__init__()
+        self._field: TransactionField = field
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self):
+        return f"Gtxns {self._field}"
+
+
+class Gtxnsa(Instruction):
+    def __init__(self, field: TransactionField):
+        super().__init__()
+        self._field: TransactionField = field
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self):
+        return f"Gtxnsa {self._field}"
+
+
 class Load(Instruction):
     def __init__(self, idx: int):
         super().__init__()

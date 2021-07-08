@@ -30,6 +30,8 @@ parser_rules = [
     ("txna ", lambda x: instructions.Txna(parse_transaction_field(x))),
     ("gtxn ", lambda x: handle_gtnx(x)),
     ("gtxna ", lambda x: handle_gtnxa(x)),
+    ("gtxns ", lambda x: instructions.Gtxns(parse_transaction_field(x))),
+    ("gtxnsa ", lambda x: instructions.Gtxnsa(parse_transaction_field(x))),
     ("load ", lambda x: instructions.Load(int(x))),
     ("store ", lambda x: instructions.Store(int(x))),
     ("dig ", lambda x: instructions.Dig(int(x))),
