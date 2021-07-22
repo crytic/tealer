@@ -88,7 +88,7 @@ parser_rules = [
     ("btoi", lambda x: instructions.Btoi()),
     ("byte base64", lambda x: instructions.ByteBase64(x)),
     ("byte ", lambda x: instructions.Byte(x)),
-    ("pushbyte ", lambda x: instructions.PushByte(x)),
+    ("pushbytes ", lambda x: instructions.PushBytes(x)),
     ("pop", lambda x: instructions.Pop()),
     ("addr ", lambda x: instructions.Addr(x)),
     ("mulw", lambda x: instructions.Mulw()),

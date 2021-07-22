@@ -645,13 +645,13 @@ class Byte(Instruction):
         return f"byte {self._bytes}"
 
 
-class PushByte(Instruction):
+class PushBytes(Instruction):
     def __init__(self, bytesb: str):
         super().__init__()
         self._bytes = bytesb
 
     def __str__(self):
-        return f"pushbyte {self._bytes}"
+        return f"pushbytes {self._bytes}"
 
 
 class Len(Instruction):
