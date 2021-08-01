@@ -535,6 +535,36 @@ class Addw(Instruction):
         return "addw"
 
 
+class Divmodw(Instruction):
+    def __str__(self):
+        return "divmodw"
+
+
+class Exp(Instruction):
+    def __str__(self):
+        return "exp"
+
+
+class Expw(Instruction):
+    def __str__(self):
+        return "expw"
+
+
+class Shl(Instruction):
+    def __str__(self):
+        return "shl"
+
+
+class Shr(Instruction):
+    def __str__(self):
+        return "shr"
+
+
+class Sqrt(Instruction):
+    def __str__(self):
+        return "sqrt"
+
+
 class Intcblock(Instruction):
     def __str__(self):
         return "intcblock"
