@@ -34,6 +34,10 @@ parser_rules = [
     ("gtxnsa ", lambda x: instructions.Gtxnsa(parse_transaction_field(x))),
     ("load ", lambda x: instructions.Load(int(x))),
     ("store ", lambda x: instructions.Store(int(x))),
+    ("gload ", lambda x: instructions.Gload(int(x.split(" ")[0]), int(x.split(" ")[1]))),
+    ("gloads ", lambda x: instructions.Gloads(int(x))),
+    ("gaid ", lambda x: instructions.Gaid(int(x))),
+    ("gaids", lambda x: instructions.Gaids()),
     ("dig ", lambda x: instructions.Dig(int(x))),
     ("swap", lambda _x: instructions.Swap()),
     ("getbit", lambda _x: instructions.GetBit()),
@@ -129,7 +133,7 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
         return instructions.Label(line[0 : line.find(":")])
     for key, f in parser_rules:
         if line.startswith(key):
-            return f(line[len(key) :])
+            return f(line[len(key) :].strip())
     if line:
         print(f"Not found {line}")
         return None

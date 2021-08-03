@@ -198,6 +198,39 @@ class Store(Instruction):
         return f"store {self._idx}"
 
 
+class Gload(Instruction):
+    def __init__(self, idx: int, slot: int):
+        super().__init__()
+        self._idx = idx
+        self._slot = slot
+
+    def __str__(self):
+        return f"gload {self._idx} {self._slot}"
+
+
+class Gloads(Instruction):
+    def __init__(self, slot: int):
+        super().__init__()
+        self._slot = slot
+
+    def __str__(self):
+        return f"gloads {self._slot}"
+
+
+class Gaid(Instruction):
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+
+    def __str__(self):
+        return f"gaid {self._idx}"
+
+
+class Gaids(Instruction):
+    def __str__(self):
+        return "gaids"
+
+
 class Dig(Instruction):
     def __init__(self, idx: int):
         super().__init__()
