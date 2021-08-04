@@ -558,6 +558,91 @@ class BitwiseInvert(Instruction):
         return "~"
 
 
+class BitLen(Instruction):
+    def __str__(self):
+        return "bitlen"
+
+
+class BModulo(Instruction):
+    def __str__(self):
+        return "b%"
+
+
+class BNeq(Instruction):
+    def __str__(self):
+        return "b!="
+
+
+class BEq(Instruction):
+    def __str__(self):
+        return "b=="
+
+
+class BBitwiseAnd(Instruction):
+    def __str__(self):
+        return "b&"
+
+
+class BBitwiseOr(Instruction):
+    def __str__(self):
+        return "b|"
+
+
+class BAdd(Instruction):
+    def __str__(self):
+        return "b+"
+
+
+class BSubtract(Instruction):
+    def __str__(self):
+        return "b-"
+
+
+class BDiv(Instruction):
+    def __str__(self):
+        return "b/"
+
+
+class BMul(Instruction):
+    def __str__(self):
+        return "b*"
+
+
+class BGreaterE(Instruction):
+    def __str__(self):
+        return "b>="
+
+
+class BGreater(Instruction):
+    def __str__(self):
+        return "b>"
+
+
+class BLessE(Instruction):
+    def __str__(self):
+        return "b<="
+
+
+class BLess(Instruction):
+    def __str__(self):
+        return "b<"
+
+
+class BBitwiseXor(Instruction):
+    def __str__(self):
+        return "b^"
+
+
+class BBitwiseInvert(Instruction):
+    def __str__(self):
+        return "b~"
+
+
+class BZero(Instruction):
+    def __str__(self):
+        return "bzero"
+
+
 class Mulw(Instruction):
     def __str__(self):
         return "mulw"
