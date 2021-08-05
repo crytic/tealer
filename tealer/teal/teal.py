@@ -10,6 +10,47 @@ class Teal:
         self._instructions = instructions
         self._bbs = bbs
 
+    @staticmethod
+    def render_instruction(i: Instruction):
+        ins_str = str(i).replace('"', '\"')
+        ins_str = ins_str.replace('>', '&gt;')
+        ins_str = ins_str.replace('<', '&lt;')
+        ins_str = ins_str.replace('&&', '&amp;&amp;')
+        comment_str = "no comment for this line"if i.comment == "" else i.comment
+        comment_str = comment_str.replace('*', '&#42;')
+        comment_str = comment_str.replace('>', '&gt;')
+        comment_str = comment_str.replace('<', '&lt;')
+        # the 'href' attribute is set to bogus because graphviz wants it in SVG
+        tooltip = f'TOOLTIP="{comment_str}" HREF="bogus"'
+        cell_i = f'<TD {tooltip} ALIGN="LEFT" PORT="{i.line}">{i.line}. {ins_str}</TD>'
+        return f'<TR>{cell_i}</TR>\n'
+
+    @staticmethod
+    def render_bb(idx: int, bb: BasicBlock):
+        table_prefix = '<<TABLE ALIGN="LEFT">\n'
+        table_suffix = '</TABLE>> labelloc=top shape=plain\n'
+        table_rows = ""
+        graph_edges = ""
+        for i in bb.instructions:
+            table_rows += Teal.render_instruction(i)
+        for next_bb in bb.next:
+            exit_loc = bb.exit_instr.line
+            entry_loc = next_bb.entry_instr.line
+            graph_edges += f"{id(bb)}:{exit_loc}:s -> {id(next_bb)}:{entry_loc}:n;\n"
+        table = table_prefix + table_rows + table_suffix
+        return f'{id(bb)}[label={table} xlabel={idx}]' + graph_edges
+
+    def render_cfg(self, filename: Path):
+        dot_output = "digraph g{\n ranksep = 1 \n overlap = scale \n"
+
+        for idx, bb in enumerate(self._bbs):
+            dot_output += Teal.render_bb(idx, bb)
+
+        dot_output += "}"
+
+        with open(filename, "w") as f:
+            f.write(dot_output)
+
     def instructions_to_dot(self, filename: Path):
         dot_output = "digraph g{\n"
 

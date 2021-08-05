@@ -57,7 +57,11 @@ def _first_pass(
     call: Optional[Callsub] = None  # Flag: last instruction was a callsub
 
     for line in lines:
-        ins = parse_line(line.strip())
+        try:
+            ins = parse_line(line.strip())
+        except KeyError as e:
+            print(f'Parse error at line {idx} near {e}')
+            exit(1)
         idx = idx + 1
         if not ins:
             continue
