@@ -57,6 +57,8 @@ parser_rules = [
     ("bz ", lambda x: instructions.BZ(x)),
     ("bnz ", lambda x: instructions.BNZ(x)),
     ("return", lambda x: instructions.Return()),
+    ("callsub ", lambda x: instructions.Callsub(x)),
+    ("retsub", lambda x: instructions.Retsub()),
     ("app_global_get_ex", lambda x: instructions.AppGlobalGetEx()),
     ("app_global_get", lambda x: instructions.AppGlobalGet()),
     ("app_global_put", lambda x: instructions.AppGlobalPut()),

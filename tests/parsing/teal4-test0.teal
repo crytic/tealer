@@ -1,0 +1,19 @@
+#pragma version 4
+
+b main
+
+success:
+    int 1
+    retsub
+
+failure:
+    int 0
+    retsub
+    
+main:
+    byte "A test program"
+    callsub success
+    int 200
+    pop
+    return
+

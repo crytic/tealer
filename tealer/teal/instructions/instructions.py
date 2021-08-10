@@ -374,9 +374,42 @@ class Label(Instruction):
         return f"{self._label}:"
 
 
+class Callsub(Instruction):
+    def __init__(self, label: str):
+        super().__init__()
+        label = label.replace(" ", "")
+        self._label = label
+
+    @property
+    def label(self) -> str:
+        return self._label
+
+    def __str__(self):
+        return f"callsub {self._label}"
+
+
 class Return(Instruction):
     def __str__(self):
         return "return"
+
+
+class Retsub(Instruction):
+    def __init__(self):
+        super().__init__()
+        self._labels: List[Instruction] = []
+
+    def add_label(self, p):
+        self._labels.append(p)
+
+    def set_labels(self, p):
+        self._labels = p
+
+    @property
+    def labels(self) -> List["Instruction"]:
+        return self._labels
+
+    def __str__(self):
+        return "retsub"
 
 
 class AppGlobalGet(Instruction):
