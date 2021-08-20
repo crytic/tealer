@@ -1,0 +1,86 @@
+// get the amount of the second transaction
+int 1
+gtxns Amount
+
+
+// get the first argument of the first transaction
+// in a stateful smart contract
+int 0
+gtxnsa ApplicationArgs 0
+
+
+
+// Assume current transaction depends on the transaction
+// that is next in the group
+// get current group index
+// add one and then get that transaction amount
+txn GroupIndex
+int 1
++
+gtxns Amount
+
+// From https://github.com/algorand/go-algorand/blob/58bc231a0a71c7bccf00881d32790cdd3afe426e/data/transactions/logic/assembler_test.go#L251
+int 1
+pushint 2000
+int 0
+int 2
+divmodw
+callsub stuff
+b next
+stuff:
+retsub
+next:
+int 1
+int 2
+shl
+int 1
+shr
+sqrt
+int 2
+exp
+int 2
+expw
+bitlen
+b+
+b-
+b/
+b*
+b<
+b>
+b<=
+b>=
+b==
+b!=
+b%
+b|
+b&
+b^
+b~
+int 2
+bzero
+gload 0 0
+gloads 0
+gaid 0
+gaids
+int 100
+
+intc 0
+dig 1
+swap
+getbit
+setbit
+getbyte
+setbyte
+select
+min_balance
+bytec 1
+pushbytes 0xb49276bd3ec0977eab86a321c449ead802c96c0bd97c2956131511d2f11eebec
+
+txna Assets 0
+txn NumAssets
+txna Applications 0
+txn NumApplications
+txn GlobalNumUint
+txn GlobalNumByteSlice
+txn LocalNumUint
+txn LocalNumByteSlice

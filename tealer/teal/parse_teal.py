@@ -1,7 +1,17 @@
 from typing import Optional, Dict, List
 
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions.instructions import Instruction, Label, B, Err, Assert, BNZ, BZ, Return, Callsub, Retsub
+from tealer.teal.instructions.instructions import (
+    Instruction,
+    Label,
+    B,
+    Err,
+    BNZ,
+    BZ,
+    Return,
+    Callsub,
+    Retsub,
+)
 from tealer.teal.instructions.parse_instruction import parse_line
 from tealer.teal.teal import Teal
 
@@ -33,18 +43,18 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]):
             bb = None
 
 
-def parse_teal(source_code: str) -> Teal:
-    instructions: List[Instruction] = []      # Parsed instructions list
-    labels: Dict[str, Instruction] = {}       # Global map of label names to label instructions
-    prev: Optional[Instruction] = None        # Flag: last instruction was an unconditional jump
-    entries: List[Instruction] = []           # Current list of labels not closed by a retsub
-    rets: Dict[str, List[Instruction]] = {}   # Lists of return points corresponding to labels
-    call: Optional[Callsub] = None            # Flag: last instruction was a callsub
-
-    lines = source_code.splitlines()
-    idx = 0
-
+def _first_pass(
+    lines: List[str],
+    labels: Dict[str, Instruction],
+    rets: Dict[str, List[Instruction]],
+    instructions: List[Instruction],
+):
     # First pass over the intructions list: Add non-jump instruction links and collect meta-data
+    idx = 0
+    entries: List[Instruction] = []  # Current list of labels not closed by a retsub
+    prev: Optional[Instruction] = None  # Flag: last instruction was an unconditional jump
+    call: Optional[Callsub] = None  # Flag: last instruction was a callsub
+
     for line in lines:
         ins = parse_line(line.strip())
         idx = idx + 1
@@ -90,6 +100,16 @@ def parse_teal(source_code: str) -> Teal:
         # Finally, add the instruction to the instruction list
         instructions.append(ins)
 
+
+def parse_teal(source_code: str) -> Teal:
+    instructions: List[Instruction] = []  # Parsed instructions list
+    labels: Dict[str, Instruction] = {}  # Global map of label names to label instructions
+    rets: Dict[str, List[Instruction]] = {}  # Lists of return points corresponding to labels
+
+    lines = source_code.splitlines()
+
+    _first_pass(lines, labels, rets, instructions)
+
     # Second pass over the instructions list: Add instruction links for jumps
     for ins in instructions:
 
@@ -118,7 +138,9 @@ def parse_teal(source_code: str) -> Teal:
             branch.bb.add_prev(ins.bb)
             ins.bb.add_next(branch.bb)
         # A single-target branching instruction (b or callsub or bz/bnz appearing as the last instruction in the list)
-        if isinstance(ins, (B, Callsub)) or (ins == instructions[-1] and isinstance(ins, (BZ, BNZ))):
+        if isinstance(ins, (B, Callsub)) or (
+            ins == instructions[-1] and isinstance(ins, (BZ, BNZ))
+        ):
             dst = ins.next[0].bb
             dst.add_prev(ins.bb)
             ins.bb.add_next(dst)
@@ -127,7 +149,5 @@ def parse_teal(source_code: str) -> Teal:
             for branch in ins.next:
                 branch.bb.add_prev(ins.bb)
                 ins.bb.add_next(branch.bb)
-
-
 
     return Teal(instructions, all_bbs)

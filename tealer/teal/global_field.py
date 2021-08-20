@@ -47,6 +47,7 @@ class CurrentApplicationID(GlobalField):
     def __str__(self):
         return "CurrentApplicationID"
 
+
 class CreatorAddress(GlobalField):
     def __str__(self):
         return "CreatorAddress"
