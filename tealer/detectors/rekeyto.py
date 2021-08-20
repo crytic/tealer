@@ -43,6 +43,7 @@ class MissingRekeyTo(AbstractDetector):
         for ins in bb.instructions:
             if isinstance(ins, Gtxn):
                 if ins.idx not in idx_fitlered:
+                    assert ins.bb
                     group_tx[ins.idx].add(ins.bb)
 
                 if isinstance(ins.field, RekeyTo):
@@ -57,13 +58,13 @@ class MissingRekeyTo(AbstractDetector):
                         return
 
                 for idx, bbs in group_tx.items():
-                    bbs = sorted(bbs, key=lambda x: x.instructions[0].line)
+                    bbs_list = sorted(bbs, key=lambda x: x.instructions[0].line)
                     filename = Path(f"rekeyto_tx_{idx}.dot")
 
                     if idx not in all_results:
-                        all_results[idx] = Result(filename, bbs + [bb], current_path)
+                        all_results[str(idx)] = Result(filename, bbs_list + [bb], current_path)
                     else:
-                        all_results[idx].add_path(current_path)
+                        all_results[str(idx)].add_path(current_path)
 
         for next_bb in bb.next:
             self.check_rekey_to(next_bb, group_tx, idx_fitlered, current_path, all_results)

@@ -318,7 +318,7 @@ class Concat(Instruction):
         return "concat"
 
 
-class B(Instruction):
+class InstructionWithLabel(Instruction):
     def __init__(self, label: str):
         super().__init__()
         label = label.replace(" ", "")
@@ -328,62 +328,28 @@ class B(Instruction):
     def label(self) -> str:
         return self._label
 
+
+class B(InstructionWithLabel):
     def __str__(self):
         return f"b {self._label}"
 
 
-class BZ(Instruction):
-    def __init__(self, label: str):
-        super().__init__()
-        label = label.replace(" ", "")
-        self._label = label
-
-    @property
-    def label(self) -> str:
-        return self._label
-
+class BZ(InstructionWithLabel):
     def __str__(self):
         return f"bz {self._label}"
 
 
-class BNZ(Instruction):
-    def __init__(self, label: str):
-        super().__init__()
-        label = label.replace(" ", "")
-        self._label = label
-
-    @property
-    def label(self) -> str:
-        return self._label
-
+class BNZ(InstructionWithLabel):
     def __str__(self):
         return f"bnz {self._label}"
 
 
-class Label(Instruction):
-    def __init__(self, label: str):
-        super().__init__()
-        label = label.replace(" ", "")
-        self._label = label
-
-    @property
-    def label(self) -> str:
-        return self._label
-
+class Label(InstructionWithLabel):
     def __str__(self):
         return f"{self._label}:"
 
 
-class Callsub(Instruction):
-    def __init__(self, label: str):
-        super().__init__()
-        label = label.replace(" ", "")
-        self._label = label
-
-    @property
-    def label(self) -> str:
-        return self._label
-
+class Callsub(InstructionWithLabel):
     def __str__(self):
         return f"callsub {self._label}"
 
@@ -396,16 +362,16 @@ class Return(Instruction):
 class Retsub(Instruction):
     def __init__(self):
         super().__init__()
-        self._labels: List[Instruction] = []
+        self._labels: List[Label] = []
 
-    def add_label(self, p):
+    def add_label(self, p: Label):
         self._labels.append(p)
 
-    def set_labels(self, p):
+    def set_labels(self, p: List[Label]):
         self._labels = p
 
     @property
-    def labels(self) -> List["Instruction"]:
+    def labels(self) -> List[Label]:
         return self._labels
 
     def __str__(self):

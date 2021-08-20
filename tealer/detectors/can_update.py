@@ -43,7 +43,7 @@ class CanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
         prev_was_equal = False
         skip_false = False
         skip_true = False
-        stack = []
+        stack: List[Instruction] = []
 
         for ins in bb.instructions:
 
