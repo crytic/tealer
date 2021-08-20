@@ -1,0 +1,19 @@
+#pragma version 4
+// jump to main loop
+b main
+
+// subroutine
+my_subroutine:
+int 100
+retsub
+
+
+main:
+int 1
+callsub my_subroutine
+int 2
+callsub my_subroutine
+//int 3
+//callsub my_subroutine
+return
+

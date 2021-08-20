@@ -1,0 +1,13 @@
+#pragma version 4
+
+gload 0 0
+int 2
+==
+
+int 0
+gloads 0
+byte "txn 1"
+==
+
+gaid 0
+gaids

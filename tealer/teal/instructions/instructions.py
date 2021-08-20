@@ -59,6 +59,11 @@ class Err(Instruction):
         return "err"
 
 
+class Assert(Instruction):
+    def __str__(self):
+        return "assert"
+
+
 class Int(Instruction):
     def __init__(self, value: str):
         super().__init__()
@@ -73,6 +78,22 @@ class Int(Instruction):
 
     def __str__(self):
         return f"int {self._value}"
+
+
+class PushInt(Instruction):
+    def __init__(self, value: str):
+        super().__init__()
+        if value.isdigit():
+            self._value: Union[int, str] = int(value)
+        else:
+            self._value = value
+
+    @property
+    def value(self) -> Union[str, int]:
+        return self._value
+
+    def __str__(self):
+        return f"pushint {self._value}"
 
 
 class Txn(Instruction):
@@ -133,6 +154,32 @@ class Gtxna(Instruction):
         return f"gtxna {self._idx} {self._field}"
 
 
+class Gtxns(Instruction):
+    def __init__(self, field: TransactionField):
+        super().__init__()
+        self._field: TransactionField = field
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self):
+        return f"Gtxns {self._field}"
+
+
+class Gtxnsa(Instruction):
+    def __init__(self, field: TransactionField):
+        super().__init__()
+        self._field: TransactionField = field
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self):
+        return f"Gtxnsa {self._field}"
+
+
 class Load(Instruction):
     def __init__(self, idx: int):
         super().__init__()
@@ -149,6 +196,73 @@ class Store(Instruction):
 
     def __str__(self):
         return f"store {self._idx}"
+
+
+class Gload(Instruction):
+    def __init__(self, idx: int, slot: int):
+        super().__init__()
+        self._idx = idx
+        self._slot = slot
+
+    def __str__(self):
+        return f"gload {self._idx} {self._slot}"
+
+
+class Gloads(Instruction):
+    def __init__(self, slot: int):
+        super().__init__()
+        self._slot = slot
+
+    def __str__(self):
+        return f"gloads {self._slot}"
+
+
+class Gaid(Instruction):
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+
+    def __str__(self):
+        return f"gaid {self._idx}"
+
+
+class Gaids(Instruction):
+    def __str__(self):
+        return "gaids"
+
+
+class Dig(Instruction):
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+
+    def __str__(self):
+        return f"dig {self._idx}"
+
+
+class Swap(Instruction):
+    def __str__(self):
+        return "swap"
+
+
+class GetBit(Instruction):
+    def __str__(self):
+        return "getbit"
+
+
+class SetBit(Instruction):
+    def __str__(self):
+        return "setbit"
+
+
+class GetByte(Instruction):
+    def __str__(self):
+        return "getbyte"
+
+
+class SetByte(Instruction):
+    def __str__(self):
+        return "setbyte"
 
 
 class Sha256(Instruction):
@@ -194,12 +308,17 @@ class Dup2(Instruction):
         return "dup2"
 
 
+class Select(Instruction):
+    def __str__(self):
+        return "select"
+
+
 class Concat(Instruction):
     def __str__(self):
         return "concat"
 
 
-class B(Instruction):
+class InstructionWithLabel(Instruction):
     def __init__(self, label: str):
         super().__init__()
         label = label.replace(" ", "")
@@ -209,55 +328,54 @@ class B(Instruction):
     def label(self) -> str:
         return self._label
 
+
+class B(InstructionWithLabel):
     def __str__(self):
         return f"b {self._label}"
 
 
-class BZ(Instruction):
-    def __init__(self, label: str):
-        super().__init__()
-        label = label.replace(" ", "")
-        self._label = label
-
-    @property
-    def label(self) -> str:
-        return self._label
-
+class BZ(InstructionWithLabel):
     def __str__(self):
         return f"bz {self._label}"
 
 
-class BNZ(Instruction):
-    def __init__(self, label: str):
-        super().__init__()
-        label = label.replace(" ", "")
-        self._label = label
-
-    @property
-    def label(self) -> str:
-        return self._label
-
+class BNZ(InstructionWithLabel):
     def __str__(self):
         return f"bnz {self._label}"
 
 
-class Label(Instruction):
-    def __init__(self, label: str):
-        super().__init__()
-        label = label.replace(" ", "")
-        self._label = label
-
-    @property
-    def label(self) -> str:
-        return self._label
-
+class Label(InstructionWithLabel):
     def __str__(self):
         return f"{self._label}:"
+
+
+class Callsub(InstructionWithLabel):
+    def __str__(self):
+        return f"callsub {self._label}"
 
 
 class Return(Instruction):
     def __str__(self):
         return "return"
+
+
+class Retsub(Instruction):
+    def __init__(self):
+        super().__init__()
+        self._labels: List[Label] = []
+
+    def add_label(self, p: Label):
+        self._labels.append(p)
+
+    def set_labels(self, p: List[Label]):
+        self._labels = p
+
+    @property
+    def labels(self) -> List[Label]:
+        return self._labels
+
+    def __str__(self):
+        return "retsub"
 
 
 class AppGlobalGet(Instruction):
@@ -318,6 +436,11 @@ class AppOptedIn(Instruction):
 class Balance(Instruction):
     def __str__(self):
         return "balance"
+
+
+class MinBalance(Instruction):
+    def __str__(self):
+        return "min_balance"
 
 
 class Itob(Instruction):
@@ -434,6 +557,91 @@ class BitwiseInvert(Instruction):
         return "~"
 
 
+class BitLen(Instruction):
+    def __str__(self):
+        return "bitlen"
+
+
+class BModulo(Instruction):
+    def __str__(self):
+        return "b%"
+
+
+class BNeq(Instruction):
+    def __str__(self):
+        return "b!="
+
+
+class BEq(Instruction):
+    def __str__(self):
+        return "b=="
+
+
+class BBitwiseAnd(Instruction):
+    def __str__(self):
+        return "b&"
+
+
+class BBitwiseOr(Instruction):
+    def __str__(self):
+        return "b|"
+
+
+class BAdd(Instruction):
+    def __str__(self):
+        return "b+"
+
+
+class BSubtract(Instruction):
+    def __str__(self):
+        return "b-"
+
+
+class BDiv(Instruction):
+    def __str__(self):
+        return "b/"
+
+
+class BMul(Instruction):
+    def __str__(self):
+        return "b*"
+
+
+class BGreaterE(Instruction):
+    def __str__(self):
+        return "b>="
+
+
+class BGreater(Instruction):
+    def __str__(self):
+        return "b>"
+
+
+class BLessE(Instruction):
+    def __str__(self):
+        return "b<="
+
+
+class BLess(Instruction):
+    def __str__(self):
+        return "b<"
+
+
+class BBitwiseXor(Instruction):
+    def __str__(self):
+        return "b^"
+
+
+class BBitwiseInvert(Instruction):
+    def __str__(self):
+        return "b~"
+
+
+class BZero(Instruction):
+    def __str__(self):
+        return "bzero"
+
+
 class Mulw(Instruction):
     def __str__(self):
         return "mulw"
@@ -442,6 +650,36 @@ class Mulw(Instruction):
 class Addw(Instruction):
     def __str__(self):
         return "addw"
+
+
+class Divmodw(Instruction):
+    def __str__(self):
+        return "divmodw"
+
+
+class Exp(Instruction):
+    def __str__(self):
+        return "exp"
+
+
+class Expw(Instruction):
+    def __str__(self):
+        return "expw"
+
+
+class Shl(Instruction):
+    def __str__(self):
+        return "shl"
+
+
+class Shr(Instruction):
+    def __str__(self):
+        return "shr"
+
+
+class Sqrt(Instruction):
+    def __str__(self):
+        return "sqrt"
 
 
 class Intcblock(Instruction):
@@ -552,6 +790,15 @@ class Byte(Instruction):
 
     def __str__(self):
         return f"byte {self._bytes}"
+
+
+class PushBytes(Instruction):
+    def __init__(self, bytesb: str):
+        super().__init__()
+        self._bytes = bytesb
+
+    def __str__(self):
+        return f"pushbytes {self._bytes}"
 
 
 class Len(Instruction):

@@ -1,0 +1,27 @@
+#pragma version 4
+
+// i = 0
+int 0
+store 10
+
+loop:
+    // assert gtxn[i].RekeyTo == ZeroAddress
+    load 10
+    gtxns RekeyTo
+    global ZeroAddress
+    ==
+    assert
+
+    // i += 1
+    load 10
+    int 1
+    +
+    store 10
+
+    // loop if i < GroupSize
+    load 10
+    global GroupSize
+    <
+    bnz loop
+
+return

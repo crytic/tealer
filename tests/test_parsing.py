@@ -6,6 +6,16 @@ TARGETS = [
     "tests/parsing/transaction_fields.teal",
     "tests/parsing/global_fields.teal",
     "tests/parsing/instructions.teal",
+    "tests/parsing/instructions.teal",
+    "tests/parsing/instructions.teal",
+    "tests/parsing/teal3-gload.teal",
+    "tests/parsing/teal4-test0.teal",
+    "tests/parsing/teal4-test1.teal",
+    "tests/parsing/teal4-test2.teal",
+    "tests/parsing/teal4-test3.teal",
+    "tests/parsing/teal4-test4.teal",
+    "tests/parsing/teal4-test5.teal",
+    "tests/parsing/teal4-random-opcodes.teal",
 ]
 
 

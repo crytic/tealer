@@ -34,6 +34,7 @@ jobs:
           pip install .
           mkdir -p .github/linters
           cp pyproject.toml .github/linters
+          cp mypy.ini .github/linters
       - name: Pylint
         uses: docker://github/super-linter:v3
         if: always()
@@ -79,4 +80,5 @@ jobs:
           VALIDATE_DOCKERFILE: false
           VALIDATE_DOCKERFILE_HADOLINT: false
           VALIDATE_EDITORCONFIG: false
+          VALIDATE_JSCPD: false
           SHELLCHECK_OPTS: "-e SC1090"
