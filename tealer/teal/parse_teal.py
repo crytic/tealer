@@ -102,7 +102,12 @@ def _first_pass(
         # Finally, add the instruction to the instruction list
         instructions.append(ins)
 
-def _second_pass(instructions: List[Instruction], labels: Dict[str, Instruction], rets: Dict[str, List[Instruction]] ):
+
+def _second_pass(
+    instructions: List[Instruction],
+    labels: Dict[str, Instruction],
+    rets: Dict[str, List[Instruction]],
+):
     # Second pass over the instructions list: Add instruction links for jumps
     for ins in instructions:
 
@@ -118,6 +123,7 @@ def _second_pass(instructions: List[Instruction], labels: Dict[str, Instruction]
                     for ret in rets[entry.label]:
                         ins.add_next(ret)
                         ret.add_prev(ins)
+
 
 def _fourth_pass(instructions: List[Instruction]):
     # Fourth pass over the instructiions list: Add jump-based basic block links
@@ -146,6 +152,7 @@ def _fourth_pass(instructions: List[Instruction]):
                 if ins.bb:
                     ins.bb.add_next(branch.bb)
 
+
 def parse_teal(source_code: str) -> Teal:
     instructions: List[Instruction] = []  # Parsed instructions list
     labels: Dict[str, Instruction] = {}  # Global map of label names to label instructions
@@ -156,12 +163,10 @@ def parse_teal(source_code: str) -> Teal:
     _first_pass(lines, labels, rets, instructions)
     _second_pass(instructions, labels, rets)
 
-
     # Third pass over the instructions list: Construct the basic blocks and sequential links
     all_bbs: List[BasicBlock] = []
     create_bb(instructions, all_bbs)
 
     _fourth_pass(instructions)
-
 
     return Teal(instructions, all_bbs)
