@@ -150,9 +150,9 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
     if "//" in line:
         comment_start = line.find("//")
         # save comment
-        comment = line[line.find("//") : len(line)]
+        comment = line[comment_start:]
         # strip line of comments and leading/trailing whitespace
-        line = line[0 : comment_start].strip()
+        line = line[:comment_start].strip()
     if ":" in line:
         return instructions.Label(line[0 : line.find(":")])
     for key, f in parser_rules:
