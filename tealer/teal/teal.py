@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import List, Optional
+import html
 
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import Instruction
@@ -12,14 +13,9 @@ class Teal:
 
     @staticmethod
     def render_instruction(i: Instruction):
-        ins_str = str(i).replace('"', '\"')
-        ins_str = ins_str.replace('>', '&gt;')
-        ins_str = ins_str.replace('<', '&lt;')
-        ins_str = ins_str.replace('&&', '&amp;&amp;')
+        ins_str = html.escape(str(i), quote=True)
         comment_str = "no comment for this line"if i.comment == "" else i.comment
-        comment_str = comment_str.replace('*', '&#42;')
-        comment_str = comment_str.replace('>', '&gt;')
-        comment_str = comment_str.replace('<', '&lt;')
+        comment_str = html.escape(comment_str, quote=True)
         # the 'href' attribute is set to bogus because graphviz wants it in SVG
         tooltip = f'TOOLTIP="{comment_str}" HREF="bogus"'
         cell_i = f'<TD {tooltip} ALIGN="LEFT" PORT="{i.line}">{i.line}. {ins_str}</TD>'
