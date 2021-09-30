@@ -42,7 +42,7 @@ class Instruction:
         return self._comment
 
     @comment.setter
-    def comment(self, c:str):
+    def comment(self, c: str):
         self._comment = c
 
     @property

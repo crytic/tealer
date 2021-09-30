@@ -14,17 +14,17 @@ class Teal:
     @staticmethod
     def render_instruction(i: Instruction):
         ins_str = html.escape(str(i), quote=True)
-        comment_str = "no comment for this line"if i.comment == "" else i.comment
+        comment_str = "no comment for this line" if i.comment == "" else i.comment
         comment_str = html.escape(comment_str, quote=True)
         # the 'href' attribute is set to bogus because graphviz wants it in SVG
         tooltip = f'TOOLTIP="{comment_str}" HREF="bogus"'
         cell_i = f'<TD {tooltip} ALIGN="LEFT" PORT="{i.line}">{i.line}. {ins_str}</TD>'
-        return f'<TR>{cell_i}</TR>\n'
+        return f"<TR>{cell_i}</TR>\n"
 
     @staticmethod
     def render_bb(idx: int, bb: BasicBlock):
         table_prefix = '<<TABLE ALIGN="LEFT">\n'
-        table_suffix = '</TABLE>> labelloc=top shape=plain\n'
+        table_suffix = "</TABLE>> labelloc=top shape=plain\n"
         table_rows = ""
         graph_edges = ""
         for i in bb.instructions:
@@ -34,7 +34,7 @@ class Teal:
             entry_loc = next_bb.entry_instr.line
             graph_edges += f"{id(bb)}:{exit_loc}:s -> {id(next_bb)}:{entry_loc}:n;\n"
         table = table_prefix + table_rows + table_suffix
-        return f'{id(bb)}[label={table} xlabel={idx}]' + graph_edges
+        return f"{id(bb)}[label={table} xlabel={idx}]" + graph_edges
 
     def render_cfg(self, filename: Path):
         dot_output = "digraph g{\n ranksep = 1 \n overlap = scale \n"
