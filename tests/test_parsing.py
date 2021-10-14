@@ -16,6 +16,7 @@ TARGETS = [
     "tests/parsing/teal4-test4.teal",
     "tests/parsing/teal4-test5.teal",
     "tests/parsing/teal4-random-opcodes.teal",
+    "tests/parsing/comments.teal",
 ]
 
 
