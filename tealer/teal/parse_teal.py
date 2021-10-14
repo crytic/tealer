@@ -1,3 +1,4 @@
+import sys
 from typing import Optional, Dict, List
 
 from tealer.teal.basic_blocks import BasicBlock
@@ -61,7 +62,7 @@ def _first_pass(
             ins = parse_line(line.strip())
         except KeyError as e:
             print(f"Parse error at line {idx} near {e}")
-            exit(1)
+            sys.exit(1)
         idx = idx + 1
         if not ins:
             continue
@@ -92,16 +93,14 @@ def _first_pass(
 
         # Now prepare for the next-line instruction
         # A flag that says that this was an unconditional jump
+        prev = ins
         if isinstance(ins, (B, Err, Return, Callsub, Retsub)):
             prev = None
-        else:
-            prev = ins
 
         # A flag that says that this was a callsub
+        call = None
         if isinstance(ins, Callsub):
             call = ins
-        else:
-            call = None
 
         # Finally, add the instruction to the instruction list
         instructions.append(ins)
