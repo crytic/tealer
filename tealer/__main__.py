@@ -63,7 +63,8 @@ def main():
 
     if args.print_cfg:
         print("CFG exported: cfg.dot")
-        teal.bbs_to_dot(Path("cfg.dot"))
+        # teal.bbs_to_dot(Path("cfg.dot"))
+        teal.render_cfg(Path("cfg.dot"))
 
     else:
         for Cls in get_detectors():
