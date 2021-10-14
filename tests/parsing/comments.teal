@@ -1,0 +1,11 @@
+#pragma version 2
+
+// some comment
+
+global GroupSize // another comment
++
+== // one more comment
+
+///////////////////
+// final comment //
+///////////////////

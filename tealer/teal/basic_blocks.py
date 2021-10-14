@@ -16,6 +16,14 @@ class BasicBlock:
     def instructions(self) -> List[Instruction]:
         return self._instructions
 
+    @property
+    def entry_instr(self) -> Instruction:
+        return self._instructions[0]
+
+    @property
+    def exit_instr(self) -> Instruction:
+        return self._instructions[-1]
+
     def add_prev(self, p):
         self._prev.append(p)
 

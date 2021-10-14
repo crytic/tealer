@@ -12,6 +12,7 @@ class Instruction:
         self._prev: List[Instruction] = []
         self._next: List[Instruction] = []
         self._line = 0
+        self._comment = ""
         self._bb: Optional["BasicBlock"] = None
 
     def add_prev(self, p):
@@ -35,6 +36,14 @@ class Instruction:
     @line.setter
     def line(self, l: int):
         self._line = l
+
+    @property
+    def comment(self) -> str:
+        return self._comment
+
+    @comment.setter
+    def comment(self, c: str):
+        self._comment = c
 
     @property
     def bb(self) -> Optional["BasicBlock"]:
@@ -459,7 +468,7 @@ class Addr(Instruction):
         self._addr = addr
 
     def __str__(self):
-        return "addr {self._addr}"
+        return f"addr {self._addr}"
 
 
 class Pop(Instruction):
