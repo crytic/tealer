@@ -18,6 +18,13 @@ def handle_gtnxa(x: str) -> instructions.Gtxna:
     tx_field = parse_transaction_field(" ".join(split[1:]))
     return instructions.Gtxna(idx, tx_field)
 
+def handle_extract(x: str) -> instructions.Extract:
+    args = x.split(" ")
+    print(args)
+    start = int(args[0])
+    length = int(args[1])
+    return instructions.Extract(start, length)
+
 
 # Order in the parser_rules is important
 parser_rules = [
@@ -46,6 +53,11 @@ parser_rules = [
     ("setbit", lambda _x: instructions.SetBit()),
     ("getbyte", lambda _x: instructions.GetByte()),
     ("setbyte", lambda _x: instructions.SetByte()),
+    ("extract ", lambda x: handle_extract(x)),
+    ("extract3", lambda _x: instructions.Extract3()),
+    ("extract_uint16", lambda _x: instructions.Extract_uint16()),
+    ("extract_uint32", lambda _x: instructions.Extract_uint32()),
+    ("extract_uint64", lambda _x: instructions.Extract_uint64()),
     ("sha256", lambda _x: instructions.Sha256()),
     ("sha512_256", lambda _x: instructions.Sha512_256()),
     ("keccak256", lambda _x: instructions.Keccak256()),

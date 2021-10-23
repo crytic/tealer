@@ -284,6 +284,44 @@ class SetByte(Instruction):
         return "setbyte"
 
 
+class Extract(Instruction):
+    def __init__(self, idx: int, idy: int):
+        super().__init__()
+        self._idx = idx
+        self._idy = idy
+
+    @property
+    def idx(self) -> int:
+        return self._idx
+
+    @property
+    def idy(self) -> int:
+        return self._idy
+
+    def __str__(self):
+        return f"extract {self._idx} {self._idy}"
+
+
+class Extract3(Instruction):
+    def __str__(self):
+        return "extract3"
+
+
+class Extract_uint16(Instruction):
+    def __str__(self):
+        return "extract_uint16"
+
+
+class Extract_uint32(Instruction):
+    def __str__(self):
+        return "extract_uint32"
+
+
+class Extract_uint64(Instruction):
+    def __str__(self):
+        return "extract_uint64"
+
+
 class Sha256(Instruction):
     def __str__(self):
         return "sha256"
