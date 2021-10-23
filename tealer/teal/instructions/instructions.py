@@ -4,6 +4,7 @@ from tealer.teal.global_field import GlobalField
 from tealer.teal.instructions.transaction_field import TransactionField
 from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
+from tealer.teal.instructions.app_params_field import AppParamsField
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -546,6 +547,19 @@ class AssetParamsGet(Instruction):
 
     def __str__(self):
         return f"asset_params_get {self._field}"
+
+
+class AppParamsGet(Instruction):
+    def __init__(self, field: AppParamsField):
+        super().__init__()
+        self._field: AppParamsField = field
+
+    @property
+    def field(self) -> AppParamsField:
+        return self._field
+
+    def __str__(self):
+        return f"app_params_get {self._field}"
 
 
 class AppOptedIn(Instruction):
