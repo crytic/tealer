@@ -1,0 +1,21 @@
+#pragma version 2
+
+// Check total against arg 4
+asset_params_get AssetTotal
+pop
+txna ApplicationArgs 4
+btoi
+==
+
+asset_params_get AssetDecimals
+asset_params_get AssetUnitName
+asset_params_get AssetDefaultFrozen
+asset_params_get AssetName
+asset_params_get AssetURL
+asset_params_get AssetMetadataHash
+asset_params_get AssetManager
+asset_params_get AssetReserve
+asset_params_get AssetFreeze
+asset_params_get AssetClawback
+asset_params_get AssetCreator
+

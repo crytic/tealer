@@ -3,6 +3,8 @@ from typing import Optional
 from tealer.teal.instructions import instructions
 from tealer.teal.instructions.parse_global_field import parse_global_field
 from tealer.teal.instructions.parse_transaction_field import parse_transaction_field
+from tealer.teal.instructions.parse_asset_holding_field import parse_asset_holding_field
+from tealer.teal.instructions.parse_asset_params_field import parse_asset_params_field
 
 
 def handle_gtnx(x: str) -> instructions.Gtxn:
@@ -89,8 +91,8 @@ parser_rules = [
     ("app_opted_in", lambda x: instructions.AppOptedIn()),
     ("balance", lambda x: instructions.Balance()),
     ("min_balance", lambda x: instructions.MinBalance()),
-    ("asset_holding_get", lambda x: instructions.AssetHoldingGet()),
-    ("asset_params_get", lambda x: instructions.AssetParamsGet()),
+    ("asset_holding_get ", lambda x: instructions.AssetHoldingGet(parse_asset_holding_field(x))),
+    ("asset_params_get ", lambda x: instructions.AssetParamsGet(parse_asset_params_field(x))),
     ("%", lambda x: instructions.Modulo()),
     ("!=", lambda x: instructions.Neq()),
     ("!", lambda x: instructions.Not()),

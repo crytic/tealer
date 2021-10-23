@@ -2,6 +2,8 @@ from typing import Union, List, TYPE_CHECKING, Optional
 
 from tealer.teal.global_field import GlobalField
 from tealer.teal.instructions.transaction_field import TransactionField
+from tealer.teal.instructions.asset_holding_field import AssetHoldingField
+from tealer.teal.instructions.asset_params_field import AssetParamsField
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -521,13 +523,29 @@ class AppLocalDel(Instruction):
 
 
 class AssetHoldingGet(Instruction):
+    def __init__(self, field: AssetHoldingField):
+        super().__init__()
+        self._field: AssetHoldingField = field
+
+    @property
+    def field(self) -> AssetHoldingField:
+        return self._field
+
     def __str__(self):
-        return "asset_holding_get"
+        return f"asset_holding_get {self._field}"
 
 
 class AssetParamsGet(Instruction):
+    def __init__(self, field: AssetParamsField):
+        super().__init__()
+        self._field: AssetParamsField = field
+
+    @property
+    def field(self) -> AssetParamsField:
+        return self._field
+
     def __str__(self):
-        return "asset_params_get"
+        return f"asset_params_get {self._field}"
 
 
 class AppOptedIn(Instruction):
