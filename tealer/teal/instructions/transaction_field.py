@@ -297,3 +297,33 @@ class LocalNumUint(TransactionField):
 class LocalNumByteSlice(TransactionField):
     def __str__(self):
         return "LocalNumByteSlice"
+
+
+class ExtraProgramPages(TransactionField):
+    def __str__(self):
+        return "ExtraProgramPages"
+
+
+class Nonparticipation(TransactionField):
+    def __str__(self):
+        return "Nonparticipation"
+
+
+class Logs(TransactionField):
+    def __str__(self):
+        return "Logs"
+
+
+class NumLogs(TransactionField):
+    def __str__(self):
+        return "NumLogs"
+
+
+class CreatedAssetID(TransactionField):
+    def __str__(self):
+        return "CreatedAssetID"
+
+
+class CreatedApplicationID(TransactionField):
+    def __str__(self):
+        return "CreatedApplicationID"

@@ -53,6 +53,12 @@ TX_FIELD_TXT_TO_OBJECT = {
     "GlobalNumByteSlice": transaction_field.GlobalNumByteSlice,
     "LocalNumUint": transaction_field.LocalNumUint,
     "LocalNumByteSlice": transaction_field.LocalNumByteSlice,
+    "ExtraProgramPages": transaction_field.ExtraProgramPages,
+    "Nonparticipation": transaction_field.Nonparticipation,
+    "Logs": transaction_field.Logs,
+    "NumLogs": transaction_field.NumLogs,
+    "CreatedAssetID": transaction_field.CreatedAssetID,
+    "CreatedApplicationID": transaction_field.CreatedApplicationID,
 }
 
 
