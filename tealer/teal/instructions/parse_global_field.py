@@ -10,6 +10,8 @@ from tealer.teal.global_field import (
     LatestTimestamp,
     CurrentApplicationID,
     CreatorAddress,
+    CurrentApplicationAddress,
+    GroupID
 )
 
 GLOBAL_FIELD_TXT_TO_OBJECT = {
@@ -23,6 +25,8 @@ GLOBAL_FIELD_TXT_TO_OBJECT = {
     "LatestTimestamp": LatestTimestamp,
     "CurrentApplicationID": CurrentApplicationID,
     "CreatorAddress": CreatorAddress,
+    "CurrentApplicationAddress": CurrentApplicationAddress,
+    "GroupID" : GroupID
 }
 
 

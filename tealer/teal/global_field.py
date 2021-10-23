@@ -51,3 +51,13 @@ class CurrentApplicationID(GlobalField):
 class CreatorAddress(GlobalField):
     def __str__(self):
         return "CreatorAddress"
+
+
+class CurrentApplicationAddress(GlobalField):
+    def __str__(self):
+        return "CurrentApplicationAddress"
+
+
+class GroupID(GlobalField):
+    def __str__(self):
+        return "GroupID"
