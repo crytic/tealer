@@ -294,6 +294,33 @@ class Ed25519verify(Instruction):
         return "ed25519verify"
 
 
+class Ecdsa_verify(Instruction):
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+
+    def __str__(self):
+        return f"ecdsa_verify {self._idx}"
+
+
+class Ecdsa_pk_decompress(Instruction):
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+
+    def __str__(self):
+        return f"ecdsa_pk_decompress {self._idx}"
+
+
+class Ecdsa_pk_recover(Instruction):
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+
+    def __str__(self):
+        return f"ecdsa_pk_recover {self._idx}"
+
+
 class Global(Instruction):
     def __init__(self, field: GlobalField):
         super().__init__()
