@@ -240,6 +240,16 @@ class Gaids(Instruction):
         return "gaids"
 
 
+class Loads(Instruction):
+    def __str__(self):
+        return "loads"
+
+
+class Stores(Instruction):
+    def __str__(self):
+        return "stores"
+
+
 class Dig(Instruction):
     def __init__(self, idx: int):
         super().__init__()
@@ -347,6 +357,24 @@ class Dup2(Instruction):
 class Select(Instruction):
     def __str__(self):
         return "select"
+
+
+class Cover(Instruction):
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+
+    def __str__(self):
+        return f"cover {self._idx}"
+
+
+class Uncover(Instruction):
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+
+    def __str__(self):
+        return f"uncover {self._idx}"
 
 
 class Concat(Instruction):
