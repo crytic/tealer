@@ -15,13 +15,13 @@ APP_PARAMS_FIELD_TXT_TO_OBJECT = {
     "AppParamsField": AppParamsField,
     "AppApprovalProgram": AppApprovalProgram,
     "AppClearStateProgram": AppClearStateProgram,
-	"AppGlobalNumUint": AppGlobalNumUint,
-	"AppGlobalNumByteSlice": AppGlobalNumByteSlice,
-	"AppLocalNumUint": AppLocalNumUint,
-	"AppLocalNumByteSlice": AppLocalNumByteSlice,
-	"AppExtraProgramPages": AppExtraProgramPages,
-	"AppCreator": AppCreator,
-	"AppAddress": AppAddress
+    "AppGlobalNumUint": AppGlobalNumUint,
+    "AppGlobalNumByteSlice": AppGlobalNumByteSlice,
+    "AppLocalNumUint": AppLocalNumUint,
+    "AppLocalNumByteSlice": AppLocalNumByteSlice,
+    "AppExtraProgramPages": AppExtraProgramPages,
+    "AppCreator": AppCreator,
+    "AppAddress": AppAddress
 }
 
 def parse_app_params_field(field: str) -> AppParamsField:

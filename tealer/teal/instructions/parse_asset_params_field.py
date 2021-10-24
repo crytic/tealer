@@ -18,15 +18,15 @@ ASSET_PARAMS_FIELD_TXT_TO_OBJECT = {
     "AssetTotal": AssetTotal,
     "AssetDecimals": AssetDecimals,
     "AssetDefaultFrozen": AssetDefaultFrozen,
-	"AssetUnitName": AssetUnitName,
-	"AssetName": AssetName,
-	"AssetURL": AssetURL,
-	"AssetMetadataHash": AssetMetadataHash,
-	"AssetManager": AssetManager,
-	"AssetReserve": AssetReserve,
-	"AssetFreeze": AssetFreeze,
-	"AssetClawback": AssetClawback,
-	"AssetCreator": AssetCreator
+    "AssetUnitName": AssetUnitName,
+    "AssetName": AssetName,
+    "AssetURL": AssetURL,
+    "AssetMetadataHash": AssetMetadataHash,
+    "AssetManager": AssetManager,
+    "AssetReserve": AssetReserve,
+    "AssetFreeze": AssetFreeze,
+    "AssetClawback": AssetClawback,
+    "AssetCreator": AssetCreator
 }
 
 def parse_asset_params_field(field: str) -> AssetParamsField:
