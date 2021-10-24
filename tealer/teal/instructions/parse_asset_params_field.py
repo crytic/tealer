@@ -1,17 +1,17 @@
 from tealer.teal.instructions.asset_params_field import (
-	AssetParamsField,
-	AssetTotal,
-	AssetDecimals,
-	AssetDefaultFrozen,
-	AssetUnitName,
-	AssetName,
-	AssetURL,
-	AssetMetadataHash,
-	AssetManager,
-	AssetReserve,
-	AssetFreeze,
-	AssetClawback,
-	AssetCreator
+    AssetParamsField,
+    AssetTotal,
+    AssetDecimals,
+    AssetDefaultFrozen,
+    AssetUnitName,
+    AssetName,
+    AssetURL,
+    AssetMetadataHash,
+    AssetManager,
+    AssetReserve,
+    AssetFreeze,
+    AssetClawback,
+    AssetCreator,
 )
 
 ASSET_PARAMS_FIELD_TXT_TO_OBJECT = {
@@ -26,8 +26,9 @@ ASSET_PARAMS_FIELD_TXT_TO_OBJECT = {
     "AssetReserve": AssetReserve,
     "AssetFreeze": AssetFreeze,
     "AssetClawback": AssetClawback,
-    "AssetCreator": AssetCreator
+    "AssetCreator": AssetCreator,
 }
+
 
 def parse_asset_params_field(field: str) -> AssetParamsField:
     return ASSET_PARAMS_FIELD_TXT_TO_OBJECT[field]()

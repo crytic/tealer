@@ -789,7 +789,7 @@ class Itxn_begin(Instruction):
 class Itxn_field(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
-        self._field:TransactionField = field
+        self._field: TransactionField = field
 
     @property
     def field(self) -> TransactionField:
@@ -807,7 +807,7 @@ class Itxn_submit(Instruction):
 class Itxn(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
-        self._field:TransactionField = field
+        self._field: TransactionField = field
 
     @property
     def field(self) -> TransactionField:
@@ -820,8 +820,8 @@ class Itxn(Instruction):
 class Itxna(Instruction):
     def __init__(self, field: TransactionField, idx: int):
         super().__init__()
-        self._field:TransactionField = field
-        self._idx:int = idx
+        self._field: TransactionField = field
+        self._idx: int = idx
 
     @property
     def field(self) -> TransactionField:
@@ -838,7 +838,7 @@ class Itxna(Instruction):
 class Txnas(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
-        self._field:TransactionField = field
+        self._field: TransactionField = field
 
     @property
     def field(self) -> TransactionField:
@@ -851,8 +851,8 @@ class Txnas(Instruction):
 class Gtxnas(Instruction):
     def __init__(self, idx: int, field: TransactionField):
         super().__init__()
-        self._idx:int = idx
-        self._field:TransactionField = field
+        self._idx: int = idx
+        self._field: TransactionField = field
 
     @property
     def idx(self) -> int:
@@ -869,7 +869,7 @@ class Gtxnas(Instruction):
 class Gtxnsas(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
-        self._field:TransactionField = field
+        self._field: TransactionField = field
 
     @property
     def field(self) -> TransactionField:

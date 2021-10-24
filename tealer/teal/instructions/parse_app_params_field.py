@@ -1,14 +1,14 @@
 from tealer.teal.instructions.app_params_field import (
-	AppParamsField,
-	AppApprovalProgram,
-	AppClearStateProgram,
-	AppGlobalNumUint,
-	AppGlobalNumByteSlice,
-	AppLocalNumUint,
-	AppLocalNumByteSlice,
-	AppExtraProgramPages,
-	AppCreator,
-	AppAddress
+    AppParamsField,
+    AppApprovalProgram,
+    AppClearStateProgram,
+    AppGlobalNumUint,
+    AppGlobalNumByteSlice,
+    AppLocalNumUint,
+    AppLocalNumByteSlice,
+    AppExtraProgramPages,
+    AppCreator,
+    AppAddress,
 )
 
 APP_PARAMS_FIELD_TXT_TO_OBJECT = {
@@ -21,8 +21,9 @@ APP_PARAMS_FIELD_TXT_TO_OBJECT = {
     "AppLocalNumByteSlice": AppLocalNumByteSlice,
     "AppExtraProgramPages": AppExtraProgramPages,
     "AppCreator": AppCreator,
-    "AppAddress": AppAddress
+    "AppAddress": AppAddress,
 }
+
 
 def parse_app_params_field(field: str) -> AppParamsField:
     return APP_PARAMS_FIELD_TXT_TO_OBJECT[field]()

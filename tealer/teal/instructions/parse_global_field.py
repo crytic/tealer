@@ -11,7 +11,7 @@ from tealer.teal.global_field import (
     CurrentApplicationID,
     CreatorAddress,
     CurrentApplicationAddress,
-    GroupID
+    GroupID,
 )
 
 GLOBAL_FIELD_TXT_TO_OBJECT = {
@@ -26,7 +26,7 @@ GLOBAL_FIELD_TXT_TO_OBJECT = {
     "CurrentApplicationID": CurrentApplicationID,
     "CreatorAddress": CreatorAddress,
     "CurrentApplicationAddress": CurrentApplicationAddress,
-    "GroupID" : GroupID
+    "GroupID": GroupID,
 }
 
 
