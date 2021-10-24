@@ -154,6 +154,7 @@ parser_rules = [
     ("txnas ", lambda x: instructions.Txnas(parse_transaction_field(x, True))),
     ("gtxnas ", lambda x: handle_gtxnas(x)),
     ("gtxnsas ", lambda x: instructions.Gtxnsas(parse_transaction_field(x, True))),
+    ("args", lambda _x: instructions.Args()),
     ("itob", lambda x: instructions.Itob()),
     ("btoi", lambda x: instructions.Btoi()),
     ("byte base64", lambda x: instructions.ByteBase64(x)),

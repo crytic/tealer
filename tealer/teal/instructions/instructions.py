@@ -879,6 +879,11 @@ class Gtxnsas(Instruction):
         return "gtxnsas {self._field}"
 
 
+class Args(Instruction):
+    def __str__(self):
+        return "args"
+
+
 class Mulw(Instruction):
     def __str__(self):
         return "mulw"
