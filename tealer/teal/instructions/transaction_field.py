@@ -142,7 +142,8 @@ class ApplicationArgs(TransactionField):
         self._idx = idx
 
     def __str__(self):
-        return f"ApplicationArgs {self._idx}"
+        s = "" if self._idx < 0 else str(self._idx)
+        return "ApplicationArgs " + s
 
 
 class NumAppArgs(TransactionField):
@@ -155,7 +156,8 @@ class Accounts(TransactionField):
         self._idx = idx
 
     def __str__(self):
-        return f"Accounts {self._idx}"
+        s = "" if self._idx < 0 else str(self._idx)
+        return "Accounts " + s
 
 
 class NumAccounts(TransactionField):
@@ -168,7 +170,8 @@ class Applications(TransactionField):
         self._idx = idx
 
     def __str__(self):
-        return f"Applications {self._idx}"
+        s = "" if self._idx < 0 else str(self._idx)
+        return "Applications " + s
 
 
 class NumApplications(TransactionField):
@@ -181,7 +184,8 @@ class Assets(TransactionField):
         self._idx = idx
 
     def __str__(self):
-        return f"Assets {self._idx}"
+        s = "" if self._idx < 0 else str(self._idx)
+        return "Assets " + s
 
 
 class NumAssets(TransactionField):

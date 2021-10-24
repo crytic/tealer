@@ -835,6 +835,50 @@ class Itxna(Instruction):
         return f"itxna {self._field} {self._idx}"
 
 
+class Txnas(Instruction):
+    def __init__(self, field: TransactionField):
+        super().__init__()
+        self._field:TransactionField = field
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self):
+        return f"txnas {self._field}"
+
+
+class Gtxnas(Instruction):
+    def __init__(self, idx: int, field: TransactionField):
+        super().__init__()
+        self._idx:int = idx
+        self._field:TransactionField = field
+
+    @property
+    def idx(self) -> int:
+        return self._idx
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self):
+        return "Gtxnas {self._idx} {self._field}"
+
+
+class Gtxnsas(Instruction):
+    def __init__(self, field: TransactionField):
+        super().__init__()
+        self._field:TransactionField = field
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self):
+        return "gtxnsas {self._field}"
+
+
 class Mulw(Instruction):
     def __str__(self):
         return "mulw"

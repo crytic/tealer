@@ -11,22 +11,29 @@ from tealer.teal.instructions.parse_app_params_field import parse_app_params_fie
 def handle_gtnx(x: str) -> instructions.Gtxn:
     split = x.split(" ")
     idx = int(split[0])
-    tx_field = parse_transaction_field(" ".join(split[1:]))
+    tx_field = parse_transaction_field(" ".join(split[1:]), False)
     return instructions.Gtxn(idx, tx_field)
 
 
 def handle_gtnxa(x: str) -> instructions.Gtxna:
     split = x.split(" ")
     idx = int(split[0])
-    tx_field = parse_transaction_field(" ".join(split[1:]))
+    tx_field = parse_transaction_field(" ".join(split[1:]), False)
     return instructions.Gtxna(idx, tx_field)
 
 
 def handle_itxna(x: str) -> instructions.Itxna:
     args = x.split(" ")
-    tx_field = parse_transaction_field(args[0])
+    tx_field = parse_transaction_field(args[0], False)
     idx = int(args[1])
     return instructions.Itxna(tx_field, idx)
+
+
+def handle_gtxnas(x: str) -> instructions.Gtxnas:
+    args = x.split(" ")
+    idx = int(args[0])
+    tx_field = parse_transaction_field(args[1], True)
+    return instructions.Gtxnas(idx, tx_field)
 
 
 def handle_extract(x: str) -> instructions.Extract:
@@ -44,12 +51,12 @@ parser_rules = [
     ("assert", lambda _x: instructions.Assert()),
     ("int ", lambda x: instructions.Int(x)),
     ("pushint ", lambda x: instructions.PushInt(x)),
-    ("txn ", lambda x: instructions.Txn(parse_transaction_field(x))),
-    ("txna ", lambda x: instructions.Txna(parse_transaction_field(x))),
+    ("txn ", lambda x: instructions.Txn(parse_transaction_field(x, False))),
+    ("txna ", lambda x: instructions.Txna(parse_transaction_field(x, False))),
     ("gtxn ", lambda x: handle_gtnx(x)),
     ("gtxna ", lambda x: handle_gtnxa(x)),
-    ("gtxns ", lambda x: instructions.Gtxns(parse_transaction_field(x))),
-    ("gtxnsa ", lambda x: instructions.Gtxnsa(parse_transaction_field(x))),
+    ("gtxns ", lambda x: instructions.Gtxns(parse_transaction_field(x, False))),
+    ("gtxnsa ", lambda x: instructions.Gtxnsa(parse_transaction_field(x, False))),
     ("load ", lambda x: instructions.Load(int(x))),
     ("store ", lambda x: instructions.Store(int(x))),
     ("gload ", lambda x: instructions.Gload(int(x.split(" ")[0]), int(x.split(" ")[1]))),
@@ -140,10 +147,13 @@ parser_rules = [
     ("bzero", lambda x: instructions.BZero()),
     ("log", lambda _x: instructions.Log()),
     ("itxn_begin", lambda _x: instructions.Itxn_begin()),
-    ("itxn_field ", lambda x: instructions.Itxn_field(parse_transaction_field(x))),
+    ("itxn_field ", lambda x: instructions.Itxn_field(parse_transaction_field(x, False))),
     ("itxn_submit", lambda _x: instructions.Itxn_submit()),
-    ("itxn ", lambda x: instructions.Itxn(parse_transaction_field(x))),
+    ("itxn ", lambda x: instructions.Itxn(parse_transaction_field(x, False))),
     ("itxna ", lambda x: handle_itxna(x)),
+    ("txnas ", lambda x: instructions.Txnas(parse_transaction_field(x, True))),
+    ("gtxnas ", lambda x: handle_gtxnas(x)),
+    ("gtxnsas ", lambda x: instructions.Gtxnsas(parse_transaction_field(x, True))),
     ("itob", lambda x: instructions.Itob()),
     ("btoi", lambda x: instructions.Btoi()),
     ("byte base64", lambda x: instructions.ByteBase64(x)),
