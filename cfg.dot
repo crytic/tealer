@@ -1,0 +1,45 @@
+digraph g{
+ ranksep = 1 
+ overlap = scale 
+4496135696[label=<<TABLE ALIGN="LEFT">
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="1">1. #pragma version 5</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="3">3. itxn_begin</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="4">4. int axfer</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="5">5. itxn_field TypeEnum</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="7">7. int 0</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="8">8. itxn_field AssetAmount</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="10">10. txna Assets 0</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="11">11. itxn_field XferAsset</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="13">13. global CurrentApplicationAddress</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="14">14. itxn_field AssetReceiver</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="15">15. itxn_submit</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="17">17. itxn_begin</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="18">18. int acfg</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="19">19. itxn_field TypeEnum</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="20">20. txn ApplicationArgs 1</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="21">21. btoi</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="22">22. itxn_field ConfigAssetTotal</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="23">23. int 0</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="24">24. itxn_field ConfigAssetDecimals</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="25">25. byte &quot;x&quot;</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="26">26. itxn_field ConfigAssetUnitName</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="27">27. byte &quot;X&quot;</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="28">28. itxn_field ConfigAssetName</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="29">29. global CurrentApplicationAddress</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="30">30. itxn_field ConfigAssetFreeze</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="31">31. itxn_submit</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="33">33. itxn_begin</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="34">34. int afrz</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="35">35. itxn_field TypeEnum</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="37">37. txna Assets 0</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="38">38. itxn_field FreezeAsset</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="40">40. txn ApplicationArgs 1</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="41">41. btoi</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="42">42. itxn_field FreezeAssetFrozen</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="44">44. txn Sender</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="45">45. itxn_field FreezeAssetAccount</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="47">47. itxn_submit</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="49">49. int 1</TD></TR>
+<TR><TD TOOLTIP="no comment for this line" HREF="bogus" ALIGN="LEFT" PORT="50">50. return</TD></TR>
+</TABLE>> labelloc=top shape=plain
+ xlabel=0]}

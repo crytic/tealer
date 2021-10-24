@@ -5,7 +5,7 @@ setup(
     description="Teal analyzer.",
     url="https://github.com/crytic/tealer",
     author="Trail of Bits",
-    version="0.0.2",
+    version="0.0.3",
     packages=find_packages(),
     python_requires=">=3.6",
     install_requires=[

@@ -8,14 +8,14 @@ from tealer.teal.instructions.parse_asset_params_field import parse_asset_params
 from tealer.teal.instructions.parse_app_params_field import parse_app_params_field
 
 
-def handle_gtnx(x: str) -> instructions.Gtxn:
+def handle_gtxn(x: str) -> instructions.Gtxn:
     split = x.split(" ")
     idx = int(split[0])
     tx_field = parse_transaction_field(" ".join(split[1:]), False)
     return instructions.Gtxn(idx, tx_field)
 
 
-def handle_gtnxa(x: str) -> instructions.Gtxna:
+def handle_gtxna(x: str) -> instructions.Gtxna:
     split = x.split(" ")
     idx = int(split[0])
     tx_field = parse_transaction_field(" ".join(split[1:]), False)
@@ -38,7 +38,6 @@ def handle_gtxnas(x: str) -> instructions.Gtxnas:
 
 def handle_extract(x: str) -> instructions.Extract:
     args = x.split(" ")
-    print(args)
     start = int(args[0])
     length = int(args[1])
     return instructions.Extract(start, length)
@@ -53,8 +52,8 @@ parser_rules = [
     ("pushint ", lambda x: instructions.PushInt(x)),
     ("txn ", lambda x: instructions.Txn(parse_transaction_field(x, False))),
     ("txna ", lambda x: instructions.Txna(parse_transaction_field(x, False))),
-    ("gtxn ", lambda x: handle_gtnx(x)),
-    ("gtxna ", lambda x: handle_gtnxa(x)),
+    ("gtxn ", lambda x: handle_gtxn(x)),
+    ("gtxna ", lambda x: handle_gtxna(x)),
     ("gtxns ", lambda x: instructions.Gtxns(parse_transaction_field(x, False))),
     ("gtxnsa ", lambda x: instructions.Gtxnsa(parse_transaction_field(x, False))),
     ("load ", lambda x: instructions.Load(int(x))),
