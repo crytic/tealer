@@ -776,6 +776,65 @@ class BZero(Instruction):
         return "bzero"
 
 
+class Log(Instruction):
+    def __str__(self):
+        return "log"
+
+
+class Itxn_begin(Instruction):
+    def __str__(self):
+        return "itxn_begin"
+
+
+class Itxn_field(Instruction):
+    def __init__(self, field: TransactionField):
+        super().__init__()
+        self._field:TransactionField = field
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self):
+        return f"itxn_field {self._field}"
+
+
+class Itxn_submit(Instruction):
+    def __str__(self):
+        return "itxn_submit"
+
+
+class Itxn(Instruction):
+    def __init__(self, field: TransactionField):
+        super().__init__()
+        self._field:TransactionField = field
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self):
+        return f"itxn {self._field}"
+
+
+class Itxna(Instruction):
+    def __init__(self, field: TransactionField, idx: int):
+        super().__init__()
+        self._field:TransactionField = field
+        self._idx:int = idx
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    @property
+    def idx(self) -> int:
+        return self._idx
+
+    def __str__(self):
+        return f"itxna {self._field} {self._idx}"
+
+
 class Mulw(Instruction):
     def __str__(self):
         return "mulw"

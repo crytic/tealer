@@ -21,6 +21,14 @@ def handle_gtnxa(x: str) -> instructions.Gtxna:
     tx_field = parse_transaction_field(" ".join(split[1:]))
     return instructions.Gtxna(idx, tx_field)
 
+
+def handle_itxna(x: str) -> instructions.Itxna:
+    args = x.split(" ")
+    tx_field = parse_transaction_field(args[0])
+    idx = int(args[1])
+    return instructions.Itxna(tx_field, idx)
+
+
 def handle_extract(x: str) -> instructions.Extract:
     args = x.split(" ")
     print(args)
@@ -130,6 +138,12 @@ parser_rules = [
     ("b^", lambda x: instructions.BBitwiseXor()),
     ("b~", lambda x: instructions.BBitwiseInvert()),
     ("bzero", lambda x: instructions.BZero()),
+    ("log", lambda _x: instructions.Log()),
+    ("itxn_begin", lambda _x: instructions.Itxn_begin()),
+    ("itxn_field ", lambda x: instructions.Itxn_field(parse_transaction_field(x))),
+    ("itxn_submit", lambda _x: instructions.Itxn_submit()),
+    ("itxn ", lambda x: instructions.Itxn(parse_transaction_field(x))),
+    ("itxna ", lambda x: handle_itxna(x)),
     ("itob", lambda x: instructions.Itob()),
     ("btoi", lambda x: instructions.Btoi()),
     ("byte base64", lambda x: instructions.ByteBase64(x)),
