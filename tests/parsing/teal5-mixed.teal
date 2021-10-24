@@ -1,0 +1,50 @@
+#pragma version 5
+
+txn Sender
+txna ApplicationArgs 0
+gtxn 0 Sender
+gtxna 0 ApplicationArgs 0
+global MinTxnFee
+arg 0
+load 0
+store 0
+gload 0 0
+gloads 0
+gaid 0
+dig 0
+cover 0
+uncover 0
+substring 0 2
+asset_params_get AssetTotal
+asset_holding_get AssetBalance
+gtxns Sender
+gtxnsa ApplicationArgs 0
+pushint 7272
+pushbytes "jojogoodgorilla"
+app_params_get AppGlobalNumUint
+extract 0 2
+txnas ApplicationArgs
+gtxnas 0 ApplicationArgs
+pop
+pop
+int 0
+int 0
+gtxnsas ApplicationArgs
+args
+itxn_begin
+int pay
+itxn_field TypeEnum
+itxn_submit
+itxn CreatedAssetID
+ed25519verify
+ecdsa_verify
+ecdsa_pk_recover
+ecdsa_pk_decompress
+global CurrentApplicationID
+pop
+byte 0x01
+byte "ZC9KNzlnWTlKZ1pwSkNzQXVzYjNBcG1xTU9YbkRNWUtIQXNKYVk2RzRBdExPakQx"
+addr DROUIZXGT3WFJR3QYVZWTR5OJJXJCMOLS7G4FUGZDSJM5PNOVOREH6HIZE
+ed25519verify
+pop
+int 1

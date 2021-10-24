@@ -863,7 +863,7 @@ class Gtxnas(Instruction):
         return self._field
 
     def __str__(self):
-        return "Gtxnas {self._idx} {self._field}"
+        return f"Gtxnas {self._idx} {self._field}"
 
 
 class Gtxnsas(Instruction):
@@ -876,7 +876,7 @@ class Gtxnsas(Instruction):
         return self._field
 
     def __str__(self):
-        return "gtxnsas {self._field}"
+        return f"gtxnsas {self._field}"
 
 
 class Args(Instruction):
