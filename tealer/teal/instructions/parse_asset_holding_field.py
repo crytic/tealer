@@ -11,4 +11,3 @@ ASSET_HOLDING_FIELD_TXT_TO_OBJECT = {
 
 def parse_asset_holding_field(field: str) -> AssetHoldingField:
     return ASSET_HOLDING_FIELD_TXT_TO_OBJECT[field]()
-

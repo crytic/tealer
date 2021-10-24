@@ -61,4 +61,3 @@ class AssetClawback(AssetParamsField):
 class AssetCreator(AssetParamsField):
     def __str__(self):
         return "AssetCreator"
-

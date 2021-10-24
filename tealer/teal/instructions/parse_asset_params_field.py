@@ -31,5 +31,3 @@ ASSET_PARAMS_FIELD_TXT_TO_OBJECT = {
 
 def parse_asset_params_field(field: str) -> AssetParamsField:
     return ASSET_PARAMS_FIELD_TXT_TO_OBJECT[field]()
-
-
