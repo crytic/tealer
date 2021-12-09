@@ -36,6 +36,10 @@ class CanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
         current_path: List[BasicBlock],
         paths_without_check: List[List[BasicBlock]],
     ):
+        # check for loops
+        if bb in current_path:
+            return
+
         current_path = current_path + [bb]
 
         # prev_was_oncompletion = False

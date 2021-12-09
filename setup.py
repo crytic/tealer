@@ -11,6 +11,7 @@ setup(
     install_requires=[
         "prettytable>=0.7.2",
     ],
+    extras_require={"dev": ["pytest", "flake8", "black", "mypy"]},
     license="AGPL-3.0",
     long_description=open("README.md").read(),
     entry_points={"console_scripts": ["tealer = tealer.__main__:main"]},

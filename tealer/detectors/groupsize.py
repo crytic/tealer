@@ -36,8 +36,11 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
         # use_gtnx: bool,
         all_results: List[Result],
     ):
-        current_path = current_path + [bb]
+        # check for loops
+        if bb in current_path:
+            return
 
+        current_path = current_path + [bb]
         for ins in bb.instructions:
 
             if isinstance(ins, Global):
@@ -67,7 +70,7 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
         all_results_txt: List[str] = []
         for res in all_results:
             description = "Lack of groupSize check found\n"
-            description += "\tFix the paths in {res.filename}\n"
+            description += f"\tFix the paths in {res.filename}\n"
             description += (
                 "\tOr ensure it is used with stateless contracts that check for GroupSize\n"
             )
