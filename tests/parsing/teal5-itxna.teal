@@ -1,7 +1,6 @@
 #pragma version 5
 
-itxnas Accounts
-int 0
-itxnas ApplicationArgs
+itxna AssetAmount 1
+itxna AssetAmount 1
 ==
 

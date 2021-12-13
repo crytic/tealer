@@ -4,5 +4,5 @@ sha512_256
 byte "dummy1"
 byte "dummy2"
 byte "dummy3"
-ecdsa_pk_decompress Secp256k1
-ecdsa_verify Secp256k1
+ecdsa_pk_decompress 1
+ecdsa_verify 1

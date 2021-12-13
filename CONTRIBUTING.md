@@ -29,5 +29,5 @@ To run them locally in the root dir of the repository:
 - `pylint tealer --rcfile pyproject.toml`
 - `black tealer --config pyproject.toml`
 
-We use pylint `2.8.2` black `20.8b1`.
+We use pylint `2.8.2` black `21.10b0`.
 

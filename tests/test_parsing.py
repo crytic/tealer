@@ -17,6 +17,14 @@ TARGETS = [
     "tests/parsing/teal4-test5.teal",
     "tests/parsing/teal4-random-opcodes.teal",
     "tests/parsing/comments.teal",
+    "tests/parsing/asset_holding_get.teal",
+    "tests/parsing/asset_params_get.teal",
+    "tests/parsing/teal5-app_params_get.teal",
+    "tests/parsing/teal5-ecdsa.teal",
+    "tests/parsing/teal5-extract.teal",
+    "tests/parsing/teal5-itxn.teal",
+    "tests/parsing/teal5-itxna.teal",
+    "tests/parsing/teal5-mixed.teal",
 ]
 
 

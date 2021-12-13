@@ -4,12 +4,12 @@ from tealer.teal.instructions.instructions import Instruction
 
 
 class BasicBlock:
-    def __init__(self):
+    def __init__(self) -> None:
         self._instructions: List[Instruction] = []
         self._prev: List[BasicBlock] = []
         self._next: List[BasicBlock] = []
 
-    def add_instruction(self, instruction: Instruction):
+    def add_instruction(self, instruction: Instruction) -> None:
         self._instructions.append(instruction)
 
     @property
@@ -24,10 +24,10 @@ class BasicBlock:
     def exit_instr(self) -> Instruction:
         return self._instructions[-1]
 
-    def add_prev(self, p):
+    def add_prev(self, p: "BasicBlock") -> None:
         self._prev.append(p)
 
-    def add_next(self, n):
+    def add_next(self, n: "BasicBlock") -> None:
         self._next.append(n)
 
     @property
@@ -38,7 +38,7 @@ class BasicBlock:
     def next(self) -> List["BasicBlock"]:
         return self._next
 
-    def __str__(self):
+    def __str__(self) -> str:
         ret = ""
         for ins in self._instructions:
             ret += f"{ins.line}: {ins}\n"

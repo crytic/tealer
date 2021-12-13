@@ -15,11 +15,11 @@ class Result:
         self.bbs = bbs
         self.paths = [path_initial]
 
-    def add_path(self, path: List[BasicBlock]):
+    def add_path(self, path: List[BasicBlock]) -> None:
         self.paths.append(path)
 
     @property
-    def all_bbs_in_paths(self):
+    def all_bbs_in_paths(self) -> List[BasicBlock]:
         return [p for sublist in self.paths for p in sublist]
 
 
@@ -36,7 +36,7 @@ class MissingRekeyTo(AbstractDetector):
         idx_fitlered: Set[int],
         current_path: List[BasicBlock],
         all_results: Dict[str, Result],
-    ):
+    ) -> None:
         current_path = current_path + [bb]
 
         group_tx = copy(group_tx)
@@ -69,7 +69,7 @@ class MissingRekeyTo(AbstractDetector):
         for next_bb in bb.next:
             self.check_rekey_to(next_bb, group_tx, idx_fitlered, current_path, all_results)
 
-    def detect(self):
+    def detect(self) -> List[str]:
 
         all_results: Dict[str, Result] = dict()
         self.check_rekey_to(self.teal.bbs[0], defaultdict(set), set(), [], all_results)

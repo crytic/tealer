@@ -7,11 +7,14 @@ gtxna 0 ApplicationArgs 0
 global MinTxnFee
 arg 0
 load 0
+loads
 store 0
+stores
 gload 0 0
 gloads 0
 gaid 0
 dig 0
+log
 cover 0
 uncover 0
 substring 0 2
@@ -37,9 +40,9 @@ itxn_field TypeEnum
 itxn_submit
 itxn CreatedAssetID
 ed25519verify
-ecdsa_verify
-ecdsa_pk_recover
-ecdsa_pk_decompress
+ecdsa_verify 1
+ecdsa_pk_recover 1
+ecdsa_pk_decompress 1
 global CurrentApplicationID
 pop
 byte 0x01

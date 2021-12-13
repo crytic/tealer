@@ -15,7 +15,7 @@ class Result:  # pylint: disable=too-few-public-methods
         self.idx = idx
 
     @property
-    def all_bbs_in_paths(self):
+    def all_bbs_in_paths(self) -> List[BasicBlock]:
         return [p for sublist in self.paths for p in sublist]
 
 
@@ -35,7 +35,7 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
         current_path: List[BasicBlock],
         # use_gtnx: bool,
         all_results: List[Result],
-    ):
+    ) -> None:
         current_path = current_path + [bb]
 
         for ins in bb.instructions:
@@ -58,7 +58,7 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
         for next_bb in bb.next:
             self._check_groupsize(next_bb, current_path, all_results)
 
-    def detect(self):
+    def detect(self) -> List[str]:
 
         all_results: List[Result] = []
 

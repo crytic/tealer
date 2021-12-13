@@ -1,11 +1,12 @@
-from typing import Optional
+from typing import Optional, Callable, Tuple, List
 
 from tealer.teal.instructions import instructions
-from tealer.teal.instructions.parse_global_field import parse_global_field
-from tealer.teal.instructions.parse_transaction_field import parse_transaction_field
+from tealer.teal.instructions.instructions import Instruction
+from tealer.teal.instructions.parse_app_params_field import parse_app_params_field
 from tealer.teal.instructions.parse_asset_holding_field import parse_asset_holding_field
 from tealer.teal.instructions.parse_asset_params_field import parse_asset_params_field
-from tealer.teal.instructions.parse_app_params_field import parse_app_params_field
+from tealer.teal.instructions.parse_global_field import parse_global_field
+from tealer.teal.instructions.parse_transaction_field import parse_transaction_field
 
 
 def handle_gtxn(x: str) -> instructions.Gtxn:
@@ -44,8 +45,8 @@ def handle_extract(x: str) -> instructions.Extract:
 
 
 # Order in the parser_rules is important
-parser_rules = [
-    ("#pragma version ", lambda x: instructions.Pragma(x)),
+parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
+    ("#pragma version ", lambda x: instructions.Pragma(int(x))),
     ("err", lambda _x: instructions.Err()),
     ("assert", lambda _x: instructions.Assert()),
     ("int ", lambda x: instructions.Int(x)),
@@ -79,9 +80,9 @@ parser_rules = [
     ("sha512_256", lambda _x: instructions.Sha512_256()),
     ("keccak256", lambda _x: instructions.Keccak256()),
     ("ed25519verify", lambda _x: instructions.Ed25519verify()),
-    ("ecdsa_verify", lambda x: instructions.Ecdsa_verify(x)),
-    ("ecdsa_pk_decompress", lambda x: instructions.Ecdsa_pk_decompress(x)),
-    ("ecdsa_pk_recover", lambda x: instructions.Ecdsa_pk_recover(x)),
+    ("ecdsa_verify", lambda x: instructions.Ecdsa_verify(int(x))),
+    ("ecdsa_pk_decompress", lambda x: instructions.Ecdsa_pk_decompress(int(x))),
+    ("ecdsa_pk_recover", lambda x: instructions.Ecdsa_pk_recover(int(x))),
     ("global ", lambda x: instructions.Global(parse_global_field(x))),
     ("dup2", lambda _x: instructions.Dup2()),
     ("dup", lambda _x: instructions.Dup()),
@@ -187,7 +188,7 @@ parser_rules = [
     ("arg_3", lambda x: instructions.Arg3()),
     ("len", lambda x: instructions.Len()),
     ("bytecblock", lambda x: instructions.Bytecblock()),
-    ("substring ", lambda x: instructions.Substring(x.split(" ")[0], x.split(" ")[1])),
+    ("substring ", lambda x: instructions.Substring(int(x.split(" ")[0]), int(x.split(" ")[1]))),
     ("substring3", lambda x: instructions.Substring3()),
 ]
 
@@ -202,6 +203,7 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
         line = line[:comment_start].strip()
     if ":" in line:
         return instructions.Label(line[0 : line.find(":")])
+    f: Callable[[str], Instruction]
     for key, f in parser_rules:
         if line.startswith(key):
             ins = f(line[len(key) :].strip())
