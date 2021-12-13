@@ -60,13 +60,10 @@ class CanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
                 paths_without_check.append(current_path)
                 return
 
-            if isinstance(ins, BNZ) and prev_was_equal:
-                skip_false = True
-
-            if isinstance(ins, BZ) and prev_was_equal:
-                skip_true = True
-
+            skip_false = isinstance(ins, BNZ) and prev_was_equal
+            skip_true = isinstance(ins, BZ) and prev_was_equal
             prev_was_equal = False
+
             if isinstance(ins, Eq) and len(stack) >= 2:
                 one = stack[-1]
                 two = stack[-2]

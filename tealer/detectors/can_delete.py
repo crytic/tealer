@@ -36,7 +36,6 @@ class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
         current_path: List[BasicBlock],
         paths_without_check: List[List[BasicBlock]],
     ):
-        # check for loops
         if bb in current_path:
             return
 
@@ -60,11 +59,9 @@ class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
                 paths_without_check.append(current_path)
                 return
 
-            if isinstance(ins, BNZ) and prev_was_equal:
-                skip_false = True
+            skip_false = isinstance(ins, BNZ) and prev_was_equal
 
-            if isinstance(ins, BZ) and prev_was_equal:
-                skip_true = True
+            skip_true = isinstance(ins, BZ) and prev_was_equal
 
             prev_was_equal = False
             if isinstance(ins, Eq) and len(stack) >= 2:
