@@ -37,6 +37,10 @@ class MissingRekeyTo(AbstractDetector):
         current_path: List[BasicBlock],
         all_results: Dict[str, Result],
     ) -> None:
+        # check for loops
+        if bb in current_path:
+            return
+
         current_path = current_path + [bb]
 
         group_tx = copy(group_tx)
