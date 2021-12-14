@@ -28,7 +28,7 @@ TARGETS = [
 ]
 
 
-@pytest.mark.parametrize("target", TARGETS)
+@pytest.mark.parametrize("target", TARGETS)  # type: ignore
 def test_parsing(target: str) -> None:
     with open(target) as f:
         teal = parse_teal(f.read())
