@@ -8,13 +8,13 @@ from tealer.teal.instructions.instructions import Return, Int, Txn, Eq, BNZ
 from tealer.teal.instructions.transaction_field import OnCompletion
 
 
-def _is_update(ins1: Instruction, ins2: Instruction):
+def _is_update(ins1: Instruction, ins2: Instruction) -> bool:
     if isinstance(ins1, Int) and ins1.value == "UpdateApplication":
         return isinstance(ins2, Txn) and isinstance(ins2.field, OnCompletion)
     return False
 
 
-def _is_oncompletion_check(ins1: Instruction, ins2: Instruction):
+def _is_oncompletion_check(ins1: Instruction, ins2: Instruction) -> bool:
     if isinstance(ins1, Txn) and isinstance(ins1.field, OnCompletion):
         return isinstance(ins2, Int) and ins2.value in [
             "DeleteApplication",
@@ -35,7 +35,7 @@ class CanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
         bb: BasicBlock,
         current_path: List[BasicBlock],
         paths_without_check: List[List[BasicBlock]],
-    ):
+    ) -> None:
         # check for loops
         if bb in current_path:
             return
@@ -83,7 +83,7 @@ class CanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
         for next_bb in bb.next:
             self._check_delete(next_bb, current_path, paths_without_check)
 
-    def detect(self):
+    def detect(self) -> List[str]:
 
         paths_without_check: List[List[BasicBlock]] = []
         self._check_delete(self.teal.bbs[0], [], paths_without_check)

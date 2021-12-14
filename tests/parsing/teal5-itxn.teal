@@ -1,0 +1,51 @@
+#pragma version 5
+
+itxn_begin
+int axfer
+itxn_field TypeEnum
+
+int 0
+itxn_field AssetAmount
+
+txna Assets 0
+itxn_field XferAsset
+
+global CurrentApplicationAddress
+itxn_field AssetReceiver
+itxn_submit
+
+itxn_begin
+int acfg
+itxn_field TypeEnum
+txn ApplicationArgs 1
+btoi
+itxn_field ConfigAssetTotal
+int 0
+itxn_field ConfigAssetDecimals
+byte "x"
+itxn_field ConfigAssetUnitName
+byte "X"
+itxn_field ConfigAssetName
+global CurrentApplicationAddress
+itxn_field ConfigAssetFreeze
+itxn_submit
+
+itxn_begin
+int afrz
+itxn_field TypeEnum
+
+txna Assets 0
+itxn_field FreezeAsset
+
+txn ApplicationArgs 1
+btoi
+itxn_field FreezeAssetFrozen
+
+txn Sender
+itxn_field FreezeAssetAccount
+
+itxn_submit
+
+int 1
+return
+

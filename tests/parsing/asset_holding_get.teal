@@ -1,0 +1,9 @@
+#pragma version 2
+
+// Check balance
+asset_holding_get AssetBalance
+pop
+
+// Check Frozenness
+asset_holding_get AssetFrozen
+pop

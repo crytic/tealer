@@ -12,7 +12,7 @@ class Teal:
         self._bbs = bbs
 
     @staticmethod
-    def render_instruction(i: Instruction):
+    def render_instruction(i: Instruction) -> str:
         ins_str = html.escape(str(i), quote=True)
         comment_str = "no comment for this line" if i.comment == "" else i.comment
         comment_str = html.escape(comment_str, quote=True)
@@ -22,7 +22,7 @@ class Teal:
         return f"<TR>{cell_i}</TR>\n"
 
     @staticmethod
-    def render_bb(idx: int, bb: BasicBlock):
+    def render_bb(idx: int, bb: BasicBlock) -> str:
         table_prefix = '<<TABLE ALIGN="LEFT">\n'
         table_suffix = "</TABLE>> labelloc=top shape=plain\n"
         table_rows = ""
@@ -36,7 +36,7 @@ class Teal:
         table = table_prefix + table_rows + table_suffix
         return f"{id(bb)}[label={table} xlabel={idx}]" + graph_edges
 
-    def render_cfg(self, filename: Path):
+    def render_cfg(self, filename: Path) -> None:
         dot_output = "digraph g{\n ranksep = 1 \n overlap = scale \n"
 
         for idx, bb in enumerate(self._bbs):
@@ -47,7 +47,7 @@ class Teal:
         with open(filename, "w") as f:
             f.write(dot_output)
 
-    def instructions_to_dot(self, filename: Path):
+    def instructions_to_dot(self, filename: Path) -> None:
         dot_output = "digraph g{\n"
 
         for ins in self._instructions:
@@ -63,7 +63,7 @@ class Teal:
         with open(filename, "w") as f:
             f.write(dot_output)
 
-    def bbs_to_dot(self, filename: Path, highlited: Optional[List[BasicBlock]] = None):
+    def bbs_to_dot(self, filename: Path, highlited: Optional[List[BasicBlock]] = None) -> None:
         dot_output = "digraph g{\n"
 
         for bb in self._bbs:

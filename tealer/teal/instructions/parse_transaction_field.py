@@ -53,17 +53,27 @@ TX_FIELD_TXT_TO_OBJECT = {
     "GlobalNumByteSlice": transaction_field.GlobalNumByteSlice,
     "LocalNumUint": transaction_field.LocalNumUint,
     "LocalNumByteSlice": transaction_field.LocalNumByteSlice,
+    "ExtraProgramPages": transaction_field.ExtraProgramPages,
+    "Nonparticipation": transaction_field.Nonparticipation,
+    "Logs": transaction_field.Logs,
+    "NumLogs": transaction_field.NumLogs,
+    "CreatedAssetID": transaction_field.CreatedAssetID,
+    "CreatedApplicationID": transaction_field.CreatedApplicationID,
 }
 
 
-def parse_transaction_field(tx_field: str) -> transaction_field.TransactionField:
-    if tx_field.startswith("Accounts "):
-        return transaction_field.Accounts(int(tx_field[len("Accounts ") :]))
-    if tx_field.startswith("ApplicationArgs "):
-        return transaction_field.ApplicationArgs(int(tx_field[len("ApplicationArgs ") :]))
-    if tx_field.startswith("Applications "):
-        return transaction_field.Applications(int(tx_field[len("Applications ") :]))
-    if tx_field.startswith("Assets "):
-        return transaction_field.Assets(int(tx_field[len("Assets ") :]))
+def parse_transaction_field(tx_field: str, use_stack: bool) -> transaction_field.TransactionField:
+    if tx_field.startswith("Accounts"):
+        return transaction_field.Accounts(-1 if use_stack else int(tx_field[len("Accounts ") :]))
+    if tx_field.startswith("ApplicationArgs"):
+        return transaction_field.ApplicationArgs(
+            -1 if use_stack else int(tx_field[len("ApplicationArgs ") :])
+        )
+    if tx_field.startswith("Applications"):
+        return transaction_field.Applications(
+            -1 if use_stack else int(tx_field[len("Applications ") :])
+        )
+    if tx_field.startswith("Assets"):
+        return transaction_field.Assets(-1 if use_stack else int(tx_field[len("Assets ") :]))
     tx_field = tx_field.replace(" ", "")
     return TX_FIELD_TXT_TO_OBJECT[tx_field]()

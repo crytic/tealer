@@ -17,11 +17,19 @@ TARGETS = [
     "tests/parsing/teal4-test5.teal",
     "tests/parsing/teal4-random-opcodes.teal",
     "tests/parsing/comments.teal",
+    "tests/parsing/asset_holding_get.teal",
+    "tests/parsing/asset_params_get.teal",
+    "tests/parsing/teal5-app_params_get.teal",
+    "tests/parsing/teal5-ecdsa.teal",
+    "tests/parsing/teal5-extract.teal",
+    "tests/parsing/teal5-itxn.teal",
+    "tests/parsing/teal5-itxna.teal",
+    "tests/parsing/teal5-mixed.teal",
 ]
 
 
-@pytest.mark.parametrize("target", TARGETS)
-def test_parsing(target: str):
+@pytest.mark.parametrize("target", TARGETS)  # type: ignore
+def test_parsing(target: str) -> None:
     with open(target) as f:
         teal = parse_teal(f.read())
     # print instruction to trigger __str__ on each ins

@@ -1,4 +1,5 @@
 import abc
+from typing import List
 
 from tealer.teal.teal import Teal
 from tealer.utils.comparable_enum import ComparableEnum
@@ -48,6 +49,6 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
             )
 
     @abc.abstractmethod
-    def detect(self):
+    def detect(self) -> List[str]:
         """TODO Documentation"""
         return []

@@ -1,0 +1,6 @@
+# Build products
+# --------------
+
+build/
+dist/
+tealer.egg-info/

@@ -1,57 +1,94 @@
-from typing import Optional
+from typing import Optional, Callable, Tuple, List
 
 from tealer.teal.instructions import instructions
+from tealer.teal.instructions.instructions import Instruction
+from tealer.teal.instructions.parse_app_params_field import parse_app_params_field
+from tealer.teal.instructions.parse_asset_holding_field import parse_asset_holding_field
+from tealer.teal.instructions.parse_asset_params_field import parse_asset_params_field
 from tealer.teal.instructions.parse_global_field import parse_global_field
 from tealer.teal.instructions.parse_transaction_field import parse_transaction_field
 
 
-def handle_gtnx(x: str) -> instructions.Gtxn:
+def handle_gtxn(x: str) -> instructions.Gtxn:
     split = x.split(" ")
     idx = int(split[0])
-    tx_field = parse_transaction_field(" ".join(split[1:]))
+    tx_field = parse_transaction_field(" ".join(split[1:]), False)
     return instructions.Gtxn(idx, tx_field)
 
 
-def handle_gtnxa(x: str) -> instructions.Gtxna:
+def handle_gtxna(x: str) -> instructions.Gtxna:
     split = x.split(" ")
     idx = int(split[0])
-    tx_field = parse_transaction_field(" ".join(split[1:]))
+    tx_field = parse_transaction_field(" ".join(split[1:]), False)
     return instructions.Gtxna(idx, tx_field)
 
 
+def handle_itxna(x: str) -> instructions.Itxna:
+    args = x.split(" ")
+    tx_field = parse_transaction_field(args[0], False)
+    idx = int(args[1])
+    return instructions.Itxna(tx_field, idx)
+
+
+def handle_gtxnas(x: str) -> instructions.Gtxnas:
+    args = x.split(" ")
+    idx = int(args[0])
+    tx_field = parse_transaction_field(args[1], True)
+    return instructions.Gtxnas(idx, tx_field)
+
+
+def handle_extract(x: str) -> instructions.Extract:
+    args = x.split(" ")
+    start = int(args[0])
+    length = int(args[1])
+    return instructions.Extract(start, length)
+
+
 # Order in the parser_rules is important
-parser_rules = [
-    ("#pragma version ", lambda x: instructions.Pragma(x)),
+parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
+    ("#pragma version ", lambda x: instructions.Pragma(int(x))),
     ("err", lambda _x: instructions.Err()),
     ("assert", lambda _x: instructions.Assert()),
     ("int ", lambda x: instructions.Int(x)),
     ("pushint ", lambda x: instructions.PushInt(x)),
-    ("txn ", lambda x: instructions.Txn(parse_transaction_field(x))),
-    ("txna ", lambda x: instructions.Txna(parse_transaction_field(x))),
-    ("gtxn ", lambda x: handle_gtnx(x)),
-    ("gtxna ", lambda x: handle_gtnxa(x)),
-    ("gtxns ", lambda x: instructions.Gtxns(parse_transaction_field(x))),
-    ("gtxnsa ", lambda x: instructions.Gtxnsa(parse_transaction_field(x))),
+    ("txn ", lambda x: instructions.Txn(parse_transaction_field(x, False))),
+    ("txna ", lambda x: instructions.Txna(parse_transaction_field(x, False))),
+    ("gtxn ", lambda x: handle_gtxn(x)),
+    ("gtxna ", lambda x: handle_gtxna(x)),
+    ("gtxns ", lambda x: instructions.Gtxns(parse_transaction_field(x, False))),
+    ("gtxnsa ", lambda x: instructions.Gtxnsa(parse_transaction_field(x, False))),
     ("load ", lambda x: instructions.Load(int(x))),
     ("store ", lambda x: instructions.Store(int(x))),
     ("gload ", lambda x: instructions.Gload(int(x.split(" ")[0]), int(x.split(" ")[1]))),
     ("gloads ", lambda x: instructions.Gloads(int(x))),
     ("gaid ", lambda x: instructions.Gaid(int(x))),
     ("gaids", lambda x: instructions.Gaids()),
+    ("loads", lambda _x: instructions.Loads()),
+    ("stores", lambda _x: instructions.Stores()),
     ("dig ", lambda x: instructions.Dig(int(x))),
     ("swap", lambda _x: instructions.Swap()),
     ("getbit", lambda _x: instructions.GetBit()),
     ("setbit", lambda _x: instructions.SetBit()),
     ("getbyte", lambda _x: instructions.GetByte()),
     ("setbyte", lambda _x: instructions.SetByte()),
+    ("extract ", lambda x: handle_extract(x)),
+    ("extract3", lambda _x: instructions.Extract3()),
+    ("extract_uint16", lambda _x: instructions.Extract_uint16()),
+    ("extract_uint32", lambda _x: instructions.Extract_uint32()),
+    ("extract_uint64", lambda _x: instructions.Extract_uint64()),
     ("sha256", lambda _x: instructions.Sha256()),
     ("sha512_256", lambda _x: instructions.Sha512_256()),
     ("keccak256", lambda _x: instructions.Keccak256()),
     ("ed25519verify", lambda _x: instructions.Ed25519verify()),
+    ("ecdsa_verify", lambda x: instructions.Ecdsa_verify(int(x))),
+    ("ecdsa_pk_decompress", lambda x: instructions.Ecdsa_pk_decompress(int(x))),
+    ("ecdsa_pk_recover", lambda x: instructions.Ecdsa_pk_recover(int(x))),
     ("global ", lambda x: instructions.Global(parse_global_field(x))),
     ("dup2", lambda _x: instructions.Dup2()),
     ("dup", lambda _x: instructions.Dup()),
     ("select", lambda _x: instructions.Select()),
+    ("cover", lambda x: instructions.Cover(int(x))),
+    ("uncover", lambda x: instructions.Uncover(int(x))),
     ("concat", lambda _x: instructions.Concat()),
     ("b ", lambda x: instructions.B(x)),
     ("bz ", lambda x: instructions.BZ(x)),
@@ -70,8 +107,9 @@ parser_rules = [
     ("app_opted_in", lambda x: instructions.AppOptedIn()),
     ("balance", lambda x: instructions.Balance()),
     ("min_balance", lambda x: instructions.MinBalance()),
-    ("asset_holding_get", lambda x: instructions.AssetHoldingGet()),
-    ("asset_params_get", lambda x: instructions.AssetParamsGet()),
+    ("asset_holding_get ", lambda x: instructions.AssetHoldingGet(parse_asset_holding_field(x))),
+    ("asset_params_get ", lambda x: instructions.AssetParamsGet(parse_asset_params_field(x))),
+    ("app_params_get ", lambda x: instructions.AppParamsGet(parse_app_params_field(x))),
     ("%", lambda x: instructions.Modulo()),
     ("!=", lambda x: instructions.Neq()),
     ("!", lambda x: instructions.Not()),
@@ -107,6 +145,16 @@ parser_rules = [
     ("b^", lambda x: instructions.BBitwiseXor()),
     ("b~", lambda x: instructions.BBitwiseInvert()),
     ("bzero", lambda x: instructions.BZero()),
+    ("log", lambda _x: instructions.Log()),
+    ("itxn_begin", lambda _x: instructions.Itxn_begin()),
+    ("itxn_field ", lambda x: instructions.Itxn_field(parse_transaction_field(x, False))),
+    ("itxn_submit", lambda _x: instructions.Itxn_submit()),
+    ("itxn ", lambda x: instructions.Itxn(parse_transaction_field(x, False))),
+    ("itxna ", lambda x: handle_itxna(x)),
+    ("txnas ", lambda x: instructions.Txnas(parse_transaction_field(x, True))),
+    ("gtxnas ", lambda x: handle_gtxnas(x)),
+    ("gtxnsas ", lambda x: instructions.Gtxnsas(parse_transaction_field(x, True))),
+    ("args", lambda _x: instructions.Args()),
     ("itob", lambda x: instructions.Itob()),
     ("btoi", lambda x: instructions.Btoi()),
     ("byte base64", lambda x: instructions.ByteBase64(x)),
@@ -140,7 +188,7 @@ parser_rules = [
     ("arg_3", lambda x: instructions.Arg3()),
     ("len", lambda x: instructions.Len()),
     ("bytecblock", lambda x: instructions.Bytecblock()),
-    ("substring ", lambda x: instructions.Substring(x.split(" ")[0], x.split(" ")[1])),
+    ("substring ", lambda x: instructions.Substring(int(x.split(" ")[0]), int(x.split(" ")[1]))),
     ("substring3", lambda x: instructions.Substring3()),
 ]
 
@@ -155,6 +203,7 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
         line = line[:comment_start].strip()
     if ":" in line:
         return instructions.Label(line[0 : line.find(":")])
+    f: Callable[[str], Instruction]
     for key, f in parser_rules:
         if line.startswith(key):
             ins = f(line[len(key) :].strip())

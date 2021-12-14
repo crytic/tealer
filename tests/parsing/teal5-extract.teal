@@ -1,0 +1,35 @@
+#pragma version 5
+
+byte 0x123456789abcaa
+extract 0 6
+byte 0x123456789abcaa
+!=
+
+byte 0x123456789abc
+int 5
+int 1
+extract3
+byte 0xbc
+==
+
+byte 0x123456789abcdef0
+int 1
+extract_uint16
+int 0x3456
+==
+byte 0x123456789abcdef0
+int 1
+extract_uint32
+int 0x3456789a
+==
+byte 0x123456789abcdef0
+int 0
+extract_uint64
+int 0x123456789abcdef0
+==
+byte 0x123456789abcdef0
+int 0
+extract_uint64
+int 0x123456789abcdef
+!=
+

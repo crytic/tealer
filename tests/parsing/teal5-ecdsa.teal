@@ -1,0 +1,8 @@
+#pragma version 5
+byte "testdata"
+sha512_256
+byte "dummy1"
+byte "dummy2"
+byte "dummy3"
+ecdsa_pk_decompress 1
+ecdsa_verify 1
