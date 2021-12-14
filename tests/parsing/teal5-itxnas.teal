@@ -1,7 +1,0 @@
-#pragma version 5
-
-txnas Accounts
-int 0
-txnas ApplicationArgs
-==
-

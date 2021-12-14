@@ -8,5 +8,5 @@ class AbstractPrinter(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public-
         self.teal = teal
 
     @abc.abstractmethod
-    def print(self):
+    def print(self) -> None:
         """TODO Documentation"""
