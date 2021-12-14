@@ -57,6 +57,9 @@ class Instruction:
     def bb(self, b: "BasicBlock") -> None:
         self._bb = b
 
+    def __str__(self) -> str:
+        return self.__class__.__qualname__.lower()
+
 
 class Pragma(Instruction):
     def __init__(self, version: int):
@@ -68,13 +71,11 @@ class Pragma(Instruction):
 
 
 class Err(Instruction):
-    def __str__(self) -> str:
-        return "err"
+    pass
 
 
 class Assert(Instruction):
-    def __str__(self) -> str:
-        return "assert"
+    pass
 
 
 class Int(Instruction):
@@ -240,18 +241,15 @@ class Gaid(Instruction):
 
 
 class Gaids(Instruction):
-    def __str__(self) -> str:
-        return "gaids"
+    pass
 
 
 class Loads(Instruction):
-    def __str__(self) -> str:
-        return "loads"
+    pass
 
 
 class Stores(Instruction):
-    def __str__(self) -> str:
-        return "stores"
+    pass
 
 
 class Dig(Instruction):
@@ -264,28 +262,23 @@ class Dig(Instruction):
 
 
 class Swap(Instruction):
-    def __str__(self) -> str:
-        return "swap"
+    pass
 
 
 class GetBit(Instruction):
-    def __str__(self) -> str:
-        return "getbit"
+    pass
 
 
 class SetBit(Instruction):
-    def __str__(self) -> str:
-        return "setbit"
+    pass
 
 
 class GetByte(Instruction):
-    def __str__(self) -> str:
-        return "getbyte"
+    pass
 
 
 class SetByte(Instruction):
-    def __str__(self) -> str:
-        return "setbyte"
+    pass
 
 
 class Extract(Instruction):
@@ -307,43 +300,35 @@ class Extract(Instruction):
 
 
 class Extract3(Instruction):
-    def __str__(self) -> str:
-        return "extract3"
+    pass
 
 
 class Extract_uint16(Instruction):
-    def __str__(self) -> str:
-        return "extract_uint16"
+    pass
 
 
 class Extract_uint32(Instruction):
-    def __str__(self) -> str:
-        return "extract_uint32"
+    pass
 
 
 class Extract_uint64(Instruction):
-    def __str__(self) -> str:
-        return "extract_uint64"
+    pass
 
 
 class Sha256(Instruction):
-    def __str__(self) -> str:
-        return "sha256"
+    pass
 
 
 class Sha512_256(Instruction):
-    def __str__(self) -> str:
-        return "sha512_256"
+    pass
 
 
 class Keccak256(Instruction):
-    def __str__(self) -> str:
-        return "keccak256"
+    pass
 
 
 class Ed25519verify(Instruction):
-    def __str__(self) -> str:
-        return "ed25519verify"
+    pass
 
 
 class Ecdsa_verify(Instruction):
@@ -387,18 +372,15 @@ class Global(Instruction):
 
 
 class Dup(Instruction):
-    def __str__(self) -> str:
-        return "dup"
+    pass
 
 
 class Dup2(Instruction):
-    def __str__(self) -> str:
-        return "dup2"
+    pass
 
 
 class Select(Instruction):
-    def __str__(self) -> str:
-        return "select"
+    pass
 
 
 class Cover(Instruction):
@@ -420,8 +402,7 @@ class Uncover(Instruction):
 
 
 class Concat(Instruction):
-    def __str__(self) -> str:
-        return "concat"
+    pass
 
 
 class InstructionWithLabel(Instruction):
@@ -461,8 +442,7 @@ class Callsub(InstructionWithLabel):
 
 
 class Return(Instruction):
-    def __str__(self) -> str:
-        return "return"
+    pass
 
 
 class Retsub(Instruction):
@@ -479,9 +459,6 @@ class Retsub(Instruction):
     @property
     def labels(self) -> List[Label]:
         return self._labels
-
-    def __str__(self) -> str:
-        return "retsub"
 
 
 class AppGlobalGet(Instruction):
@@ -569,8 +546,7 @@ class AppOptedIn(Instruction):
 
 
 class Balance(Instruction):
-    def __str__(self) -> str:
-        return "balance"
+    pass
 
 
 class MinBalance(Instruction):
@@ -579,13 +555,11 @@ class MinBalance(Instruction):
 
 
 class Itob(Instruction):
-    def __str__(self) -> str:
-        return "itob"
+    pass
 
 
 class Btoi(Instruction):
-    def __str__(self) -> str:
-        return "btoi"
+    pass
 
 
 class Addr(Instruction):
@@ -598,8 +572,7 @@ class Addr(Instruction):
 
 
 class Pop(Instruction):
-    def __str__(self) -> str:
-        return "pop"
+    pass
 
 
 class Not(Instruction):
@@ -693,8 +666,7 @@ class BitwiseInvert(Instruction):
 
 
 class BitLen(Instruction):
-    def __str__(self) -> str:
-        return "bitlen"
+    pass
 
 
 class BModulo(Instruction):
@@ -773,18 +745,15 @@ class BBitwiseInvert(Instruction):
 
 
 class BZero(Instruction):
-    def __str__(self) -> str:
-        return "bzero"
+    pass
 
 
 class Log(Instruction):
-    def __str__(self) -> str:
-        return "log"
+    pass
 
 
 class Itxn_begin(Instruction):
-    def __str__(self) -> str:
-        return "itxn_begin"
+    pass
 
 
 class Itxn_field(Instruction):
@@ -801,8 +770,7 @@ class Itxn_field(Instruction):
 
 
 class Itxn_submit(Instruction):
-    def __str__(self) -> str:
-        return "itxn_submit"
+    pass
 
 
 class Itxn(Instruction):
@@ -881,48 +849,39 @@ class Gtxnsas(Instruction):
 
 
 class Args(Instruction):
-    def __str__(self) -> str:
-        return "args"
+    pass
 
 
 class Mulw(Instruction):
-    def __str__(self) -> str:
-        return "mulw"
+    pass
 
 
 class Addw(Instruction):
-    def __str__(self) -> str:
-        return "addw"
+    pass
 
 
 class Divmodw(Instruction):
-    def __str__(self) -> str:
-        return "divmodw"
+    pass
 
 
 class Exp(Instruction):
-    def __str__(self) -> str:
-        return "exp"
+    pass
 
 
 class Expw(Instruction):
-    def __str__(self) -> str:
-        return "expw"
+    pass
 
 
 class Shl(Instruction):
-    def __str__(self) -> str:
-        return "shl"
+    pass
 
 
 class Shr(Instruction):
-    def __str__(self) -> str:
-        return "shr"
+    pass
 
 
 class Sqrt(Instruction):
-    def __str__(self) -> str:
-        return "sqrt"
+    pass
 
 
 class Intcblock(Instruction):
@@ -1045,8 +1004,7 @@ class PushBytes(Instruction):
 
 
 class Len(Instruction):
-    def __str__(self) -> str:
-        return "len"
+    pass
 
 
 class Bytecblock(Instruction):
@@ -1065,5 +1023,4 @@ class Substring(Instruction):
 
 
 class Substring3(Instruction):
-    def __str__(self) -> str:
-        return "substring3"
+    pass

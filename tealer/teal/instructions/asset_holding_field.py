@@ -1,13 +1,12 @@
 # pylint: disable=too-few-public-methods
 class AssetHoldingField:
-    pass
+    def __str__(self) -> str:
+        return self.__class__.__qualname__
 
 
 class AssetBalance(AssetHoldingField):
-    def __str__(self) -> str:
-        return "AssetBalance"
+    pass
 
 
 class AssetFrozen(AssetHoldingField):
-    def __str__(self) -> str:
-        return "AssetFrozen"
+    pass

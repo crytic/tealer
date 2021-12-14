@@ -1,63 +1,52 @@
 # pylint: disable=too-few-public-methods
 class GlobalField:
-    pass
+    def __str__(self) -> str:
+        return self.__class__.__qualname__
 
 
 class GroupSize(GlobalField):
-    def __str__(self) -> str:
-        return "GroupSize"
+    pass
 
 
 class MinTxnFee(GlobalField):
-    def __str__(self) -> str:
-        return "MinTxnFee"
+    pass
 
 
 class ZeroAddress(GlobalField):
-    def __str__(self) -> str:
-        return "ZeroAddress"
+    pass
 
 
 class MinBalance(GlobalField):
-    def __str__(self) -> str:
-        return "MinBalance"
+    pass
 
 
 class MaxTxnLife(GlobalField):
-    def __str__(self) -> str:
-        return "MaxTxnLife"
+    pass
 
 
 class LogicSigVersion(GlobalField):
-    def __str__(self) -> str:
-        return "LogicSigVersion"
+    pass
 
 
 class Round(GlobalField):
-    def __str__(self) -> str:
-        return "Round"
+    pass
 
 
 class LatestTimestamp(GlobalField):
-    def __str__(self) -> str:
-        return "LatestTimestamp"
+    pass
 
 
 class CurrentApplicationID(GlobalField):
-    def __str__(self) -> str:
-        return "CurrentApplicationID"
+    pass
 
 
 class CreatorAddress(GlobalField):
-    def __str__(self) -> str:
-        return "CreatorAddress"
+    pass
 
 
 class CurrentApplicationAddress(GlobalField):
-    def __str__(self) -> str:
-        return "CurrentApplicationAddress"
+    pass
 
 
 class GroupID(GlobalField):
-    def __str__(self) -> str:
-        return "GroupID"
+    pass
