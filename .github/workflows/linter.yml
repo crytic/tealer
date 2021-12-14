@@ -35,6 +35,7 @@ jobs:
           mkdir -p .github/linters
           cp pyproject.toml .github/linters
           cp mypy.ini .github/linters
+          pip install pytest
       - name: Pylint
         uses: docker://github/super-linter:v3
         if: always()

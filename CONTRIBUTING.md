@@ -30,5 +30,5 @@ To run them locally in the root dir of the repository:
 - `black tealer --config pyproject.toml`
 - `mypy tealer --config mypy.ini`
 
-We use pylint `2.8.2` black `21.10b0` and mypy `0.812`.
+We use pylint `2.8.2` black `21.10b0` and mypy `0.910`.
 
