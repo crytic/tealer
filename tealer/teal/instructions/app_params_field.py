@@ -1,48 +1,40 @@
 # pylint: disable=too-few-public-methods
 class AppParamsField:
-    pass
+    def __str__(self) -> str:
+        return self.__class__.__qualname__
 
 
 class AppApprovalProgram(AppParamsField):
-    def __str__(self) -> str:
-        return "AppApprovalProgram"
+    pass
 
 
 class AppClearStateProgram(AppParamsField):
-    def __str__(self) -> str:
-        return "AppClearStateProgram"
+    pass
 
 
 class AppGlobalNumUint(AppParamsField):
-    def __str__(self) -> str:
-        return "AppGlobalNumUint"
+    pass
 
 
 class AppGlobalNumByteSlice(AppParamsField):
-    def __str__(self) -> str:
-        return "AppGlobalNumByteSlice"
+    pass
 
 
 class AppLocalNumUint(AppParamsField):
-    def __str__(self) -> str:
-        return "AppLocalNumUint"
+    pass
 
 
 class AppLocalNumByteSlice(AppParamsField):
-    def __str__(self) -> str:
-        return "AppLocalNumByteSlice"
+    pass
 
 
 class AppExtraProgramPages(AppParamsField):
-    def __str__(self) -> str:
-        return "AppExtraProgramPages"
+    pass
 
 
 class AppCreator(AppParamsField):
-    def __str__(self) -> str:
-        return "AppCreator"
+    pass
 
 
 class AppAddress(AppParamsField):
-    def __str__(self) -> str:
-        return "AppAddress"
+    pass

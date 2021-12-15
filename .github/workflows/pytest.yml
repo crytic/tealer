@@ -33,6 +33,11 @@ jobs:
         python setup.py install
         pip install pytest
         pip install pytest-cov
-    - name: Run Tests
+
+    - name: Run Parsing tests
       run: |
         pytest tests/test_parsing.py --cov=tealer/teal/instructions --cov-branch  --cov-fail-under=96
+
+    - name: Run string tests
+      run: |
+        pytest tests/test_string_representation.py

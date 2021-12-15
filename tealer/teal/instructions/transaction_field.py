@@ -4,137 +4,112 @@
 
 
 class TransactionField:
-    pass
+    def __str__(self) -> str:
+        return self.__class__.__qualname__
 
 
 class Sender(TransactionField):
-    def __str__(self) -> str:
-        return "Sender"
+    pass
 
 
 class Fee(TransactionField):
-    def __str__(self) -> str:
-        return "Fee"
+    pass
 
 
 class FirstValid(TransactionField):
-    def __str__(self) -> str:
-        return "FirstValid"
+    pass
 
 
 class FirstValidTime(TransactionField):
-    def __str__(self) -> str:
-        return "FirstValidTime"
+    pass
 
 
 class LastValid(TransactionField):
-    def __str__(self) -> str:
-        return "LastValid"
+    pass
 
 
 class Note(TransactionField):
-    def __str__(self) -> str:
-        return "Note"
+    pass
 
 
 class Lease(TransactionField):
-    def __str__(self) -> str:
-        return "Lease"
+    pass
 
 
 class Receiver(TransactionField):
-    def __str__(self) -> str:
-        return "Receiver"
+    pass
 
 
 class Amount(TransactionField):
-    def __str__(self) -> str:
-        return "Amount"
+    pass
 
 
 class CloseRemainderTo(TransactionField):
-    def __str__(self) -> str:
-        return "CloseRemainderTo"
+    pass
 
 
 class VotePK(TransactionField):
-    def __str__(self) -> str:
-        return "VotePK"
+    pass
 
 
 class SelectionPK(TransactionField):
-    def __str__(self) -> str:
-        return "SelectionPK"
+    pass
 
 
 class VoteFirst(TransactionField):
-    def __str__(self) -> str:
-        return "VoteFirst"
+    pass
 
 
 class VoteLast(TransactionField):
-    def __str__(self) -> str:
-        return "VoteLast"
+    pass
 
 
 class VoteKeyDilution(TransactionField):
-    def __str__(self) -> str:
-        return "VoteKeyDilution"
+    pass
 
 
 class Type(TransactionField):
-    def __str__(self) -> str:
-        return "Type"
+    pass
 
 
 class TypeEnum(TransactionField):
-    def __str__(self) -> str:
-        return "TypeEnum"
+    pass
 
 
 class XferAsset(TransactionField):
-    def __str__(self) -> str:
-        return "XferAsset"
+    pass
 
 
 class AssetAmount(TransactionField):
-    def __str__(self) -> str:
-        return "AssetAmount"
+    pass
 
 
 class AssetSender(TransactionField):
-    def __str__(self) -> str:
-        return "AssetSender"
+    pass
 
 
 class AssetReceiver(TransactionField):
-    def __str__(self) -> str:
-        return "AssetReceiver"
+    pass
 
 
 class AssetCloseTo(TransactionField):
-    def __str__(self) -> str:
-        return "AssetCloseTo"
+    pass
 
 
 class GroupIndex(TransactionField):
-    def __str__(self) -> str:
-        return "GroupIndex"
+    pass
 
 
 class TxID(TransactionField):
-    def __str__(self) -> str:
-        return "TxID"
+    pass
 
 
 class ApplicationID(TransactionField):
-    def __str__(self) -> str:
-        return "ApplicationID"
+    pass
 
 
 class OnCompletion(TransactionField):
-    def __str__(self) -> str:
-        return "OnCompletion"
+    pass
 
 
 class ApplicationArgs(TransactionField):
@@ -147,8 +122,7 @@ class ApplicationArgs(TransactionField):
 
 
 class NumAppArgs(TransactionField):
-    def __str__(self) -> str:
-        return "NumAppArgs"
+    pass
 
 
 class Accounts(TransactionField):
@@ -161,8 +135,7 @@ class Accounts(TransactionField):
 
 
 class NumAccounts(TransactionField):
-    def __str__(self) -> str:
-        return "NumAccounts"
+    pass
 
 
 class Applications(TransactionField):
@@ -175,8 +148,7 @@ class Applications(TransactionField):
 
 
 class NumApplications(TransactionField):
-    def __str__(self) -> str:
-        return "NumApplications"
+    pass
 
 
 class Assets(TransactionField):
@@ -189,145 +161,116 @@ class Assets(TransactionField):
 
 
 class NumAssets(TransactionField):
-    def __str__(self) -> str:
-        return "NumAssets"
+    pass
 
 
 class ApprovalProgram(TransactionField):
-    def __str__(self) -> str:
-        return "ApprovalProgram"
+    pass
 
 
 class ClearStateProgram(TransactionField):
-    def __str__(self) -> str:
-        return "ClearStateProgram"
+    pass
 
 
 class RekeyTo(TransactionField):
-    def __str__(self) -> str:
-        return "RekeyTo"
+    pass
 
 
 class ConfigAsset(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAsset"
+    pass
 
 
 class ConfigAssetTotal(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetTotal"
+    pass
 
 
 class ConfigAssetDecimals(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetDecimals"
+    pass
 
 
 class ConfigAssetDefaultFrozen(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetDefaultFrozen"
+    pass
 
 
 class ConfigAssetUnitName(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetUnitName"
+    pass
 
 
 class ConfigAssetName(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetName"
+    pass
 
 
 class ConfigAssetURL(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetURL"
+    pass
 
 
 class ConfigAssetMetadataHash(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetMetadataHash"
+    pass
 
 
 class ConfigAssetManager(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetManager"
+    pass
 
 
 class ConfigAssetReserve(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetReserve"
+    pass
 
 
 class ConfigAssetFreeze(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetFreeze"
+    pass
 
 
 class ConfigAssetClawback(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetClawback"
+    pass
 
 
 class FreezeAsset(TransactionField):
-    def __str__(self) -> str:
-        return "FreezeAsset"
+    pass
 
 
 class FreezeAssetAccount(TransactionField):
-    def __str__(self) -> str:
-        return "FreezeAssetAccount"
+    pass
 
 
 class FreezeAssetFrozen(TransactionField):
-    def __str__(self) -> str:
-        return "FreezeAssetFrozen"
+    pass
 
 
 class GlobalNumUint(TransactionField):
-    def __str__(self) -> str:
-        return "GlobalNumUint"
+    pass
 
 
 class GlobalNumByteSlice(TransactionField):
-    def __str__(self) -> str:
-        return "GlobalNumByteSlice"
+    pass
 
 
 class LocalNumUint(TransactionField):
-    def __str__(self) -> str:
-        return "LocalNumUint"
+    pass
 
 
 class LocalNumByteSlice(TransactionField):
-    def __str__(self) -> str:
-        return "LocalNumByteSlice"
+    pass
 
 
 class ExtraProgramPages(TransactionField):
-    def __str__(self) -> str:
-        return "ExtraProgramPages"
+    pass
 
 
 class Nonparticipation(TransactionField):
-    def __str__(self) -> str:
-        return "Nonparticipation"
+    pass
 
 
 class Logs(TransactionField):
-    def __str__(self) -> str:
-        return "Logs"
+    pass
 
 
 class NumLogs(TransactionField):
-    def __str__(self) -> str:
-        return "NumLogs"
+    pass
 
 
 class CreatedAssetID(TransactionField):
-    def __str__(self) -> str:
-        return "CreatedAssetID"
+    pass
 
 
 class CreatedApplicationID(TransactionField):
-    def __str__(self) -> str:
-        return "CreatedApplicationID"
+    pass

@@ -1,63 +1,52 @@
 # pylint: disable=too-few-public-methods
 class AssetParamsField:
-    pass
+    def __str__(self) -> str:
+        return self.__class__.__qualname__
 
 
 class AssetTotal(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetTotal"
+    pass
 
 
 class AssetDecimals(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetDecimals"
+    pass
 
 
 class AssetDefaultFrozen(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetDefaultFrozen"
+    pass
 
 
 class AssetUnitName(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetUnitName"
+    pass
 
 
 class AssetName(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetName"
+    pass
 
 
 class AssetURL(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetURL"
+    pass
 
 
 class AssetMetadataHash(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetMetadataHash"
+    pass
 
 
 class AssetManager(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetManager"
+    pass
 
 
 class AssetReserve(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetReserve"
+    pass
 
 
 class AssetFreeze(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetFreeze"
+    pass
 
 
 class AssetClawback(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetClawback"
+    pass
 
 
 class AssetCreator(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetCreator"
+    pass
