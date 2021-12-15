@@ -41,3 +41,7 @@ jobs:
     - name: Run string tests
       run: |
         pytest tests/test_string_representation.py
+
+    - name: Run version tests
+      run: |
+        pytest tests/test_versions.py

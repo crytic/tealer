@@ -6,9 +6,16 @@ from tealer.teal.instructions.transaction_field import TransactionField
 from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
+from tealer.utils.comparable_enum import ComparableEnum
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
+
+
+class ContractType(ComparableEnum):
+    STATELESS = 0
+    STATEFULL = 1
+    ANY = 2
 
 
 class Instruction:
@@ -18,6 +25,8 @@ class Instruction:
         self._line = 0
         self._comment = ""
         self._bb: Optional["BasicBlock"] = None
+        self._version: int = 1
+        self._mode: ContractType = ContractType.ANY
 
     def add_prev(self, p: "Instruction") -> None:
         self._prev.append(p)
@@ -57,6 +66,14 @@ class Instruction:
     def bb(self, b: "BasicBlock") -> None:
         self._bb = b
 
+    @property
+    def version(self) -> int:
+        return self._version
+
+    @property
+    def mode(self) -> ContractType:
+        return self._mode
+
     def __str__(self) -> str:
         return self.__class__.__qualname__.lower()
 
@@ -75,7 +92,9 @@ class Err(Instruction):
 
 
 class Assert(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class Int(Instruction):
@@ -101,6 +120,7 @@ class PushInt(Instruction):
             self._value: Union[int, str] = int(value)
         else:
             self._value = value
+        self._version = 3
 
     @property
     def value(self) -> Union[str, int]:
@@ -127,6 +147,7 @@ class Txna(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
         self._field: TransactionField = field
+        self._version: int = 2
 
     def __str__(self) -> str:
         return f"txna {self._field}"
@@ -155,6 +176,7 @@ class Gtxna(Instruction):
         super().__init__()
         self._idx = idx
         self._field: TransactionField = field
+        self._version: int = 2
 
     @property
     def idx(self) -> int:
@@ -172,6 +194,7 @@ class Gtxns(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
         self._field: TransactionField = field
+        self._version: int = 3
 
     @property
     def field(self) -> TransactionField:
@@ -185,6 +208,7 @@ class Gtxnsa(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
         self._field: TransactionField = field
+        self._version: int = 3
 
     @property
     def field(self) -> TransactionField:
@@ -217,6 +241,8 @@ class Gload(Instruction):
         super().__init__()
         self._idx = idx
         self._slot = slot
+        self._version: int = 4
+        self._mode: ContractType = ContractType.STATEFULL
 
     def __str__(self) -> str:
         return f"gload {self._idx} {self._slot}"
@@ -226,6 +252,8 @@ class Gloads(Instruction):
     def __init__(self, slot: int):
         super().__init__()
         self._slot = slot
+        self._version: int = 4
+        self._mode: ContractType = ContractType.STATEFULL
 
     def __str__(self) -> str:
         return f"gloads {self._slot}"
@@ -235,57 +263,78 @@ class Gaid(Instruction):
     def __init__(self, idx: int):
         super().__init__()
         self._idx = idx
+        self._version: int = 4
+        self._mode: ContractType = ContractType.STATEFULL
 
     def __str__(self) -> str:
         return f"gaid {self._idx}"
 
 
 class Gaids(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+        self._mode: ContractType = ContractType.STATEFULL
 
 
 class Loads(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class Stores(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class Dig(Instruction):
-    def __init__(self, idx: int):
+    def __init__(self, idx: int) -> None:
         super().__init__()
         self._idx = idx
+        self._version: int = 3
 
     def __str__(self) -> str:
         return f"dig {self._idx}"
 
 
 class Swap(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class GetBit(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class SetBit(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class GetByte(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class SetByte(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class Extract(Instruction):
-    def __init__(self, idx: int, idy: int):
+    def __init__(self, idx: int, idy: int) -> None:
         super().__init__()
         self._idx = idx
         self._idy = idy
+        self._version: int = 5
 
     @property
     def idx(self) -> int:
@@ -300,19 +349,27 @@ class Extract(Instruction):
 
 
 class Extract3(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class Extract_uint16(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class Extract_uint32(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class Extract_uint64(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class Sha256(Instruction):
@@ -335,6 +392,7 @@ class Ecdsa_verify(Instruction):
     def __init__(self, idx: str):
         super().__init__()
         self._idx = idx
+        self._version: int = 5
 
     def __str__(self) -> str:
         return f"ecdsa_verify {self._idx}"
@@ -344,6 +402,7 @@ class Ecdsa_pk_decompress(Instruction):
     def __init__(self, idx: str):
         super().__init__()
         self._idx = idx
+        self._version: int = 5
 
     def __str__(self) -> str:
         return f"ecdsa_pk_decompress {self._idx}"
@@ -353,6 +412,7 @@ class Ecdsa_pk_recover(Instruction):
     def __init__(self, idx: str):
         super().__init__()
         self._idx = idx
+        self._version: int = 5
 
     def __str__(self) -> str:
         return f"ecdsa_pk_recover {self._idx}"
@@ -376,17 +436,22 @@ class Dup(Instruction):
 
 
 class Dup2(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class Select(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class Cover(Instruction):
     def __init__(self, idx: int):
         super().__init__()
         self._idx = idx
+        self._version: int = 5
 
     def __str__(self) -> str:
         return f"cover {self._idx}"
@@ -396,13 +461,16 @@ class Uncover(Instruction):
     def __init__(self, idx: int):
         super().__init__()
         self._idx = idx
+        self._version: int = 5
 
     def __str__(self) -> str:
         return f"uncover {self._idx}"
 
 
 class Concat(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class InstructionWithLabel(Instruction):
@@ -417,11 +485,19 @@ class InstructionWithLabel(Instruction):
 
 
 class B(InstructionWithLabel):
+    def __init__(self, label: str):
+        super().__init__(label)
+        self._version: int = 2
+
     def __str__(self) -> str:
         return f"b {self._label}"
 
 
 class BZ(InstructionWithLabel):
+    def __init__(self, label: str):
+        super().__init__(label)
+        self._version: int = 2
+
     def __str__(self) -> str:
         return f"bz {self._label}"
 
@@ -437,18 +513,25 @@ class Label(InstructionWithLabel):
 
 
 class Callsub(InstructionWithLabel):
+    def __init__(self, label: str):
+        super().__init__(label)
+        self._version: int = 4
+
     def __str__(self) -> str:
         return f"callsub {self._label}"
 
 
 class Return(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class Retsub(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._labels: List[Label] = []
+        self._version: int = 4
 
     def add_label(self, p: Label) -> None:
         self._labels.append(p)
@@ -462,41 +545,81 @@ class Retsub(Instruction):
 
 
 class AppGlobalGet(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
+
     def __str__(self) -> str:
         return "app_global_get"
 
 
 class AppGlobalGetEx(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
+
     def __str__(self) -> str:
         return "app_global_get_ex"
 
 
 class AppGlobalPut(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
+
     def __str__(self) -> str:
         return "app_global_put"
 
 
 class AppGlobalDel(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
+
     def __str__(self) -> str:
         return "app_global_del"
 
 
 class AppLocalGetEx(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
+
     def __str__(self) -> str:
         return "app_local_get_ex"
 
 
 class AppLocalGet(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
+
     def __str__(self) -> str:
         return "app_local_get"
 
 
 class AppLocalPut(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
+
     def __str__(self) -> str:
         return "app_local_put"
 
 
 class AppLocalDel(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
+
     def __str__(self) -> str:
         return "app_local_del"
 
@@ -505,6 +628,8 @@ class AssetHoldingGet(Instruction):
     def __init__(self, field: AssetHoldingField):
         super().__init__()
         self._field: AssetHoldingField = field
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
 
     @property
     def field(self) -> AssetHoldingField:
@@ -518,6 +643,8 @@ class AssetParamsGet(Instruction):
     def __init__(self, field: AssetParamsField):
         super().__init__()
         self._field: AssetParamsField = field
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
 
     @property
     def field(self) -> AssetParamsField:
@@ -531,6 +658,8 @@ class AppParamsGet(Instruction):
     def __init__(self, field: AppParamsField):
         super().__init__()
         self._field: AppParamsField = field
+        self._version: int = 5
+        self._mode: ContractType = ContractType.STATEFULL
 
     @property
     def field(self) -> AppParamsField:
@@ -541,15 +670,28 @@ class AppParamsGet(Instruction):
 
 
 class AppOptedIn(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
+
     def __str__(self) -> str:
         return "app_opted_in"
 
 
 class Balance(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
+        self._mode: ContractType = ContractType.STATEFULL
 
 
 class MinBalance(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
+        self._mode: ContractType = ContractType.STATEFULL
+
     def __str__(self) -> str:
         return "min_balance"
 
@@ -666,100 +808,172 @@ class BitwiseInvert(Instruction):
 
 
 class BitLen(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
 
 
 class BModulo(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b%"
 
 
 class BNeq(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b!="
 
 
 class BEq(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b=="
 
 
 class BBitwiseAnd(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b&"
 
 
 class BBitwiseOr(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b|"
 
 
 class BAdd(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b+"
 
 
 class BSubtract(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b-"
 
 
 class BDiv(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b/"
 
 
 class BMul(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b*"
 
 
 class BGreaterE(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b>="
 
 
 class BGreater(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b>"
 
 
 class BLessE(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b<="
 
 
 class BLess(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b<"
 
 
 class BBitwiseXor(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b^"
 
 
 class BBitwiseInvert(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
+
     def __str__(self) -> str:
         return "b~"
 
 
 class BZero(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
 
 
 class Log(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
+        self._mode: ContractType = ContractType.STATEFULL
 
 
 class Itxn_begin(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
+        self._mode: ContractType = ContractType.STATEFULL
 
 
 class Itxn_field(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
         self._field: TransactionField = field
+        self._version: int = 5
+        self._mode: ContractType = ContractType.STATEFULL
 
     @property
     def field(self) -> TransactionField:
@@ -770,13 +984,18 @@ class Itxn_field(Instruction):
 
 
 class Itxn_submit(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
+        self._mode: ContractType = ContractType.STATEFULL
 
 
 class Itxn(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
         self._field: TransactionField = field
+        self._version: int = 5
+        self._mode: ContractType = ContractType.STATEFULL
 
     @property
     def field(self) -> TransactionField:
@@ -790,6 +1009,8 @@ class Itxna(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
         self._field: TransactionField = field
+        self._version: int = 5
+        self._mode: ContractType = ContractType.STATEFULL
 
     @property
     def field(self) -> TransactionField:
@@ -803,6 +1024,7 @@ class Txnas(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
         self._field: TransactionField = field
+        self._version: int = 5
 
     @property
     def field(self) -> TransactionField:
@@ -817,6 +1039,7 @@ class Gtxnas(Instruction):
         super().__init__()
         self._idx: int = idx
         self._field: TransactionField = field
+        self._version: int = 5
 
     @property
     def idx(self) -> int:
@@ -834,6 +1057,7 @@ class Gtxnsas(Instruction):
     def __init__(self, field: TransactionField):
         super().__init__()
         self._field: TransactionField = field
+        self._version: int = 5
 
     @property
     def field(self) -> TransactionField:
@@ -844,7 +1068,10 @@ class Gtxnsas(Instruction):
 
 
 class Args(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
+        self._mode: ContractType = ContractType.STATELESS
 
 
 class Mulw(Instruction):
@@ -852,31 +1079,45 @@ class Mulw(Instruction):
 
 
 class Addw(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class Divmodw(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
 
 
 class Exp(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
 
 
 class Expw(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
 
 
 class Shl(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
 
 
 class Shr(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
 
 
 class Sqrt(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
 
 
 class Intcblock(Instruction):
@@ -946,27 +1187,44 @@ class Arg(Instruction):
     def __init__(self, idx: str):
         super().__init__()
         self._idx = int(idx)
+        self._mode: ContractType = ContractType.STATELESS
 
     def __str__(self) -> str:
         return f"arg {self._idx}"
 
 
 class Arg0(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._mode: ContractType = ContractType.STATELESS
+
     def __str__(self) -> str:
         return "arg_0"
 
 
 class Arg1(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._mode: ContractType = ContractType.STATELESS
+
     def __str__(self) -> str:
         return "arg_1"
 
 
 class Arg2(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._mode: ContractType = ContractType.STATELESS
+
     def __str__(self) -> str:
         return "arg_2"
 
 
 class Arg3(Instruction):
+    def __init__(self) -> None:
+        super().__init__()
+        self._mode: ContractType = ContractType.STATELESS
+
     def __str__(self) -> str:
         return "arg_3"
 
@@ -993,6 +1251,7 @@ class PushBytes(Instruction):
     def __init__(self, bytesb: str):
         super().__init__()
         self._bytes = bytesb
+        self._version: int = 3
 
     def __str__(self) -> str:
         return f"pushbytes {self._bytes}"
@@ -1012,10 +1271,13 @@ class Substring(Instruction):
         super().__init__()
         self._start = int(start)
         self._stop = int(stop)
+        self._version: int = 2
 
     def __str__(self) -> str:
         return f"substring {self._start} {self._stop}"
 
 
 class Substring3(Instruction):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
