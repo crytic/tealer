@@ -1,5 +1,5 @@
-import pytest
 from typing import Any, Dict
+import pytest
 
 from tealer.teal.instructions.parse_app_params_field import APP_PARAMS_FIELD_TXT_TO_OBJECT
 from tealer.teal.instructions.parse_asset_holding_field import ASSET_HOLDING_FIELD_TXT_TO_OBJECT
@@ -39,4 +39,4 @@ ALL_TESTS = [
 @pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
 def test_string_repr(test: Dict[str, Any]) -> None:
     for target, obj in test.items():
-        assert(str(obj()) == target)
+        assert str(obj()) == target
