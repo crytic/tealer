@@ -23,13 +23,6 @@ def handle_gtxna(x: str) -> instructions.Gtxna:
     return instructions.Gtxna(idx, tx_field)
 
 
-def handle_itxna(x: str) -> instructions.Itxna:
-    args = x.split(" ")
-    tx_field = parse_transaction_field(args[0], False)
-    idx = int(args[1])
-    return instructions.Itxna(tx_field, idx)
-
-
 def handle_gtxnas(x: str) -> instructions.Gtxnas:
     args = x.split(" ")
     idx = int(args[0])
@@ -80,9 +73,9 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("sha512_256", lambda _x: instructions.Sha512_256()),
     ("keccak256", lambda _x: instructions.Keccak256()),
     ("ed25519verify", lambda _x: instructions.Ed25519verify()),
-    ("ecdsa_verify", lambda x: instructions.Ecdsa_verify(int(x))),
-    ("ecdsa_pk_decompress", lambda x: instructions.Ecdsa_pk_decompress(int(x))),
-    ("ecdsa_pk_recover", lambda x: instructions.Ecdsa_pk_recover(int(x))),
+    ("ecdsa_verify", lambda x: instructions.Ecdsa_verify(x)),
+    ("ecdsa_pk_decompress", lambda x: instructions.Ecdsa_pk_decompress(x)),
+    ("ecdsa_pk_recover", lambda x: instructions.Ecdsa_pk_recover(x)),
     ("global ", lambda x: instructions.Global(parse_global_field(x))),
     ("dup2", lambda _x: instructions.Dup2()),
     ("dup", lambda _x: instructions.Dup()),
@@ -150,7 +143,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("itxn_field ", lambda x: instructions.Itxn_field(parse_transaction_field(x, False))),
     ("itxn_submit", lambda _x: instructions.Itxn_submit()),
     ("itxn ", lambda x: instructions.Itxn(parse_transaction_field(x, False))),
-    ("itxna ", lambda x: handle_itxna(x)),
+    ("itxna ", lambda x: instructions.Itxna(parse_transaction_field(x, False))),
     ("txnas ", lambda x: instructions.Txnas(parse_transaction_field(x, True))),
     ("gtxnas ", lambda x: handle_gtxnas(x)),
     ("gtxnsas ", lambda x: instructions.Gtxnsas(parse_transaction_field(x, True))),

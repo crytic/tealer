@@ -332,7 +332,7 @@ class Ed25519verify(Instruction):
 
 
 class Ecdsa_verify(Instruction):
-    def __init__(self, idx: int):
+    def __init__(self, idx: str):
         super().__init__()
         self._idx = idx
 
@@ -341,7 +341,7 @@ class Ecdsa_verify(Instruction):
 
 
 class Ecdsa_pk_decompress(Instruction):
-    def __init__(self, idx: int):
+    def __init__(self, idx: str):
         super().__init__()
         self._idx = idx
 
@@ -350,7 +350,7 @@ class Ecdsa_pk_decompress(Instruction):
 
 
 class Ecdsa_pk_recover(Instruction):
-    def __init__(self, idx: int):
+    def __init__(self, idx: str):
         super().__init__()
         self._idx = idx
 
@@ -787,21 +787,16 @@ class Itxn(Instruction):
 
 
 class Itxna(Instruction):
-    def __init__(self, field: TransactionField, idx: int):
+    def __init__(self, field: TransactionField):
         super().__init__()
         self._field: TransactionField = field
-        self._idx: int = idx
 
     @property
     def field(self) -> TransactionField:
         return self._field
 
-    @property
-    def idx(self) -> int:
-        return self._idx
-
     def __str__(self) -> str:
-        return f"itxna {self._field} {self._idx}"
+        return f"itxna {self._field}"
 
 
 class Txnas(Instruction):

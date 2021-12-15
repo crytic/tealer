@@ -261,7 +261,12 @@ class Nonparticipation(TransactionField):
 
 
 class Logs(TransactionField):
-    pass
+    def __init__(self, idx: int):
+        self._idx = idx
+
+    def __str__(self) -> str:
+        s = "" if self._idx < 0 else str(self._idx)
+        return "Logs " + s
 
 
 class NumLogs(TransactionField):
