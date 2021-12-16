@@ -11,6 +11,7 @@ setup(
     install_requires=[
         "prettytable>=0.7.2",
     ],
+    extras_require={"dev": ["pylint==2.8.2", "black==21.10b0", "mypy==0.910"]},
     license="AGPL-3.0",
     long_description=open("README.md").read(),
     entry_points={"console_scripts": ["tealer = tealer.__main__:main"]},
