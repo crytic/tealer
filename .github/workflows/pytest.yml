@@ -45,3 +45,4 @@ jobs:
     - name: Run version tests
       run: |
         pytest tests/test_versions.py
+        pytest tests/test_mode_detector.py

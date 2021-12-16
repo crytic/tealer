@@ -81,10 +81,14 @@ class Instruction:
 class Pragma(Instruction):
     def __init__(self, version: int):
         super().__init__()
-        self._version = version
+        self._program_version = version
 
     def __str__(self) -> str:
-        return f"#pragma version {self._version}"
+        return f"#pragma version {self._program_version}"
+
+    @property
+    def program_version(self) -> int:
+        return self._program_version
 
 
 class Err(Instruction):

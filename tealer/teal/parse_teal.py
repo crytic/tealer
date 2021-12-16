@@ -12,9 +12,18 @@ from tealer.teal.instructions.instructions import (
     Return,
     Callsub,
     Retsub,
+    Pragma,
 )
+from tealer.teal.instructions.instructions import ContractType
 from tealer.teal.instructions.parse_instruction import parse_line
 from tealer.teal.teal import Teal
+
+
+def _detect_contract_type(instructions: List[Instruction]) -> ContractType:
+    for ins in instructions:
+        if ins.mode != ContractType.ANY:
+            return ins.mode
+    return ContractType.ANY
 
 
 def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> None:
@@ -172,4 +181,10 @@ def parse_teal(source_code: str) -> Teal:
 
     _fourth_pass(instructions)
 
-    return Teal(instructions, all_bbs)
+    mode = _detect_contract_type(instructions)
+
+    version = 1
+    if isinstance(instructions[0], Pragma):
+        version = instructions[0].program_version
+
+    return Teal(instructions, all_bbs, version, mode)
