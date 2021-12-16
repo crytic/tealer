@@ -1,12 +1,11 @@
 # pylint: disable=too-few-public-methods
-from typing import Type, cast
 from dataclasses import dataclass
 
 
 class DataclassMeta(type):
-    def __new__(cls, name, bases, classdict): # type: ignore
+    def __new__(cls, name, bases, classdict):  # type: ignore
         new_cls = super().__new__(cls, name, bases, classdict)
-        return cast(DataclassMeta, dataclass(frozen=True)(new_cls))
+        return dataclass(frozen=True)(new_cls)
 
 
 class GlobalField(metaclass=DataclassMeta):
