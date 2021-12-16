@@ -1,11 +1,16 @@
 # pylint: disable=too-few-public-methods
-class GlobalField:
-    def __init__(self) -> None:
-        self._version: int = 1
+from typing import Type, cast
+from dataclasses import dataclass
 
-    @property
-    def version(self) -> int:
-        return self._version
+
+class DataclassMeta(type):
+    def __new__(cls, name, bases, classdict): # type: ignore
+        new_cls = super().__new__(cls, name, bases, classdict)
+        return cast(DataclassMeta, dataclass(frozen=True)(new_cls))
+
+
+class GlobalField(metaclass=DataclassMeta):
+    version: int = 1
 
     def __str__(self) -> str:
         return self.__class__.__qualname__
@@ -32,42 +37,28 @@ class MaxTxnLife(GlobalField):
 
 
 class LogicSigVersion(GlobalField):
-    def __init__(self) -> None:
-        super().__init__()
-        self._version = 2
+    version: int = 2
 
 
 class Round(GlobalField):
-    def __init__(self) -> None:
-        super().__init__()
-        self._version = 2
+    version: int = 2
 
 
 class LatestTimestamp(GlobalField):
-    def __init__(self) -> None:
-        super().__init__()
-        self._version = 2
+    version: int = 2
 
 
 class CurrentApplicationID(GlobalField):
-    def __init__(self) -> None:
-        super().__init__()
-        self._version = 2
+    version: int = 2
 
 
 class CreatorAddress(GlobalField):
-    def __init__(self) -> None:
-        super().__init__()
-        self._version = 3
+    version: int = 3
 
 
 class CurrentApplicationAddress(GlobalField):
-    def __init__(self) -> None:
-        super().__init__()
-        self._version = 5
+    version: int = 5
 
 
 class GroupID(GlobalField):
-    def __init__(self) -> None:
-        super().__init__()
-        self._version = 5
+    version: int = 5

@@ -4,6 +4,7 @@ import pytest
 from tealer.teal.parse_teal import parse_teal
 from tealer.teal.instructions.transaction_field import TransactionField
 from tealer.teal.instructions.instructions import ContractType
+from tealer.teal.global_field import *
 
 
 INSTRUCTIONS_TARGETS = [
@@ -51,3 +52,9 @@ def test_field_version(target: str) -> None:
                 continue
             version = match_obj.groups()[0]
             assert field.version == int(version)
+
+def test_field_version_basic() -> None:
+    caa = CurrentApplicationAddress()
+    assert caa.version == 5
+    ca = CreatorAddress()
+    assert ca.version == 3
