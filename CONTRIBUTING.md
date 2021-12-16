@@ -9,6 +9,17 @@ Bug reports and feature suggestions can be submitted to our issue tracker. For b
 ## Questions
 Questions can be submitted to the issue tracker, but you may get a faster response if you ask in our [chat room](https://empireslacking.herokuapp.com/) (in the #ethereum channel).
 
+## One punch editable developement version
+Do something like this to clone the repository and install all development dependencies in a python virtual environment
+```
+git clone https://github.com/crytic/tealer.git
+cd tealer
+python -m venv venv
+. ./venv/bin/activate
+pip install -e .[dev]
+```
+
+
 ## Code
 Tealer uses the pull request contribution model. Please make an account on Github, fork this repo, and submit code contributions via pull request. For more documentation, look [here](https://guides.github.com/activities/forking/).
 
@@ -30,5 +41,7 @@ To run them locally in the root dir of the repository:
 - `black tealer --config pyproject.toml`
 - `mypy tealer --config mypy.ini`
 
-We use pylint `2.8.2` black `21.10b0` and mypy `0.910`.
+Install the linters with `pip install .[dev]`.
+We use pylint `2.8.2` black `21.10b0` and mypy `0.910`. 
+
 
