@@ -11,7 +11,7 @@ Questions can be submitted to the issue tracker, but you may get a faster respon
 
 ## One punch editable developement version
 Do something like this to clone the repository and install all development dependencies in a python virtual environment
-```
+```bash
 git clone https://github.com/crytic/tealer.git
 cd tealer
 python -m venv venv
@@ -42,6 +42,6 @@ To run them locally in the root dir of the repository:
 - `mypy tealer --config mypy.ini`
 
 Install the linters with `pip install .[dev]`.
-We use pylint `2.8.2` black `21.10b0` and mypy `0.910`. 
+We use pylint `2.8.2` black `21.10b0` and mypy `0.910`.
 
 
