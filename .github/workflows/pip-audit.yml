@@ -23,5 +23,5 @@ jobs:
         python -m pip install pip-audit
     - name: Run pip-audit
       run: |
-        echo "-e ." > audit.txt
-        pip-audit --strict --desc -r audit.txt
+        python -m pip install .
+        pip-audit --desc
