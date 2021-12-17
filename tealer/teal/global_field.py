@@ -1,5 +1,12 @@
 # pylint: disable=too-few-public-methods
 class GlobalField:
+    def __init__(self) -> None:
+        self._version: int = 1
+
+    @property
+    def version(self) -> int:
+        return self._version
+
     def __str__(self) -> str:
         return self.__class__.__qualname__
 
@@ -25,28 +32,42 @@ class MaxTxnLife(GlobalField):
 
 
 class LogicSigVersion(GlobalField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version = 2
 
 
 class Round(GlobalField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version = 2
 
 
 class LatestTimestamp(GlobalField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version = 2
 
 
 class CurrentApplicationID(GlobalField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version = 2
 
 
 class CreatorAddress(GlobalField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version = 3
 
 
 class CurrentApplicationAddress(GlobalField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version = 5
 
 
 class GroupID(GlobalField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version = 5

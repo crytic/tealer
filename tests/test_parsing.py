@@ -25,6 +25,8 @@ TARGETS = [
     "tests/parsing/teal5-itxn.teal",
     "tests/parsing/teal5-itxna.teal",
     "tests/parsing/teal5-mixed.teal",
+    "tests/parsing/teal-instructions-with-versions.teal",
+    "tests/parsing/teal-fields-with-versions.teal",
 ]
 
 

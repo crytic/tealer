@@ -4,6 +4,13 @@
 
 
 class TransactionField:
+    def __init__(self) -> None:
+        self._version: int = 1
+
+    @property
+    def version(self) -> int:
+        return self._version
+
     def __str__(self) -> str:
         return self.__class__.__qualname__
 
@@ -105,16 +112,22 @@ class TxID(TransactionField):
 
 
 class ApplicationID(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class OnCompletion(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ApplicationArgs(TransactionField):
     def __init__(self, idx: int):
+        super().__init__()
         self._idx = idx
+        self._version: int = 2
 
     def __str__(self) -> str:
         s = "" if self._idx < 0 else str(self._idx)
@@ -122,12 +135,16 @@ class ApplicationArgs(TransactionField):
 
 
 class NumAppArgs(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class Accounts(TransactionField):
     def __init__(self, idx: int):
+        super().__init__()
         self._idx = idx
+        self._version: int = 2
 
     def __str__(self) -> str:
         s = "" if self._idx < 0 else str(self._idx)
@@ -135,12 +152,16 @@ class Accounts(TransactionField):
 
 
 class NumAccounts(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class Applications(TransactionField):
     def __init__(self, idx: int):
+        super().__init__()
         self._idx = idx
+        self._version: int = 3
 
     def __str__(self) -> str:
         s = "" if self._idx < 0 else str(self._idx)
@@ -148,12 +169,16 @@ class Applications(TransactionField):
 
 
 class NumApplications(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class Assets(TransactionField):
     def __init__(self, idx: int):
+        super().__init__()
         self._idx = idx
+        self._version: int = 3
 
     def __str__(self) -> str:
         s = "" if self._idx < 0 else str(self._idx)
@@ -161,116 +186,179 @@ class Assets(TransactionField):
 
 
 class NumAssets(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class ApprovalProgram(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ClearStateProgram(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class RekeyTo(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAsset(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetTotal(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetDecimals(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetDefaultFrozen(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetUnitName(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetName(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetURL(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetMetadataHash(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetManager(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetReserve(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetFreeze(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetClawback(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class FreezeAsset(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class FreezeAssetAccount(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class FreezeAssetFrozen(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class GlobalNumUint(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class GlobalNumByteSlice(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class LocalNumUint(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class LocalNumByteSlice(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class ExtraProgramPages(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
 
 
 class Nonparticipation(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class Logs(TransactionField):
-    pass
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+        self._version: int = 5
+
+    def __str__(self) -> str:
+        s = "" if self._idx < 0 else str(self._idx)
+        return "Logs " + s
 
 
 class NumLogs(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class CreatedAssetID(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class CreatedApplicationID(TransactionField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5

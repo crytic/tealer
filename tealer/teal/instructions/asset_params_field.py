@@ -1,5 +1,12 @@
 # pylint: disable=too-few-public-methods
 class AssetParamsField:
+    def __init__(self) -> None:
+        self._version: int = 2
+
+    @property
+    def version(self) -> int:
+        return self._version
+
     def __str__(self) -> str:
         return self.__class__.__qualname__
 
@@ -49,4 +56,6 @@ class AssetClawback(AssetParamsField):
 
 
 class AssetCreator(AssetParamsField):
-    pass
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5

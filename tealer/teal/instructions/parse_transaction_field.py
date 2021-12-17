@@ -55,7 +55,6 @@ TX_FIELD_TXT_TO_OBJECT = {
     "LocalNumByteSlice": transaction_field.LocalNumByteSlice,
     "ExtraProgramPages": transaction_field.ExtraProgramPages,
     "Nonparticipation": transaction_field.Nonparticipation,
-    "Logs": transaction_field.Logs,
     "NumLogs": transaction_field.NumLogs,
     "CreatedAssetID": transaction_field.CreatedAssetID,
     "CreatedApplicationID": transaction_field.CreatedApplicationID,
@@ -75,5 +74,8 @@ def parse_transaction_field(tx_field: str, use_stack: bool) -> transaction_field
         )
     if tx_field.startswith("Assets"):
         return transaction_field.Assets(-1 if use_stack else int(tx_field[len("Assets ") :]))
+    if tx_field.startswith("Logs"):
+        return transaction_field.Logs(-1 if use_stack else int(tx_field[len("Logs ") :]))
+
     tx_field = tx_field.replace(" ", "")
     return TX_FIELD_TXT_TO_OBJECT[tx_field]()
