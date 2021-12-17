@@ -61,21 +61,31 @@ TX_FIELD_TXT_TO_OBJECT = {
 }
 
 
+def _parse_int(x: str) -> int:
+    if x.startswith("0x"):
+        return int(x[2:], 16)
+    if x.startswith("0"):
+        return int(x, 8)
+    return int(x)
+
+
 def parse_transaction_field(tx_field: str, use_stack: bool) -> transaction_field.TransactionField:
     if tx_field.startswith("Accounts"):
-        return transaction_field.Accounts(-1 if use_stack else int(tx_field[len("Accounts ") :]))
+        return transaction_field.Accounts(
+            -1 if use_stack else _parse_int(tx_field[len("Accounts ") :])
+        )
     if tx_field.startswith("ApplicationArgs"):
         return transaction_field.ApplicationArgs(
-            -1 if use_stack else int(tx_field[len("ApplicationArgs ") :])
+            -1 if use_stack else _parse_int(tx_field[len("ApplicationArgs ") :])
         )
     if tx_field.startswith("Applications"):
         return transaction_field.Applications(
-            -1 if use_stack else int(tx_field[len("Applications ") :])
+            -1 if use_stack else _parse_int(tx_field[len("Applications ") :])
         )
     if tx_field.startswith("Assets"):
-        return transaction_field.Assets(-1 if use_stack else int(tx_field[len("Assets ") :]))
+        return transaction_field.Assets(-1 if use_stack else _parse_int(tx_field[len("Assets ") :]))
     if tx_field.startswith("Logs"):
-        return transaction_field.Logs(-1 if use_stack else int(tx_field[len("Logs ") :]))
+        return transaction_field.Logs(-1 if use_stack else _parse_int(tx_field[len("Logs ") :]))
 
     tx_field = tx_field.replace(" ", "")
     return TX_FIELD_TXT_TO_OBJECT[tx_field]()

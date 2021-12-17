@@ -15,7 +15,7 @@ from tealer.teal.instructions.instructions import (
     Pragma,
 )
 from tealer.teal.instructions.instructions import ContractType
-from tealer.teal.instructions.parse_instruction import parse_line
+from tealer.teal.instructions.parse_instruction import parse_line, ParseError
 from tealer.teal.teal import Teal
 
 
@@ -69,8 +69,8 @@ def _first_pass(
     for line in lines:
         try:
             ins = parse_line(line.strip())
-        except KeyError as e:
-            print(f"Parse error at line {idx} near {e}")
+        except ParseError as e:
+            print(f"Parse error at line {idx}: {e}")
             sys.exit(1)
         idx = idx + 1
         if not ins:

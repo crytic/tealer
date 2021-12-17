@@ -1,6 +1,8 @@
+from typing import Type, Tuple
 import pytest
 
 from tealer.teal.parse_teal import parse_teal
+from tealer.teal.instructions import instructions
 
 TARGETS = [
     "tests/parsing/transaction_fields.teal",
@@ -29,6 +31,26 @@ TARGETS = [
     "tests/parsing/teal-fields-with-versions.teal",
 ]
 
+TEST_CODE = """
+intcblock 0xf 017 15
+intcblock
+int pay
+byte base64 AA
+byte b64 AA
+byte base64(AA)
+byte b64(AA)
+byte base32 AA
+byte b32 AA
+byte base32(AA)
+byte b32(AA)
+byte 0x0123456789abcdef
+byte "\x01\x02"
+byte "string literal"
+bytecblock b32(AA) base64 AA 0x00 "00"
+bytecblock
+byte "not label: // not comment either"
+"""
+
 
 @pytest.mark.parametrize("target", TARGETS)  # type: ignore
 def test_parsing(target: str) -> None:
@@ -37,3 +59,67 @@ def test_parsing(target: str) -> None:
     # print instruction to trigger __str__ on each ins
     for i in teal.instructions:
         print(i)
+
+
+def _cmp_instructions(
+    b1: instructions.Instruction,
+    b2: instructions.Instruction,
+    target: Type[instructions.Instruction],
+    attributes: Tuple[str],
+) -> bool:
+    check = isinstance(b1, target) and isinstance(b2, target)
+    if not check:
+        return check
+
+    for attr in attributes:
+        v1 = getattr(b1, attr, None)
+        v2 = getattr(b2, attr, None)
+        if v1 != v2:
+            return False
+    return True
+
+
+def test_parsing_2() -> None:
+    teal = parse_teal(TEST_CODE)
+    ins1 = teal.instructions
+    ins2 = [
+        instructions.Intcblock([15, 15, 15]),
+        instructions.Intcblock([]),
+        instructions.Int("pay"),
+        instructions.Byte("0x00"),
+        instructions.Byte("0x00"),
+        instructions.Byte("0x00"),
+        instructions.Byte("0x00"),
+        instructions.Byte("0x00"),
+        instructions.Byte("0x00"),
+        instructions.Byte("0x00"),
+        instructions.Byte("0x00"),
+        instructions.Byte("0x0123456789abcdef"),
+        instructions.Byte('"\x01\x02"'),
+        instructions.Byte('"string literal"'),
+        instructions.Bytecblock(["0x00", "0x00", "0x00", '"00"']),
+        instructions.Bytecblock([]),
+        instructions.Byte('"not label: // not comment either"'),
+    ]
+    t = [
+        (instructions.Intcblock, ("_constants",)),
+        (instructions.Intcblock, ("_constants",)),
+        (instructions.Int, ("value",)),
+        (instructions.Byte, ("_bytes",)),
+        (instructions.Byte, ("_bytes",)),
+        (instructions.Byte, ("_bytes",)),
+        (instructions.Byte, ("_bytes",)),
+        (instructions.Byte, ("_bytes",)),
+        (instructions.Byte, ("_bytes",)),
+        (instructions.Byte, ("_bytes",)),
+        (instructions.Byte, ("_bytes",)),
+        (instructions.Byte, ("_bytes",)),
+        (instructions.Byte, ("_bytes",)),
+        (instructions.Byte, ("_bytes",)),
+        (instructions.Bytecblock, ("_constants",)),
+        (instructions.Bytecblock, ("_constants",)),
+        (instructions.Byte, ("_bytes",)),
+    ]
+
+    for (b1, b2, (target, attributes)) in zip(ins1, ins2, t):
+        assert _cmp_instructions(b1, b2, target, attributes)
