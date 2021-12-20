@@ -513,7 +513,16 @@ class Label(InstructionWithLabel):
 class Callsub(InstructionWithLabel):
     def __init__(self, label: str):
         super().__init__(label)
+        self._return_point: Optional[Instruction] = None
         self._version: int = 4
+
+    @property
+    def return_point(self) -> Optional[Instruction]:
+        return self._return_point
+
+    @return_point.setter
+    def return_point(self, ins: Instruction) -> None:
+        self._return_point = ins
 
     def __str__(self) -> str:
         return f"callsub {self._label}"
@@ -528,18 +537,7 @@ class Return(Instruction):
 class Retsub(Instruction):
     def __init__(self) -> None:
         super().__init__()
-        self._labels: List[Label] = []
         self._version: int = 4
-
-    def add_label(self, p: Label) -> None:
-        self._labels.append(p)
-
-    def set_labels(self, p: List[Label]) -> None:
-        self._labels = p
-
-    @property
-    def labels(self) -> List[Label]:
-        return self._labels
 
 
 class AppGlobalGet(Instruction):

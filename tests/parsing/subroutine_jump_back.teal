@@ -1,0 +1,12 @@
+#pragma version 5
+b main
+getmod:
+    %
+    retsub
+is_odd:
+    int 2
+    b getmod
+main:
+    int 5
+    callsub is_odd
+    return
