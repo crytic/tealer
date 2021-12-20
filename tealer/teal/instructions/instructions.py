@@ -147,6 +147,10 @@ class Txna(Instruction):
         self._field: TransactionField = field
         self._version: int = 2
 
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
     def __str__(self) -> str:
         return f"txna {self._field}"
 

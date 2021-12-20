@@ -29,6 +29,8 @@ TARGETS = [
     "tests/parsing/teal5-mixed.teal",
     "tests/parsing/teal-instructions-with-versions.teal",
     "tests/parsing/teal-fields-with-versions.teal",
+    "tests/parsing/multiple_retsub.teal",
+    "tests/parsing/subroutine_jump_back.teal",
 ]
 
 TEST_CODE = """
