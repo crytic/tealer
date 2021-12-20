@@ -526,6 +526,8 @@ class Callsub(InstructionWithLabel):
 
     @return_point.setter
     def return_point(self, ins: Instruction) -> None:
+        if self._return_point is not None:
+            raise ValueError("Return point already set")
         self._return_point = ins
 
     def __str__(self) -> str:
