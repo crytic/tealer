@@ -102,12 +102,9 @@ class Assert(Instruction):
 
 
 class Int(Instruction):
-    def __init__(self, value: str):
+    def __init__(self, value: Union[str, int]):
         super().__init__()
-        if value.isdigit():
-            self._value: Union[int, str] = int(value)
-        else:
-            self._value = value
+        self._value = value
 
     @property
     def value(self) -> Union[str, int]:
@@ -118,12 +115,9 @@ class Int(Instruction):
 
 
 class PushInt(Instruction):
-    def __init__(self, value: str):
+    def __init__(self, value: Union[str, int]):
         super().__init__()
-        if value.isdigit():
-            self._value: Union[int, str] = int(value)
-        else:
-            self._value = value
+        self._value = value
         self._version = 3
 
     @property
@@ -1125,14 +1119,18 @@ class Sqrt(Instruction):
 
 
 class Intcblock(Instruction):
+    def __init__(self, int_list: List[int]):
+        super().__init__()
+        self._constants = int_list
+
     def __str__(self) -> str:
-        return "intcblock"
+        return " ".join(["intcblock"] + list(map(str, self._constants)))
 
 
 class Intc(Instruction):
-    def __init__(self, idx: str):
+    def __init__(self, idx: int):
         super().__init__()
-        self._idx = int(idx)
+        self._idx = idx
 
     def __str__(self) -> str:
         return f"intc {self._idx}"
@@ -1159,9 +1157,9 @@ class Intc3(Instruction):
 
 
 class Bytec(Instruction):
-    def __init__(self, idx: str):
+    def __init__(self, idx: int):
         super().__init__()
-        self._idx = int(idx)
+        self._idx = idx
 
     def __str__(self) -> str:
         return f"bytec {self._idx}"
@@ -1188,9 +1186,9 @@ class Bytec3(Instruction):
 
 
 class Arg(Instruction):
-    def __init__(self, idx: str):
+    def __init__(self, idx: int):
         super().__init__()
-        self._idx = int(idx)
+        self._idx = idx
         self._mode: ContractType = ContractType.STATELESS
 
     def __str__(self) -> str:
@@ -1233,15 +1231,6 @@ class Arg3(Instruction):
         return "arg_3"
 
 
-class ByteBase64(Instruction):
-    def __init__(self, bytesb64: str):
-        super().__init__()
-        self._bytes = bytesb64
-
-    def __str__(self) -> str:
-        return f"byte base64 {self._bytes}"
-
-
 class Byte(Instruction):
     def __init__(self, bytesb: str):
         super().__init__()
@@ -1266,15 +1255,19 @@ class Len(Instruction):
 
 
 class Bytecblock(Instruction):
+    def __init__(self, bytes_list: List[str]):
+        super().__init__()
+        self._constants = bytes_list
+
     def __str__(self) -> str:
-        return "bytecblock"
+        return " ".join(["bytecblock"] + self._constants)
 
 
 class Substring(Instruction):
     def __init__(self, start: int, stop: int):
         super().__init__()
-        self._start = int(start)
-        self._stop = int(stop)
+        self._start = start
+        self._stop = stop
         self._version: int = 2
 
     def __str__(self) -> str:
