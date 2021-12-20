@@ -46,3 +46,7 @@ jobs:
       run: |
         pytest tests/test_versions.py
         pytest tests/test_mode_detector.py
+
+    - name: Run cfg recovery tests
+      run: |
+        pytest tests/test_cfg.py
