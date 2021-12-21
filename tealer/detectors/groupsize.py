@@ -25,6 +25,15 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
     DESCRIPTION = "Detect paths with a missing GroupSize check"
     TYPE = DetectorType.STATEFULLGROUP
 
+    WIKI_TITLE = "Missing GroupSize check"
+    WIKI_DESCRIPTION = "Detect paths with a missing GroupSize check"
+    WIKI_EXPLOIT_SCENARIO = """
+**TODO**
+"""
+    WIKI_RECOMMENDATION = """
+**TODO**
+"""
+
     def __init__(self, teal: Teal):
         super().__init__(teal)
         self.results_number = 0

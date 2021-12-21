@@ -30,6 +30,11 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
     DESCRIPTION = ""
     TYPE = DetectorType.UNDEFINED
 
+    WIKI_TITLE = ""
+    WIKI_DESCRIPTION = ""
+    WIKI_EXPLOIT_SCENARIO = ""
+    WIKI_RECOMMENDATION = ""
+
     def __init__(self, teal: Teal):
         self.teal = teal
 
@@ -46,6 +51,26 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
         if self.TYPE == DetectorType.UNDEFINED:
             raise IncorrectDetectorInitialization(
                 f"TYPE is not initialized {self.__class__.__name__}"
+            )
+
+        if not self.WIKI_TITLE:
+            raise IncorrectDetectorInitialization(
+                "WIKI_TITLE is not initialized {}".format(self.__class__.__name__)
+            )
+
+        if not self.WIKI_DESCRIPTION:
+            raise IncorrectDetectorInitialization(
+                "WIKI_DESCRIPTION is not initialized {}".format(self.__class__.__name__)
+            )
+
+        if not self.WIKI_EXPLOIT_SCENARIO:
+            raise IncorrectDetectorInitialization(
+                "WIKI_EXPLOIT_SCENARIO is not initialized {}".format(self.__class__.__name__)
+            )
+
+        if not self.WIKI_RECOMMENDATION:
+            raise IncorrectDetectorInitialization(
+                "WIKI_RECOMMENDATION is not initialized {}".format(self.__class__.__name__)
             )
 
     @abc.abstractmethod
