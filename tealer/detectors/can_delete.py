@@ -55,6 +55,8 @@ After executing the ApprovalProgram, delete the application parameters from the 
 ```
 
 Ability to execute DeleteApplication transaction will give the ability to make application assets permanently inaccesible to anyone.
+
+Attacker sends a DeleteApplication transaction and make assets inaccessible to everyone.
 """
 
     WIKI_RECOMMENDATION = """

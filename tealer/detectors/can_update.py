@@ -55,6 +55,8 @@ After executing the ApprovalProgram, replace the ApprovalProgram and ClearStateP
 ```
 
 Ability to execute UpdateApplication transaction will give complete control of application code, which controls all the assets held by the application.
+
+Attacker sends a UpdateApplication transaction with the new approval program which transfers all the application assets to attacker's address using inner transaction.
 """
 
     WIKI_RECOMMENDATION = """

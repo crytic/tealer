@@ -36,6 +36,8 @@ Rekeying is an Algorand feature which enables an account holder to give authoriz
 Rekeying is done by using *rekey-to* transaction which is a payment transaction with `rekey-to` parameter set to new authorized address.
 
 if a stateless contract, approves a payment transaction without checking the `rekey-to` parameter then one can set the authorization address to the contract account and withdraw funds directly bypassing all the checks.
+
+Attacker creates a payment transaction using the contract with `rekey-to` set to their address. After rekeying, attacker transfer's the assets using their private key bypassing the conditions defined in the contract.
 """
 
     WIKI_RECOMMENDATION = """
