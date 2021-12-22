@@ -35,13 +35,6 @@ def handle_gtxnas(x: str) -> instructions.Gtxnas:
     return instructions.Gtxnas(idx, tx_field)
 
 
-def handle_extract(x: str) -> instructions.Extract:
-    args = x.split(" ")
-    start = _parse_int(args[0])
-    length = _parse_int(args[1])
-    return instructions.Extract(start, length)
-
-
 def _parse_int(x: str) -> int:
     if x.startswith("0x"):
         return int(x[2:], 16)
@@ -149,22 +142,26 @@ def _parse_byte_arguments(fields: List[str]) -> List[str]:
         if fields[i] == "base64" or fields[i] == "b64":
             if len(fields) <= i + 1:
                 error = True
+                break
             arguments.append(_b64_decode(fields[i + 1]))
             i += 2
         elif fields[i] == "base32" or fields[i] == "b32":
             if len(fields) <= i + 1:
                 error = True
+                break
             arguments.append(_b32_decode(fields[i + 1]))
             i += 2
         elif fields[i].startswith("base64(") or fields[i].startswith("b64("):
             if fields[i][-1] != ")":
                 error = True
+                break
             data = fields[i].split("(")[1][:-1]
             arguments.append(_b64_decode(data))
             i += 1
         elif fields[i].startswith("base32(") or fields[i].startswith("b32("):
             if fields[i][-1] != ")":
                 error = True
+                break
             data = fields[i].split("(")[1][:-1]
             arguments.append(_b32_decode(data))
             i += 1
@@ -174,6 +171,7 @@ def _parse_byte_arguments(fields: List[str]) -> List[str]:
         else:
             error = True
             i += 1
+            break
     if error:
         line = " ".join(fields)
         raise ParseError(f"incorrect byte format {line}")

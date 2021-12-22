@@ -62,7 +62,6 @@ def _first_pass(
 ) -> None:
     # First pass over the intructions list: Add non-jump instruction links and collect meta-data
     idx = 0
-    entries: List[Label] = []  # Current list of labels not closed by a retsub
     prev: Optional[Instruction] = None  # Flag: last instruction was an unconditional jump
     call: Optional[Callsub] = None  # Flag: last instruction was a callsub
 
@@ -77,16 +76,9 @@ def _first_pass(
             continue
         ins.line = idx
 
-        # A label? Add it to the global label list and the currently open entry points list
+        # A label? Add it to the global label list
         if isinstance(ins, Label):
             labels[ins.label] = ins
-            entries.append(ins)
-
-        # A retsub? Assign the current open entry points list to it and then reset the list
-        if isinstance(ins, Retsub):
-            # pylint: disable=no-member
-            ins.set_labels(entries[:])
-            entries = []
 
         # If the prev. ins. was anything other than an unconditional jump, then link the two instructions
         if prev:
@@ -95,6 +87,7 @@ def _first_pass(
 
         # If the prev. inst was a callsub, add the current instruction as a return point for the callsub label
         if call:
+            call.return_point = ins
             if call.label in rets.keys():
                 rets[call.label].append(ins)
             else:
@@ -128,13 +121,41 @@ def _second_pass(
             ins.add_next(labels[ins.label])
             labels[ins.label].add_prev(ins)
 
-        # If a retsub, link the ins. to its return point(s)
-        if isinstance(ins, Retsub):
-            for entry in ins.labels:
-                if entry.label in rets.keys():
-                    for ret in rets[entry.label]:
-                        ins.add_next(ret)
-                        ret.add_prev(ins)
+    # link retsub instructions to return points of corresponding subroutines
+    retsubs: Dict[str, List[Retsub]] = {}  # map each subroutine label to list of it's retsubs
+    for subroutine in rets:
+        label = labels[subroutine]
+        retsubs[subroutine] = []
+
+        # use dfs to find all retsub instructions starting from subroutine label instruction
+        stack: List[Instruction] = []
+        visited: List[Instruction] = []
+
+        stack.append(label)
+        while len(stack) > 0:
+            ins = stack.pop()
+            visited.append(ins)
+
+            if isinstance(ins, Retsub):
+                retsubs[subroutine].append(ins)
+                continue
+
+            for next_ins in ins.next:
+                # don't follow callsub path, which initself is another subroutine
+                if isinstance(next_ins, Callsub):
+                    if next_ins.return_point is None:
+                        continue
+                    next_ins = next_ins.return_point
+
+                if next_ins not in visited:
+                    stack.append(next_ins)
+
+    # link retsub to return points
+    for subroutine in rets:
+        for return_point in rets[subroutine]:
+            for retsub_ins in retsubs[subroutine]:
+                retsub_ins.add_next(return_point)
+                return_point.add_prev(retsub_ins)
 
 
 def _fourth_pass(instructions: List[Instruction]) -> None:
