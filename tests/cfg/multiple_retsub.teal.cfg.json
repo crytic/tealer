@@ -1,0 +1,87 @@
+[
+    {
+        "type": "BasicBlock",
+        "id": 0,
+        "instructions": [
+            "#pragma version 5",
+            "b main"
+        ],
+        "prev": [],
+        "next": [
+            4
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 1,
+        "instructions": [
+            "is_even:",
+            "int 2",
+            "%",
+            "bz return_1"
+        ],
+        "prev": [
+            4
+        ],
+        "next": [
+            2,
+            3
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 2,
+        "instructions": [
+            "int 0",
+            "retsub"
+        ],
+        "prev": [
+            1
+        ],
+        "next": [
+            5
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 3,
+        "instructions": [
+            "return_1:",
+            "int 1",
+            "retsub"
+        ],
+        "prev": [
+            1
+        ],
+        "next": [
+            5
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 4,
+        "instructions": [
+            "main:",
+            "int 4",
+            "callsub is_even"
+        ],
+        "prev": [
+            0
+        ],
+        "next": [
+            1
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 5,
+        "instructions": [
+            "return"
+        ],
+        "prev": [
+            2,
+            3
+        ],
+        "next": []
+    }
+]

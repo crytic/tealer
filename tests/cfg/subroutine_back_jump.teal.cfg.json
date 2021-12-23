@@ -1,0 +1,70 @@
+[
+    {
+        "type": "BasicBlock",
+        "id": 0,
+        "instructions": [
+            "#pragma version 5",
+            "b main"
+        ],
+        "prev": [],
+        "next": [
+            3
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 1,
+        "instructions": [
+            "getmod:",
+            "%",
+            "retsub"
+        ],
+        "prev": [
+            2
+        ],
+        "next": [
+            4
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 2,
+        "instructions": [
+            "is_odd:",
+            "int 2",
+            "b getmod"
+        ],
+        "prev": [
+            3
+        ],
+        "next": [
+            1
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 3,
+        "instructions": [
+            "main:",
+            "int 5",
+            "callsub is_odd"
+        ],
+        "prev": [
+            0
+        ],
+        "next": [
+            2
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 4,
+        "instructions": [
+            "return"
+        ],
+        "prev": [
+            1
+        ],
+        "next": []
+    }
+]

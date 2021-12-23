@@ -1,101 +1,98 @@
-from typing import List, Tuple
+import json
+import os
+import sys
+import pathlib
+from pprint import pprint
+
 import pytest
+from deepdiff import DeepDiff
 
-
-from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions import instructions
+from tealer.utils.output import bbs_to_json
 from tealer.teal.parse_teal import parse_teal
 
-from tests.utils import cmp_cfg, construct_cfg
 
-
-MULTIPLE_RETSUB = """
-#pragma version 5
-b main
-is_even:
-    int 2
-    %
-    bz return_1
-    int 0
-    retsub
-return_1:
-    int 1
-    retsub
-main:
-    int 4
-    callsub is_even
-    return
-"""
-
-ins_list = [
-    instructions.Pragma(5),
-    instructions.B("main"),
-    instructions.Label("is_even"),
-    instructions.Int(2),
-    instructions.Modulo(),
-    instructions.BZ("return_1"),
-    instructions.Int(0),
-    instructions.Retsub(),
-    instructions.Label("return_1"),
-    instructions.Int(1),
-    instructions.Retsub(),
-    instructions.Label("main"),
-    instructions.Int(4),
-    instructions.Callsub("is_even"),
-    instructions.Return(),
-]
-
-ins_partitions = [(0, 2), (2, 6), (6, 8), (8, 11), (11, 14), (14, 15)]
-bbs_links = [(0, 4), (4, 1), (1, 2), (1, 3), (2, 5), (3, 5)]
-
-
-MULTIPLE_RETSUB_CFG = construct_cfg(ins_list, ins_partitions, bbs_links)
-
-
-SUBROUTINE_BACK_JUMP = """
-#pragma version 5
-b main
-getmod:
-    %
-    retsub
-is_odd:
-    int 2
-    b getmod
-main:
-    int 5
-    callsub is_odd
-    return
-"""
-
-ins_list = [
-    instructions.Pragma(5),
-    instructions.B("main"),
-    instructions.Label("getmod"),
-    instructions.Modulo(),
-    instructions.Retsub(),
-    instructions.Label("is_odd"),
-    instructions.Int(2),
-    instructions.B("getmod"),
-    instructions.Label("main"),
-    instructions.Int(5),
-    instructions.Callsub("is_odd"),
-    instructions.Return(),
-]
-
-ins_partitions = [(0, 2), (2, 5), (5, 8), (8, 11), (11, 12)]
-bbs_links = [(0, 3), (3, 2), (2, 1), (1, 4)]
-
-SUBROUTINE_BACK_JUMP_CFG = construct_cfg(ins_list, ins_partitions, bbs_links)
+class Test:  # pylint: disable=too-few-public-methods
+    def __init__(self, test_file: str):
+        self.test_file = test_file
+        self.expected_result = test_file + ".cfg.json"
 
 
 ALL_TESTS = [
-    (MULTIPLE_RETSUB, MULTIPLE_RETSUB_CFG),
-    (SUBROUTINE_BACK_JUMP, SUBROUTINE_BACK_JUMP_CFG),
+    Test("multiple_retsub.teal"),
+    Test("subroutine_back_jump.teal"),
+    Test("branches.teal"),
+    Test("branching.teal"),
+    Test("loopsandsub.teal"),
 ]
 
 
-@pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
-def test_cfg_construction(test: Tuple[str, List[BasicBlock]]) -> None:
-    code, cfg = test
-    teal = parse_teal(code.strip())
-    assert cmp_cfg(teal.bbs, cfg)
+@pytest.mark.parametrize("test_item", ALL_TESTS)
+def test_cfg_construction(test_item: Test) -> None:
+    test_dir_path = pathlib.Path(
+        pathlib.Path().absolute(),
+        "tests",
+        "cfg",
+    )
+
+    test_file_path = str(pathlib.Path(test_dir_path, test_item.test_file))
+    expected_result_path = str(pathlib.Path(test_dir_path, test_item.expected_result).absolute())
+
+    with open(test_file_path) as f:
+        teal = parse_teal(f.read())
+
+    results = bbs_to_json(teal.bbs)
+
+    with open(expected_result_path, encoding="utf8") as f:
+        expected_result = json.load(f)
+
+    ignore_order_func = lambda level: "instructions" not in level.path()
+
+    diff = DeepDiff(
+        results, expected_result, ignore_order=True, ignore_order_func=ignore_order_func
+    )
+
+    if diff:
+        pprint(diff)
+        diff_as_dict = diff.to_dict()
+
+        if "iterable_item_added" in diff_as_dict:
+            print("#### Added blocks")
+            print(diff_as_dict["iterable_item_added"])
+
+        if "iterable_item_removed" in diff_as_dict:
+            print("#### removed blocks")
+            print(diff_as_dict["iterable_item_removed"])
+
+
+def _generate_test(test_item: Test, skip_existing: bool = False) -> None:
+    test_dir_path = pathlib.Path(
+        pathlib.Path().absolute(),
+        "tests",
+        "cfg",
+    )
+
+    test_file_path = str(pathlib.Path(test_dir_path, test_item.test_file))
+    expected_result_path = str(pathlib.Path(test_dir_path, test_item.expected_result).absolute())
+
+    if skip_existing:
+        if os.path.isfile(expected_result_path):
+            return
+
+    with open(test_file_path) as f:
+        teal = parse_teal(f.read())
+
+    results = bbs_to_json(teal.bbs)
+
+    with open(expected_result_path, "w") as f:
+        f.write(json.dumps(results, indent=4))
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("To generate the json artifacts run\n\tpython tests/test_cfg.py --generate")
+    elif sys.argv[1] == "--generate":
+        for next_test in ALL_TESTS:
+            _generate_test(next_test, skip_existing=True)
+    elif sys.argv[1] == "--overwrite":
+        for next_test in ALL_TESTS:
+            _generate_test(next_test)

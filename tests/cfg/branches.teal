@@ -1,0 +1,23 @@
+// teal program with branches
+#pragma version 3
+arg_0
+byte "secret"
+==
+bnz secondcheck
+int 0
+return
+secondcheck:
+	arg_1
+	byte "secret2"
+	==
+	bz failed
+	arg_2
+	byte "secret3"
+	==
+	bnz success
+failed:
+	int 0
+	return
+success:
+	int 1
+	return

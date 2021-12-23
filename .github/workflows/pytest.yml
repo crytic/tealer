@@ -33,6 +33,7 @@ jobs:
         python setup.py install
         pip install pytest
         pip install pytest-cov
+        pip install deepdiff
 
     - name: Run Parsing tests
       run: |

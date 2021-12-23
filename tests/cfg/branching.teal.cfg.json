@@ -1,0 +1,92 @@
+[
+    {
+        "type": "BasicBlock",
+        "id": 0,
+        "instructions": [
+            "#pragma version 2",
+            "txn NumAppArgs",
+            "int 2",
+            "==",
+            "bz fin"
+        ],
+        "prev": [],
+        "next": [
+            1,
+            5
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 1,
+        "instructions": [
+            "byte \"myarg\"",
+            "txn ApplicationArgs 0",
+            "==",
+            "bnz check_second_arg"
+        ],
+        "prev": [
+            0
+        ],
+        "next": [
+            2,
+            3
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 2,
+        "instructions": [
+            "int 0",
+            "return"
+        ],
+        "prev": [
+            1
+        ],
+        "next": []
+    },
+    {
+        "type": "BasicBlock",
+        "id": 3,
+        "instructions": [
+            "check_second_arg:",
+            "txn ApplicationArgs 1",
+            "btoi",
+            "int 100",
+            ">",
+            "bnz fin"
+        ],
+        "prev": [
+            1
+        ],
+        "next": [
+            4,
+            5
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 4,
+        "instructions": [
+            "int 0",
+            "return"
+        ],
+        "prev": [
+            3
+        ],
+        "next": []
+    },
+    {
+        "type": "BasicBlock",
+        "id": 5,
+        "instructions": [
+            "fin:",
+            "int 1",
+            "return"
+        ],
+        "prev": [
+            0,
+            3
+        ],
+        "next": []
+    }
+]

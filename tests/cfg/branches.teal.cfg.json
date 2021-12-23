@@ -1,0 +1,92 @@
+[
+    {
+        "type": "BasicBlock",
+        "id": 0,
+        "instructions": [
+            "#pragma version 3",
+            "arg_0",
+            "byte \"secret\"",
+            "==",
+            "bnz secondcheck"
+        ],
+        "prev": [],
+        "next": [
+            1,
+            2
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 1,
+        "instructions": [
+            "int 0",
+            "return"
+        ],
+        "prev": [
+            0
+        ],
+        "next": []
+    },
+    {
+        "type": "BasicBlock",
+        "id": 2,
+        "instructions": [
+            "secondcheck:",
+            "arg_1",
+            "byte \"secret2\"",
+            "==",
+            "bz failed"
+        ],
+        "prev": [
+            0
+        ],
+        "next": [
+            3,
+            4
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 3,
+        "instructions": [
+            "arg_2",
+            "byte \"secret3\"",
+            "==",
+            "bnz success"
+        ],
+        "prev": [
+            2
+        ],
+        "next": [
+            4,
+            5
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 4,
+        "instructions": [
+            "failed:",
+            "int 0",
+            "return"
+        ],
+        "prev": [
+            3,
+            2
+        ],
+        "next": []
+    },
+    {
+        "type": "BasicBlock",
+        "id": 5,
+        "instructions": [
+            "success:",
+            "int 1",
+            "return"
+        ],
+        "prev": [
+            3
+        ],
+        "next": []
+    }
+]

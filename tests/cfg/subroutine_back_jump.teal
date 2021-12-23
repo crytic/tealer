@@ -1,0 +1,13 @@
+// Teal allows defining non-continous subroutines, test cfg when retsub of a subroutine is defined before it's start label.
+#pragma version 5
+b main
+getmod:
+    %
+    retsub
+is_odd:
+    int 2
+    b getmod
+main:
+    int 5
+    callsub is_odd
+    return

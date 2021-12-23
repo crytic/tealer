@@ -1,0 +1,136 @@
+[
+    {
+        "type": "BasicBlock",
+        "id": 0,
+        "instructions": [
+            "#pragma version 5",
+            "txn ApplicationID",
+            "bz creation"
+        ],
+        "prev": [],
+        "next": [
+            1,
+            7
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 1,
+        "instructions": [
+            "txn ApplicationArgs 0",
+            "btoi",
+            "dup",
+            "store 0",
+            "store 1",
+            "b main"
+        ],
+        "prev": [
+            0
+        ],
+        "next": [
+            3
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 2,
+        "instructions": [
+            "cal_mul:",
+            "load 0",
+            "int 1",
+            "-",
+            "load 1",
+            "*",
+            "store 1",
+            "load 0",
+            "int 1",
+            "-",
+            "store 0",
+            "retsub"
+        ],
+        "prev": [
+            4
+        ],
+        "next": [
+            5
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 3,
+        "instructions": [
+            "main:",
+            "int 0"
+        ],
+        "prev": [
+            1
+        ],
+        "next": [
+            4
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 4,
+        "instructions": [
+            "loop:",
+            "callsub cal_mul"
+        ],
+        "prev": [
+            3,
+            5
+        ],
+        "next": [
+            2
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 5,
+        "instructions": [
+            "int 1",
+            "+",
+            "dup",
+            "txn ApplicationArgs 0",
+            "btoi",
+            "int 1",
+            "-",
+            "<",
+            "bnz loop"
+        ],
+        "prev": [
+            2
+        ],
+        "next": [
+            6,
+            4
+        ]
+    },
+    {
+        "type": "BasicBlock",
+        "id": 6,
+        "instructions": [
+            "load 1",
+            "itob",
+            "log",
+            "return"
+        ],
+        "prev": [
+            5
+        ],
+        "next": []
+    },
+    {
+        "type": "BasicBlock",
+        "id": 7,
+        "instructions": [
+            "creation:",
+            "int 1",
+            "return"
+        ],
+        "prev": [
+            0
+        ],
+        "next": []
+    }
+]

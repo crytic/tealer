@@ -1,0 +1,16 @@
+// A single subroutine contains multiple retsub instructions
+#pragma version 5
+b main
+is_even:
+    int 2
+    %
+    bz return_1
+    int 0
+    retsub
+return_1:
+    int 1
+    retsub
+main:
+    int 4
+    callsub is_even
+    return
