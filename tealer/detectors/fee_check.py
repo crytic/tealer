@@ -23,10 +23,34 @@ def _is_fee_check(ins1: Instruction, ins2: Instruction) -> bool:
     return False
 
 
-class MissingFeeCheck(AbstractDetector):
+class MissingFeeCheck(AbstractDetector):  # pylint: disable=too-few-public-methods
     NAME = "feeCheck"
     DESCRIPTION = "Detect paths with a missing Fee check"
     TYPE = DetectorType.STATELESS
+
+    WIKI_TITLE = "Missing Fee check"
+    WIKI_DESCRIPTION = "Detect paths with a missing Fee check"
+    WIKI_EXPLOIT_SCENARIO = """
+```
+#pragma version 2
+txn Receiver
+addr BAZ7SJR2DVKCO6EHLLPXT7FRSYHNCZ35UTQD6K2FI4VALM2SSFIWTBZCTA
+==
+txn Amount
+int 1000000
+==
+&&
+...
+```
+
+Above stateless contract could be used to allow witdraw certain amount by a predefined receiver. if the contract doesn't check the transaction fee, the receiver who turns out be malicious could set it to a high value and drain the
+balance of the account that signed the contract as the fee will be deducted from that account.
+
+"""
+
+    WIKI_RECOMMENDATION = """
+Always check that transaction fee which can be accessed using `txn Fee` in Teal is less than certain limit and fail if that's not the case.
+"""
 
     def _check_fee(
         self,
@@ -37,31 +61,19 @@ class MissingFeeCheck(AbstractDetector):
         # check for loops
         if bb in current_path:
             return
-        
+
         current_path = current_path + [bb]
-        
+
         stack: List[Instruction] = []
 
         for ins in bb.instructions:
 
-            if isinstance(ins, Less) or isinstance(ins, LessE):
-               if len(stack) >= 2:
-                   one = stack[-1]
-                   two = stack[-2]
-                   # int .. <[=?] txn fee or txn fee <[=?] int .. 
-                   if _is_fee_check(one, two) or _is_fee_check(two, one):
-                       return
-            if isinstance(ins, Greater) or isinstance(ins, GreaterE):
+            if isinstance(ins, (Less, LessE, Greater, GreaterE, Eq)):
                 if len(stack) >= 2:
                     one = stack[-1]
                     two = stack[-2]
-                    # int .. >[=?] txnfee or txn fee >[=?] int ..
-                    if _is_fee_check(one, two) or _is_fee_check(two, one):
-                        return
-            if isinstance(ins, Eq):
-                if len(stack) >= 2:
-                    one = stack[-1]
-                    two = stack[-2]
+                    # int .. <[=?] txn fee or txn fee <[=?] int .. or
+                    # int .. >[=?] txnfee or txn fee >[=?] int .. or
                     #  txn fee == int .. or txn fee == int ..
                     if _is_fee_check(one, two) or _is_fee_check(two, one):
                         return
@@ -71,22 +83,19 @@ class MissingFeeCheck(AbstractDetector):
                     prev = ins.prev[0]
                     if isinstance(prev, Int) and prev.value == 0:
                         return
-                
+
                 paths_without_check.append(current_path)
                 return
-            
+
             stack.append(ins)
-        
+
         for next_bb in bb.next:
             self._check_fee(next_bb, current_path, paths_without_check)
 
-    def detect(self, json=False) -> List[str]:
+    def detect(self) -> List[str]:
         paths_without_check: List[List[BasicBlock]] = []
         self._check_fee(self.teal.bbs[0], [], paths_without_check)
 
-        if json:
-            return [self.paths_to_json(paths_without_check)]
-        
         all_results_txt: List[str] = []
         idx = 1
         for path in paths_without_check:
@@ -96,5 +105,5 @@ class MissingFeeCheck(AbstractDetector):
             description += f"\n\tCheck the path in {filename}\n"
             all_results_txt.append(description)
             self.teal.bbs_to_dot(filename, path)
-        
+
         return all_results_txt

@@ -83,7 +83,9 @@ class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
                     return
                 if _is_oncompletion_check(one, two) or _is_oncompletion_check(two, one):
                     prev_was_equal = True
-                if _is_application_creation_check(one, two) or _is_application_creation_check(two, one):
+                if _is_application_creation_check(one, two) or _is_application_creation_check(
+                    two, one
+                ):
                     prev_was_equal = True
 
             stack.append(ins)
