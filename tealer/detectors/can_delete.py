@@ -42,6 +42,40 @@ class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
     DESCRIPTION = "Detect paths that can delete the application"
     TYPE = DetectorType.STATEFULL
 
+    WIKI_TITLE = "Can Delete Application"
+    WIKI_DESCRIPTION = "Detect paths that can delete the application"
+    WIKI_EXPLOIT_SCENARIO = """
+```
+#pragma version 5
+...
+int NoOp
+txn OnCompletion
+==
+bnz handle_noop
+return 1 // return sucess for all other transaction types
+handle_noop:
+    ...
+```
+
+Algorand supports multiple types of application transactions. All types of application transactions execute the application
+and fail if the execution fails. Additional to application execution, each application transaction type will result in different
+operations before or after the application execution. This operations will be reverted if the approval program execution fails.
+
+One of the application transaction type is DeleteApplication which
+```
+After executing the ApprovalProgram, delete the application parameters from the account data of the application's creator.
+```
+
+Ability to execute DeleteApplication transaction will give the ability to make application assets permanently inaccesible to anyone.
+
+Attacker sends a DeleteApplication transaction and make assets inaccessible to everyone.
+"""
+
+    WIKI_RECOMMENDATION = """
+Teal stores type of application transaction in `OnCompletion` transaction field, which can be accessed using `txn OnCompletion`.
+Check if `txn OnCompletion == int DeleteApplication` and do appropriate actions based on the need.
+"""
+
     def _check_delete(
         self,
         bb: BasicBlock,

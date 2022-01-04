@@ -29,6 +29,21 @@ class MissingRekeyTo(AbstractDetector):
     DESCRIPTION = "Detect paths with a missing RekeyTo check"
     TYPE = DetectorType.STATEFULLGROUP
 
+    WIKI_TITLE = "Can Rekey Contract"
+    WIKI_DESCRIPTION = "Detect paths with a missing RekeyTo check"
+    WIKI_EXPLOIT_SCENARIO = """
+Rekeying is an Algorand feature which enables an account holder to give authorization of their account to different address, whereby users can maintain a single static public address while updating the key controlling the assets.
+Rekeying is done by using *rekey-to* transaction which is a payment transaction with `rekey-to` parameter set to new authorized address.
+
+if a stateless contract, approves a payment transaction without checking the `rekey-to` parameter then one can set the authorization address to the contract account and withdraw funds directly bypassing all the checks.
+
+Attacker creates a payment transaction using the contract with `rekey-to` set to their address. After rekeying, attacker transfer's the assets using their private key bypassing the conditions defined in the contract.
+"""
+
+    WIKI_RECOMMENDATION = """
+Add a check in the contract code verifying that `RekeyTo` property of any transaction is set to `ZeroAddress`.
+"""
+
     def check_rekey_to(  # pylint: disable=too-many-arguments
         self,
         bb: BasicBlock,
