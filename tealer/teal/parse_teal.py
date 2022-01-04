@@ -186,6 +186,13 @@ def _fourth_pass(instructions: List[Instruction]) -> None:
                     ins.bb.add_next(branch.bb)
 
 
+def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
+    bbs = sorted(bbs, key=lambda x: x.entry_instr.line)
+    for i, bb in enumerate(bbs):
+        bb.idx = i
+    return bbs
+
+
 def parse_teal(source_code: str) -> Teal:
     instructions: List[Instruction] = []  # Parsed instructions list
     labels: Dict[str, Instruction] = {}  # Global map of label names to label instructions
@@ -202,6 +209,7 @@ def parse_teal(source_code: str) -> Teal:
 
     _fourth_pass(instructions)
 
+    all_bbs = _add_basic_blocks_idx(all_bbs)
     mode = _detect_contract_type(instructions)
 
     version = 1

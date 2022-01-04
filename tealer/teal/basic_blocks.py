@@ -8,6 +8,7 @@ class BasicBlock:
         self._instructions: List[Instruction] = []
         self._prev: List[BasicBlock] = []
         self._next: List[BasicBlock] = []
+        self._idx: int = 0
 
     def add_instruction(self, instruction: Instruction) -> None:
         self._instructions.append(instruction)
@@ -37,6 +38,14 @@ class BasicBlock:
     @property
     def next(self) -> List["BasicBlock"]:
         return self._next
+
+    @property
+    def idx(self) -> int:
+        return self._idx
+
+    @idx.setter
+    def idx(self, i: int) -> None:
+        self._idx = i
 
     def __str__(self) -> str:
         ret = ""

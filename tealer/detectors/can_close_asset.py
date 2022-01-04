@@ -15,6 +15,7 @@ from tealer.teal.instructions.instructions import (
     Txn,
 )
 from tealer.teal.instructions.transaction_field import AssetCloseTo
+from tealer.utils.output import execution_path_to_dot
 
 
 def _is_asset_close_check(ins1: Instruction, ins2: Instruction) -> bool:
@@ -102,6 +103,7 @@ Always check that AssetCloseTo transaction field is set to a ZeroAddress or inte
             description += " holdings of the account."
             description += f"\n\tCheck the path in {filename}\n"
             all_results_txt.append(description)
-            self.teal.bbs_to_dot(filename, path)
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(execution_path_to_dot(self.teal.bbs, path))
 
         return all_results_txt

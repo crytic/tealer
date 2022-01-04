@@ -6,6 +6,7 @@ from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import GroupSize
 from tealer.teal.instructions.instructions import Return, Int, Global
 from tealer.teal.teal import Teal
+from tealer.utils.output import execution_path_to_dot
 
 
 class Result:  # pylint: disable=too-few-public-methods
@@ -85,6 +86,7 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
             )
 
             all_results_txt.append(description)
-            self.teal.bbs_to_dot(res.filename, res.all_bbs_in_paths)
+            with open(res.filename, "w", encoding="utf-8") as f:
+                f.write(execution_path_to_dot(self.teal.bbs, res.all_bbs_in_paths))
 
         return all_results_txt
