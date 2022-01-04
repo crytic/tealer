@@ -90,7 +90,7 @@ Add a check in the contract code verifying that `RekeyTo` property of any transa
 
     def detect(self) -> List[str]:
 
-        all_results: Dict[str, Result] = dict()
+        all_results: Dict[str, Result] = {}
         self.check_rekey_to(self.teal.bbs[0], defaultdict(set), set(), [], all_results)
 
         all_results_txt: List[str] = []

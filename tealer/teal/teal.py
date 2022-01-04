@@ -52,7 +52,7 @@ class Teal:
 
         dot_output += "}"
 
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(dot_output)
 
     def instructions_to_dot(self, filename: Path) -> None:
@@ -68,7 +68,7 @@ class Teal:
 
         dot_output += "}"
 
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(dot_output)
 
     def bbs_to_dot(self, filename: Path, highlited: Optional[List[BasicBlock]] = None) -> None:
@@ -86,7 +86,7 @@ class Teal:
 
         dot_output += "}"
 
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(dot_output)
 
     @property

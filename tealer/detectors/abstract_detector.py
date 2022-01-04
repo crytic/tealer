@@ -55,22 +55,22 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
 
         if not self.WIKI_TITLE:
             raise IncorrectDetectorInitialization(
-                "WIKI_TITLE is not initialized {}".format(self.__class__.__name__)
+                f"WIKI_TITLE is not initialized {self.__class__.__name__}"
             )
 
         if not self.WIKI_DESCRIPTION:
             raise IncorrectDetectorInitialization(
-                "WIKI_DESCRIPTION is not initialized {}".format(self.__class__.__name__)
+                f"WIKI_DESCRIPTION is not initialized {self.__class__.__name__}"
             )
 
         if not self.WIKI_EXPLOIT_SCENARIO:
             raise IncorrectDetectorInitialization(
-                "WIKI_EXPLOIT_SCENARIO is not initialized {}".format(self.__class__.__name__)
+                f"WIKI_EXPLOIT_SCENARIO is not initialized {self.__class__.__name__}"
             )
 
         if not self.WIKI_RECOMMENDATION:
             raise IncorrectDetectorInitialization(
-                "WIKI_RECOMMENDATION is not initialized {}".format(self.__class__.__name__)
+                f"WIKI_RECOMMENDATION is not initialized {self.__class__.__name__}"
             )
 
     @abc.abstractmethod

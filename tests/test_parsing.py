@@ -56,7 +56,7 @@ byte "not label: // not comment either"
 
 @pytest.mark.parametrize("target", TARGETS)  # type: ignore
 def test_parsing(target: str) -> None:
-    with open(target) as f:
+    with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     # print instruction to trigger __str__ on each ins
     for i in teal.instructions:

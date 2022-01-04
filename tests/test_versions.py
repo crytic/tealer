@@ -21,7 +21,7 @@ field_info_pattern = re.compile(r"\(version: ([0-9]+)\)")
 
 @pytest.mark.parametrize("target", INSTRUCTIONS_TARGETS)  # type: ignore
 def test_instruction_version(target: str) -> None:
-    with open(target) as f:
+    with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     for ins in teal.instructions:
         match_obj = instruction_info_pattern.search(ins.comment)
@@ -39,7 +39,7 @@ def test_instruction_version(target: str) -> None:
 
 @pytest.mark.parametrize("target", FIELDS_TARGETS)  # type: ignore
 def test_field_version(target: str) -> None:
-    with open(target) as f:
+    with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     for ins in teal.instructions:
         field = getattr(ins, "field", None)
