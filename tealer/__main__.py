@@ -60,7 +60,7 @@ def main() -> None:
 
     args = parse_args()
 
-    with open(args.program) as f:
+    with open(args.program, encoding="utf-8") as f:
         print(f"Analyze {args.program}")
         teal = parse_teal(f.read())
 

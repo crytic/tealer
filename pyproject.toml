@@ -19,5 +19,4 @@ logging-not-lazy,
 duplicate-code,
 import-error,
 unsubscriptable-object,
-unspecified-encoding,
 """
