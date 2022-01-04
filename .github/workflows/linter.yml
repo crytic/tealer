@@ -37,7 +37,7 @@ jobs:
           cp mypy.ini .github/linters
           pip install pytest
       - name: Pylint
-        uses: docker://github/super-linter:v3
+        uses: docker://github/super-linter@v4
         if: always()
         env:
           # run linter on everything to catch preexisting problems
@@ -50,7 +50,7 @@ jobs:
           PYTHON_PYLINT_CONFIG_FILE: pyproject.toml
 
       - name: Black
-        uses: docker://github/super-linter:v3
+        uses: docker://github/super-linter@v4
         if: always()
         env:
           # run linter on everything to catch preexisting problems
@@ -62,7 +62,7 @@ jobs:
           PYTHON_BLACK_CONFIG_FILE: pyproject.toml
 
       - name: MyPy
-        uses: docker://github/super-linter:v3
+        uses: docker://github/super-linter@v4
         if: always()
         env:
           # run linter on everything to catch preexisting problems
@@ -74,7 +74,7 @@ jobs:
           PYTHON_MYPY_CONFIG_FILE: mypy.ini
 
       - name: Lint everything else
-        uses: docker://github/super-linter:v3
+        uses: docker://github/super-linter@v4
         if: always()
         env:
           # run linter on everything to catch preexisting problems
