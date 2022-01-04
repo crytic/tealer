@@ -1,7 +1,11 @@
 from pathlib import Path
 from typing import List
 
-from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
+from tealer.detectors.abstract_detector import (
+    AbstractDetector,
+    DetectorClassification,
+    DetectorType,
+)
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import ZeroAddress
 from tealer.teal.instructions.instructions import (
@@ -30,6 +34,9 @@ class CanCloseAccount(AbstractDetector):  # pylint: disable=too-few-public-metho
     NAME = "canCloseAccount"
     DESCRIPTION = "Detect paths that can close out the sender account"
     TYPE = DetectorType.STATELESS
+
+    IMPACT = DetectorClassification.HIGH
+    CONFIDENCE = DetectorClassification.HIGH
 
     WIKI_TITLE = "Can Close Account"
     WIKI_DESCRIPTION = "Detect paths that can close out the sender account"
