@@ -1,5 +1,7 @@
 # pylint: disable=too-few-public-methods
 class AssetHoldingField:
+    """Base class to represent asset holding field."""
+
     def __init__(self) -> None:
         self._version: int = 2
 
@@ -12,8 +14,8 @@ class AssetHoldingField:
 
 
 class AssetBalance(AssetHoldingField):
-    pass
+    """Amount of the asset unit held by this account."""
 
 
 class AssetFrozen(AssetHoldingField):
-    pass
+    """Is asset frozen for this account or not."""
