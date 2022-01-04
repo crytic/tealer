@@ -1,5 +1,7 @@
 # pylint: disable=too-few-public-methods
 class AssetParamsField:
+    """Base class to represent asset_params_get field."""
+
     def __init__(self) -> None:
         self._version: int = 2
 
@@ -12,50 +14,52 @@ class AssetParamsField:
 
 
 class AssetTotal(AssetParamsField):
-    pass
+    """Total number of units of this asset."""
 
 
 class AssetDecimals(AssetParamsField):
-    pass
+    """Number of digits to display after the decimal place."""
 
 
 class AssetDefaultFrozen(AssetParamsField):
-    pass
+    """Whether the asset is frozen by default or not."""
 
 
 class AssetUnitName(AssetParamsField):
-    pass
+    """Unit name of the asset."""
 
 
 class AssetName(AssetParamsField):
-    pass
+    """The asset name."""
 
 
 class AssetURL(AssetParamsField):
-    pass
+    """Url associated with the asset."""
 
 
 class AssetMetadataHash(AssetParamsField):
-    pass
+    """32 byte commitment to some unspecified asset metadata."""
 
 
 class AssetManager(AssetParamsField):
-    pass
+    """Manager address, only account that can authorize transactions to re-configure or destroy an asset."""
 
 
 class AssetReserve(AssetParamsField):
-    pass
+    """Reserve address, where non-minted assets will reside."""
 
 
 class AssetFreeze(AssetParamsField):
-    pass
+    """Freeze account, which is allowed to freeze or unfreeze the asset holding for an account."""
 
 
 class AssetClawback(AssetParamsField):
-    pass
+    """Clawback address, which can transfer assets from and to any asset holder."""
 
 
 class AssetCreator(AssetParamsField):
+    """Creator address of this asset."""
+
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5

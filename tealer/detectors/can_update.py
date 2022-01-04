@@ -5,7 +5,7 @@ from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import BZ, Instruction
 from tealer.teal.instructions.instructions import Return, Int, Txn, Eq, BNZ
-from tealer.teal.instructions.transaction_field import OnCompletion
+from tealer.teal.instructions.transaction_field import OnCompletion, ApplicationID
 
 
 def _is_update(ins1: Instruction, ins2: Instruction) -> bool:
@@ -22,6 +22,18 @@ def _is_oncompletion_check(ins1: Instruction, ins2: Instruction) -> bool:
             "OptIn",
             "CloseOut",
         ]
+    return False
+
+
+def _is_application_creation_check(ins1: Instruction, ins2: Instruction) -> bool:
+    """check if the instructions are application creation check.
+
+    ApplicationID will be 0 at the time of creation as a result the condition
+    txn ApplicationID == int 0 is generally used to do intialisation operations
+    at the time of application creation.
+    """
+    if isinstance(ins1, Txn) and isinstance(ins1.field, ApplicationID):
+        return isinstance(ins2, Int) and ins2.value == 0
     return False
 
 
@@ -70,6 +82,10 @@ class CanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
                 if _is_update(one, two) or _is_update(two, one):
                     return
                 if _is_oncompletion_check(one, two) or _is_oncompletion_check(two, one):
+                    prev_was_equal = True
+                if _is_application_creation_check(one, two) or _is_application_creation_check(
+                    two, one
+                ):
                     prev_was_equal = True
 
             stack.append(ins)
