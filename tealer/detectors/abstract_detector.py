@@ -1,8 +1,10 @@
 import abc
-from typing import List
+from typing import List, TYPE_CHECKING
 
-from tealer.teal.teal import Teal
 from tealer.utils.comparable_enum import ComparableEnum
+
+if TYPE_CHECKING:
+    from tealer.teal.teal import Teal
 
 
 class IncorrectDetectorInitialization(Exception):
@@ -35,7 +37,7 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
     WIKI_EXPLOIT_SCENARIO = ""
     WIKI_RECOMMENDATION = ""
 
-    def __init__(self, teal: Teal):
+    def __init__(self, teal: "Teal"):
         self.teal = teal
 
         if not self.NAME:

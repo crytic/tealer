@@ -1,11 +1,11 @@
-from typing import List
+from typing import List, Type
 
 from prettytable import PrettyTable
 
 from tealer.detectors.abstract_detector import DETECTOR_TYPE_TXT, AbstractDetector
 
 
-def output_detectors(detector_classes: List[AbstractDetector]) -> None:
+def output_detectors(detector_classes: List[Type[AbstractDetector]]) -> None:
     detectors_list = []
     for detector in detector_classes:
         name = detector.NAME
