@@ -76,7 +76,8 @@ def main() -> None:
                 teal.register_detector(Cls)
             results = teal.run_detectors()
             for r in results:
-                print(*r, sep="\n")
+                r.write_to_files(Path("."))
+
         except TealerException as e:
             print(e)
             sys.exit(-1)

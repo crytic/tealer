@@ -1,23 +1,13 @@
-from pathlib import Path
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import GroupSize
 from tealer.teal.instructions.instructions import Return, Int, Global
 from tealer.teal.teal import Teal
-from tealer.utils.output import execution_path_to_dot
 
-
-class Result:  # pylint: disable=too-few-public-methods
-    def __init__(self, filename: Path, path_initial: List[BasicBlock], idx: int):
-        self.filename = filename
-        self.paths = [path_initial]
-        self.idx = idx
-
-    @property
-    def all_bbs_in_paths(self) -> List[BasicBlock]:
-        return [p for sublist in self.paths for p in sublist]
+if TYPE_CHECKING:
+    from tealer.utils.output import SupportedOutput
 
 
 class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-methods
@@ -44,7 +34,7 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
         bb: BasicBlock,
         current_path: List[BasicBlock],
         # use_gtnx: bool,
-        all_results: List[Result],
+        paths_without_check: List[List[BasicBlock]],
     ) -> None:
         # check for loops
         if bb in current_path:
@@ -64,29 +54,17 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
                         if prev.value == 0:
                             return
 
-                filename = Path(f"group_size_{self.results_number}.dot")
-                self.results_number += 1
-                all_results.append(Result(filename, current_path, self.results_number))
+                paths_without_check.append(current_path)
 
         for next_bb in bb.next:
-            self._check_groupsize(next_bb, current_path, all_results)
+            self._check_groupsize(next_bb, current_path, paths_without_check)
 
-    def detect(self) -> List[str]:
+    def detect(self) -> "SupportedOutput":
 
-        all_results: List[Result] = []
+        paths_without_check: List[List[BasicBlock]] = []
+        self._check_groupsize(self.teal.bbs[0], [], paths_without_check)
 
-        self._check_groupsize(self.teal.bbs[0], [], all_results)
+        description = "Lack of groupSize check found"
+        filename = "missing_group_size"
 
-        all_results_txt: List[str] = []
-        for res in all_results:
-            description = "Lack of groupSize check found\n"
-            description += f"\tFix the paths in {res.filename}\n"
-            description += (
-                "\tOr ensure it is used with stateless contracts that check for GroupSize\n"
-            )
-
-            all_results_txt.append(description)
-            with open(res.filename, "w", encoding="utf-8") as f:
-                f.write(execution_path_to_dot(self.teal.bbs, res.all_bbs_in_paths))
-
-        return all_results_txt
+        return self.generate_result(paths_without_check, description, filename)

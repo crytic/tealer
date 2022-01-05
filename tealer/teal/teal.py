@@ -1,4 +1,4 @@
-from typing import List, Any, Type
+from typing import List, Any, Type, TYPE_CHECKING
 
 from tealer.detectors.abstract_detector import AbstractDetector
 from tealer.printers.abstract_printer import AbstractPrinter
@@ -6,6 +6,9 @@ from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import Instruction, ContractType
 from tealer.exceptions import TealerException
+
+if TYPE_CHECKING:
+    from tealer.utils.output import SupportedOutput
 
 
 def _check_common_things(
@@ -82,7 +85,7 @@ class Teal:
         instance = printer_class(self)
         self._printers.append(instance)
 
-    def run_detectors(self) -> List:
+    def run_detectors(self) -> List["SupportedOutput"]:
         results = [d.detect() for d in self._detectors]
 
         return results
