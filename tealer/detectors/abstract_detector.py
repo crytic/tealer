@@ -24,11 +24,33 @@ DETECTOR_TYPE_TXT = {
 }
 
 
+class DetectorClassification(ComparableEnum):
+    HIGH = 0
+    MEDIUM = 1
+    LOW = 2
+    INFORMATIONAL = 3
+    OPTIMIZATION = 4
+
+    UNIMPLEMENTED = 999
+
+
+classification_txt = {
+    DetectorClassification.OPTIMIZATION: "Optimization",
+    DetectorClassification.INFORMATIONAL: "Informational",
+    DetectorClassification.LOW: "Low",
+    DetectorClassification.MEDIUM: "Medium",
+    DetectorClassification.HIGH: "High",
+}
+
+
 class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public-methods
 
     NAME = ""  # detector name
     DESCRIPTION = ""
     TYPE = DetectorType.UNDEFINED
+
+    IMPACT: DetectorClassification = DetectorClassification.UNIMPLEMENTED
+    CONFIDENCE: DetectorClassification = DetectorClassification.UNIMPLEMENTED
 
     WIKI_TITLE = ""
     WIKI_DESCRIPTION = ""
@@ -71,6 +93,26 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
         if not self.WIKI_RECOMMENDATION:
             raise IncorrectDetectorInitialization(
                 f"WIKI_RECOMMENDATION is not initialized {self.__class__.__name__}"
+            )
+
+        if self.IMPACT not in [
+            DetectorClassification.LOW,
+            DetectorClassification.MEDIUM,
+            DetectorClassification.HIGH,
+            DetectorClassification.INFORMATIONAL,
+            DetectorClassification.OPTIMIZATION,
+        ]:
+            raise IncorrectDetectorInitialization(
+                f"IMPACT is not initialized {self.__class__.__name__}"
+            )
+
+        if self.CONFIDENCE not in [
+            DetectorClassification.LOW,
+            DetectorClassification.MEDIUM,
+            DetectorClassification.HIGH,
+        ]:
+            raise IncorrectDetectorInitialization(
+                f"CONFIDENCE is not initialized {self.__class__.__name__}"
             )
 
     @abc.abstractmethod

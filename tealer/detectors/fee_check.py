@@ -1,7 +1,11 @@
 from pathlib import Path
 from typing import List
 
-from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
+from tealer.detectors.abstract_detector import (
+    AbstractDetector,
+    DetectorClassification,
+    DetectorType,
+)
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import (
     Eq,
@@ -27,6 +31,9 @@ class MissingFeeCheck(AbstractDetector):  # pylint: disable=too-few-public-metho
     NAME = "feeCheck"
     DESCRIPTION = "Detect paths with a missing Fee check"
     TYPE = DetectorType.STATELESS
+
+    IMPACT = DetectorClassification.HIGH
+    CONFIDENCE = DetectorClassification.HIGH
 
     WIKI_TITLE = "Missing Fee check"
     WIKI_DESCRIPTION = "Detect paths with a missing Fee check"
