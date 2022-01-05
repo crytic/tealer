@@ -1,4 +1,5 @@
-from typing import List, Any, Type, TYPE_CHECKING
+from pathlib import Path
+from typing import List, Any, Optional, Type, TYPE_CHECKING
 
 from tealer.detectors.abstract_detector import AbstractDetector
 from tealer.printers.abstract_printer import AbstractPrinter
@@ -90,5 +91,5 @@ class Teal:
 
         return results
 
-    def run_printers(self) -> List:
-        return [p.print() for p in self._printers]
+    def run_printers(self, dest: Optional[Path] = None) -> List:
+        return [p.print(dest) for p in self._printers]
