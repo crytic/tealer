@@ -14,7 +14,10 @@ if TYPE_CHECKING:
 def _check_common_things(
     thing_name: str, cls: Any, base_cls: Any, instance_list: List[Any]
 ) -> None:
-
+    """check if cls is subclass of base_cls and it's instance is not already
+    present in instance_list. if either of the conditions fail, then error is
+    raised.
+    """
     if not issubclass(cls, base_cls) or cls is base_cls:
         raise TealerException(
             f"You can't register {cls.__name__} as a {thing_name}."
@@ -45,18 +48,32 @@ class Teal:
 
     @property
     def instructions(self) -> List[Instruction]:
+        """List of instructions of the contract"""
         return self._instructions
 
     @property
     def bbs(self) -> List[BasicBlock]:
+        """CFG of the contract"""
         return self._bbs
 
     @property
     def subroutines(self) -> List[List["BasicBlock"]]:
+        """Returns list of subroutines.
+
+        Each subroutine is represented by the list of basic blocks that constitute
+        a that particular subroutine. Subroutines are supported from version Teal 4 onwards.
+        For Teal version 3 or less this property will return empty List.
+        """
         return self._subroutines
 
     @property
     def version(self) -> int:
+        """Teal version for this contract.
+
+        Version of the contract is based on whether the first instruction of the
+        contract is #pragma version instruction or not. if it is, then version will
+        be the teal version specified or else, version will be 1.
+        """
         return self._version
 
     @version.setter
@@ -65,6 +82,13 @@ class Teal:
 
     @property
     def mode(self) -> ContractType:
+        """Type of the contract: Stateless, Stateful or Any.
+
+        Mode is determined based on the instructions of the contract. if there are
+        any instructions that are only supported in one kind of contract then that
+        will be the contract type. if there aren't any such type of instructions, then
+        this will be "Any".
+        """
         return self._mode
 
     @mode.setter
@@ -73,10 +97,12 @@ class Teal:
 
     @property
     def detectors(self) -> List[AbstractDetector]:
+        """return list of registered detectors."""
         return self._detectors
 
     @property
     def printers(self) -> List[AbstractPrinter]:
+        """return list of registered printers."""
         return self._printers
 
     def register_detector(self, detector_class: Type[AbstractDetector]) -> None:
