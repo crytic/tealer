@@ -8,7 +8,7 @@ from tealer.detectors import all_detectors
 from tealer.detectors.abstract_detector import AbstractDetector
 from tealer.teal.parse_teal import parse_teal
 from tealer.utils.command_line import output_detectors
-from tealer.utils.output import ExecutionPaths, cfg_to_dot
+from tealer.utils.output import cfg_to_dot
 from tealer.exceptions import TealerException
 
 
@@ -76,10 +76,8 @@ def main() -> None:
                 teal.register_detector(Cls)
             results = teal.run_detectors()
             for r in results:
-                if isinstance(r, ExecutionPaths):
-                    r.write_to_files(Path("."))
-                else:
-                    print(*r, sep="\n")
+                r.write_to_files(Path("."))
+
         except TealerException as e:
             print(e)
             sys.exit(-1)

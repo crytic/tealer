@@ -96,4 +96,3 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
     @abc.abstractmethod
     def detect(self) -> "SupportedOutput":
         """TODO Documentation"""
-        return []

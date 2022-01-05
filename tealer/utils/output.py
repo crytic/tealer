@@ -1,6 +1,6 @@
 import html
 from pathlib import Path
-from typing import List, TYPE_CHECKING, Dict, Union
+from typing import List, TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -186,4 +186,4 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         return result
 
 
-SupportedOutput = Union[List[str], ExecutionPaths]
+SupportedOutput = ExecutionPaths
