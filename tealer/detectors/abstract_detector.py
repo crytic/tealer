@@ -2,9 +2,12 @@ import abc
 from typing import List, TYPE_CHECKING
 
 from tealer.utils.comparable_enum import ComparableEnum
+from tealer.utils.output import ExecutionPaths
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
+    from tealer.teal.basic_blocks import BasicBlock
+    from tealer.utils.output import SupportedOutput
 
 
 class IncorrectDetectorInitialization(Exception):
@@ -75,7 +78,22 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
                 f"WIKI_RECOMMENDATION is not initialized {self.__class__.__name__}"
             )
 
+    def generate_result(
+        self, paths: List[List["BasicBlock"]], description: str, filename: str
+    ) -> ExecutionPaths:
+        output = ExecutionPaths(self.teal.bbs, description, filename)
+
+        for path in paths:
+            output.add_path(path)
+
+        output.check = self.NAME
+        # output.impact = classification_txt[self.IMPACT]
+        # output.confidence = classification_txt[self.CONFIDENCE]
+        output.help = self.WIKI_RECOMMENDATION.strip()
+
+        return output
+
     @abc.abstractmethod
-    def detect(self) -> List[str]:
+    def detect(self) -> "SupportedOutput":
         """TODO Documentation"""
         return []

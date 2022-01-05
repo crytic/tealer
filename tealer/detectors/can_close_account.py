@@ -1,5 +1,4 @@
-from pathlib import Path
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.teal.basic_blocks import BasicBlock
@@ -15,7 +14,9 @@ from tealer.teal.instructions.instructions import (
     Txn,
 )
 from tealer.teal.instructions.transaction_field import CloseRemainderTo
-from tealer.utils.output import execution_path_to_dot
+
+if TYPE_CHECKING:
+    from tealer.utils.output import SupportedOutput
 
 
 def _is_close_remainder_check(ins1: Instruction, ins2: Instruction) -> bool:
@@ -93,21 +94,14 @@ Always check that CloseRemainderTo transaction field is set to a ZeroAddress or 
         for next_bb in bb.next:
             self._check_close_account(next_bb, current_path, paths_without_check)
 
-    def detect(self) -> List[str]:
+    def detect(self) -> "SupportedOutput":
 
         paths_without_check: List[List[BasicBlock]] = []
         self._check_close_account(self.teal.bbs[0], [], paths_without_check)
 
-        all_results_txt: List[str] = []
-        idx = 1
-        for path in paths_without_check:
-            filename = Path(f"can_close_account_{idx}.dot")
-            idx += 1
-            description = "Lack of CloseRemainderTo check allows to close the account"
-            description += " and transfer all the funds to their controlled account."
-            description += f"\n\tCheck the path in {filename}\n"
-            all_results_txt.append(description)
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(execution_path_to_dot(self.teal.bbs, path))
+        description = "Lack of CloseRemainderTo check allows to close the account and"
+        description += " transfer all the funds to attacker controlled address."
 
-        return all_results_txt
+        filename = "can_close_account"
+
+        return self.generate_result(paths_without_check, description, filename)
