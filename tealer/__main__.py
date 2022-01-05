@@ -8,6 +8,7 @@ from tealer.detectors import all_detectors
 from tealer.detectors.abstract_detector import AbstractDetector
 from tealer.teal.parse_teal import parse_teal
 from tealer.utils.command_line import output_detectors
+from tealer.utils.output import cfg_to_dot
 
 
 def parse_args() -> argparse.Namespace:
@@ -66,8 +67,7 @@ def main() -> None:
 
     if args.print_cfg:
         print("CFG exported: cfg.dot")
-        # teal.bbs_to_dot(Path("cfg.dot"))
-        teal.render_cfg(Path("cfg.dot"))
+        cfg_to_dot(teal.bbs, Path("cfg.dot"))
 
     else:
         for Cls in get_detectors():

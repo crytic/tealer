@@ -10,6 +10,7 @@ from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import BZ, Instruction
 from tealer.teal.instructions.instructions import Return, Int, Txn, Eq, BNZ
 from tealer.teal.instructions.transaction_field import OnCompletion, ApplicationID
+from tealer.utils.output import execution_path_to_dot
 
 
 def _is_delete(ins1: Instruction, ins2: Instruction) -> bool:
@@ -153,6 +154,7 @@ Check if `txn OnCompletion == int DeleteApplication` and do appropriate actions 
             description = "Lack of OnCompletion check allows to delete the app\n"
             description += f"\tCheck the path in {filename}\n"
             all_results_txt.append(description)
-            self.teal.bbs_to_dot(filename, path)
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(execution_path_to_dot(self.teal.bbs, path))
 
         return all_results_txt
