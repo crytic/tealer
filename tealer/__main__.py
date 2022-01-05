@@ -3,7 +3,7 @@ import inspect
 import sys
 import json
 from pathlib import Path
-from typing import List, Any, Type, Tuple
+from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional
 
 from pkg_resources import require  # type: ignore
 
@@ -15,6 +15,10 @@ from tealer.teal.parse_teal import parse_teal
 from tealer.utils.command_line import output_detectors, output_printers
 from tealer.utils.output import cfg_to_dot
 from tealer.exceptions import TealerException
+
+if TYPE_CHECKING:
+    from tealer.teal.teal import Teal
+    from tealer.utils.output import SupportedOutput
 
 
 def choose_detectors(
@@ -58,7 +62,7 @@ def choose_printers(
         if printer in printers:
             printers_to_run.append(printers[printer])
         else:
-            raise Exception(f"{printer} is not a printer")
+            raise TealerException(f"{printer} is not a printer")
     return printers_to_run
 
 
@@ -212,7 +216,64 @@ def get_detectors_and_printers() -> Tuple[
     return detector_classes, printer_classes
 
 
-def main() -> None:  # pylint: disable=too-many-branches
+def handle_print_cfg(args: argparse.Namespace, teal: "Teal") -> None:
+    filename = args.print_cfg
+    if not filename.endswith(".dot"):
+        filename += ".dot"
+
+    filename = Path(args.dest) / Path(filename)
+    print(f"\nCFG exported to file: {filename}")
+    cfg_to_dot(teal.bbs, filename)
+
+
+def handle_detectors_and_printers(
+    args: argparse.Namespace,
+    teal: "Teal",
+    detectors: List[Type[AbstractDetector]],
+    printers: List[Type[AbstractPrinter]],
+) -> Tuple[List["SupportedOutput"], List]:
+    for detector_cls in detectors:
+        teal.register_detector(detector_cls)
+
+    for printer_cls in printers:
+        teal.register_printer(printer_cls)
+
+    return teal.run_detectors(), teal.run_printers(Path(args.dest))
+
+
+def handle_output(
+    args: argparse.Namespace,
+    detector_results: List["SupportedOutput"],
+    _printer_results: List,
+    error: Optional[str],
+) -> None:
+    if args.json is None:
+
+        if error is not None:
+            print(f"Error: {error}")
+            sys.exit(-1)
+
+        for output in detector_results:
+            output.write_to_files(args.dest, args.all_paths_in_one)
+    else:
+        json_results = [output.to_json() for output in detector_results]
+
+        json_output = {
+            "success": error is not None,
+            "error": error,
+            "result": json_results,
+        }
+
+        if args.json == "-":
+            print(json.dumps(json_output, indent=2))
+        else:
+            filename = Path(args.dest) / Path(args.json)
+            print(f"json output is written to {filename}")
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(json.dumps(json_output, indent=2))
+
+
+def main() -> None:
 
     detector_classes, printer_classes = get_detectors_and_printers()
     args = parse_args(detector_classes, printer_classes)
@@ -220,7 +281,8 @@ def main() -> None:  # pylint: disable=too-many-branches
     detector_classes = choose_detectors(args, detector_classes)
     printer_classes = choose_printers(args, printer_classes)
 
-    json_result = []
+    results_detectors: List["SupportedOutput"] = []
+    _results_printers: List = []
     error = None
     try:
         with open(args.program, encoding="utf-8") as f:
@@ -228,52 +290,17 @@ def main() -> None:  # pylint: disable=too-many-branches
             teal = parse_teal(f.read())
 
         if args.print_cfg is not None:
-
-            filename = args.print_cfg
-            if not filename.endswith(".dot"):
-                filename += ".dot"
-
-            filename = Path(args.dest) / Path(filename)
-            print(f"\nCFG exported to file: {filename}")
-            cfg_to_dot(teal.bbs, filename)
+            handle_print_cfg(args, teal)
             return
 
-        for detector_cls in detector_classes:
-            teal.register_detector(detector_cls)
-
-        for printer_cls in printer_classes:
-            teal.register_printer(printer_cls)
-
-        results_detectors = teal.run_detectors()
-        _results_printers = teal.run_printers(Path(args.dest))
-
-        if args.json is None:
-            for output in results_detectors:
-                output.write_to_files(Path(args.dest), args.all_paths_in_one)
-        else:
-            for output in results_detectors:
-                json_result.append(output.to_json())
+        results_detectors, _results_printers = handle_detectors_and_printers(
+            args, teal, detector_classes, printer_classes
+        )
 
     except TealerException as e:
         error = str(e)
 
-    if args.json is not None:
-        result = {
-            "success": error is None,
-            "error": error,
-            "result": json_result,
-        }
-        if args.json == "-":
-            print(json.dumps(result, indent=2))
-        else:
-            filename = Path(args.dest) / Path(args.json)
-            print(f"json output is written to {filename}")
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(json.dumps(result, indent=2))
-
-    if error is not None:
-        print(f"Error: {error}")
-        sys.exit(-1)
+    handle_output(args, results_detectors, _results_printers, error)
 
 
 if __name__ == "__main__":
