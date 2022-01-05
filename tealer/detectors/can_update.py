@@ -1,5 +1,4 @@
-from pathlib import Path
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
@@ -10,7 +9,9 @@ from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import BZ, Instruction
 from tealer.teal.instructions.instructions import Return, Int, Txn, Eq, BNZ
 from tealer.teal.instructions.transaction_field import OnCompletion, ApplicationID
-from tealer.utils.output import execution_path_to_dot
+
+if TYPE_CHECKING:
+    from tealer.utils.output import SupportedOutput
 
 
 def _is_update(ins1: Instruction, ins2: Instruction) -> bool:
@@ -141,20 +142,13 @@ Check if `txn OnCompletion == int UpdateApplication` and do appropriate actions 
         for next_bb in bb.next:
             self._check_delete(next_bb, current_path, paths_without_check)
 
-    def detect(self) -> List[str]:
+    def detect(self) -> "SupportedOutput":
 
         paths_without_check: List[List[BasicBlock]] = []
         self._check_delete(self.teal.bbs[0], [], paths_without_check)
 
-        all_results_txt: List[str] = []
-        idx = 1
-        for path in paths_without_check:
-            filename = Path(f"can_update_{idx}.dot")
-            idx += 1
-            description = "Lack of OnCompletion check allows to update the app\n"
-            description += f"\tCheck the path in {filename}\n"
-            all_results_txt.append(description)
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(execution_path_to_dot(self.teal.bbs, path))
+        description = "Lack of txn OnCompletion == int UpdateApplication check allows to"
+        description += " update the application's approval and clear programs."
 
-        return all_results_txt
+        filename = "can_update"
+        return self.generate_result(paths_without_check, description, filename)

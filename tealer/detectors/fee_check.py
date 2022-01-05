@@ -1,5 +1,4 @@
-from pathlib import Path
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
@@ -19,7 +18,9 @@ from tealer.teal.instructions.instructions import (
     Txn,
 )
 from tealer.teal.instructions.transaction_field import Fee
-from tealer.utils.output import execution_path_to_dot
+
+if TYPE_CHECKING:
+    from tealer.utils.output import SupportedOutput
 
 
 def _is_fee_check(ins1: Instruction, ins2: Instruction) -> bool:
@@ -100,19 +101,12 @@ Always check that transaction fee which can be accessed using `txn Fee` in Teal 
         for next_bb in bb.next:
             self._check_fee(next_bb, current_path, paths_without_check)
 
-    def detect(self) -> List[str]:
+    def detect(self) -> "SupportedOutput":
         paths_without_check: List[List[BasicBlock]] = []
         self._check_fee(self.teal.bbs[0], [], paths_without_check)
 
-        all_results_txt: List[str] = []
-        idx = 1
-        for path in paths_without_check:
-            filename = Path(f"missing_fee_check_{idx}.dot")
-            idx += 1
-            description = "Lack of fee check allows draining the funds of sender account"
-            description += f"\n\tCheck the path in {filename}\n"
-            all_results_txt.append(description)
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(execution_path_to_dot(self.teal.bbs, path))
+        description = "Lack of fee check allows draining the funds of sender account,"
+        description += "contract account or signer of delegate contract."
+        filename = "missing_fee_check"
 
-        return all_results_txt
+        return self.generate_result(paths_without_check, description, filename)

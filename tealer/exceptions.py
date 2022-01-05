@@ -1,0 +1,2 @@
+class TealerException(Exception):
+    pass

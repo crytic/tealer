@@ -1,7 +1,6 @@
 from collections import defaultdict
 from copy import copy
-from pathlib import Path
-from typing import Dict, Set, List
+from typing import Dict, Set, List, TYPE_CHECKING
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
@@ -11,21 +10,9 @@ from tealer.detectors.abstract_detector import (
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import Gtxn, Return, Int
 from tealer.teal.instructions.transaction_field import RekeyTo
-from tealer.utils.output import execution_path_to_dot
 
-
-class Result:
-    def __init__(self, filename: Path, bbs: List[BasicBlock], path_initial: List[BasicBlock]):
-        self.filename = filename
-        self.bbs = bbs
-        self.paths = [path_initial]
-
-    def add_path(self, path: List[BasicBlock]) -> None:
-        self.paths.append(path)
-
-    @property
-    def all_bbs_in_paths(self) -> List[BasicBlock]:
-        return [p for sublist in self.paths for p in sublist]
+if TYPE_CHECKING:
+    from tealer.utils.output import SupportedOutput
 
 
 class MissingRekeyTo(AbstractDetector):
@@ -58,7 +45,7 @@ Add a check in the contract code verifying that `RekeyTo` property of any transa
         group_tx: Dict[int, Set[BasicBlock]],
         idx_fitlered: Set[int],
         current_path: List[BasicBlock],
-        all_results: Dict[str, Result],
+        paths_without_check: List[List[BasicBlock]],
     ) -> None:
         # check for loops
         if bb in current_path:
@@ -84,32 +71,18 @@ Add a check in the contract code verifying that `RekeyTo` property of any transa
                     if isinstance(prev, Int) and prev.value == 0:
                         return
 
-                for idx, bbs in group_tx.items():
-                    bbs_list = sorted(bbs, key=lambda x: x.instructions[0].line)
-                    filename = Path(f"rekeyto_tx_{idx}.dot")
-
-                    if idx not in all_results:
-                        all_results[str(idx)] = Result(filename, bbs_list + [bb], current_path)
-                    else:
-                        all_results[str(idx)].add_path(current_path)
+                paths_without_check.append(current_path)
 
         for next_bb in bb.next:
-            self.check_rekey_to(next_bb, group_tx, idx_fitlered, current_path, all_results)
+            self.check_rekey_to(next_bb, group_tx, idx_fitlered, current_path, paths_without_check)
 
-    def detect(self) -> List[str]:
+    def detect(self) -> "SupportedOutput":
 
-        all_results: Dict[str, Result] = {}
-        self.check_rekey_to(self.teal.bbs[0], defaultdict(set), set(), [], all_results)
+        paths_without_check: List[List[BasicBlock]] = []
+        self.check_rekey_to(self.teal.bbs[0], defaultdict(set), set(), [], paths_without_check)
 
-        all_results_txt: List[str] = []
-        for idx, res in all_results.items():
-            description = f"Potential lack of RekeyTo check on transaction {idx}\n"
-            description += f"\tFix the paths in {res.filename}\n"
-            description += (
-                "\tOr ensure it is used with stateless contracts that check for ReKeyTo\n"
-            )
-            all_results_txt.append(description)
-            with open(res.filename, "w", encoding="utf-8") as f:
-                f.write(execution_path_to_dot(self.teal.bbs, res.all_bbs_in_paths))
+        description = "Lack of txn RekeyTo check allows rekeying the account to"
+        description += " attacker controlled address and control the account directly"
+        filename = "missing_rekeyto_check"
 
-        return all_results_txt
+        return self.generate_result(paths_without_check, description, filename)

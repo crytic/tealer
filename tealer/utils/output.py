@@ -1,6 +1,6 @@
 import html
 from pathlib import Path
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -61,3 +61,129 @@ def execution_path_to_dot(cfg: List["BasicBlock"], path: List["BasicBlock"]) -> 
     dot_output += "}"
 
     return dot_output
+
+
+class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
+    """Detector output class to store list of vulnerable paths"""
+
+    def __init__(self, cfg: List["BasicBlock"], description: str, filename: str):
+        self._cfg = cfg
+        self._description = description
+        self._filename = filename
+        self._paths: List[List["BasicBlock"]] = []
+        self._check: str = ""
+        # self._impact: str = ""
+        # self._confidence: str = ""
+        self._help: str = ""
+
+    def add_path(self, path: List["BasicBlock"]) -> None:
+        self._paths.append(path)
+
+    @property
+    def paths(self) -> List[List["BasicBlock"]]:
+        return self._paths
+
+    @property
+    def cfg(self) -> List["BasicBlock"]:
+        return self._cfg
+
+    @property
+    def description(self) -> str:
+        return self._description
+
+    @property
+    def check(self) -> str:
+        return self._check
+
+    @check.setter
+    def check(self, c: str) -> None:
+        self._check = c
+
+    # @property
+    # def impact(self) -> str:
+    #     return self._impact
+
+    # @impact.setter
+    # def impact(self, i: str) -> None:
+    #     self._impact = i
+
+    # @property
+    # def confidence(self) -> str:
+    #     return self._confidence
+
+    # @confidence.setter
+    # def confidence(self, c: str) -> None:
+    #     self._confidence = c
+
+    @property
+    def help(self) -> str:
+        return self._help
+
+    @help.setter
+    def help(self, h: str) -> None:
+        self._help = h
+
+    def write_to_files(self, dest: Path, all_paths_in_one: bool = False) -> None:
+        # print(f"\ncheck: {self.check}, impact: {self.impact}, confidence: {self.confidence}")
+        print(f"\ncheck: {self.check}")
+        print(self.description)
+        if len(self.paths) == 0:
+            print("\tdetector didn't find any vulnerable paths.")
+            return
+
+        print("\tfollowing are the vulnerable paths found")
+        if not all_paths_in_one:
+
+            for idx, path in enumerate(self._paths, start=1):
+
+                short = " -> ".join(map(str, [bb.idx for bb in path]))
+                print(f"\n\t\t path: {short}")
+
+                filename = dest / Path(f"{self._filename}_{idx}.dot")
+                print(f"\t\t check file: {filename}")
+
+                with open(filename, "w", encoding="utf-8") as f:
+                    f.write(execution_path_to_dot(self.cfg, path))
+        else:
+            bbs_to_highlight = []
+
+            for path in self._paths:
+                short = " -> ".join(map(str, [bb.idx for bb in path]))
+                print(f"\t\t path: {short}")
+                for bb in path:
+                    if bb not in bbs_to_highlight:
+                        bbs_to_highlight.append(bb)
+
+            filename = dest / Path(f"{self._filename}.dot")
+            print(f"\t\t check file: {filename}")
+
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(execution_path_to_dot(self.cfg, bbs_to_highlight))
+
+    def to_json(self) -> Dict:
+        result = {
+            "type": "ExecutionPaths",
+            "count": len(self.paths),
+            "description": self.description,
+            "check": self.check,
+            # "impact": self.impact,
+            # "confidence": self.confidence,
+            "help": self.help,
+        }
+        paths = []
+        for path in self.paths:
+            short = " -> ".join(map(str, [bb.idx for bb in path]))
+            blocks = []
+            for bb in path:
+                block = []
+                for ins in bb.instructions:
+                    block.append(f"{ins.line}: {ins}")
+                blocks.append(block)
+
+            paths.append({"short": short, "blocks": blocks})
+
+        result["paths"] = paths
+        return result
+
+
+SupportedOutput = ExecutionPaths
