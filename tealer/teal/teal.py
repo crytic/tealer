@@ -26,17 +26,19 @@ def _check_common_things(
 
 
 class Teal:
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         instructions: List[Instruction],
         bbs: List[BasicBlock],
         version: int,
         mode: ContractType,
+        subroutines: List[List["BasicBlock"]],
     ):
         self._instructions = instructions
         self._bbs = bbs
         self._version = version
         self._mode = mode
+        self._subroutines = subroutines
 
         self._detectors: List[AbstractDetector] = []
         self._printers: List[AbstractPrinter] = []
@@ -48,6 +50,10 @@ class Teal:
     @property
     def bbs(self) -> List[BasicBlock]:
         return self._bbs
+
+    @property
+    def subroutines(self) -> List[List["BasicBlock"]]:
+        return self._subroutines
 
     @property
     def version(self) -> int:
