@@ -1,6 +1,10 @@
 from typing import List, TYPE_CHECKING
 
-from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
+from tealer.detectors.abstract_detector import (
+    AbstractDetector,
+    DetectorClassification,
+    DetectorType,
+)
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import GroupSize
 from tealer.teal.instructions.instructions import Return, Int, Global
@@ -15,6 +19,9 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
     NAME = "groupSize"
     DESCRIPTION = "Detect paths with a missing GroupSize check"
     TYPE = DetectorType.STATEFULLGROUP
+
+    IMPACT = DetectorClassification.MEDIUM
+    CONFIDENCE = DetectorClassification.HIGH
 
     WIKI_TITLE = "Missing GroupSize check"
     WIKI_DESCRIPTION = "Detect paths with a missing GroupSize check"

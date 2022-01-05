@@ -1,6 +1,10 @@
 from typing import List, TYPE_CHECKING
 
-from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
+from tealer.detectors.abstract_detector import (
+    AbstractDetector,
+    DetectorClassification,
+    DetectorType,
+)
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import ZeroAddress
 from tealer.teal.instructions.instructions import (
@@ -32,6 +36,9 @@ class CanCloseAsset(AbstractDetector):  # pylint: disable=too-few-public-methods
     NAME = "canCloseAsset"
     DESCRIPTION = "Detect paths that can close the asset holdings of the sender"
     TYPE = DetectorType.STATELESS
+
+    IMPACT = DetectorClassification.HIGH
+    CONFIDENCE = DetectorClassification.HIGH
 
     WIKI_TITLE = "Can Close Asset"
     WIKI_DESCRIPTION = "Detect paths that can close the asset holdings of the sender"

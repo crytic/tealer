@@ -2,7 +2,11 @@ from collections import defaultdict
 from copy import copy
 from typing import Dict, Set, List, TYPE_CHECKING
 
-from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
+from tealer.detectors.abstract_detector import (
+    AbstractDetector,
+    DetectorClassification,
+    DetectorType,
+)
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import Gtxn, Return, Int
 from tealer.teal.instructions.transaction_field import RekeyTo
@@ -16,6 +20,9 @@ class MissingRekeyTo(AbstractDetector):
     NAME = "rekeyTo"
     DESCRIPTION = "Detect paths with a missing RekeyTo check"
     TYPE = DetectorType.STATEFULLGROUP
+
+    IMPACT = DetectorClassification.HIGH
+    CONFIDENCE = DetectorClassification.HIGH
 
     WIKI_TITLE = "Can Rekey Contract"
     WIKI_DESCRIPTION = "Detect paths with a missing RekeyTo check"

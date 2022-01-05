@@ -1,6 +1,10 @@
 from typing import List, TYPE_CHECKING
 
-from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
+from tealer.detectors.abstract_detector import (
+    AbstractDetector,
+    DetectorClassification,
+    DetectorType,
+)
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import BZ, Instruction
 from tealer.teal.instructions.instructions import Return, Int, Txn, Eq, BNZ
@@ -43,6 +47,9 @@ class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
     NAME = "canDelete"
     DESCRIPTION = "Detect paths that can delete the application"
     TYPE = DetectorType.STATEFULL
+
+    IMPACT = DetectorClassification.HIGH
+    CONFIDENCE = DetectorClassification.HIGH
 
     WIKI_TITLE = "Can Delete Application"
     WIKI_DESCRIPTION = "Detect paths that can delete the application"
