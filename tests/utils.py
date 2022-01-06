@@ -80,10 +80,11 @@ def construct_cfg(
         ins.line = idx
 
     bbs = []
-    for start, end in ins_partitions:
+    for (idx, (start, end)) in enumerate(ins_partitions):
         bb = BasicBlock()
         for ins in ins_list[start:end]:
             bb.add_instruction(ins)
+        bb.idx = idx
         bbs.append(bb)
 
     for idx1, idx2 in bbs_links:
