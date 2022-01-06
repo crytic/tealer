@@ -56,7 +56,7 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> Non
 
 def _first_pass(
     lines: List[str],
-    labels: Dict[str, Instruction],
+    labels: Dict[str, Label],
     rets: Dict[str, List[Instruction]],
     instructions: List[Instruction],
 ) -> None:
@@ -110,7 +110,7 @@ def _first_pass(
 
 def _second_pass(
     instructions: List[Instruction],
-    labels: Dict[str, Instruction],
+    labels: Dict[str, Label],
     rets: Dict[str, List[Instruction]],
 ) -> None:
     # Second pass over the instructions list: Add instruction links for jumps
@@ -193,9 +193,51 @@ def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
     return bbs
 
 
+def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
+    """find all the basic blocks part of a subroutine given it's label instruction.
+
+    Args:
+        label ("Label"): label instruction of the subroutine.
+        bbs (List["BasicBlock"]): CFG of the contract.
+
+    Returns:
+        List["BasicBlock"]: list of all basic blocks part of a subroutine.
+
+    """
+    if label.bb is None:
+        return []
+
+    subroutines_blocks: List["BasicBlock"] = []
+    stack: List["BasicBlock"] = []
+
+    stack.append(label.bb)
+    while len(stack) > 0:
+        bb = stack.pop()
+        subroutines_blocks.append(bb)
+
+        # check for retsub before exploring as retsubs are connected to return points
+        if isinstance(bb.exit_instr, Retsub):
+            continue
+
+        # callsub return point is part of the subroutine
+        if isinstance(bb.exit_instr, Callsub):
+            return_point = bb.exit_instr.return_point
+
+            if return_point and return_point.bb not in subroutines_blocks:
+                if return_point.bb is not None:
+                    stack.append(return_point.bb)
+            continue
+
+        for next_bb in bb.next:
+            if next_bb not in subroutines_blocks:
+                stack.append(next_bb)
+
+    return subroutines_blocks
+
+
 def parse_teal(source_code: str) -> Teal:
     instructions: List[Instruction] = []  # Parsed instructions list
-    labels: Dict[str, Instruction] = {}  # Global map of label names to label instructions
+    labels: Dict[str, Label] = {}  # Global map of label names to label instructions
     rets: Dict[str, List[Instruction]] = {}  # Lists of return points corresponding to labels
 
     lines = source_code.splitlines()
@@ -216,4 +258,10 @@ def parse_teal(source_code: str) -> Teal:
     if isinstance(instructions[0], Pragma):
         version = instructions[0].program_version
 
-    return Teal(instructions, all_bbs, version, mode)
+    subroutines = []
+    if version >= 4:
+        for subroutine_label in rets:
+            label_ins = labels[subroutine_label]
+            subroutines.append(_identify_subroutine_blocks(label_ins))
+
+    return Teal(instructions, all_bbs, version, mode, subroutines)
