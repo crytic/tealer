@@ -33,12 +33,14 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> Non
     for ins in instructions:
 
         if isinstance(ins, Label) or not bb:
-            next_bb = BasicBlock()
-            all_bbs.append(next_bb)
-            if bb:
-                bb.add_next(next_bb)
-                next_bb.add_prev(bb)
-            bb = next_bb
+            # use bb if it is empty instead of creating new BasicBlock.
+            if bb is None or len(bb.instructions) != 0:
+                next_bb = BasicBlock()
+                all_bbs.append(next_bb)
+                if bb:
+                    bb.add_next(next_bb)
+                    next_bb.add_prev(bb)
+                bb = next_bb
         bb.add_instruction(ins)
         ins.bb = bb
 
