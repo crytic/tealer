@@ -16,6 +16,10 @@ from tealer.teal.instructions.instructions import (
 )
 from tealer.teal.instructions.instructions import ContractType
 from tealer.teal.instructions.parse_instruction import parse_line, ParseError
+from tealer.teal.instructions.transaction_field import TransactionField
+from tealer.teal.instructions.asset_holding_field import AssetHoldingField
+from tealer.teal.instructions.asset_params_field import AssetParamsField
+from tealer.teal.instructions.app_params_field import AppParamsField
 from tealer.teal.teal import Teal
 
 
@@ -235,6 +239,69 @@ def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
     return subroutines_blocks
 
 
+def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
+    """verify that instructions and fields used in the contract are supported in the
+    Teal version specified by the contract.
+
+    This function doesn't raise an exception in case of error, only returns a boolean representing
+    the presence of it and prints related information to stderr.
+
+    Args:
+        ins_list (List[Instruction]): list of contract instructions.
+        program_version (int): Teal version of the contract, calculated using #pragma version
+        instruction if it is the first instruction or else default version 1.
+    Returns:
+        (bool): returns true if there is any error i.e if any of the instructions or fields are
+        not supported in the contract version Or if the contract contains instructions that are
+        specific to both Signature and Application Mode.
+
+    """
+    stateful_ins: List[Instruction] = []
+    stateless_ins: List[Instruction] = []
+    error = False
+
+    print("\nchecking instruction, field versions with contract version\n")
+    for ins in ins_list:
+        if program_version < ins.version:
+            print(
+                f"{ins.line}: {ins} instruction is not supported in Teal version {program_version}"
+                f", it is supported from Teal version {ins.version}",
+                file=sys.stderr,
+            )
+            error = True
+        else:
+            field = getattr(ins, "field", None)
+            if field is not None and isinstance(
+                field, (TransactionField, AssetHoldingField, AssetParamsField, AppParamsField)
+            ):
+                if program_version < field.version:
+                    print(
+                        f"{ins.line}: {ins}, field {field} is not supported in Teal version {program_version}"
+                        f", it is supported from Teal version {field.version}",
+                        file=sys.stderr,
+                    )
+                    error = True
+        if ins.mode == ContractType.STATEFULL:
+            stateful_ins.append(ins)
+        elif ins.mode == ContractType.STATELESS:
+            stateless_ins.append(ins)
+
+    if stateless_ins and stateful_ins:
+        print(
+            "\nprogram contains instructions specific to both Application and Signature Mode",
+            file=sys.stderr,
+        )
+        print("Instructions supported only in Signature Mode:", file=sys.stderr)
+        for ins in stateless_ins:
+            print(f"\t{ins.line}: {ins}", file=sys.stderr)
+        print("\nInstructions supported only in Application Mode:", file=sys.stderr)
+        for ins in stateful_ins:
+            print(f"\t{ins.line}: {ins}", file=sys.stderr)
+        error = True
+
+    return error
+
+
 def parse_teal(source_code: str) -> Teal:
     instructions: List[Instruction] = []  # Parsed instructions list
     labels: Dict[str, Label] = {}  # Global map of label names to label instructions
@@ -257,6 +324,8 @@ def parse_teal(source_code: str) -> Teal:
     version = 1
     if isinstance(instructions[0], Pragma):
         version = instructions[0].program_version
+
+    _verify_version(instructions, version)
 
     subroutines = []
     if version >= 4:
