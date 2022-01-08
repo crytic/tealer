@@ -50,3 +50,7 @@ jobs:
     - name: Run cfg recovery tests
       run: |
         pytest tests/test_cfg.py
+
+    - name: Run detectors tests
+      run: |
+        pytest tests/test_detectors.py
