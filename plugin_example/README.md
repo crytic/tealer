@@ -1,7 +1,7 @@
 # Tealer plugin example
 
 Tealer supports plugins, additional detectors and printers can be added to tealer in the form of plugins.
-This repo contains template and an actual implementation of tealer plugin.
+This repository contains template and an actual implementation of tealer plugin.
 
 ## Architecture
 
@@ -10,13 +10,14 @@ This repo contains template and an actual implementation of tealer plugin.
 - Printers should be subclasses of `AbstractPrinter` and have to override `print` method.
 
 see `template` folder for skeleton of the plugin
+
 - `setup.py`: Contains the plugin information.
 - `tealer_plugin/__init__.py`: Contains `make_plugin` function which has to return list of detectors and printers.
--  `tealer_plugin/detectors/example.py`: Contains detector plugin skeleton.
+- `tealer_plugin/detectors/example.py`: Contains detector plugin skeleton.
 
 plugin can be installed after updating the files in the template by running:
 
-```
+```sh
 python setup.py develop
 ```
 
