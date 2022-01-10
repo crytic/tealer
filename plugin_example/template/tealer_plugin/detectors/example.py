@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
 
 
-class Example(AbstractDetector):
+class Example(AbstractDetector):  # pylint: disable=too-few-public-methods
     """
     Documentation
     """

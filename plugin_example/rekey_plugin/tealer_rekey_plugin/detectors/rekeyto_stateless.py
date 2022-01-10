@@ -25,7 +25,7 @@ def _is_rekey_check(ins1: "Instruction", ins2: "Instruction") -> bool:
     return False
 
 
-class CanRekey(AbstractDetector):
+class CanRekey(AbstractDetector):  # pylint: disable=too-few-public-methods
 
     NAME = "rekeyTo-stateless"
     DESCRIPTION = "Detect paths with a missing RekeyTo check"
