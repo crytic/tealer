@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional
 
-from pkg_resources import require  # type: ignore
+from pkg_resources import iter_entry_points, require  # type: ignore
 
 from tealer.detectors import all_detectors
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
@@ -200,6 +200,41 @@ class ListPrinters(argparse.Action):  # pylint: disable=too-few-public-methods
         parser.exit()
 
 
+def collect_plugins() -> Tuple[List[Type[AbstractDetector]], List[Type[AbstractPrinter]]]:
+    """collect detectors and printers installed in form of plugins.
+
+    plugins are collected using the entry point group `teal_analyzer.plugin`.
+    The entry point of each plugin has to return tuple containing list of detectors and
+    list of printers defined in the plugin when called.
+
+    Returns:
+        (Tuple[List[Type[AbstractDetector]], List[Type[AbstractPrinter]]]): detectors and
+        printers added in the form of plugins.
+
+    """
+    detector_classes: List[Type[AbstractDetector]] = []
+    printer_classes: List[Type[AbstractPrinter]] = []
+    for entry_point in iter_entry_points(group="teal_analyzer.plugin", name=None):
+        make_plugin = entry_point.load()
+
+        plugin_detectors, plugin_printers = make_plugin()
+        detector = None
+        if not all(issubclass(detector, AbstractDetector) for detector in plugin_detectors):
+            raise TealerException(
+                f"Error when loading plugin {entry_point}, {detector} is not a detector"
+            )
+        printer = None
+        if not all(issubclass(printer, AbstractPrinter) for printer in plugin_printers):
+            raise TealerException(
+                f"Error when loading plugin {entry_point}, {printer} is not a printer"
+            )
+
+        detector_classes += plugin_detectors
+        printer_classes += plugin_printers
+
+    return detector_classes, printer_classes
+
+
 def get_detectors_and_printers() -> Tuple[
     List[Type[AbstractDetector]], List[Type[AbstractPrinter]]
 ]:
@@ -212,6 +247,11 @@ def get_detectors_and_printers() -> Tuple[
     printer_classes = [
         d for d in printer_classes if inspect.isclass(d) and issubclass(d, AbstractPrinter)
     ]
+
+    plugins_detectors, plugins_printers = collect_plugins()
+
+    detector_classes += plugins_detectors
+    printer_classes += plugins_printers
 
     return detector_classes, printer_classes
 
