@@ -7,6 +7,7 @@ from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
 from tealer.utils.comparable_enum import ComparableEnum
+from tealer.utils.instruction_utils import instruction_cost
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -82,6 +83,10 @@ class Instruction:
     def mode(self) -> ContractType:
         """Type of smart contracts this instruction is supported."""
         return self._mode
+
+    def cost(self, contract_version: int) -> int:
+        """cost of executing this instruction in given teal version"""
+        return instruction_cost(str(self), contract_version)
 
     def __str__(self) -> str:
         return self.__class__.__qualname__.lower()

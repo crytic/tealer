@@ -29,7 +29,8 @@ def _bb_to_dot(bb: "BasicBlock") -> str:
         entry_loc = next_bb.entry_instr.line
         graph_edges += f"{bb.idx}:{exit_loc}:s -> {next_bb.idx}:{entry_loc}:n;\n"
     table = table_prefix + table_rows + table_suffix
-    return f"{bb.idx}[label={table} xlabel={bb.idx}]" + graph_edges
+    bb_xlabel = f'"cost = {bb.cost}; {bb.idx}"'
+    return f"{bb.idx}[label={table} xlabel={bb_xlabel}]" + graph_edges
 
 
 def cfg_to_dot(bbs: List["BasicBlock"], filename: Path) -> None:

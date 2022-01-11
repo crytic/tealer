@@ -304,6 +304,16 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
     return error
 
 
+def _set_basic_block_costs(cfg: List[BasicBlock], contract_version: int) -> None:
+    """Compute and set execution cost of basic blocks which is simply total sum of costs of
+    each instruction present in that basic block.
+    """
+
+    for bb in cfg:
+        bb_cost = sum(ins.cost(contract_version) for ins in bb.instructions)
+        bb.cost = bb_cost
+
+
 def parse_teal(source_code: str) -> Teal:
     instructions: List[Instruction] = []  # Parsed instructions list
     labels: Dict[str, Label] = {}  # Global map of label names to label instructions
@@ -328,6 +338,8 @@ def parse_teal(source_code: str) -> Teal:
         version = instructions[0].program_version
 
     _verify_version(instructions, version)
+
+    _set_basic_block_costs(all_bbs, version)
 
     subroutines = []
     if version >= 4:

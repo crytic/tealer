@@ -9,6 +9,7 @@ class BasicBlock:
         self._prev: List[BasicBlock] = []
         self._next: List[BasicBlock] = []
         self._idx: int = 0
+        self._execution_cost: int = 0
 
     def add_instruction(self, instruction: Instruction) -> None:
         self._instructions.append(instruction)
@@ -46,6 +47,15 @@ class BasicBlock:
     @idx.setter
     def idx(self, i: int) -> None:
         self._idx = i
+
+    @property
+    def cost(self) -> int:
+        """cost of executing instructions in this basic block"""
+        return self._execution_cost
+
+    @cost.setter
+    def cost(self, c: int) -> None:
+        self._execution_cost = c
 
     def __str__(self) -> str:
         ret = ""
