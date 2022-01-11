@@ -18,6 +18,13 @@ class ContractType(ComparableEnum):
     ANY = 2
 
 
+contract_type_to_txt = {
+    ContractType.STATEFULL: "stateful",
+    ContractType.STATELESS: "stateless",
+    ContractType.ANY: "any",
+}
+
+
 class Instruction:
     """Base class for Teal instructions."""
 

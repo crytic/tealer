@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List, Any, Optional, Type, TYPE_CHECKING
 
-from tealer.detectors.abstract_detector import AbstractDetector
+from tealer.detectors.abstract_detector import AbstractDetector, DetectorClassification
 from tealer.printers.abstract_printer import AbstractPrinter
 
 from tealer.teal.basic_blocks import BasicBlock
@@ -100,6 +100,31 @@ class Teal:
     def detectors(self) -> List[AbstractDetector]:
         """return list of registered detectors."""
         return self._detectors
+
+    @property
+    def detectors_high(self) -> List[AbstractDetector]:
+        """return list of registered detectors with impact high"""
+        return [d for d in self._detectors if d.IMPACT == DetectorClassification.HIGH]
+
+    @property
+    def detectors_medium(self) -> List[AbstractDetector]:
+        """return list of registered detectors with impact medium"""
+        return [d for d in self._detectors if d.IMPACT == DetectorClassification.MEDIUM]
+
+    @property
+    def detectors_low(self) -> List[AbstractDetector]:
+        """return list of registered detectors with impact low"""
+        return [d for d in self._detectors if d.IMPACT == DetectorClassification.LOW]
+
+    @property
+    def detectors_informational(self) -> List[AbstractDetector]:
+        """return list of registered detectors with impact informational"""
+        return [d for d in self._detectors if d.IMPACT == DetectorClassification.INFORMATIONAL]
+
+    @property
+    def detectors_optimization(self) -> List[AbstractDetector]:
+        """return list of registered detectors with impact optimization"""
+        return [d for d in self._detectors if d.IMPACT == DetectorClassification.OPTIMIZATION]
 
     @property
     def printers(self) -> List[AbstractPrinter]:
