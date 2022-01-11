@@ -16,20 +16,30 @@ def output_detectors(detector_classes: List[Type[AbstractDetector]]) -> None:
         name = detector.NAME
         description = detector.DESCRIPTION
         detector_type = DETECTOR_TYPE_TXT[detector.TYPE]
-        detector_impact = classification_txt[detector.IMPACT]
-        detector_confidence = classification_txt[detector.CONFIDENCE]
+        detector_impact = detector.IMPACT
+        detector_confidence = detector.CONFIDENCE
         detectors_list.append(
             (name, description, detector_type, detector_impact, detector_confidence)
         )
     table = PrettyTable(["Num", "Check", "What it Detects", "Type", "Impact", "Confidence"])
 
-    # Sort by type, name, and description
+    # Sort by type, impact, confidence, name, and description
     detectors_list = sorted(
-        detectors_list, key=lambda element: (element[2], element[0], element[1])
+        detectors_list,
+        key=lambda element: (element[2], element[3], element[4], element[0], element[1]),
     )
     idx = 1
     for (name, description, detector_type, impact, confidence) in detectors_list:
-        table.add_row([idx, name, description, detector_type, impact, confidence])
+        table.add_row(
+            [
+                idx,
+                name,
+                description,
+                detector_type,
+                classification_txt[impact],
+                classification_txt[confidence],
+            ]
+        )
         idx = idx + 1
     print(table)
 
