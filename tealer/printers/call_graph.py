@@ -22,7 +22,7 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
         """construct call graph for the contract.
 
         entry point is treated as a separate function `__entry__`.
-        For each subroutine, lable(subroutine name) represents the node and each callsub
+        For each subroutine, label(subroutine name) represents the node and each callsub
         instruction in the subroutine corresponds to directed edge from subroutine the
         callsub instruction is part of to subroutine corresponding to the callsub label.
 
