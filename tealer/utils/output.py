@@ -72,8 +72,8 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         self._filename = filename
         self._paths: List[List["BasicBlock"]] = []
         self._check: str = ""
-        # self._impact: str = ""
-        # self._confidence: str = ""
+        self._impact: str = ""
+        self._confidence: str = ""
         self._help: str = ""
 
     def add_path(self, path: List["BasicBlock"]) -> None:
@@ -99,21 +99,21 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
     def check(self, c: str) -> None:
         self._check = c
 
-    # @property
-    # def impact(self) -> str:
-    #     return self._impact
+    @property
+    def impact(self) -> str:
+        return self._impact
 
-    # @impact.setter
-    # def impact(self, i: str) -> None:
-    #     self._impact = i
+    @impact.setter
+    def impact(self, i: str) -> None:
+        self._impact = i
 
-    # @property
-    # def confidence(self) -> str:
-    #     return self._confidence
+    @property
+    def confidence(self) -> str:
+        return self._confidence
 
-    # @confidence.setter
-    # def confidence(self, c: str) -> None:
-    #     self._confidence = c
+    @confidence.setter
+    def confidence(self, c: str) -> None:
+        self._confidence = c
 
     @property
     def help(self) -> str:
@@ -124,8 +124,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         self._help = h
 
     def write_to_files(self, dest: Path, all_paths_in_one: bool = False) -> None:
-        # print(f"\ncheck: {self.check}, impact: {self.impact}, confidence: {self.confidence}")
-        print(f"\ncheck: {self.check}")
+        print(f"\ncheck: {self.check}, impact: {self.impact}, confidence: {self.confidence}")
         print(self.description)
         if len(self.paths) == 0:
             print("\tdetector didn't find any vulnerable paths.")
@@ -166,8 +165,8 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
             "count": len(self.paths),
             "description": self.description,
             "check": self.check,
-            # "impact": self.impact,
-            # "confidence": self.confidence,
+            "impact": self.impact,
+            "confidence": self.confidence,
             "help": self.help,
         }
         paths = []
