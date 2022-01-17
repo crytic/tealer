@@ -129,8 +129,8 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
             output.add_path(path)
 
         output.check = self.NAME
-        # output.impact = classification_txt[self.IMPACT]
-        # output.confidence = classification_txt[self.CONFIDENCE]
+        output.impact = classification_txt[self.IMPACT]
+        output.confidence = classification_txt[self.CONFIDENCE]
         output.help = self.WIKI_RECOMMENDATION.strip()
 
         return output
