@@ -7,7 +7,6 @@ from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
 from tealer.utils.comparable_enum import ComparableEnum
-from tealer.utils.instruction_utils import instruction_cost
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -84,9 +83,17 @@ class Instruction:
         """Type of smart contracts this instruction is supported."""
         return self._mode
 
-    def cost(self, contract_version: int) -> int:
-        """cost of executing this instruction in given teal version"""
-        return instruction_cost(str(self), contract_version)
+    @property
+    def cost(self) -> int:
+        """cost of executing this instruction.
+
+        Most of the opcodes in teal have cost of 1. By default, this property
+        will return 1 independent of contract version. Instructions whose cost
+        is not 1 or depends on contract version must override the cost property
+        and return the correct cost using the contract version.
+        """
+
+        return 1
 
     def __str__(self) -> str:
         return self.__class__.__qualname__.lower()
@@ -783,6 +790,21 @@ class Sha256(Instruction):
 
     """
 
+    @property
+    def cost(self) -> int:
+        """cost of executing sha256 instruction."""
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version == 1:
+            return 7
+        return 35
+
 
 class Sha512_256(Instruction):
     """`sha512_256` calculate the sha512_256 hash of the given element.
@@ -799,6 +821,21 @@ class Sha512_256(Instruction):
 
     """
 
+    @property
+    def cost(self) -> int:
+        """cost of executing sha512_256 instruction."""
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version == 1:
+            return 9
+        return 45
+
 
 class Keccak256(Instruction):
     """`keccak256` calculate the keccak256 hash of the given element.
@@ -814,6 +851,21 @@ class Keccak256(Instruction):
         Teal v2 onwards: cost of keccak256 is 130.
 
     """
+
+    @property
+    def cost(self) -> int:
+        """cost of executing keccak256 instruction."""
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version == 1:
+            return 26
+        return 130
 
 
 class Ed25519verify(Instruction):
@@ -832,6 +884,11 @@ class Ed25519verify(Instruction):
         the public key C or else 0.
 
     """
+
+    @property
+    def cost(self) -> int:
+        """cost of executing ed25519verify instruction."""
+        return 1900
 
 
 class Ecdsa_verify(Instruction):
@@ -863,6 +920,26 @@ class Ecdsa_verify(Instruction):
         self._idx = idx
         self._version: int = 5
 
+    @property
+    def cost(self) -> int:
+        """cost of executing ecdsa_verify instruction.
+
+        overrides cost property. ecdsa_verify instruction is introduced in
+        Teal version 5. if the cost property is accessed for contracts with
+        lesser version, value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 5:
+            return 1700
+        return 0
+
     def __str__(self) -> str:
         return f"ecdsa_verify {self._idx}"
 
@@ -887,6 +964,26 @@ class Ecdsa_pk_decompress(Instruction):
         super().__init__()
         self._idx = idx
         self._version: int = 5
+
+    @property
+    def cost(self) -> int:
+        """cost of executing ecdsa_pk_decompress instruction.
+
+        overrides cost property. ecdsa_pk_decompress instruction is introduced in
+        Teal version 5. if the cost property is accessed for contracts with
+        lesser version, value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 5:
+            return 650
+        return 0
 
     def __str__(self) -> str:
         return f"ecdsa_pk_decompress {self._idx}"
@@ -915,6 +1012,26 @@ class Ecdsa_pk_recover(Instruction):
         super().__init__()
         self._idx = idx
         self._version: int = 5
+
+    @property
+    def cost(self) -> int:
+        """cost of executing ecdsa_pk_recover instruction.
+
+        overrides cost property. ecdsa_pk_recover instruction is introduced in
+        Teal version 5. if the cost property is accessed for contracts with
+        lesser version, value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 5:
+            return 2000
+        return 0
 
     def __str__(self) -> str:
         return f"ecdsa_pk_recover {self._idx}"
@@ -1916,6 +2033,26 @@ class BModulo(Instruction):
         super().__init__()
         self._version: int = 4
 
+    @property
+    def cost(self) -> int:
+        """cost of executing b% instruction.
+
+        overrides cost property. b% instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version,
+        value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 20
+        return 0
+
     def __str__(self) -> str:
         return "b%"
 
@@ -1982,6 +2119,26 @@ class BBitwiseAnd(Instruction):
         super().__init__()
         self._version: int = 4
 
+    @property
+    def cost(self) -> int:
+        """cost of executing b& instruction.
+
+        overrides cost property. b& instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version,
+        value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 6
+        return 0
+
     def __str__(self) -> str:
         return "b&"
 
@@ -2004,6 +2161,26 @@ class BBitwiseOr(Instruction):
         super().__init__()
         self._version: int = 4
 
+    @property
+    def cost(self) -> int:
+        """cost of executing b| instruction.
+
+        overrides cost property. b| instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version,
+        value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 6
+        return 0
+
     def __str__(self) -> str:
         return "b|"
 
@@ -2025,6 +2202,26 @@ class BAdd(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 4
+
+    @property
+    def cost(self) -> int:
+        """cost of executing b+ instruction.
+
+        overrides cost property. b+ instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version,
+        value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 10
+        return 0
 
     def __str__(self) -> str:
         return "b+"
@@ -2051,6 +2248,26 @@ class BSubtract(Instruction):
         super().__init__()
         self._version: int = 4
 
+    @property
+    def cost(self) -> int:
+        """cost of executing b- instruction.
+
+        overrides cost property. b- instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version,
+        value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 10
+        return 0
+
     def __str__(self) -> str:
         return "b-"
 
@@ -2076,6 +2293,26 @@ class BDiv(Instruction):
         super().__init__()
         self._version: int = 4
 
+    @property
+    def cost(self) -> int:
+        """cost of executing b/ instruction.
+
+        overrides cost property. b/ instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version,
+        value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 20
+        return 0
+
     def __str__(self) -> str:
         return "b/"
 
@@ -2097,6 +2334,26 @@ class BMul(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 4
+
+    @property
+    def cost(self) -> int:
+        """cost of executing b* instruction.
+
+        overrides cost property. b* instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version,
+        value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 20
+        return 0
 
     def __str__(self) -> str:
         return "b*"
@@ -2208,6 +2465,26 @@ class BBitwiseXor(Instruction):
         super().__init__()
         self._version: int = 4
 
+    @property
+    def cost(self) -> int:
+        """cost of executing b^ instruction.
+
+        overrides cost property. b^ instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version,
+        value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 6
+        return 0
+
     def __str__(self) -> str:
         return "b^"
 
@@ -2230,6 +2507,26 @@ class BBitwiseInvert(Instruction):
 
     def __str__(self) -> str:
         return "b~"
+
+    @property
+    def cost(self) -> int:
+        """cost of executing b~ instruction.
+
+        overrides cost property. b~ instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version,
+        value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 4
+        return 0
 
 
 class BZero(Instruction):
@@ -2561,6 +2858,26 @@ class Divmodw(Instruction):
         super().__init__()
         self._version: int = 4
 
+    @property
+    def cost(self) -> int:
+        """cost of executing divmodw instruction.
+
+        overrides cost property. divmodw instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version, value 0
+        is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 20
+        return 0
+
 
 class Exp(Instruction):
     """`exp` allows calculating powers of a number.
@@ -2601,6 +2918,26 @@ class Expw(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 4
+
+    @property
+    def cost(self) -> int:
+        """cost of executing expw instruction.
+
+        overrides cost property. expw instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version, value 0
+        is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 10
+        return 0
 
 
 class Shl(Instruction):
@@ -2651,6 +2988,26 @@ class Sqrt(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 4
+
+    @property
+    def cost(self) -> int:
+        """cost of executing sqrt instruction.
+
+        overrides cost property. sqrt instruction is introduced in Teal version 4.
+        if the cost property is accessed for contracts with lesser version, value 0
+        is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 4:
+            return 4
+        return 0
 
 
 class Intcblock(Instruction):
