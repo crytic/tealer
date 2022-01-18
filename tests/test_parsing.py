@@ -2,6 +2,7 @@ from typing import Type, Tuple
 import pytest
 
 from tealer.teal.parse_teal import parse_teal
+from tealer.teal.instructions.parse_instruction import parse_line, ParseError
 from tealer.teal.instructions import instructions
 
 TARGETS = [
@@ -51,6 +52,22 @@ byte "string literal"
 bytecblock b32(AA) base64 AA 0x00 "00"
 bytecblock
 byte "not label: // not comment either"
+labelwithqoute": // valid
+"""
+
+invalid_instructions = """
+byte "sdf       // missing closing qoute
+byte base64     // missing encoded string
+byte b64        // missing encoded string
+byte base32     // missing encoded string
+byte b32        // missing encoded string
+byte base64(AA  // missing closing paranthesis
+byte b64(AA     // missing closing paranthesis
+byte base32(AA  // missing closing paranthesis
+byte b32(AA     // missing closing paranthesis
+label: add      // contains additional token add
+byte "1" "2"    // byte expects only one immediate arg.
+byte sdf        // incorrect byte format
 """
 
 
@@ -60,7 +77,7 @@ def test_parsing(target: str) -> None:
         teal = parse_teal(f.read())
     # print instruction to trigger __str__ on each ins
     for i in teal.instructions:
-        print(i)
+        print(i, i.cost)
 
 
 def _cmp_instructions(
@@ -102,6 +119,7 @@ def test_parsing_2() -> None:
         instructions.Bytecblock(["0x00", "0x00", "0x00", '"00"']),
         instructions.Bytecblock([]),
         instructions.Byte('"not label: // not comment either"'),
+        instructions.Label('labelwithqoute"'),
     ]
     t = [
         (instructions.Intcblock, ("_constants",)),
@@ -121,7 +139,14 @@ def test_parsing_2() -> None:
         (instructions.Bytecblock, ("_constants",)),
         (instructions.Bytecblock, ("_constants",)),
         (instructions.Byte, ("_bytes",)),
+        (instructions.Label, ("label",)),
     ]
 
     for (b1, b2, (target, attributes)) in zip(ins1, ins2, t):
         assert _cmp_instructions(b1, b2, target, attributes)
+
+
+def test_invalid_instructions() -> None:
+    for line in invalid_instructions.strip().splitlines():
+        with pytest.raises(ParseError):
+            parse_line(line)
