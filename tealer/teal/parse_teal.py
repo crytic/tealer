@@ -335,4 +335,10 @@ def parse_teal(source_code: str) -> Teal:
             label_ins = labels[subroutine_label]
             subroutines.append(_identify_subroutine_blocks(label_ins))
 
-    return Teal(instructions, all_bbs, version, mode, subroutines)
+    teal = Teal(instructions, all_bbs, version, mode, subroutines)
+
+    # set teal instance to it's basic blocks
+    for bb in teal.bbs:
+        bb.teal = teal
+
+    return teal

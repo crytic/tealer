@@ -1,6 +1,9 @@
-from typing import List
+from typing import List, Optional, TYPE_CHECKING
 
 from tealer.teal.instructions.instructions import Instruction
+
+if TYPE_CHECKING:
+    from tealer.teal.teal import Teal
 
 
 class BasicBlock:
@@ -9,6 +12,7 @@ class BasicBlock:
         self._prev: List[BasicBlock] = []
         self._next: List[BasicBlock] = []
         self._idx: int = 0
+        self._teal: Optional["Teal"] = None
 
     def add_instruction(self, instruction: Instruction) -> None:
         self._instructions.append(instruction)
@@ -46,6 +50,20 @@ class BasicBlock:
     @idx.setter
     def idx(self, i: int) -> None:
         self._idx = i
+
+    @property
+    def cost(self) -> int:
+        """cost of executing all instructions in this basic block"""
+        return sum(ins.cost for ins in self.instructions)
+
+    @property
+    def teal(self) -> Optional["Teal"]:
+        """Teal instance of the contract this basic block belongs to."""
+        return self._teal
+
+    @teal.setter
+    def teal(self, teal_instance: "Teal") -> None:
+        self._teal = teal_instance
 
     def __str__(self) -> str:
         ret = ""
