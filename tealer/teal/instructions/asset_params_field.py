@@ -1,3 +1,14 @@
+"""Defines classes to represent asset_params_get fields.
+
+``asset_params_get`` instruction is used to access parameter fields
+of an asset.
+
+Each field that can be accessed using asset_params_get is represented
+by a class in tealer. All the classes representing the fields must inherit
+from AssetParamsField class.
+
+"""
+
 # pylint: disable=too-few-public-methods
 class AssetParamsField:
     """Base class to represent asset_params_get field."""
@@ -7,6 +18,7 @@ class AssetParamsField:
 
     @property
     def version(self) -> int:
+        """Teal version this field is introduced in and supported from."""
         return self._version
 
     def __str__(self) -> str:
@@ -42,19 +54,35 @@ class AssetMetadataHash(AssetParamsField):
 
 
 class AssetManager(AssetParamsField):
-    """Manager address, only account that can authorize transactions to re-configure or destroy an asset."""
+    """Manager address of the asset.
+
+    Manager account is the only account that can authorize transactions
+    to re-configure or destroy an asset.
+    """
 
 
 class AssetReserve(AssetParamsField):
-    """Reserve address, where non-minted assets will reside."""
+    """Reserve address of the asset.
+
+    Non-minted assets will reside in Reserve address instead of creator
+    address if specified.
+    """
 
 
 class AssetFreeze(AssetParamsField):
-    """Freeze account, which is allowed to freeze or unfreeze the asset holding for an account."""
+    """Freeze address of the asset.
+
+    The freeze account is allowed to freeze or unfreeze the asset holdings
+    for a specific account.
+    """
 
 
 class AssetClawback(AssetParamsField):
-    """Clawback address, which can transfer assets from and to any asset holder."""
+    """Clawback address of the asset.
+
+    The clawback address represents an account that is allowed to transfer
+    assets from and to any asset holder.
+    """
 
 
 class AssetCreator(AssetParamsField):

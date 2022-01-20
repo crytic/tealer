@@ -1,3 +1,14 @@
+"""Defines classes to represent app_params_get fields.
+
+``app_params_get`` instruction is used to access parameter fields
+of an application in the contract.
+
+Each field that can be accessed using app_params_get is represented
+by a class in tealer. All the classes representing the fields must
+inherit from AppParamsField class.
+
+"""
+
 # pylint: disable=too-few-public-methods
 class AppParamsField:
     """Base class to represent App fields."""
@@ -7,6 +18,7 @@ class AppParamsField:
 
     @property
     def version(self) -> int:
+        """Teal version this field is introduced in and supported from."""
         return self._version
 
     def __str__(self) -> str:
@@ -14,11 +26,11 @@ class AppParamsField:
 
 
 class AppApprovalProgram(AppParamsField):
-    """Bytecode of approval program."""
+    """Bytecode of approval program of the App."""
 
 
 class AppClearStateProgram(AppParamsField):
-    """Bytecode of clear state program."""
+    """Bytecode of clear state program of the App."""
 
 
 class AppGlobalNumUint(AppParamsField):
@@ -42,7 +54,7 @@ class AppExtraProgramPages(AppParamsField):
 
 
 class AppCreator(AppParamsField):
-    """Creator address."""
+    """Address of Creator(deployer) of the application."""
 
 
 class AppAddress(AppParamsField):

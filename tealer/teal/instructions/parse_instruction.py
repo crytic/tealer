@@ -1,3 +1,32 @@
+"""Parser for teal instructions.
+
+Each teal instruction is represented as a class. Parsing teal instructions
+is creating the correct Instruction subclass instance and setting the fields
+of it given the source code line.
+
+Each teal instruction in the source code start with a fixed prefix. A instruction
+might contain additional immediate values which need to be handled case by case.
+Instruction parser works by first creating a list where each item has the fixed prefix
+for the instruction and a callable(function) that will handle parsing of immediate
+arguments specific to that instruction. All the callables take a string containing
+all the immediate arguments and return the instruction object with the parsed immediates.
+
+In teal contracts, a source line might contain comments, indentation, additional to the
+instruction. Teal comments in the same line as the instruction will be stored in the
+instruction object. Indentation, comments without a instruction, empty lines are all
+ignored by the instruction parser.
+
+Attributes:
+    parser_rules (List[Tuple[str, Callable[[str], Instruction]]]):
+        List of tuple each containing the instruction prefix and a callable.
+        Callable handles the parsing of immediate arguments of the instruction and
+        creation of instruction object.
+
+Exceptions:
+    ParseError: Exception class to represent errors raised while parsing
+        invalid or incorrectly formatted instructions.
+"""
+
 from typing import Optional, Callable, Tuple, List
 import base64
 
@@ -11,10 +40,21 @@ from tealer.teal.instructions.parse_transaction_field import parse_transaction_f
 
 
 class ParseError(Exception):
-    pass
+    """Exception class to represent instruction parsing errors."""
 
 
 def handle_gtxn(x: str) -> instructions.Gtxn:
+    """Parse gtxn instruction.
+
+    Args:
+        x: proper string representation of gtxn instruction immediate
+            arguments.
+
+    Returns:
+        Gtxn instruction object created after parsing immediate
+        arguments.
+    """
+
     split = x.split(" ")
     idx = _parse_int(split[0])
     tx_field = parse_transaction_field(" ".join(split[1:]), False)
@@ -22,6 +62,17 @@ def handle_gtxn(x: str) -> instructions.Gtxn:
 
 
 def handle_gtxna(x: str) -> instructions.Gtxna:
+    """Parse gtxna instruction.
+
+    Args:
+        x: proper string representation of gtxna instruction immediate
+            arguments.
+
+    Returns:
+        Gtxna instruction object created after parsing immediate
+        arguments.
+    """
+
     split = x.split(" ")
     idx = _parse_int(split[0])
     tx_field = parse_transaction_field(" ".join(split[1:]), False)
@@ -29,6 +80,17 @@ def handle_gtxna(x: str) -> instructions.Gtxna:
 
 
 def handle_gtxnas(x: str) -> instructions.Gtxnas:
+    """Parse gtxnas instruction.
+
+    Args:
+        x: proper string representation of gtxnas instruction
+            immediate arguments.
+
+    Returns:
+        Gtxnas instruction object created after parsing immediate
+        arguments.
+    """
+
     args = x.split(" ")
     idx = _parse_int(args[0])
     tx_field = parse_transaction_field(args[1], True)
@@ -36,6 +98,20 @@ def handle_gtxnas(x: str) -> instructions.Gtxnas:
 
 
 def _parse_int(x: str) -> int:
+    """Parse teal integers.
+
+    Teal supports three formats to write integers: hex, octal and
+    decimal. hexadecimal numbers start with the prefix 0x and octal
+    numbers have prefix 0.
+
+    Args:
+        x: string representation of the teal integer.
+
+    Returns:
+        python integer equal to the value represented by the given
+        teal integer.
+    """
+
     if x.startswith("0x"):
         return int(x[2:], 16)
     if x.startswith("0"):
@@ -43,30 +119,29 @@ def _parse_int(x: str) -> int:
     return int(x)
 
 
-def _split_line(line: str) -> List[str]:
-    """split line using spaces as separators.
+def _split_instruction_into_tokens(line: str) -> List[str]:
+    """Split given instruction into tokens.
 
-    Divide the given line into fields, where each field is
-    either a string literal enclosed in '"' or a comment, field
-    starting with '//' or a sequence of non-space characters.
+    Teal instructions are divided into tokens. Tokens in teal are
+    comments, string literals or sequence of non-space characters.
 
     Args:
-        line (str): line to split
+        line (str): string representation of teal instruction.
 
     Returns:
-        List[str]: List of fields
+        List[str]: List of tokens.
 
     Examples:
-        >>> _split_line('a "string" // comment')
+        >>> _split_instruction_into_tokens('a "string" // comment')
         ['a', '"string"', '// comment']
-        >>> _split_line('a "s tring //" // "comment"')
+        >>> _split_instruction_into_tokens('a "s tring //" // "comment"')
         ['a', '"s tring //"', '// "comment"']
 
     Raises:
         ParseError: raises ParseError if string literals are not
             properly enclosed in the line.
-
     """
+
     fields: List[str] = []
     line = line.strip()
     i = 0
@@ -102,28 +177,46 @@ def _split_line(line: str) -> List[str]:
 
 
 def _b64_decode(s: str) -> str:
+    """Return hex representation of base64 encoded string.
+
+    Args:
+        s: base64 encoded string.
+
+    Returns:
+        hex representation of the given string with the prefix "0x"
+    """
+
     return "0x" + base64.b64decode(s + "=" * (-len(s) % 4)).hex()
 
 
 def _b32_decode(s: str) -> str:
+    """Return hex representation of base32 encoded string.
+
+    Args:
+        s: base32 encoded string.
+
+    Returns:
+        hex representation of the given string with the prefix "0x"
+    """
+
     return "0x" + base64.b32decode(s + "=" * (-len(s) % 8)).hex()
 
 
 def _parse_byte_arguments(fields: List[str]) -> List[str]:
-    """parse multiple representations of teal byte literals.
+    """Parse multiple representations of teal byte literals.
 
-    Parse byte literals and convert all base encoded strings to hex
-    encoding. currently parses
+    Parses byte literals and convert all base encoded strings to hex
+    encoding. currently parses following formats
     base64 AAAA..., b64 AAAA..., base64(AAAA...), b64(AAAA...),
     base32 AAAA..., b32 AAAA..., base32(AAAA...), b32(AAAA...),
     0x0123..., "literal".
 
     Args:
-        fields (List[str]): list of space separated fields.
+        fields (List[str]): list of space separated fields(tokens).
 
     Returns:
         List[str]: list of byte arguments, all either encoded in
-        hex or as string literals.
+            hex or as string literals.
 
     Examples:
         >>> _parse_byte_arguments(['base64', 'AA', 'base64(AA)', 'b64(AA)'])
@@ -135,6 +228,7 @@ def _parse_byte_arguments(fields: List[str]) -> List[str]:
         ParseError: raises ParseError if the byte arguments are not correctly
         encoded.
     """
+
     arguments: List[str] = []
     error: bool = False
     i: int = 0
@@ -178,6 +272,7 @@ def _parse_byte_arguments(fields: List[str]) -> List[str]:
     return arguments
 
 
+# return true if the given string is a teal integer.
 _is_int: Callable[[str], bool] = lambda x: x.startswith("0x") or x.isdigit()
 
 
@@ -336,10 +431,28 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
 
 
 def parse_line(line: str) -> Optional[instructions.Instruction]:
+    """Parse line into a teal instruction.
+
+    This might return None instead of an instance of Instruction subclass
+    if the line is empty, contains only comments, etc.
+
+    Args:
+        line: Teal source code line to parse.
+
+    Returns:
+        returns instance of Instruction subclass corresponding to the given
+        string representation if :line: contains a valid representation or
+        else returns None.
+
+    Raises:
+        ParseError: raises ParseError if the instruction present in the given
+            line is not correctly formatted and if is not valid.
+    """
+
     if not line.strip():
         return None
 
-    fields = _split_line(line)
+    fields = _split_instruction_into_tokens(line)
     comment = ""
     if fields[-1].startswith("//"):
         comment = fields[-1]
