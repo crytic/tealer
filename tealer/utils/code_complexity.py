@@ -1,30 +1,57 @@
+"""Util functions to compute code complexity of the contracts.
+
+Module implements functions to calculate cyclomatic complexity of
+the contract for now.
+
+Functions:
+    compute_cyclomatic_complexity(cfg: List["BasicBlock"]) -> int:
+        Calculates the cyclomatic complexity of the contract given
+        it's Control Flow Graph(CFG) :cfg:.
+
+"""
+
 from typing import List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
 
 
-# Copy from https://github.com/crytic/slither/blob/master/slither/utils/code_complexity.py
-
-
+# from slither: slither/utils/code_complexity.py
 def _compute_number_edges(cfg: List["BasicBlock"]) -> int:
-    """compute number of edges in the control flow graph of the contract."""
+    """compute number of edges in the control flow graph of the contract.
+
+    Args:
+        cfg: Control Flow Graph(CFG) of the contract.
+
+    Returns:
+        number of edges in the CFG.
+    """
+
     n = 0
     for bb in cfg:
         n += len(bb.next)
     return n
 
 
+# from slither: slither/utils/code_complexity.py
 def _compute_strongly_connected_components(cfg: List["BasicBlock"]) -> List[List["BasicBlock"]]:
-    """Compute strongly connected components
-        Based on Kosaraju algo
-        Implem follows wikipedia algo: https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm#The_algorithm
-    Args:
-        cfg (List[BasicBlock]): cfg of the contract
-    Returns:
-        List[List[BasicBlock]]: List of strongly connected components
+    """Compute strongly connected components in the control flow graph.
 
+    Implementation uses Kosaraju algorithm to find strongly connected
+    components in the control flow graph of the contract. This follows
+    the implementation described in the `Kosaraju algorithm wikipedia page`_.
+
+    Args:
+        cfg : Control Flow Graph(CFG) of the contract
+
+    Returns:
+        list of strongly connected components in CFG. each connected component
+        is a list of basic blocks(nodes in CFG).
+
+    .. _Kosaraju algorithm wikipedia page:
+       https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm#The_algorithm
     """
+
     visited = {bb: False for bb in cfg}
     assigned = {bb: False for bb in cfg}
     components = []
@@ -57,14 +84,15 @@ def _compute_strongly_connected_components(cfg: List["BasicBlock"]) -> List[List
     return components
 
 
+# from slither: slither/utils/code_complexity.py
 def compute_cyclomatic_complexity(cfg: List["BasicBlock"]) -> int:
-    """Compute the cyclomatic complexity of the program
+    """Compute cyclomatic complexity of the contract.
 
     Args:
-        cfg (List[BasicBlock]): cfg of the contract.
-    Returns:
-        (int): cyclomatic complexity of the contract.
+        cfg: Control Flow Graph(CFG) of the contract.
 
+    Returns:
+        Cyclomatic complexity of the contract.
     """
 
     # from https://en.wikipedia.org/wiki/Cyclomatic_complexity
