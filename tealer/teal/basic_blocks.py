@@ -1,3 +1,4 @@
+import functools
 from typing import List
 
 from tealer.teal.instructions.instructions import Instruction
@@ -10,6 +11,7 @@ class BasicBlock:
         self._next: List[BasicBlock] = []
 
     def add_instruction(self, instruction: Instruction) -> None:
+        self.__str__.cache_clear()
         self._instructions.append(instruction)
 
     @property
@@ -38,6 +40,7 @@ class BasicBlock:
     def next(self) -> List["BasicBlock"]:
         return self._next
 
+    @functools.lru_cache(maxsize=None)
     def __str__(self) -> str:
         ret = ""
         for ins in self._instructions:
