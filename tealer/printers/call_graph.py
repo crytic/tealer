@@ -1,3 +1,5 @@
+"""Printer for exporting call-graph of the contract."""
+
 import html
 from pathlib import Path
 from typing import List, Dict, Optional
@@ -7,11 +9,12 @@ from tealer.teal.instructions.instructions import Callsub, Label
 
 
 class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-methods
-    """Printer to export dot representation of callgraph of the contract.
+    """Printer to export call-graph of the contract.
 
     This printer is supposed to work for contracts written in teal version 4 or greater.
     Call graph dot file will be saved as `call-graph.dot` in destination folder if given
-    or else in the current directory.
+    or else in the current directory. The entry point of the contract is
+    treated as another function("__entry__") while constructing the call graph.
 
     """
 
@@ -30,7 +33,6 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
             Dict[str, List[str]]: dictionary representing the graph. each `key` is a node and
             `value` is a list representing the edges. Each str in value list corresponds to end
             node for a directed edge from `key` node.
-
         """
 
         graph = {}
@@ -77,8 +79,8 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
         Args:
             dest (Optional[Path]): destination directory to save output files in. files will be saved in
             the current directory if it is None.
-
         """
+
         if self.teal.version < 4:
             print("subroutines are not supported in teal version 3 or less")
             return
