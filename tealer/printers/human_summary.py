@@ -1,3 +1,17 @@
+"""Printer to print human readable summary of the contract.
+
+Summary includes :
+* Contract version.
+* Type of the contract as detected by tealer.
+* Number of basic blocks in the contract.
+* Number of instructions in the contract.
+* Number of subroutines defined in the contract.
+* Name of each subroutine defined in the contract.
+* Number of issues found by detectors each class of impact.
+* Check whether contract code is complex or not.
+
+"""
+
 from typing import List, Tuple, Optional, TYPE_CHECKING
 
 from tealer.printers.abstract_printer import AbstractPrinter
@@ -15,13 +29,13 @@ class PrinterHumanSummary(AbstractPrinter):
     HELP = "Print a human-readable summary of the contracts"
 
     def _is_complex_code(self) -> str:
-        """check whether contract code is complex or not using cyclomatic complexity.
+        """Check whether contract code is complex or not.
 
         Returns:
-            (str): returns "Yes" if cyclomatic complexity of the contract is greater than 7 or
-            else returns "No".
-
+            (str): returns "Yes" if cyclomatic complexity of the contract
+            is greater than 7 or else returns "No".
         """
+
         is_complex = False
         if compute_cyclomatic_complexity(self.teal.bbs) > 7:
             is_complex = True
@@ -30,7 +44,7 @@ class PrinterHumanSummary(AbstractPrinter):
         return result
 
     def _get_detectors_result(self) -> Tuple[List, int, int, int, int, int]:
-        """return dectector results and number of issues found in the contract for each `impact` class.
+        """Return dectector results and number of issues found in the contract for each `impact` class.
 
         Returns:
             (Tuple[List, int, int, int, int, int]): returns list of results found by all the detectors and
@@ -73,12 +87,15 @@ class PrinterHumanSummary(AbstractPrinter):
         )
 
     def get_detectors_result(self) -> str:
-        """return textual summary of number of issues found by detectors for each `impact` class.
+        """Return textual summary of number of issues found by detectors.
+
+        Textual summary contains number of issues found in the contract
+        for each class of impact(severity).
 
         Returns:
             (str): textual summary of number of issues found by detectors.
-
         """
+
         (
             _,
             optimization,
@@ -97,12 +114,17 @@ class PrinterHumanSummary(AbstractPrinter):
         return txt
 
     def print(self, dest: Optional["Path"] = None) -> None:
-        """Prints summary of the contract to stdout.
+        """Print summary of the contract to stdout.
 
         Currently displays version, mode, number of basic blocks, instructions, subroutines,
         Names of subroutines, number of results found by detectors for each level of impact.
 
+        Args:
+            dest: if printer saves output in files then they will be saved in
+                :dest: directory. Currently, the printer doesn't save output in
+                files, this argument is ignored.
         """
+
         teal = self.teal
 
         txt = "\n"

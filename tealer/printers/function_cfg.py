@@ -1,3 +1,18 @@
+"""Printer for exporting subroutines in dot format.
+
+Control Flow Graph of each subroutine defined in the contract
+is exported in dot format. As the subroutines are only
+supported from teal version 4, for contracts written in version
+3 or less, printer doesn't do anything. Each subroutine is saved
+in a new dot file with filename ``function_{subroutine_name}_cfg.dot``
+in the destination directly which will be current directory if not
+specified.
+
+Classes:
+    PrinterFunctionCFG: Printer to export CFGs of subroutines defined
+        in the contract. The CFGs will be saved in dot format.
+"""
+
 import html
 from pathlib import Path
 from typing import Optional, List, TYPE_CHECKING
@@ -10,7 +25,7 @@ if TYPE_CHECKING:
 
 
 class PrinterFunctionCFG(AbstractPrinter):  # pylint: disable=too-few-public-methods
-    """Printer to export dot representation of cfg of subroutines defined in the contract.
+    """Printer to export CFGs of subroutines in dot.
 
     This printer is supposed to work for contracts written in teal version 4 or greater.
     Dot files will be saved as `function_{subroutine_name}_cfg.dot` in destination folder
@@ -23,7 +38,7 @@ class PrinterFunctionCFG(AbstractPrinter):  # pylint: disable=too-few-public-met
 
     @staticmethod
     def _subroutine_to_dot(subroutine: List["BasicBlock"]) -> str:
-        """return dot representation of directed graph representing the cfg of given subroutine.
+        """Return dot representation of directed graph representing the cfg of given subroutine.
 
         Subroutine CFG doesn't show an edge between callsub basic block to called subroutine basic block
         unlike the contract CFG. Instead, an edge between callsub and it's return point is shown.
@@ -33,8 +48,8 @@ class PrinterFunctionCFG(AbstractPrinter):  # pylint: disable=too-few-public-met
 
         Returns:
             (str): dot representation of the subroutine cfg.
-
         """
+
         dot_output = "digraph g{\n"
 
         for bb in subroutine:
@@ -59,7 +74,7 @@ class PrinterFunctionCFG(AbstractPrinter):  # pylint: disable=too-few-public-met
         return dot_output
 
     def print(self, dest: Optional[Path] = None) -> None:
-        """Export subroutine CFG of each subroutines defined in the contract.
+        """Export CFG of each subroutine defined in the contract.
 
         As subroutines are supported from teal version 4, for contracts with version 3 or less,
         only an error message is printed. And for version 4 or larger, dot representation of each
@@ -68,8 +83,8 @@ class PrinterFunctionCFG(AbstractPrinter):  # pylint: disable=too-few-public-met
         Args:
             dest (Optional[Path]): files will be saved in the `dest` folder if it's not None. if
             it is, then dot files will be saved in the current directory.
-
         """
+
         if self.teal.version < 4:
             print("subroutines are not supported in teal version 3 or less.")
             return
