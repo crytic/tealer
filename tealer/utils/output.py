@@ -1,3 +1,28 @@
+"""Util functions to output dot files and detector results.
+
+This modules contains functions, classes which are used to store
+and display different types of output formats used by tealer detectors
+and printers.
+
+Functions:
+    cfg_to_dot(bbs: List[BasicBlock], filename: Path) -> None:
+        Exports dot representation of CFG represented by :bbs: in
+        dot format to given filename.
+
+    execution_path_to_dot(cfg: List[BasicBlock], path: List[BasicBlock]) -> str:
+        Returns dot representation of the given control flow graph :cfg:
+        with basic blocks present in :path: highlighted.
+
+Classes:
+    ExecutionPaths: Class to represent results of a detector, stores
+        execution paths detected by the detector.
+
+Types:
+    SupportedOutput: Union of types used for representing detector results.
+        For now, it is an alias for ExecutionPaths.
+
+"""
+
 import html
 from pathlib import Path
 from typing import List, TYPE_CHECKING, Dict
@@ -8,6 +33,19 @@ if TYPE_CHECKING:
 
 
 def _instruction_to_dot(ins: "Instruction") -> str:
+    """Return dot representation of Teal instruction.
+
+    string representation of the instruction is represented as
+    a table cell(row) in dot.
+
+    Args:
+        ins: teal instruction to represent in dot format.
+
+    Returns:
+        string containing the dot representation of the given
+        instruction.
+    """
+
     ins_str = html.escape(str(ins), quote=True)
     comment_str = "no comment for this line" if ins.comment == "" else ins.comment
     comment_str = html.escape(comment_str, quote=True)
@@ -18,6 +56,19 @@ def _instruction_to_dot(ins: "Instruction") -> str:
 
 
 def _bb_to_dot(bb: "BasicBlock") -> str:
+    """Return dot representation of basic block.
+
+    Basic Blocks are represented in the form of a tabel in dot.
+    Each instruction in the basic block is represented as a row.
+
+    Args:
+        bb: basic block to represent in dot format.
+
+    Returns:
+        string containing the dot representation of the given
+        basic block.
+    """
+
     table_prefix = '<<TABLE ALIGN="LEFT">\n'
     table_suffix = "</TABLE>> labelloc=top shape=plain\n"
     table_rows = ""
@@ -34,6 +85,19 @@ def _bb_to_dot(bb: "BasicBlock") -> str:
 
 
 def cfg_to_dot(bbs: List["BasicBlock"], filename: Path) -> None:
+    """Export control flow graph to a dot file.
+
+    The control flow graph is represented as a digraph in dot.
+    basic blocks are represented as a table with it's instructions
+    as rows.
+
+    Args:
+        bbs: list of basic blocks representing the control
+            flow graph.
+        filename: name of the file to save the dot representation
+            of control flow graph in.
+    """
+
     dot_output = "digraph g{\n ranksep = 1 \n overlap = scale \n"
 
     for bb in bbs:
@@ -46,6 +110,22 @@ def cfg_to_dot(bbs: List["BasicBlock"], filename: Path) -> None:
 
 
 def execution_path_to_dot(cfg: List["BasicBlock"], path: List["BasicBlock"]) -> str:
+    """Return CFG with a execution path highlighted in dot format.
+
+    The CFG is represented as a digraph in dot. nodes are basic blocks
+    of the CFG. The execution path, which is a sequence of basic blocks
+    are highlighted using a color in the dot representation.
+
+    Args:
+        cfg: Control Flow Graph of the contract.
+        path: An execution path to highlight in the given CFG.
+
+    Returns:
+        string containg the dot representation of CFG where nodes
+        corresponding to the given execution path are highlighted
+        using red color.
+    """
+
     dot_output = "digraph g{\n"
 
     for bb in cfg:
@@ -65,7 +145,15 @@ def execution_path_to_dot(cfg: List["BasicBlock"], path: List["BasicBlock"]) -> 
 
 
 class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
-    """Detector output class to store list of vulnerable paths"""
+    """Detector output class to store list of execution paths.
+
+    Args:
+        cfg: Control Flow Graph of the teal contract.
+        description: Description of the execution path detected by
+            the detector.
+        filename: The dot representation of execution paths will be
+            saved in the filenames starting with :filename: prefix.
+    """
 
     def __init__(self, cfg: List["BasicBlock"], description: str, filename: str):
         self._cfg = cfg
@@ -78,22 +166,33 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         self._help: str = ""
 
     def add_path(self, path: List["BasicBlock"]) -> None:
+        """Add given execution path to current list of execution paths.
+
+        Args:
+            path: new execution path detected by the detector which
+                will be added to the list of execution paths.
+        """
+
         self._paths.append(path)
 
     @property
     def paths(self) -> List[List["BasicBlock"]]:
+        """List of execution paths stored in the result."""
         return self._paths
 
     @property
     def cfg(self) -> List["BasicBlock"]:
+        """Control Flow of the teal contract."""
         return self._cfg
 
     @property
     def description(self) -> str:
+        """Description of execution paths stored in this result"""
         return self._description
 
     @property
     def check(self) -> str:
+        """Name of the detector whose result is being represented."""
         return self._check
 
     @check.setter
@@ -102,6 +201,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
 
     @property
     def impact(self) -> str:
+        """Impact of the detector whose result is being represented."""
         return self._impact
 
     @impact.setter
@@ -110,6 +210,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
 
     @property
     def confidence(self) -> str:
+        """Confidence of the detector whose result is being represented."""
         return self._confidence
 
     @confidence.setter
@@ -118,6 +219,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
 
     @property
     def help(self) -> str:
+        """Help message to remove detected issues from the contract."""
         return self._help
 
     @help.setter
@@ -125,6 +227,21 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         self._help = h
 
     def write_to_files(self, dest: Path, all_paths_in_one: bool = False) -> None:
+        """Export execution paths to dot files.
+
+        The execution paths are highlighted in the dot representation
+        of CFG. Each execution path is indexed based on the order they
+        are added to the result and index will be used in the filename.
+
+        Args:
+            dest: The dot files will be saved in the given :dest: destination
+                directory.
+            all_paths_in_one: if this is set to True, all the execution
+                paths will be highlighted in a single file. if this is
+                False, each execution path is saved in a different file.
+                Default False.
+        """
+
         print(f"\ncheck: {self.check}, impact: {self.impact}, confidence: {self.confidence}")
         print(self.description)
         if len(self.paths) == 0:
@@ -161,6 +278,16 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
                 f.write(execution_path_to_dot(self.cfg, bbs_to_highlight))
 
     def to_json(self) -> Dict:
+        """Return json representation of detector result.
+
+        The execution paths are represented as a list of basic blocks,
+        which themselves are list of string representation of it's
+        instructions.
+
+        Returns:
+            JSON encodable dictionary representing the detector result.
+        """
+
         result = {
             "type": "ExecutionPaths",
             "count": len(self.paths),
