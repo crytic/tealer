@@ -11,6 +11,7 @@ from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import BZ, Instruction
 from tealer.teal.instructions.instructions import Return, Int, Txn, Eq, BNZ
 from tealer.teal.instructions.transaction_field import OnCompletion, ApplicationID
+from tealer.utils.analyses import is_oncompletion_check
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
@@ -33,38 +34,6 @@ def _is_delete(ins1: Instruction, ins2: Instruction) -> bool:
 
     if isinstance(ins1, Int) and ins1.value == "DeleteApplication":
         return isinstance(ins2, Txn) and isinstance(ins2.field, OnCompletion)
-    return False
-
-
-def _is_oncompletion_check(ins1: Instruction, ins2: Instruction) -> bool:
-    """Check if the instructions form OnCompletion check with value other than DeleteApplication.
-
-    OnCompletion transaction field stores the type of the application transaction
-    that invoked the contract execution. Additional to DeleteApplication type, UpdateApplication,
-    NoOp, OptIn, CloseOut are other application transaction types. CanDelete detector
-    which checks for paths missing DeleteApplication check can skip the paths that are
-    only executed if the application transaction type is different from DeleteApplication
-    i.e OnCompletion is different from DeleteApplication.
-
-    Args:
-        ins1: First instruction of the execution sequence that is supposed
-            to form this comparison check .
-        ins2: Second instruction in the execution sequence, will be executed
-            right after :ins1:.
-
-    Returns:
-        True if the given instructions :ins1:, :ins2: form a OnCompletion check
-        for other application transaction types. True if :ins1: is txn OnCompletion and
-        :ins2: is int (UpdateApplication|NoOp|OptIn|CloseOut).
-    """
-
-    if isinstance(ins1, Txn) and isinstance(ins1.field, OnCompletion):
-        return isinstance(ins2, Int) and ins2.value in [
-            "UpdateApplication",
-            "NoOp",
-            "OptIn",
-            "CloseOut",
-        ]
     return False
 
 
@@ -93,6 +62,14 @@ def _is_application_creation_check(ins1: Instruction, ins2: Instruction) -> bool
     if isinstance(ins1, Txn) and isinstance(ins1.field, ApplicationID):
         return isinstance(ins2, Int) and ins2.value == 0
     return False
+
+
+CHECKED_VALUES = [
+    "UpdateApplication",
+    "NoOp",
+    "OptIn",
+    "CloseOut",
+]
 
 
 class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
@@ -208,7 +185,9 @@ Check if `txn OnCompletion == int DeleteApplication` and do appropriate actions 
                 two = stack[-2]
                 if _is_delete(one, two) or _is_delete(two, one):
                     return
-                if _is_oncompletion_check(one, two) or _is_oncompletion_check(two, one):
+                if is_oncompletion_check(one, two, CHECKED_VALUES) or is_oncompletion_check(
+                    two, one, CHECKED_VALUES
+                ):
                     prev_was_equal = True
                 if _is_application_creation_check(one, two) or _is_application_creation_check(
                     two, one

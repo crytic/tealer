@@ -11,6 +11,7 @@ from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import BZ, Instruction
 from tealer.teal.instructions.instructions import Return, Int, Txn, Eq, BNZ
 from tealer.teal.instructions.transaction_field import OnCompletion, ApplicationID
+from tealer.utils.analyses import is_oncompletion_check
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
@@ -36,36 +37,12 @@ def _is_update(ins1: Instruction, ins2: Instruction) -> bool:
     return False
 
 
-def _is_oncompletion_check(ins1: Instruction, ins2: Instruction) -> bool:
-    """Check if the instructions form OnCompletion check with value other than UpdateApplication.
-
-    OnCompletion transaction field stores the type of the application transaction
-    that invoked this contract execution. Additional to UpdateApplication type, DeletApplication,
-    NoOp, OptIn, CloseOut are other application transaction types. CanUpdate detector
-    which checks for paths missing UpdateApplication check can skip the paths that are
-    only executed if the application transaction type is different from UpdateApplication
-    i.e OnCompletion is different from UpdateApplication.
-
-    Args:
-        ins1: First instruction of the execution sequence that is supposed
-            to form this comparison check .
-        ins2: Second instruction in the execution sequence, will be executed
-            right after :ins1:.
-
-    Returns:
-        True if the given instructions :ins1:, :ins2: form a OnCompletion check
-        for other application transaction types. True if :ins1: is txn OnCompletion and
-        :ins2: is int (DeleteApplication|NoOp|OptIn|CloseOut).
-    """
-
-    if isinstance(ins1, Txn) and isinstance(ins1.field, OnCompletion):
-        return isinstance(ins2, Int) and ins2.value in [
-            "DeleteApplication",
-            "NoOp",
-            "OptIn",
-            "CloseOut",
-        ]
-    return False
+CHECKED_VALUES = [
+    "DeleteApplication",
+    "NoOp",
+    "OptIn",
+    "CloseOut",
+]
 
 
 def _is_application_creation_check(ins1: Instruction, ins2: Instruction) -> bool:
@@ -209,7 +186,9 @@ Check if `txn OnCompletion == int UpdateApplication` and do appropriate actions 
                 two = stack[-2]
                 if _is_update(one, two) or _is_update(two, one):
                     return
-                if _is_oncompletion_check(one, two) or _is_oncompletion_check(two, one):
+                if is_oncompletion_check(one, two, CHECKED_VALUES) or is_oncompletion_check(
+                    two, one, CHECKED_VALUES
+                ):
                     prev_was_equal = True
                 if _is_application_creation_check(one, two) or _is_application_creation_check(
                     two, one
