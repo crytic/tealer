@@ -1,3 +1,27 @@
+"""Defines classes to represent teal instructions.
+
+Each teal instruction is represented by a class specific to
+that instruction. All instruction classes inherit ``Instruction``
+class which defines common methods and properties of teal instructions.
+
+Few teal instructions have immediate values which are defined and stored
+as appropriate properties in the class representing that instruction.
+
+Attributes:
+    ContractType: ContractType is a comparable enumerator. it defines
+        three symbols ``STATELESS``, ``STATEFULL``, ``ANY``.
+        ``STATELESS`` represents stateless(signature) contracts,
+        ``STATEFULL`` represents stateful(Application) contracts and
+        ``ANY`` represents that contract is either ``STATELESS`` Or
+        ``STATEFULL``. Exact meaning of the symbols depend on the place
+        of usage.
+
+    contract_type_to_txt: This is a mapping from ContractType symbol to
+        their corresponding string representation. Useful while printing
+        or outputting ContractType variable.
+
+"""
+
 # pylint: disable=too-many-lines
 from typing import Union, List, TYPE_CHECKING, Optional
 
@@ -26,7 +50,13 @@ contract_type_to_txt = {
 
 
 class Instruction:
-    """Base class for Teal instructions."""
+    """Base class for Teal instructions.
+
+    Any class that represents a teal instruction must inherit from
+    this class. This class is used for type hints anywhere a teal
+    instruction is expected and this also comes with methods
+    and properties common to every teal instruction.
+    """
 
     def __init__(self) -> None:
         self._prev: List[Instruction] = []
@@ -37,25 +67,52 @@ class Instruction:
         self._version: int = 1
         self._mode: ContractType = ContractType.ANY
 
-    def add_prev(self, p: "Instruction") -> None:
-        self._prev.append(p)
+    def add_prev(self, prev_ins: "Instruction") -> None:
+        """Add instruction that may execute just before this instruction.
 
-    def add_next(self, n: "Instruction") -> None:
-        self._next.append(n)
+        An instruction is considered as a previous instruction if it's
+        possible for that instruction to execute just before this instruction.
+        Previous instruction doesn't necessarily have to be previous
+        instruction in the source code, a branch instruction is also considered
+        as previous instruction to the instruction present at it's destination.
+
+        Args:
+            prev_ins: instruction to add to the list of previous instructions
+                of this instruction.
+        """
+
+        self._prev.append(prev_ins)
+
+    def add_next(self, next_ins: "Instruction") -> None:
+        """Add instruction that may execute right after this instruction.
+
+        An instruction is considered as a next instruction if it's possible
+        for that instruction to execute right after this instruction.
+        Again, next instruction doesn't neccessarily have to present right
+        after this instruction in the source code, destination of a branch
+        instruction is also considered as a next instruction to the branch
+        instruction.
+
+        Args:
+            next_ins: instruction to add to the list of next instructions
+                of this instruction.
+        """
+
+        self._next.append(next_ins)
 
     @property
     def prev(self) -> List["Instruction"]:
-        """list of all possible previous instructions."""
+        """List of previous instructions to this instruction."""
         return self._prev
 
     @property
     def next(self) -> List["Instruction"]:
-        """list of instructions which may execute after this instruction."""
+        """List of next instructions to this instruction."""
         return self._next
 
     @property
     def line(self) -> int:
-        """line number of the current instruction."""
+        """Source code line number of this instruction."""
         return self._line
 
     @line.setter
@@ -64,7 +121,7 @@ class Instruction:
 
     @property
     def comment(self) -> str:
-        """comment(//) of teal instruction if any."""
+        """Teal comment present in the instruction line."""
         return self._comment
 
     @comment.setter
@@ -73,7 +130,7 @@ class Instruction:
 
     @property
     def bb(self) -> Optional["BasicBlock"]:
-        """Basic block this instruction belongs to."""
+        """Instance of BasicBlock this instruction is part of."""
         return self._bb
 
     @bb.setter
@@ -82,12 +139,27 @@ class Instruction:
 
     @property
     def version(self) -> int:
-        """Teal version this particular instruction is introduced."""
+        """Teal version this instruction is introduced in and supported from."""
         return self._version
 
     @property
     def mode(self) -> ContractType:
-        """Type of smart contracts this instruction is supported."""
+        """Type of smart contract this instruction execution is supported in.
+
+        Execution of every teal instruction is not supported in all types
+        of smart contracts. There are instructions that will execute without
+        failing only if the contract they are defined in is used as an application.
+        Similarly, there are instructions that work only when contract is used
+        as a signature(stateless). Remaining instructions execute correctly
+        irrespective of the contract type. This property represents the contract
+        type(mode) this instruction is supported in and executes properly.
+
+        ``STATELESS`` contract type implies that this instruction will execute only
+        in stateless(signature) contracts, ``STATEFULL`` implies that the instructions
+        only work in application contracts and ``ANY`` represents that this instruction
+        is supported in both kind of contracts.
+        """
+
         return self._mode
 
     @property
@@ -97,7 +169,7 @@ class Instruction:
         Most of the opcodes in teal have cost of 1. By default, this property
         will return 1 independent of contract version. Instructions whose cost
         is not 1 or depends on contract version must override the cost property
-        and return the correct cost using the contract version.
+        and return the correct cost.
         """
 
         return 1
@@ -177,6 +249,7 @@ class Int(Instruction):
 
     @property
     def value(self) -> Union[str, int]:
+        """Immediate value of int instruction."""
         return self._value
 
     def __str__(self) -> str:
@@ -211,6 +284,7 @@ class PushInt(Instruction):
 
     @property
     def value(self) -> Union[str, int]:
+        """Immediate value of pushint instruction."""
         return self._value
 
     def __str__(self) -> str:
@@ -235,6 +309,7 @@ class Txn(Instruction):
 
     @property
     def field(self) -> TransactionField:
+        """Transaction field being accessed using the txn instruction."""
         return self._field
 
     def __str__(self) -> str:
@@ -264,6 +339,7 @@ class Txna(Instruction):
 
     @property
     def field(self) -> TransactionField:
+        """Transaction field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -289,10 +365,12 @@ class Gtxn(Instruction):
 
     @property
     def idx(self) -> int:
+        """Index of the transaction in the atomic group"""
         return self._idx
 
     @property
     def field(self) -> TransactionField:
+        """Transaction field of the instruction being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -324,10 +402,12 @@ class Gtxna(Instruction):
 
     @property
     def idx(self) -> int:
+        """Index of the transaction in the atomic group."""
         return self._idx
 
     @property
     def field(self) -> TransactionField:
+        """Array transaction field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -355,6 +435,7 @@ class Gtxns(Instruction):
 
     @property
     def field(self) -> TransactionField:
+        """Transaction field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -383,6 +464,7 @@ class Gtxnsa(Instruction):
 
     @property
     def field(self) -> TransactionField:
+        """Array transaction field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -690,11 +772,13 @@ class Extract(Instruction):
         self._version: int = 5
 
     @property
-    def idx(self) -> int:
+    def start_position(self) -> int:
+        """Starting position of the substring in the bytearray."""
         return self._idx
 
     @property
-    def idy(self) -> int:
+    def length(self) -> int:
+        """Length of the bytearray to extract."""
         return self._idy
 
     def __str__(self) -> str:
@@ -1062,6 +1146,7 @@ class Global(Instruction):
 
     @property
     def field(self) -> GlobalField:
+        """Global field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -1174,6 +1259,7 @@ class InstructionWithLabel(Instruction):
 
     @property
     def label(self) -> str:
+        """String representing the label."""
         return self._label
 
 
@@ -1240,8 +1326,8 @@ class Label(InstructionWithLabel):
 class Callsub(InstructionWithLabel):
     """`callsub target` calls a subroutine target.
 
-    callstack is different from data stack and only `callsub` and `retsub` manipulate it.
-
+    callstack is different from data stack and only `callsub` and `retsub`
+    manipulate it.
     """
 
     def __init__(self, label: str):
@@ -1251,6 +1337,14 @@ class Callsub(InstructionWithLabel):
 
     @property
     def return_point(self) -> Optional[Instruction]:
+        """Return point of this call instruction.
+
+        Execution returns to the next instruction of the call instruction
+        after executing the called subroutine. This property returns instance
+        of that instruction. This is helpful in construction of contract CFG and
+        subroutine CFGs.
+        """
+
         return self._return_point
 
     @return_point.setter
@@ -1508,6 +1602,7 @@ class AssetHoldingGet(Instruction):
 
     @property
     def field(self) -> AssetHoldingField:
+        """Asset holding field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -1541,6 +1636,7 @@ class AssetParamsGet(Instruction):
 
     @property
     def field(self) -> AssetParamsField:
+        """Asset Parameter field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -1574,6 +1670,7 @@ class AppParamsGet(Instruction):
 
     @property
     def field(self) -> AppParamsField:
+        """Application parameter field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -2611,6 +2708,7 @@ class Itxn_field(Instruction):
 
     @property
     def field(self) -> TransactionField:
+        """Transaction field of inner transaction being set."""
         return self._field
 
     def __str__(self) -> str:
@@ -2656,6 +2754,7 @@ class Itxn(Instruction):
 
     @property
     def field(self) -> TransactionField:
+        """Transaction field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -2686,6 +2785,7 @@ class Itxna(Instruction):
 
     @property
     def field(self) -> TransactionField:
+        """Array transaction field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -2717,6 +2817,7 @@ class Txnas(Instruction):
 
     @property
     def field(self) -> TransactionField:
+        """Array transaction field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -2750,10 +2851,12 @@ class Gtxnas(Instruction):
 
     @property
     def idx(self) -> int:
+        """Index into array of array transaction field."""
         return self._idx
 
     @property
     def field(self) -> TransactionField:
+        """Transaction field being accessed."""
         return self._field
 
     def __str__(self) -> str:
@@ -2786,6 +2889,7 @@ class Gtxnsas(Instruction):
 
     @property
     def field(self) -> TransactionField:
+        """Transaction field being accessed."""
         return self._field
 
     def __str__(self) -> str:

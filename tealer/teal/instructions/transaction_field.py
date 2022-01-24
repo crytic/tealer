@@ -1,3 +1,13 @@
+"""Defines classes to represent transaction fields.
+
+Teal supports access to fields of the transaction that invoked the
+execution of this contract through multiple instructions.
+
+Each transaction field is represented by a class in tealer. All the
+classes representing the fields must inherit from TransactionField class.
+
+"""
+
 # pylint: disable=too-few-public-methods
 
 # https://developer.algorand.org/docs/reference/teal/opcodes/#txn
@@ -11,6 +21,7 @@ class TransactionField:
 
     @property
     def version(self) -> int:
+        """Teal version this field is introduced in and supported from."""
         return self._version
 
     def __str__(self) -> str:
