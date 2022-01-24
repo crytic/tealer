@@ -1,3 +1,5 @@
+"""Detector for finding execution paths missing UpdateApplication."""
+
 from typing import List, TYPE_CHECKING
 
 from tealer.detectors.abstract_detector import (
@@ -15,12 +17,47 @@ if TYPE_CHECKING:
 
 
 def _is_update(ins1: Instruction, ins2: Instruction) -> bool:
+    """Util function to check if given instructions form UpdateApplication check.
+
+    Args:
+        ins1: First instruction of the execution sequence that is supposed
+            to form a comparison check for UpdateApplication.
+        ins2: Second instruction in the execution sequence, will be executed
+            right after :ins1:.
+
+    Returns:
+        True if the given instructions :ins1:, :ins2: form a UpdateApplication
+        check i.e True if :ins1: is int UpdateApplication and :ins2: is
+        txn OnCompletion.
+    """
+
     if isinstance(ins1, Int) and ins1.value == "UpdateApplication":
         return isinstance(ins2, Txn) and isinstance(ins2.field, OnCompletion)
     return False
 
 
 def _is_oncompletion_check(ins1: Instruction, ins2: Instruction) -> bool:
+    """Check if the instructions form OnCompletion check with value other than UpdateApplication.
+
+    OnCompletion transaction field stores the type of the application transaction
+    that invoked this contract execution. Additional to UpdateApplication type, DeletApplication,
+    NoOp, OptIn, CloseOut are other application transaction types. CanUpdate detector
+    which checks for paths missing UpdateApplication check can skip the paths that are
+    only executed if the application transaction type is different from UpdateApplication
+    i.e OnCompletion is different from UpdateApplication.
+
+    Args:
+        ins1: First instruction of the execution sequence that is supposed
+            to form this comparison check .
+        ins2: Second instruction in the execution sequence, will be executed
+            right after :ins1:.
+
+    Returns:
+        True if the given instructions :ins1:, :ins2: form a OnCompletion check
+        for other application transaction types. True if :ins1: is txn OnCompletion and
+        :ins2: is int (DeleteApplication|NoOp|OptIn|CloseOut).
+    """
+
     if isinstance(ins1, Txn) and isinstance(ins1.field, OnCompletion):
         return isinstance(ins2, Int) and ins2.value in [
             "DeleteApplication",
@@ -32,18 +69,47 @@ def _is_oncompletion_check(ins1: Instruction, ins2: Instruction) -> bool:
 
 
 def _is_application_creation_check(ins1: Instruction, ins2: Instruction) -> bool:
-    """check if the instructions are application creation check.
+    """Check if the instructions form application creation check.
 
     ApplicationID will be 0 at the time of creation as a result the condition
-    txn ApplicationID == int 0 is generally used to do intialisation operations
-    at the time of application creation.
+    txn ApplicationID == int 0 is generally used to do intialization operations
+    at the time of application creation. Updating or Deleting application isn't
+    possible if the transaction is a application creation check. Using this check
+    allows the UpdateApplication, DeleteApplication detector to not explore(pruning)
+    paths where this check is true.
+
+    Args:
+        ins1: First instruction of the execution sequence that is supposed
+            to form a comparison check for application creation.
+        ins2: Second instruction in the execution sequence, will be executed
+            right after :ins1:.
+
+    Returns:
+        True if the given instructions :ins1:, :ins2: form a application creation
+        check i.e True if :ins1: is txn ApplicationID and :ins2: is
+        int 0.
     """
+
     if isinstance(ins1, Txn) and isinstance(ins1.field, ApplicationID):
         return isinstance(ins2, Int) and ins2.value == 0
     return False
 
 
 class CanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
+    """Detector to find execution paths missing UpdateApplication check.
+
+    Stateful smart contracts(application) can be updated with the new code
+    in algorand. If the application transaction of type UpdateApplication is
+    approved by the contract then the application's approval, clear programs
+    will be replaced by the ones sent along with the transaction. Contracts
+    can check the application transaction type using OnCompletion field.
+
+    This detector tries to find execution paths that approve the application
+    transactions("return 1") and doesn't check the OnCompletion field against
+    UpdateApplication value. Execution paths that only execute if the application
+    transaction is not UpdateApplication are excluded.
+    """
+
     NAME = "canUpdate"
     DESCRIPTION = "Detect paths that can update the application"
     TYPE = DetectorType.STATEFULL
@@ -91,6 +157,25 @@ Check if `txn OnCompletion == int UpdateApplication` and do appropriate actions 
         current_path: List[BasicBlock],
         paths_without_check: List[List[BasicBlock]],
     ) -> None:
+        """Find execution paths with missing UpdateApplication check.
+
+        This function recursively explores the Control Flow Graph(CFG) of the
+        contract and reports execution paths with missing UpdateApplication
+        check. Paths that will only execute if the application transaction
+        is not UpdateApplication transaction are excluded.
+
+        This function is "in place", modifies arguments with the data it is
+        supposed to return.
+
+        Args:
+            bb: Current basic block being checked(whose execution is simulated.)
+            current_path: Current execution path being explored.
+            paths_without_check:
+                Execution paths with missing UpdateApplication check. This is a
+                "in place" argument. Vulnerable paths found by this function are
+                appended to this list.
+        """
+
         # check for loops
         if bb in current_path:
             return
@@ -143,6 +228,13 @@ Check if `txn OnCompletion == int UpdateApplication` and do appropriate actions 
             self._check_delete(next_bb, current_path, paths_without_check)
 
     def detect(self) -> "SupportedOutput":
+        """Detect execution paths with missing UpdateApplication check.
+
+        Returns:
+            ExecutionPaths instance containing the list of vulnerable execution
+            paths along with name, check, impact, confidence and other detector
+            information.
+        """
 
         paths_without_check: List[List[BasicBlock]] = []
         self._check_delete(self.teal.bbs[0], [], paths_without_check)

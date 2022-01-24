@@ -1,7 +1,18 @@
+"""Defines class to represent Teal contracts.
+
+Teal class is used to store Control Flow Graph of the contract.
+It comes with methods for running detectors, printers on the contract.
+And also has properties for easy access of the parsed contract
+information.
+
+Classes:
+    Teal: Class to represent a contract.
+"""
+
 from pathlib import Path
 from typing import List, Any, Optional, Type, TYPE_CHECKING
 
-from tealer.detectors.abstract_detector import AbstractDetector
+from tealer.detectors.abstract_detector import AbstractDetector, DetectorClassification
 from tealer.printers.abstract_printer import AbstractPrinter
 
 from tealer.teal.basic_blocks import BasicBlock
@@ -11,14 +22,29 @@ from tealer.exceptions import TealerException
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
 
-
+# from slither: slither/slither.py
 def _check_common_things(
     thing_name: str, cls: Any, base_cls: Any, instance_list: List[Any]
 ) -> None:
-    """check if cls is subclass of base_cls and it's instance is not already
-    present in instance_list. if either of the conditions fail, then error is
-    raised.
+    """Check if the class is correct subclass and is unique.
+
+    check if :cls: is subclass of :base_cls: and it's instance is not already
+    present in :instance_list:. if either of the conditions fail, then an
+    exception is raised.
+
+    Args:
+        thing_name: name of the feature(add-on) that will on the teal
+            contract("detector" or "printer"). Used for error reporting.
+        cls: Class representing the feature.
+        base_cls: Base class for the feature.
+        instance_list: List of objects already registered to run.
+
+    Raises:
+        TealerException: raises exception if the :cls: is not subclass of
+            :base_cls: or if an object of :cls: is present in the
+            :instance_list:.
     """
+
     if not issubclass(cls, base_cls) or cls is base_cls:
         raise TealerException(
             f"You can't register {cls.__name__} as a {thing_name}."
@@ -30,6 +56,24 @@ def _check_common_things(
 
 
 class Teal:
+    """Class to represent a teal contract.
+
+    This class stores CFG, subroutines and other information of the
+    contract. Also comes with easy api methods to run detectors, printers
+    on the contract.
+
+    Args:
+        instructions: List of parsed instruction objects.
+        bbs: List of basic blocks representing the Control Flow Graph(CFG)
+            of the contract.
+        version: Teal version this contract is written in.
+        mode: Mode of the contract.
+        subroutines: List of subroutines defined in the contract, will be
+            empty for contracts written in Teal version 3 or less. Each
+            subroutine is represented by the list of basic blocks part of
+            that subroutine.
+    """
+
     def __init__(  # pylint: disable=too-many-arguments
         self,
         instructions: List[Instruction],
@@ -62,9 +106,10 @@ class Teal:
         """Returns list of subroutines.
 
         Each subroutine is represented by the list of basic blocks that constitute
-        a that particular subroutine. Subroutines are supported from version Teal 4 onwards.
+        that particular subroutine. Subroutines are supported from Teal version 4 onwards.
         For Teal version 3 or less this property will return empty List.
         """
+
         return self._subroutines
 
     @property
@@ -73,8 +118,9 @@ class Teal:
 
         Version of the contract is based on whether the first instruction of the
         contract is #pragma version instruction or not. if it is, then version will
-        be the teal version specified or else, version will be 1.
+        be the teal version specified or else version will be 1.
         """
+
         return self._version
 
     @version.setter
@@ -90,38 +136,107 @@ class Teal:
         will be the contract type. if there aren't any such type of instructions, then
         this will be "Any".
         """
+
         return self._mode
 
     @mode.setter
     def mode(self, m: ContractType) -> None:
         self._mode = m
 
+    # from slither: Slither Class in slither/slither.py
     @property
     def detectors(self) -> List[AbstractDetector]:
         """return list of registered detectors."""
         return self._detectors
 
+    # from slither: Slither Class in slither/slither.py
+    @property
+    def detectors_high(self) -> List[AbstractDetector]:
+        """return list of registered detectors with impact high"""
+        return [d for d in self._detectors if d.IMPACT == DetectorClassification.HIGH]
+
+    # from slither: Slither Class in slither/slither.py
+    @property
+    def detectors_medium(self) -> List[AbstractDetector]:
+        """return list of registered detectors with impact medium"""
+        return [d for d in self._detectors if d.IMPACT == DetectorClassification.MEDIUM]
+
+    # from slither: Slither Class in slither/slither.py
+    @property
+    def detectors_low(self) -> List[AbstractDetector]:
+        """return list of registered detectors with impact low"""
+        return [d for d in self._detectors if d.IMPACT == DetectorClassification.LOW]
+
+    # from slither: Slither Class in slither/slither.py
+    @property
+    def detectors_informational(self) -> List[AbstractDetector]:
+        """return list of registered detectors with impact informational"""
+        return [d for d in self._detectors if d.IMPACT == DetectorClassification.INFORMATIONAL]
+
+    # from slither: Slither Class in slither/slither.py
+    @property
+    def detectors_optimization(self) -> List[AbstractDetector]:
+        """return list of registered detectors with impact optimization"""
+        return [d for d in self._detectors if d.IMPACT == DetectorClassification.OPTIMIZATION]
+
+    # from slither: Slither Class in slither/slither.py
     @property
     def printers(self) -> List[AbstractPrinter]:
         """return list of registered printers."""
         return self._printers
 
+    # from slither: Slither Class in slither/slither.py
     def register_detector(self, detector_class: Type[AbstractDetector]) -> None:
+        """Register detector to run on the contract.
+
+        Args:
+            detector_class: Class representing the detector.
+        """
+
         _check_common_things("detector", detector_class, AbstractDetector, self._detectors)
 
         instance = detector_class(self)
         self._detectors.append(instance)
 
+    # from slither: Slither Class in slither/slither.py
     def register_printer(self, printer_class: Type[AbstractPrinter]) -> None:
+        """Register printer to run on the contract.
+
+        Args:
+            printer_class: Class representing the printer.
+        """
+
         _check_common_things("printer", printer_class, AbstractPrinter, self._printers)
 
         instance = printer_class(self)
         self._printers.append(instance)
 
+    # from slither: Slither Class in slither/slither.py
     def run_detectors(self) -> List["SupportedOutput"]:
+        """Run all the registered detectors.
+
+        Returns:
+            List of results, each result corresponds to the output
+            of a single detector.
+        """
+
         results = [d.detect() for d in self._detectors]
 
         return results
 
+    # from slither: Slither Class in slither/slither.py
     def run_printers(self, dest: Optional[Path] = None) -> List:
+        """Run all the registered printers.
+
+        Args:
+            dest: Optional. :dest: is used by printers to determine
+                the destination directory to save the output files.
+                if :dest: is None, current directory is used as destination
+                directory.
+
+        Returns:
+            List of results, each result corresponds to the output
+            of a single printer.
+        """
+
         return [p.print(dest) for p in self._printers]

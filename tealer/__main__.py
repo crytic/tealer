@@ -1,3 +1,67 @@
+"""Entry point of **Tealer** when executed as a script.
+
+Tealer is a static analysis tool for Algorand Smart Contracts written
+in TEAL. Tealer takes the source(teal) code of the smart contract as
+input, parses and runs detectors, printers on the parsed code.
+
+Detectors are analyzers which go through the parsed code and look for
+certain patterns in the program which are of interest to anyone invested
+in the security of the contract.
+
+Printers are information summarizers. Printers make finding and evaluating
+interesting information related to the contract easier. There's always abundant
+information that can be extracted from a smart contract, manually going
+through a smart contract for a every tiny bit of information is hard, boringgg
+and error prone. Printers make this process of finding information easier and
+colorful(will be after adding colors and ofcourse emojis, who doesn't like them <3).
+
+Tealer comes with builtin detectors for finding common security issues and builtin
+printers for printing information interesting in general. Additional to that,
+tealer allows adding user defined detectors, printers in the form of plugins.
+With the plugin support, tealer makes adding new detectors, printers easier and
+allows to get away with the minimum amount of work.
+
+Once installed, Tealer adds a command ``tealer`` to the system which will invoke
+the ``main()`` function when executed. Tealer comes with few command line
+arguments which help users in selecting and running specific detectors, printers
+based on the need.
+
+The normal execution flow of tealer is:
+
+* Select the detectors, printers to run on the contract.
+    * Collect the list of detectors, printers that come with tealer.
+    * Find the plugins installed in the system and collect their detectors, printers.
+    * Choose the detectors, printers based on the user command line arguments.
+* Read the contract teal source code.
+* Parse the source code and generate Teal object.
+    * Parse each line of the source as a teal instruction.
+    * Construct basic blocks using branch instructions and other rules.
+    * Construct Control Flow Graph(CFG) of the contract.
+    * Detect basic info like version, mode and create a Teal object.
+* Run the selected detectors, printers on the contract.
+    * Detectors, Printers are registered, run on the contract using Teal object API.
+    * The results are displayed in json format or normally based on command line argument.
+
+The following are few of the command line arguments a user can use to get the best out of tealer:
+
+To know available detectors and printers, both tealer builtins as well as installed plugins:
+
+--list-detectors - prints a pretty table listing the available detectors.
+--list-printers - prints a pretty table listing the available printers.
+
+To choose detectors to run from the available list:
+
+--detect - takes in comma separated list of detectors to run. runs all of them if not given.
+--exclude - takes in comma separated list of detectors to exclude from running detectors list.
+--exclude-stateless - excludes detectors that are supposed to run on stateless smart contracts.
+--exclude-stateful - excludes detectors that are supposed to run on stateful smart contracts.
+
+To choose printers to run from the available list:
+
+--print - takes in comma separated list of printers to run. doesn't run any if not given.
+
+"""
+
 import argparse
 import inspect
 import sys
@@ -21,9 +85,29 @@ if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
 
 
+# from slither: slither/__main__.py
 def choose_detectors(
     args: argparse.Namespace, all_detector_classes: List[Type[AbstractDetector]]
 ) -> List[Type[AbstractDetector]]:
+    """Select detectors from available list based on command line arguments.
+
+    Detectors are selected using the values of command line arguments
+    ``--detect``, ``--exclude``, ``--exclude-stateless``, ``--exclude-stateful``.
+
+    Args:
+        args: Namespace object representing the command line arguments selected
+            by the user.
+        all_detector_classes: list of all available detectors.
+
+    Returns:
+        list of chosen detectors from the available list using the tealer
+        command line arguments.
+
+    Raises:
+        TealerException: raises exception if name of detector selected using the
+            command line argument is not present in the given availble list of
+            detectors.
+    """
 
     detectors_to_run = []
     detectors = {d.NAME: d for d in all_detector_classes}
@@ -49,9 +133,29 @@ def choose_detectors(
     return detectors_to_run
 
 
+# from slither: slither/__main__.py
 def choose_printers(
     args: argparse.Namespace, all_printer_classes: List[Type[AbstractPrinter]]
 ) -> List[Type[AbstractPrinter]]:
+    """Select printers from available list based on command line arguments.
+
+    printers are selected using the value of command line argument
+    ``--print`` which is comma separated list of printer names to run.
+
+    Args:
+        args: Namespace object representing the command line arguments selected
+            by the user.
+        all_detector_classes: list of all available printers.
+
+    Returns:
+        list of chosen printers from the available list based on tealer
+        command line arguments.
+
+    Raises:
+        TealerException: raises exception if name of printer selected using the
+            command line argument is not present in the given availble list of
+            printers.
+    """
 
     if args.printers_to_run is None:
         return []
@@ -69,6 +173,18 @@ def choose_printers(
 def parse_args(
     detector_classes: List[Type[AbstractDetector]], printer_classes: List[Type[AbstractPrinter]]
 ) -> argparse.Namespace:
+    """parse command line arguments of tealer.
+
+    Args:
+        detector_classes: list of detectors available to tealer. Used to display
+            available detectors in tealer command help message.
+        printer_classes: list of printers available to tealer. Used to display
+            available printers in tealer command help message.
+
+    Returns:
+        Namespace object representing the parsed command line arguments.
+    """
+
     parser = argparse.ArgumentParser(
         description="TealAnalyzer",
         usage="tealer program.teal [flag]",
@@ -182,7 +298,15 @@ def parse_args(
     return args
 
 
+# from slither: slither/__main__.py
 class ListDetectors(argparse.Action):  # pylint: disable=too-few-public-methods
+    """Argparse Action class to display available detectors.
+
+    This Action will be invoked if ``--list-detectors`` command line
+    argument is selected. Upon invocation, prints a table listing the available
+    detectors along with their name, description, type, impact and confidence.
+    """
+
     def __call__(
         self, parser: argparse.ArgumentParser, *args: Any, **kwargs: Any
     ) -> None:  # pylint: disable=signature-differs
@@ -191,7 +315,15 @@ class ListDetectors(argparse.Action):  # pylint: disable=too-few-public-methods
         parser.exit()
 
 
+# from slither: slither/__main__.py
 class ListPrinters(argparse.Action):  # pylint: disable=too-few-public-methods
+    """Argparse Action class to display available printers.
+
+    This Action will be invoked if ``--list-printers`` command line
+    argument is selected. Upon invocation, prints a table listing the available
+    printers along with their name and description.
+    """
+
     def __call__(
         self, parser: argparse.ArgumentParser, *args: Any, **kwargs: Any
     ) -> None:  # pylint: disable=signature-differs
@@ -235,9 +367,21 @@ def collect_plugins() -> Tuple[List[Type[AbstractDetector]], List[Type[AbstractP
     return detector_classes, printer_classes
 
 
+# from slither: slither/__main__.py
 def get_detectors_and_printers() -> Tuple[
     List[Type[AbstractDetector]], List[Type[AbstractPrinter]]
 ]:
+    """Get list of detectors and printers available to tealer.
+
+    Detectors, Printers are considered available to tealer either if they
+    are defined in the tealer itself or if they are defined in one of the
+    tealer plugins installed in the system.
+
+    Returns:
+        list of detectors, list of printers defined in tealer and plugins
+        combined.
+    """
+
     detector_classes = [getattr(all_detectors, name) for name in dir(all_detectors)]
     detector_classes = [
         d for d in detector_classes if inspect.isclass(d) and issubclass(d, AbstractDetector)
@@ -257,6 +401,17 @@ def get_detectors_and_printers() -> Tuple[
 
 
 def handle_print_cfg(args: argparse.Namespace, teal: "Teal") -> None:
+    """Util function to handle print cfg command line argument.
+
+    This function is invoked when command line argument ``--print-cfg``
+    is used by the user to export the CFG of the contract in dot format.
+
+    Args:
+        args: Namespace object representing the command line arguments selected
+            by the user.
+        teal: Teal object representing the contract being analyzed.
+    """
+
     filename = args.print_cfg
     if not filename.endswith(".dot"):
         filename += ".dot"
@@ -272,6 +427,19 @@ def handle_detectors_and_printers(
     detectors: List[Type[AbstractDetector]],
     printers: List[Type[AbstractPrinter]],
 ) -> Tuple[List["SupportedOutput"], List]:
+    """Util function to register and run detectors, printers.
+
+    Args:
+        args: Namespace object representing the command line arguments selected
+            by the user.
+        teal: Teal object representing the contract being analyzed.
+        detectors: Detector classes to register and run.
+        printers: Printer classes to register and run.
+
+    Returns:
+        returns list of detector results and list of printer results.
+    """
+
     for detector_cls in detectors:
         teal.register_detector(detector_cls)
 
@@ -287,6 +455,18 @@ def handle_output(
     _printer_results: List,
     error: Optional[str],
 ) -> None:
+    """Util function to output tealer results.
+
+    Tealer supports displaying the results in json format or raw format.
+    Format is decided on whether ``--json`` command line argument is set or not.
+
+    Args:
+        args: Namespace object representing the command line arguments selected
+            by the user.
+        detector_results: results of running the selected detectors.
+        _printer_results: results of running the selected printers.
+    """
+
     if args.json is None:
 
         if error is not None:
@@ -314,6 +494,12 @@ def handle_output(
 
 
 def main() -> None:
+    """Entry point of the tealer tool.
+
+    This function is called when tealer command is executed or tealer is
+    executed as a script. This function directs execution flow of the tool
+    based on the command line arguments given by the user.
+    """
 
     detector_classes, printer_classes = get_detectors_and_printers()
     args = parse_args(detector_classes, printer_classes)

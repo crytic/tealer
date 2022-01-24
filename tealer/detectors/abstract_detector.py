@@ -1,3 +1,48 @@
+"""Defines abstract base class for detectors in tealer.
+
+This module contains implementation of abstract class which
+defines the attributes, common methods and must implement methods
+of detectors. All detectors in tealer must inherit from this class
+and set attributes, override abstract methods.
+
+Attributes:
+    DetectorType: DetectorType is a comparable enumerator. Detector
+        type indicates what kind of contracts is that detector supposed
+        to work on and find issues in them. DetectorType defines three
+        symbols ``STATELESS``, ``STATEFULL``, ``STATEFULLGROUP``.
+
+        ``STATELESS`` detectors work on and find issues in stateless
+        contracts(signatures).
+
+        ``STATEFULL`` detectors try to find issues that commonly occur
+        in stateful(application) contracts.
+
+        ``STATEFULLGROUP`` detectors work on stateful contracts that are
+        supposed to verify security related checks for other transactions/
+        contracts in the atomic group. One of the algorand smart contract
+        development architecture is to have one contract commonly an
+        application that must be included with most of the transaction
+        groups interacting with the system. This contract's job is to
+        verify the security properties of other transactions in the group
+        along with the security properties of it's own transaction.
+        ``STATEFULLGROUP`` type of detectors find issues in this kind of
+        contracts, whether they are verifying/doing all the related
+        security checks for other transactions in the group.
+
+    DETECTOR_TYPE_TXT: Map from DetectorType symbol to it's string representation.
+
+    DetectorClassification: DetectorClassification is a comparable enumerator.
+        It defines ``HIGH``, ``MEDIUM``, ``LOW``, ``INFORMATIONAL`` and
+        ``OPTIMIZATION``. This class is used to classify detector's impact and
+        confidence.
+
+    classification_txt: Map from DetectorClassification symbol to it's string
+        representation.
+
+Classes:
+    AbstractDetector: Abstract class to represent detectors in tealer.
+"""
+
 import abc
 from typing import List, TYPE_CHECKING
 
@@ -11,7 +56,11 @@ if TYPE_CHECKING:
 
 
 class IncorrectDetectorInitialization(Exception):
-    pass
+    """Exception class to represent incorrect detector intialization.
+
+    This exception will be used if any of the necessary attributes of
+    the AbstractDetector are not set by the inheriting detector class.
+    """
 
 
 class DetectorType(ComparableEnum):
@@ -49,6 +98,47 @@ classification_txt = {
 
 
 class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public-methods
+    """Abstract class to represent detectors in tealer.
+
+    All detectors in tealer must inherit from this class and overrride
+    the abstract methods with functionality specific to them. This class
+    defines the api methods that must be implemented by every detector.
+    ``detect`` method of each detector will be called to execute the
+    detector. Every detector must implement ``detect`` method.
+
+    Attributes:
+        NAME: Name of the detector. Detector name will be used while
+            displaying information about the printer and also for selecting
+            the detector from command line.
+
+        DESCRIPTION: Description of the detector about what it tries to find.
+
+        IMPACT: Severity of the issue the detector tries to detect. IMPACT is
+            classified into ``HIGH``, ``MEDIUM``, ``LOW``, ``INFORMATIONAL`` and
+        ``OPTIMIZATION`` using DetectorClassification enum.
+
+        CONFIDENCE: Precision of the detector, how often the results of this
+            detector are true. Confidence is classified into ``HIGH``, ``MEDIUM``
+            and ``LOW`` using DetectorClassification enum.
+
+        WIKI_TITLE: Wiki title of the detector/issue.
+
+        WIKI_DESCRIPTION: Wiki description of the detector.
+
+        WIKI_EXPLOIT_SCENARIO: Example exploit scenario exploiting the issue this
+            detector tries to find.
+
+        WIKI_RECOMMENDATION: Help or recommendation message on how to avoid, remove
+            this issue/vuln from the contract.
+
+    Args:
+        teal: Teal instance representing the contract. Detector will analyze the
+            contract represented by :teal: for issues/vulnerabilites .
+
+    Raises:
+        IncorrectDetectorInitialization: Exception is raised if any of the class
+            attributes are not intialized properly by the inheriting detector class.
+    """
 
     NAME = ""  # detector name
     DESCRIPTION = ""
@@ -123,18 +213,49 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
     def generate_result(
         self, paths: List[List["BasicBlock"]], description: str, filename: str
     ) -> ExecutionPaths:
+        """Helper method to construct ExecutionPaths result.
+
+        This function constructs and fills up the detector information of
+        ExecutionPaths object. ExecutionPaths is used to store output of
+        detector's that represent issues/vulnerabilities as execution paths.
+
+        Args:
+            paths: List of execution paths. Each execution path is represented
+                by a list of basic blocks.
+            description: Description of the issue/vulns.
+            filename: The execution paths are saved in dot files. :filename: is
+                used as the filename prefix for that dot files.
+
+        Returns:
+            ExecutionPaths object populated with the given args and detector
+            specific information.
+        """
+
         output = ExecutionPaths(self.teal.bbs, description, filename)
 
         for path in paths:
             output.add_path(path)
 
         output.check = self.NAME
-        # output.impact = classification_txt[self.IMPACT]
-        # output.confidence = classification_txt[self.CONFIDENCE]
+        output.impact = classification_txt[self.IMPACT]
+        output.confidence = classification_txt[self.CONFIDENCE]
         output.help = self.WIKI_RECOMMENDATION.strip()
 
         return output
 
     @abc.abstractmethod
     def detect(self) -> "SupportedOutput":
-        """TODO Documentation"""
+        """Entry method of detector.
+
+        All detectors must override this method with the functionality specific
+        to them. This method is the entry point of the detector and will be
+        called to execute it.
+
+        Returns:
+            detector results represented in one of the supported types. Currently,
+            all detectors work on Control Flow Graph(CFG) of the contract and represent
+            the issues in the form of execution path in the CFG. ExecutionPaths class
+            is used to represent them. It is the only type supported currently and
+            AbstractDetector comes with a helper method to construct the result object
+            given the vulnerable execution paths, description and filenames.
+        """
