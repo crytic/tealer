@@ -1,3 +1,5 @@
+"""Detector for finding execution paths missing Fee check."""
+
 from typing import List, TYPE_CHECKING
 
 from tealer.detectors.abstract_detector import (
@@ -24,12 +26,36 @@ if TYPE_CHECKING:
 
 
 def _is_fee_check(ins1: Instruction, ins2: Instruction) -> bool:
+    """Util function to check if given instructions form Fee check.
+
+    Args:
+        ins1: First instruction of the execution sequence that is supposed
+            to form a comparison check for Fee transaction field.
+        ins2: Second instruction in the execution sequence, will be executed
+            right after :ins1:.
+
+    Returns:
+        True if the given instructions :ins1:, :ins2: form a Fee check
+        i.e True if :ins1: is txn Fee and :ins2: is int .. .
+    """
+
     if isinstance(ins1, Txn) and isinstance(ins1.field, Fee):
         return isinstance(ins2, Int)
     return False
 
 
 class MissingFeeCheck(AbstractDetector):  # pylint: disable=too-few-public-methods
+    """Detector to find execution paths missing Fee check.
+
+    The fee for stateless contract transactions will be deducted
+    from the contract account or the LogicSig signer account. An
+    attacker could set the fee to high value and drain the account
+    funds in form of fees.
+
+    This detector tries to find execution paths that approve the algorand
+    transaction("return 1") and doesn't check the Fee field.
+    """
+
     NAME = "feeCheck"
     DESCRIPTION = "Detect paths with a missing Fee check"
     TYPE = DetectorType.STATELESS
@@ -67,6 +93,23 @@ Always check that transaction fee which can be accessed using `txn Fee` in Teal 
         current_path: List[BasicBlock],
         paths_without_check: List[List[BasicBlock]],
     ) -> None:
+        """Find execution paths with missing Fee check.
+
+        This function recursively explores the Control Flow Graph(CFG) of the
+        contract and reports execution paths with missing Fee check.
+
+        This function is "in place", modifies arguments with the data it is
+        supposed to return.
+
+        Args:
+            bb: Current basic block being checked(whose execution is simulated.)
+            current_path: Current execution path being explored.
+            paths_without_check:
+                Execution paths with missing Fee check. This is a
+                "in place" argument. Vulnerable paths found by this function are
+                appended to this list.
+        """
+
         # check for loops
         if bb in current_path:
             return
@@ -102,6 +145,14 @@ Always check that transaction fee which can be accessed using `txn Fee` in Teal 
             self._check_fee(next_bb, current_path, paths_without_check)
 
     def detect(self) -> "SupportedOutput":
+        """Detect execution paths with missing Fee check.
+
+        Returns:
+            ExecutionPaths instance containing the list of vulnerable execution
+            paths along with name, check, impact, confidence and other detector
+            information.
+        """
+
         paths_without_check: List[List[BasicBlock]] = []
         self._check_fee(self.teal.bbs[0], [], paths_without_check)
 

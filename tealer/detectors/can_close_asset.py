@@ -1,3 +1,5 @@
+"""Detector for finding execution paths missing AssetCloseTo check."""
+
 from typing import List, TYPE_CHECKING
 
 from tealer.detectors.abstract_detector import (
@@ -24,6 +26,20 @@ if TYPE_CHECKING:
 
 
 def _is_asset_close_check(ins1: Instruction, ins2: Instruction) -> bool:
+    """Util function to check if given instructions form AssetCloseTo check.
+
+    Args:
+        ins1: First instruction of the execution sequence that is supposed
+            to form a comparison check for AssetCloseTo transaction field.
+        ins2: Second instruction in the execution sequence, will be executed
+            right after :ins1:.
+
+    Returns:
+        True if the given instructions :ins1:, :ins2: form a AssetCloseTo
+        check i.e True if :ins1: is txn AssetCloseTo and :ins2: is
+        global ZeroAddress or addr.
+    """
+
     if isinstance(ins1, Txn) and isinstance(ins1.field, AssetCloseTo):
         if isinstance(ins2, Global) and isinstance(ins2.field, ZeroAddress):
             return True
@@ -33,6 +49,18 @@ def _is_asset_close_check(ins1: Instruction, ins2: Instruction) -> bool:
 
 
 class CanCloseAsset(AbstractDetector):  # pylint: disable=too-few-public-methods
+    """Detector to find execution paths missing AssetCloseTo check.
+
+    In algorand, A transaction can close out the asset balance of a contract
+    account and transfer all asset balance to the specified address. If the
+    AssetCloseTo field of a transaction is set to an address and that transaction
+    is approved by the contract then all the contract asset balance will be
+    transferred to address in AssetCloseTo field.
+
+    This detector tries to find execution paths that approve the algorand
+    transaction("return 1") and doesn't check the AssetCloseTo field.
+    """
+
     NAME = "canCloseAsset"
     DESCRIPTION = "Detect paths that can close the asset holdings of the sender"
     TYPE = DetectorType.STATELESS
@@ -68,6 +96,24 @@ Always check that AssetCloseTo transaction field is set to a ZeroAddress or inte
         current_path: List[BasicBlock],
         paths_without_check: List[List[BasicBlock]],
     ) -> None:
+        """Find execution paths with missing AssetCloseTo check.
+
+        This function recursively explores the Control Flow Graph(CFG) of the
+        contract and reports execution paths with missing AssetCloseTo
+        check.
+
+        This function is "in place", modifies arguments with the data it is
+        supposed to return.
+
+        Args:
+            bb: Current basic block being checked(whose execution is simulated.)
+            current_path: Current execution path being explored.
+            paths_without_check:
+                Execution paths with missing AssetCloseTo check. This is a
+                "in place" argument. Vulnerable paths found by this function are
+                appended to this list.
+        """
+
         if bb in current_path:
             return
 
@@ -98,6 +144,13 @@ Always check that AssetCloseTo transaction field is set to a ZeroAddress or inte
             self._check_close_asset(next_bb, current_path, paths_without_check)
 
     def detect(self) -> "SupportedOutput":
+        """Detect execution paths with missing AssetCloseTo check.
+
+        Returns:
+            ExecutionPaths instance containing the list of vulnerable execution
+            paths along with name, check, impact, confidence and other detector
+            information.
+        """
 
         paths_without_check: List[List[BasicBlock]] = []
         self._check_close_asset(self.teal.bbs[0], [], paths_without_check)
