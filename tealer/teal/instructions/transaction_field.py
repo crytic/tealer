@@ -1,145 +1,152 @@
+"""Defines classes to represent transaction fields.
+
+Teal supports access to fields of the transaction that invoked the
+execution of this contract through multiple instructions.
+
+Each transaction field is represented by a class in tealer. All the
+classes representing the fields must inherit from TransactionField class.
+
+"""
+
 # pylint: disable=too-few-public-methods
 
 # https://developer.algorand.org/docs/reference/teal/opcodes/#txn
 
 
 class TransactionField:
-    pass
+    """Base class representing a transaction field"""
+
+    def __init__(self) -> None:
+        self._version: int = 1
+
+    @property
+    def version(self) -> int:
+        """Teal version this field is introduced in and supported from."""
+        return self._version
+
+    def __str__(self) -> str:
+        return self.__class__.__qualname__
 
 
 class Sender(TransactionField):
-    def __str__(self) -> str:
-        return "Sender"
+    """address of sender of this transaction."""
 
 
 class Fee(TransactionField):
-    def __str__(self) -> str:
-        return "Fee"
+    """Transaction fee in micro-Algos."""
 
 
 class FirstValid(TransactionField):
-    def __str__(self) -> str:
-        return "FirstValid"
+    """minimum round number after which this transaction is valid."""
 
 
 class FirstValidTime(TransactionField):
-    def __str__(self) -> str:
-        return "FirstValidTime"
+    """reserved for future use. causes program to fail if used."""
 
 
 class LastValid(TransactionField):
-    def __str__(self) -> str:
-        return "LastValid"
+    """maximum round number before which this transaction is valid."""
 
 
 class Note(TransactionField):
-    def __str__(self) -> str:
-        return "Note"
+    """Any data up to 1024 bytes."""
 
 
 class Lease(TransactionField):
-    def __str__(self) -> str:
-        return "Lease"
+    """A lease to enforces mutual exclusion of transactions."""
 
 
 class Receiver(TransactionField):
-    def __str__(self) -> str:
-        return "Receiver"
+    """Address of the account that receives the amount."""
 
 
 class Amount(TransactionField):
-    def __str__(self) -> str:
-        return "Amount"
+    """The total amount to sent in microAlgos."""
 
 
 class CloseRemainderTo(TransactionField):
-    def __str__(self) -> str:
-        return "CloseRemainderTo"
+    """if set, the account will be closed and all funds will be sent to the given address"""
 
 
 class VotePK(TransactionField):
-    def __str__(self) -> str:
-        return "VotePK"
+    """The root participation public key."""
 
 
 class SelectionPK(TransactionField):
-    def __str__(self) -> str:
-        return "SelectionPK"
+    """The VRF public key."""
 
 
 class VoteFirst(TransactionField):
-    def __str__(self) -> str:
-        return "VoteFirst"
+    """The first round the participation key is valid."""
 
 
 class VoteLast(TransactionField):
-    def __str__(self) -> str:
-        return "VoteLast"
+    """The last round the participation key is valid."""
 
 
 class VoteKeyDilution(TransactionField):
-    def __str__(self) -> str:
-        return "VoteKeyDilution"
+    """Dilution for the 2-level participation key."""
 
 
 class Type(TransactionField):
-    def __str__(self) -> str:
-        return "Type"
+    """Specifies the type of the transaction"""
 
 
 class TypeEnum(TransactionField):
-    def __str__(self) -> str:
-        return "TypeEnum"
+    """Type of the transaction"""
 
 
 class XferAsset(TransactionField):
-    def __str__(self) -> str:
-        return "XferAsset"
+    """The unique id of the asset to be transferred."""
 
 
 class AssetAmount(TransactionField):
-    def __str__(self) -> str:
-        return "AssetAmount"
+    """The amount of the asset to be transferred."""
 
 
 class AssetSender(TransactionField):
-    def __str__(self) -> str:
-        return "AssetSender"
+    """The sender of the asset transfer."""
 
 
 class AssetReceiver(TransactionField):
-    def __str__(self) -> str:
-        return "AssetReceiver"
+    """The receiver of the asset transfer."""
 
 
 class AssetCloseTo(TransactionField):
-    def __str__(self) -> str:
-        return "AssetCloseTo"
+    """if set, removes the asset holding from sender and reduced minimum required balance."""
 
 
 class GroupIndex(TransactionField):
-    def __str__(self) -> str:
-        return "GroupIndex"
+    """Position of this transaction within the atomic group transaction."""
 
 
 class TxID(TransactionField):
-    def __str__(self) -> str:
-        return "TxID"
+    """The computed ID for this transaction."""
 
 
 class ApplicationID(TransactionField):
-    def __str__(self) -> str:
-        return "ApplicationID"
+    """ApplicationID from ApplicationCall transaction"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class OnCompletion(TransactionField):
-    def __str__(self) -> str:
-        return "OnCompletion"
+    """ApplicationCall transaction on completion action."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ApplicationArgs(TransactionField):
+    """Arguments passed to the application in the ApplicationCall."""
+
     def __init__(self, idx: int):
+        super().__init__()
         self._idx = idx
+        self._version: int = 2
 
     def __str__(self) -> str:
         s = "" if self._idx < 0 else str(self._idx)
@@ -147,13 +154,20 @@ class ApplicationArgs(TransactionField):
 
 
 class NumAppArgs(TransactionField):
-    def __str__(self) -> str:
-        return "NumAppArgs"
+    """Number of Application Args."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class Accounts(TransactionField):
+    """Accounts listed in the ApplicationCall transaction."""
+
     def __init__(self, idx: int):
+        super().__init__()
         self._idx = idx
+        self._version: int = 2
 
     def __str__(self) -> str:
         s = "" if self._idx < 0 else str(self._idx)
@@ -161,13 +175,20 @@ class Accounts(TransactionField):
 
 
 class NumAccounts(TransactionField):
-    def __str__(self) -> str:
-        return "NumAccounts"
+    """Number of Accounts."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class Applications(TransactionField):
+    """Foreign Apps listed in the ApplicationCall transaction."""
+
     def __init__(self, idx: int):
+        super().__init__()
         self._idx = idx
+        self._version: int = 3
 
     def __str__(self) -> str:
         s = "" if self._idx < 0 else str(self._idx)
@@ -175,13 +196,20 @@ class Applications(TransactionField):
 
 
 class NumApplications(TransactionField):
-    def __str__(self) -> str:
-        return "NumApplications"
+    """Number of Applications."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class Assets(TransactionField):
+    """Foreign Assets listed in the ApplicationCall transaction."""
+
     def __init__(self, idx: int):
+        super().__init__()
         self._idx = idx
+        self._version: int = 3
 
     def __str__(self) -> str:
         s = "" if self._idx < 0 else str(self._idx)
@@ -189,145 +217,237 @@ class Assets(TransactionField):
 
 
 class NumAssets(TransactionField):
-    def __str__(self) -> str:
-        return "NumAssets"
+    """Number of Assets."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class ApprovalProgram(TransactionField):
-    def __str__(self) -> str:
-        return "ApprovalProgram"
+    """Approval program of the application."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ClearStateProgram(TransactionField):
-    def __str__(self) -> str:
-        return "ClearStateProgram"
+    """Clear state program of the application."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class RekeyTo(TransactionField):
-    def __str__(self) -> str:
-        return "RekeyTo"
+    """Sender's new AuthAddr."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAsset(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAsset"
+    """AssetID in asset config transaction."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetTotal(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetTotal"
+    """Total number of units of asset created."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetDecimals(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetDecimals"
+    """Number of digits to display after the decimal place."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetDefaultFrozen(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetDefaultFrozen"
+    """Whether the asset's slots are frozen by default or not."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetUnitName(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetUnitName"
+    """Unit name of the asset."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetName(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetName"
+    """The asset name."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetURL(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetURL"
+    """Url associated with the asset."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetMetadataHash(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetMetadataHash"
+    """32 byte commitment to some unspecified asset metadata."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetManager(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetManager"
+    """Manager address, only account that can authorize transactions to re-configure or destroy an asset."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetReserve(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetReserve"
+    """Reserve address, where non-minted assets will reside."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetFreeze(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetFreeze"
+    """Freeze account, which is allowed to freeze or unfreeze the asset holding for an account."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class ConfigAssetClawback(TransactionField):
-    def __str__(self) -> str:
-        return "ConfigAssetClawback"
+    """Clawback address, which can transfer assets from and to any asset holder."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class FreezeAsset(TransactionField):
-    def __str__(self) -> str:
-        return "FreezeAsset"
+    """AssetID being frozen or un-frozen."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class FreezeAssetAccount(TransactionField):
-    def __str__(self) -> str:
-        return "FreezeAssetAccount"
+    """address whose asset slot is being frozen or un-frozen."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class FreezeAssetFrozen(TransactionField):
-    def __str__(self) -> str:
-        return "FreezeAssetFrozen"
+    """The new frozen value, 0 or 1."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 2
 
 
 class GlobalNumUint(TransactionField):
-    def __str__(self) -> str:
-        return "GlobalNumUint"
+    """Number of global state integers in ApplicationCall."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class GlobalNumByteSlice(TransactionField):
-    def __str__(self) -> str:
-        return "GlobalNumByteSlice"
+    """Number of global state byteslices in ApplicationCall."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class LocalNumUint(TransactionField):
-    def __str__(self) -> str:
-        return "LocalNumUint"
+    """Number of local state integers in ApplicationCall."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class LocalNumByteSlice(TransactionField):
-    def __str__(self) -> str:
-        return "LocalNumByteSlice"
+    """Number of local state byteslices in ApplicationCall."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 3
 
 
 class ExtraProgramPages(TransactionField):
-    def __str__(self) -> str:
-        return "ExtraProgramPages"
+    """Number of additional pages for each of approval and clear state programs."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 4
 
 
 class Nonparticipation(TransactionField):
-    def __str__(self) -> str:
-        return "Nonparticipation"
+    """Marks an account nonparticipating for rewards."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class Logs(TransactionField):
+    """Log messages emitted by an application call(itxn only)."""
+
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+        self._version: int = 5
+
     def __str__(self) -> str:
-        return "Logs"
+        s = "" if self._idx < 0 else str(self._idx)
+        return "Logs " + s
 
 
 class NumLogs(TransactionField):
-    def __str__(self) -> str:
-        return "NumLogs"
+    """Number of log messages(itxn only)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class CreatedAssetID(TransactionField):
-    def __str__(self) -> str:
-        return "CreatedAssetID"
+    """Asset ID allocated by the creation of an ASA (itxn only)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
 
 
 class CreatedApplicationID(TransactionField):
-    def __str__(self) -> str:
-        return "CreatedApplicationID"
+    """ApplicationID allocated by the creation of an application (itxn only)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5

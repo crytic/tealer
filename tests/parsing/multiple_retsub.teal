@@ -1,0 +1,18 @@
+#pragma version 5
+b main
+push_zero:
+    int 0
+    retsub
+is_even:
+    int 2
+    %
+    bz return_1
+    callsub push_zero
+    retsub
+return_1:
+    int 1
+    retsub
+main:
+    int 4
+    callsub is_even
+    return
