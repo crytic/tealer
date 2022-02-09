@@ -10,36 +10,12 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions.instructions import Gtxn, Return, Int, Txn, Global, Addr, Eq, Neq
+from tealer.teal.instructions.instructions import Gtxn, Return, Int
 from tealer.teal.instructions.transaction_field import RekeyTo
-from tealer.teal.global_field import ZeroAddress
+from tealer.utils.analyses import detect_missing_txn_check
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
-    from tealer.teal.instructions.instructions import Instruction
-
-
-def _is_rekey_check(ins1: "Instruction", ins2: "Instruction") -> bool:
-    """Util function to check if given instructions form RekeyTo check.
-
-    Args:
-        ins1: First instruction of the execution sequence that is supposed
-            to form a comparison check for RekeyTo transaction field.
-        ins2: Second instruction in the execution sequence, will be executed
-            right after :ins1:.
-
-    Returns:
-        True if the given instructions :ins1:, :ins2: form a RekeyTo check
-        i.e True if :ins1: is txn RekeyTo and :ins2: is global ZeroAddress
-        or addr .. .
-    """
-
-    if isinstance(ins1, Txn) and isinstance(ins1.field, RekeyTo):
-        if isinstance(ins2, Global) and isinstance(ins2.field, ZeroAddress):
-            return True
-        if isinstance(ins2, Addr):
-            return True
-    return False
 
 
 class MissingRekeyTo(AbstractDetector):
@@ -80,58 +56,6 @@ Attacker creates a payment transaction using the contract with `rekey-to` set to
     WIKI_RECOMMENDATION = """
 Add a check in the contract code verifying that `RekeyTo` property of any transaction is set to `ZeroAddress`.
 """
-
-    def _check_rekey_to_contract(
-        self,
-        bb: "BasicBlock",
-        current_path: List["BasicBlock"],
-        paths_without_check: List[List["BasicBlock"]],
-    ) -> None:
-        """Find execution paths with missing RekeyTo check.
-
-        This function checks for rekeying of this contract i.e whether the contract is checking for
-        rekeying of itself.
-
-        This function is "in place", modifies arguments with the data it is
-        supposed to return.
-
-        Args:
-            bb: Current basic block being checked(whose execution is simulated.)
-            current_path: Current execution path being explored.
-            paths_without_check:
-                Execution paths with missing RekeyTo check. This is a
-                "in place" argument. Vulnerable paths found by this function are
-                appended to this list.
-        """
-
-        # check for loops
-        if bb in current_path:
-            return
-
-        current_path = current_path + [bb]
-
-        stack: List["Instruction"] = []
-
-        for ins in bb.instructions:
-            if isinstance(ins, Return):
-                if len(ins.prev) == 1:
-                    prev = ins.prev[0]
-                    if isinstance(prev, Int) and prev.value == 0:
-                        return
-
-                paths_without_check.append(current_path)
-                return
-
-            if isinstance(ins, (Eq, Neq)) and len(stack) >= 2:
-                one = stack[-1]
-                two = stack[-2]
-                if _is_rekey_check(one, two) or _is_rekey_check(two, one):
-                    return
-
-            stack.append(ins)
-
-        for next_bb in bb.next:
-            self._check_rekey_to_contract(next_bb, current_path, paths_without_check)
 
     def check_rekey_to_group(  # pylint: disable=too-many-arguments
         self,
@@ -208,7 +132,7 @@ Add a check in the contract code verifying that `RekeyTo` property of any transa
             self.teal.bbs[0], defaultdict(set), set(), [], paths_without_check
         )
 
-        self._check_rekey_to_contract(self.teal.bbs[0], [], paths_without_check)
+        detect_missing_txn_check(RekeyTo, self.teal.bbs[0], [], paths_without_check)
 
         # paths might repeat as cfg traversed twice, once for each check
         paths_without_check_unique = []

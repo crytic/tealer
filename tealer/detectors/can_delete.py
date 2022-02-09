@@ -8,91 +8,10 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions.instructions import BZ, Instruction
-from tealer.teal.instructions.instructions import Return, Int, Txn, Eq, BNZ
-from tealer.teal.instructions.transaction_field import OnCompletion, ApplicationID
+from tealer.utils.analyses import detect_missing_on_completion
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
-
-
-def _is_delete(ins1: Instruction, ins2: Instruction) -> bool:
-    """Util function to check if given instructions form DeleteApplication check.
-
-    Args:
-        ins1: First instruction of the execution sequence that is supposed
-            to form a comparison check for DeleteApplication.
-        ins2: Second instruction in the execution sequence, will be executed
-            right after :ins1:.
-
-    Returns:
-        True if the given instructions :ins1:, :ins2: form a DeleteApplication
-        check i.e True if :ins1: is int DeleteApplication and :ins2: is
-        txn OnCompletion.
-    """
-
-    if isinstance(ins1, Int) and ins1.value == "DeleteApplication":
-        return isinstance(ins2, Txn) and isinstance(ins2.field, OnCompletion)
-    return False
-
-
-def _is_oncompletion_check(ins1: Instruction, ins2: Instruction) -> bool:
-    """Check if the instructions form OnCompletion check with value other than DeleteApplication.
-
-    OnCompletion transaction field stores the type of the application transaction
-    that invoked the contract execution. Additional to DeleteApplication type, UpdateApplication,
-    NoOp, OptIn, CloseOut are other application transaction types. CanDelete detector
-    which checks for paths missing DeleteApplication check can skip the paths that are
-    only executed if the application transaction type is different from DeleteApplication
-    i.e OnCompletion is different from DeleteApplication.
-
-    Args:
-        ins1: First instruction of the execution sequence that is supposed
-            to form this comparison check .
-        ins2: Second instruction in the execution sequence, will be executed
-            right after :ins1:.
-
-    Returns:
-        True if the given instructions :ins1:, :ins2: form a OnCompletion check
-        for other application transaction types. True if :ins1: is txn OnCompletion and
-        :ins2: is int (UpdateApplication|NoOp|OptIn|CloseOut).
-    """
-
-    if isinstance(ins1, Txn) and isinstance(ins1.field, OnCompletion):
-        return isinstance(ins2, Int) and ins2.value in [
-            "UpdateApplication",
-            "NoOp",
-            "OptIn",
-            "CloseOut",
-        ]
-    return False
-
-
-def _is_application_creation_check(ins1: Instruction, ins2: Instruction) -> bool:
-    """Check if the instructions form application creation check.
-
-    ApplicationID will be 0 at the time of creation as a result the condition
-    txn ApplicationID == int 0 is generally used to do intialization operations
-    at the time of application creation. Updating or Deleting application isn't
-    possible if the transaction is a application creation check. Using this check
-    allows the UpdateApplication, DeleteApplication detector to not explore(pruning)
-    paths where this check is true.
-
-    Args:
-        ins1: First instruction of the execution sequence that is supposed
-            to form a comparison check for application creation.
-        ins2: Second instruction in the execution sequence, will be executed
-            right after :ins1:.
-
-    Returns:
-        True if the given instructions :ins1:, :ins2: form a application creation
-        check i.e True if :ins1: is txn ApplicationID and :ins2: is
-        int 0.
-    """
-
-    if isinstance(ins1, Txn) and isinstance(ins1.field, ApplicationID):
-        return isinstance(ins2, Int) and ins2.value == 0
-    return False
 
 
 class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
@@ -150,82 +69,6 @@ Teal stores type of application transaction in `OnCompletion` transaction field,
 Check if `txn OnCompletion == int DeleteApplication` and do appropriate actions based on the need.
 """
 
-    def _check_delete(
-        self,
-        bb: BasicBlock,
-        current_path: List[BasicBlock],
-        paths_without_check: List[List[BasicBlock]],
-    ) -> None:
-        """Find execution paths with missing DeleteApplication check.
-
-        This function recursively explores the Control Flow Graph(CFG) of the
-        contract and reports execution paths with missing DeleteApplication
-        check. Paths that will only execute if the application transaction
-        is not DeleteApplication transaction are excluded.
-
-        This function is "in place", modifies arguments with the data it is
-        supposed to return.
-
-        Args:
-            bb: Current basic block being checked(whose execution is simulated.)
-            current_path: Current execution path being explored.
-            paths_without_check:
-                Execution paths with missing DeleteApplication check. This is a
-                "in place" argument. Vulnerable paths found by this function are
-                appended to this list.
-        """
-
-        if bb in current_path:
-            return
-
-        current_path = current_path + [bb]
-
-        # prev_was_oncompletion = False
-        # prev_was_int = False
-        prev_was_equal = False
-        skip_false = False
-        skip_true = False
-        stack: List[Instruction] = []
-
-        for ins in bb.instructions:
-
-            if isinstance(ins, Return):
-                if len(ins.prev) == 1:
-                    prev = ins.prev[0]
-                    if isinstance(prev, Int) and prev.value == 0:
-                        return
-
-                paths_without_check.append(current_path)
-                return
-
-            skip_false = isinstance(ins, BNZ) and prev_was_equal
-
-            skip_true = isinstance(ins, BZ) and prev_was_equal
-
-            prev_was_equal = False
-            if isinstance(ins, Eq) and len(stack) >= 2:
-                one = stack[-1]
-                two = stack[-2]
-                if _is_delete(one, two) or _is_delete(two, one):
-                    return
-                if _is_oncompletion_check(one, two) or _is_oncompletion_check(two, one):
-                    prev_was_equal = True
-                if _is_application_creation_check(one, two) or _is_application_creation_check(
-                    two, one
-                ):
-                    prev_was_equal = True
-
-            stack.append(ins)
-
-        if skip_false:
-            self._check_delete(bb.next[0], current_path, paths_without_check)
-            return
-        if skip_true:
-            self._check_delete(bb.next[1], current_path, paths_without_check)
-            return
-        for next_bb in bb.next:
-            self._check_delete(next_bb, current_path, paths_without_check)
-
     def detect(self) -> "SupportedOutput":
         """Detect execution paths with missing DeleteApplication check.
 
@@ -236,7 +79,18 @@ Check if `txn OnCompletion == int DeleteApplication` and do appropriate actions 
         """
 
         paths_without_check: List[List[BasicBlock]] = []
-        self._check_delete(self.teal.bbs[0], [], paths_without_check)
+        detect_missing_on_completion(
+            self.teal.bbs[0],
+            [],
+            paths_without_check,
+            "DeleteApplication",
+            [
+                "UpdateApplication",
+                "NoOp",
+                "OptIn",
+                "CloseOut",
+            ],
+        )
 
         description = "Lack of txn OnCompletion == int DeleteApplication check allows to"
         description += " delete the application."
