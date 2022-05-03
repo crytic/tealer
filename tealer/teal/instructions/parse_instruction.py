@@ -493,5 +493,5 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
             return ins
     if line:
         print(f"Not found {line}")
-        return None
+        return instructions.UnsupportedInstruction(line)
     return None

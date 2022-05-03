@@ -178,6 +178,27 @@ class Instruction:
         return self.__class__.__qualname__.lower()
 
 
+class UnsupportedInstruction(Instruction):
+    """
+    Instruction that is not supported by Tealer.
+
+    The unsupported instruction will be printed in the CFG verbatim
+    and specifically marked as UNSUPPORTED.
+    """
+
+    def __init__(self, verbatim_line: str):
+        super().__init__()
+        self._verbatim_line = verbatim_line
+
+    def __str__(self) -> str:
+        return f"UNSUPPORTED {self._verbatim_line}"
+
+    @property
+    def verbatim_line(self) -> str:
+        """unsupported instruction as read from input"""
+        return self._verbatim_line
+
+
 class Pragma(Instruction):
     """Pragma version instruction to store version of the teal program.
 
