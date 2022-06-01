@@ -16,7 +16,7 @@ from tests.detectors.rekeyto import missing_rekeyto_tests
 from tests.utils import cmp_cfg
 
 
-ALL_TESTS = [
+ALL_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[BasicBlock]]]] = [
     *missing_group_size_tests,
     *missing_fee_check_tests,
     *can_close_account_tests,
