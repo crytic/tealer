@@ -27,7 +27,7 @@ ALL_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[BasicBlock]]]] = [
 ]
 
 
-@pytest.mark.parametrize("test", ALL_TESTS)
+@pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
 def test_detectors(test: Tuple[str, Type[AbstractDetector], List[List[BasicBlock]]]) -> None:
     code, detector, expected_paths = test
     teal = parse_teal(code.strip())
