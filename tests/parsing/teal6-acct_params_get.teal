@@ -1,0 +1,8 @@
+#pragma version 6
+int 0
+acct_params_get AcctBalance
+!
+// a comment
+assert
+int 0
+==
