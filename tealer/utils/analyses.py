@@ -179,7 +179,7 @@ def is_application_creation_check(ins1: Instruction, ins2: Instruction) -> bool:
     return False
 
 
-def detect_missing_on_completion(
+def detect_missing_on_completion(  # pylint: disable=too-many-branches
     bb: BasicBlock,
     current_path: List[BasicBlock],
     paths_without_check: List[List[BasicBlock]],
@@ -220,6 +220,7 @@ def detect_missing_on_completion(
     # prev_was_oncompletion = False
     # prev_was_int = False
     prev_was_equal = False
+    prev_was_txn_application_id = False
     skip_false = False
     skip_true = False
     stack: List[Instruction] = []
@@ -238,6 +239,17 @@ def detect_missing_on_completion(
         skip_false = isinstance(ins, BNZ) and prev_was_equal
         skip_true = isinstance(ins, BZ) and prev_was_equal
         prev_was_equal = False
+
+        # detect the following pattern of application creation check and prune branches
+        # where the application creation check is true
+        # txn ApplicationID
+        # [bz | bnz] LABEL
+        skip_false = skip_false or (isinstance(ins, BZ) and prev_was_txn_application_id)
+        skip_true = skip_true or (isinstance(ins, BNZ) and prev_was_txn_application_id)
+        prev_was_txn_application_id = False
+
+        if isinstance(ins, Txn) and isinstance(ins.field, ApplicationID):
+            prev_was_txn_application_id = True
 
         if isinstance(ins, Eq) and len(stack) >= 2:
             one = stack[-1]
