@@ -3,6 +3,7 @@ from typing import Type as TypingType, List
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import ZeroAddress
 from tealer.teal.instructions.instructions import (
+    PushInt,
     Txn,
     Global,
     Instruction,
@@ -113,7 +114,9 @@ def detect_missing_txn_check(
         if isinstance(ins, Return):
             if len(ins.prev) == 1:
                 prev = ins.prev[0]
-                if isinstance(prev, Int) and prev.value == 0:
+                if (isinstance(prev, Int) and prev.value == 0) or (
+                    isinstance(prev, PushInt) and prev.value == 0
+                ):
                     return
 
             paths_without_check.append(current_path)
@@ -161,8 +164,12 @@ def is_oncompletion_check(ins1: Instruction, ins2: Instruction, checked_values: 
             integer_checked_values.append(ENUM_NAMES_TO_INT[named_constant])
 
     if isinstance(ins1, Txn) and isinstance(ins1.field, OnCompletion):
-        return isinstance(ins2, Int) and (
-            ins2.value in checked_values or ins2.value in integer_checked_values
+        return (
+            isinstance(ins2, Int)
+            and (ins2.value in checked_values or ins2.value in integer_checked_values)
+        ) or (
+            isinstance(ins2, PushInt)
+            and (ins2.value in checked_values or ins2.value in integer_checked_values)
         )
     return False
 
@@ -190,7 +197,9 @@ def is_application_creation_check(ins1: Instruction, ins2: Instruction) -> bool:
     """
 
     if isinstance(ins1, Txn) and isinstance(ins1.field, ApplicationID):
-        return isinstance(ins2, Int) and ins2.value == 0
+        return (isinstance(ins2, Int) and ins2.value == 0) or (
+            isinstance(ins2, PushInt) and ins2.value == 0
+        )
     return False
 
 
@@ -244,7 +253,9 @@ def detect_missing_on_completion(
         if isinstance(ins, Return):
             if len(ins.prev) == 1:
                 prev = ins.prev[0]
-                if isinstance(prev, Int) and prev.value == 0:
+                if (isinstance(prev, Int) and prev.value == 0) and (
+                    isinstance(prev, PushInt) and prev.value == 0
+                ):
                     return
 
             paths_without_check.append(current_path)
