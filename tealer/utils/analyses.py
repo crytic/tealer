@@ -146,9 +146,24 @@ def is_oncompletion_check(ins1: Instruction, ins2: Instruction, checked_values: 
         using the checked values. True if :ins1: is txn OnCompletion and
         :ins2: is int (checked_values).
     """
+    # Adds integer values along with names for Named Integer Constants of txn OnCompletion
+    ENUM_NAMES_TO_INT = {
+        "NoOp": 0,
+        "OptIn": 1,
+        "CloseOut": 2,
+        "ClearState": 3,
+        "UpdateApplication": 4,
+        "DeleteApplication": 5,
+    }
+    integer_checked_values: List[int] = []
+    for named_constant in checked_values:
+        if named_constant in ENUM_NAMES_TO_INT:
+            integer_checked_values.append(ENUM_NAMES_TO_INT[named_constant])
 
     if isinstance(ins1, Txn) and isinstance(ins1.field, OnCompletion):
-        return isinstance(ins2, Int) and ins2.value in checked_values
+        return isinstance(ins2, Int) and (
+            ins2.value in checked_values or ins2.value in integer_checked_values
+        )
     return False
 
 
