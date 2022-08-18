@@ -1,4 +1,4 @@
-from typing import Type as TypingType, List
+from typing import Optional, Type as TypingType, List, Tuple, Union
 
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import ZeroAddress
@@ -16,6 +16,14 @@ from tealer.teal.instructions.instructions import (
     BNZ,
 )
 from tealer.teal.instructions.transaction_field import TransactionField, OnCompletion, ApplicationID
+
+
+def _is_int_push_ins(ins: Instruction) -> Tuple[bool, Optional[Union[int, str]]]:
+    if isinstance(ins, Int) or isinstance(  # pylint: disable=consider-merging-isinstance
+        ins, PushInt
+    ):
+        return True, ins.value
+    return False, None
 
 
 def check_if_txn_field_against_address(
@@ -114,9 +122,8 @@ def detect_missing_txn_check(
         if isinstance(ins, Return):
             if len(ins.prev) == 1:
                 prev = ins.prev[0]
-                if (isinstance(prev, Int) and prev.value == 0) or (
-                    isinstance(prev, PushInt) and prev.value == 0
-                ):
+                is_int_push, value = _is_int_push_ins(prev)
+                if is_int_push and value == 0:
                     return
 
             paths_without_check.append(current_path)
@@ -164,13 +171,8 @@ def is_oncompletion_check(ins1: Instruction, ins2: Instruction, checked_values: 
             integer_checked_values.append(ENUM_NAMES_TO_INT[named_constant])
 
     if isinstance(ins1, Txn) and isinstance(ins1.field, OnCompletion):
-        return (
-            isinstance(ins2, Int)
-            and (ins2.value in checked_values or ins2.value in integer_checked_values)
-        ) or (
-            isinstance(ins2, PushInt)
-            and (ins2.value in checked_values or ins2.value in integer_checked_values)
-        )
+        is_int_push, value = _is_int_push_ins(ins2)
+        return is_int_push and (value in checked_values or value in integer_checked_values)
     return False
 
 
@@ -197,13 +199,12 @@ def is_application_creation_check(ins1: Instruction, ins2: Instruction) -> bool:
     """
 
     if isinstance(ins1, Txn) and isinstance(ins1.field, ApplicationID):
-        return (isinstance(ins2, Int) and ins2.value == 0) or (
-            isinstance(ins2, PushInt) and ins2.value == 0
-        )
+        is_int_push, value = _is_int_push_ins(ins2)
+        return is_int_push and value == 0
     return False
 
 
-def detect_missing_on_completion(
+def detect_missing_on_completion(  # pylint: disable=too-many-locals
     bb: BasicBlock,
     current_path: List[BasicBlock],
     paths_without_check: List[List[BasicBlock]],
@@ -253,9 +254,8 @@ def detect_missing_on_completion(
         if isinstance(ins, Return):
             if len(ins.prev) == 1:
                 prev = ins.prev[0]
-                if (isinstance(prev, Int) and prev.value == 0) and (
-                    isinstance(prev, PushInt) and prev.value == 0
-                ):
+                is_int_push, value = _is_int_push_ins(prev)
+                if is_int_push and value == 0:
                     return
 
             paths_without_check.append(current_path)
