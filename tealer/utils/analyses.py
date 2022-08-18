@@ -13,6 +13,7 @@ from tealer.teal.instructions.instructions import (
     Return,
     BZ,
     BNZ,
+    Assert,
 )
 from tealer.teal.instructions.transaction_field import TransactionField, OnCompletion, ApplicationID
 
@@ -179,7 +180,7 @@ def is_application_creation_check(ins1: Instruction, ins2: Instruction) -> bool:
     return False
 
 
-def detect_missing_on_completion(
+def detect_missing_on_completion(  # pylint: disable=too-many-branches
     bb: BasicBlock,
     current_path: List[BasicBlock],
     paths_without_check: List[List[BasicBlock]],
@@ -233,6 +234,12 @@ def detect_missing_on_completion(
                     return
 
             paths_without_check.append(current_path)
+            return
+
+        # return if a mutually exclusive condition is asserted
+        # i.e txn OnCompletion is asserted against one of the other possible value or
+        # if application creation check is asserted
+        if isinstance(ins, Assert) and prev_was_equal:
             return
 
         skip_false = isinstance(ins, BNZ) and prev_was_equal
