@@ -14,6 +14,7 @@ Classes:
 """
 
 from typing import List, Optional, TYPE_CHECKING
+import functools
 
 from tealer.teal.instructions.instructions import Instruction
 
@@ -45,6 +46,7 @@ class BasicBlock:
             instruction: intruction to add to the basic block.
         """
 
+        self.__str__.cache_clear()
         self._instructions.append(instruction)
 
     @property
@@ -127,6 +129,7 @@ class BasicBlock:
     def teal(self, teal_instance: "Teal") -> None:
         self._teal = teal_instance
 
+    @functools.lru_cache(maxsize=None)
     def __str__(self) -> str:
         ret = ""
         for ins in self._instructions:
