@@ -26,9 +26,10 @@ contract represented by sequence of the basic blocks.
 """
 
 import sys
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Set
 
 from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.subroutines import Subroutine
 from tealer.teal.instructions.instructions import (
     Instruction,
     Label,
@@ -221,6 +222,7 @@ def _first_pass(
         call = None
         if isinstance(ins, Callsub):
             call = ins
+            subroutines.add(ins.label)
 
         # Finally, add the instruction to the instruction list
         instructions.append(ins)
@@ -331,6 +333,12 @@ def _fourth_pass(instructions: List[Instruction]) -> None:
                 if ins.bb and branch.bb:
                     ins.bb.add_next(branch.bb)
 
+def _fifth_pass(bb: List[BasicBlock], sub_entries: Set[str], subroutines: List[Subroutine]):
+    # Fifth pass over the basic blocks: reconstruct the subroutines
+    for block in bb:
+        first_ins = block.entry_instr
+        if isinstance(first_ins, Label) and first_ins.label in sub_entries:
+            subroutines.append(Subroutine(block))
 
 def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
     """Set index of basic blocks based on their entry instruction line number.
@@ -480,12 +488,14 @@ def parse_teal(source_code: str) -> Teal:
     """
 
     instructions: List[Instruction] = []  # Parsed instructions list
-    labels: Dict[str, Label] = {}  # Global map of label names to label instructions
+    labels: Dict[str, Instruction] = {}  # Global map of label names to label instructions
+    sub_entries: Set[str] = set() # Set of all subroutine entry points
     rets: Dict[str, List[Instruction]] = {}  # Lists of return points corresponding to labels
+    subroutines: List[Subroutine] = []
 
     lines = source_code.splitlines()
 
-    _first_pass(lines, labels, rets, instructions)
+    _first_pass(lines, labels, sub_entries, rets, instructions)
     _second_pass(instructions, labels, rets)
 
     # Third pass over the instructions list: Construct the basic blocks and sequential links
@@ -493,6 +503,7 @@ def parse_teal(source_code: str) -> Teal:
     create_bb(instructions, all_bbs)
 
     _fourth_pass(instructions)
+    _fifth_pass(all_bbs, sub_entries, subroutines)
 
     all_bbs = _add_basic_blocks_idx(all_bbs)
     mode = _detect_contract_type(instructions)
