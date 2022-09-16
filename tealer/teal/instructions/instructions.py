@@ -164,6 +164,13 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         """Teal version this instruction is introduced in and supported from."""
         return self._version
 
+    def input_size(self) -> int:
+        return 0
+    
+    def output_size(self) -> int:
+        return 0
+
+
     @property
     def mode(self) -> ContractType:
         """Type of smart contract this instruction execution is supported in.
@@ -269,6 +276,9 @@ class Assert(Instruction):
         super().__init__()
         self._version: int = 3
 
+    def input_size(self) -> int:
+        return 1
+
 
 class Int(Instruction):
     """`int x` instruction pushes immediate value to the top of the stack.
@@ -297,6 +307,9 @@ class Int(Instruction):
 
     def __str__(self) -> str:
         return f"int {self._value}"
+
+    def output_size(self) -> int:
+        return 1
 
 
 class PushInt(Instruction):
@@ -332,6 +345,9 @@ class PushInt(Instruction):
 
     def __str__(self) -> str:
         return f"pushint {self._value}"
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Txn(Instruction):
@@ -388,6 +404,9 @@ class Txna(Instruction):
     def __str__(self) -> str:
         return f"txna {self._field}"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Gtxn(Instruction):
     """`gtxn t f` pushes value of transaction field f of transaction t in the group.
@@ -418,6 +437,9 @@ class Gtxn(Instruction):
 
     def __str__(self) -> str:
         return f"gtxn {self._idx} {self._field}"
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Gtxna(Instruction):
@@ -456,6 +478,9 @@ class Gtxna(Instruction):
     def __str__(self) -> str:
         return f"gtxna {self._idx} {self._field}"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Gtxns(Instruction):
     """`gtxns f` pushes value of transaction field f of given transaction in the group.
@@ -483,6 +508,12 @@ class Gtxns(Instruction):
 
     def __str__(self) -> str:
         return f"Gtxns {self._field}"
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Gtxnsa(Instruction):
@@ -513,6 +544,12 @@ class Gtxnsa(Instruction):
     def __str__(self) -> str:
         return f"Gtxnsa {self._field}"
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Load(Instruction):
     """`load i` pushes the value at scratch space position i.
@@ -532,6 +569,9 @@ class Load(Instruction):
     def __str__(self) -> str:
         return f"load {self._idx}"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Store(Instruction):
     """`store i` store value on top of the stack at scratch space position i.
@@ -550,6 +590,9 @@ class Store(Instruction):
 
     def __str__(self) -> str:
         return f"store {self._idx}"
+
+    def input_size(self) -> int:
+        return 1
 
 
 class Gload(Instruction):
@@ -577,6 +620,9 @@ class Gload(Instruction):
 
     def __str__(self) -> str:
         return f"gload {self._idx} {self._slot}"
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Gloads(Instruction):
@@ -606,6 +652,12 @@ class Gloads(Instruction):
     def __str__(self) -> str:
         return f"gloads {self._slot}"
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Gaid(Instruction):
     """`gaid t` pushes the id of asset or application created in transaction t in the group.
@@ -630,6 +682,9 @@ class Gaid(Instruction):
     def __str__(self) -> str:
         return f"gaid {self._idx}"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Gaids(Instruction):
     """`gaids` pushes the id of asset or application created in transaction X in the group.
@@ -650,6 +705,12 @@ class Gaids(Instruction):
         self._version: int = 4
         self._mode: ContractType = ContractType.STATEFULL
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Loads(Instruction):
     """`loads` pushes the value at scratch space position X.
@@ -666,6 +727,12 @@ class Loads(Instruction):
         super().__init__()
         self._version: int = 5
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Stores(Instruction):
     """`stores` store value on top of the stack (B) at scratch space position (A).
@@ -679,6 +746,9 @@ class Stores(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
+
+    def input_size(self) -> int:
+        return 2
 
 
 class Dig(Instruction):
@@ -700,6 +770,12 @@ class Dig(Instruction):
     def __str__(self) -> str:
         return f"dig {self._idx}"
 
+    def input_size(self) -> int:
+        return 1 + self._idx
+
+    def output_size(self) -> int:
+        return 2 + self._idx
+
 
 class Swap(Instruction):
     """`swap` swaps top two elements of the stack.
@@ -712,6 +788,12 @@ class Swap(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 3
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 2
 
 
 class GetBit(Instruction):
@@ -732,6 +814,12 @@ class GetBit(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 3
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class SetBit(Instruction):
@@ -754,6 +842,12 @@ class SetBit(Instruction):
         super().__init__()
         self._version: int = 3
 
+    def input_size(self) -> int:
+        return 3
+
+    def output_size(self) -> int:
+        return 1
+
 
 class GetByte(Instruction):
     """`getbyte` pushes the byte value of given element at given position.
@@ -770,6 +864,12 @@ class GetByte(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 3
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class SetByte(Instruction):
@@ -788,6 +888,12 @@ class SetByte(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 3
+
+    def input_size(self) -> int:
+        return 3
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Extract(Instruction):
@@ -827,6 +933,12 @@ class Extract(Instruction):
     def __str__(self) -> str:
         return f"extract {self._idx} {self._idy}"
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Extract3(Instruction):
     """`extract3` extracts the bytes from the given position of given length.
@@ -848,6 +960,12 @@ class Extract3(Instruction):
         super().__init__()
         self._version: int = 5
 
+    def input_size(self) -> int:
+        return 3
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Extract_uint16(Instruction):
     """`extract_uint16` converts the two bytes at given position as uint16.
@@ -867,6 +985,12 @@ class Extract_uint16(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Extract_uint32(Instruction):
@@ -888,6 +1012,12 @@ class Extract_uint32(Instruction):
         super().__init__()
         self._version: int = 5
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Extract_uint64(Instruction):
     """`extract_uint64` converts the eight bytes at given position as uint64.
@@ -907,6 +1037,12 @@ class Extract_uint64(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Sha256(Instruction):
@@ -939,6 +1075,12 @@ class Sha256(Instruction):
             return 7
         return 35
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Sha512_256(Instruction):
     """`sha512_256` calculate the sha512_256 hash of the given element.
@@ -969,6 +1111,12 @@ class Sha512_256(Instruction):
         if contract_version == 1:
             return 9
         return 45
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Keccak256(Instruction):
@@ -1001,6 +1149,12 @@ class Keccak256(Instruction):
             return 26
         return 130
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Ed25519verify(Instruction):
     """`ed25519verify` verifies the ed25519 signature for given public key and data.
@@ -1023,6 +1177,12 @@ class Ed25519verify(Instruction):
     def cost(self) -> int:
         """cost of executing ed25519verify instruction."""
         return 1900
+
+    def input_size(self) -> int:
+        return 3
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Ecdsa_verify(Instruction):
@@ -1080,6 +1240,12 @@ class Ecdsa_verify(Instruction):
     def __str__(self) -> str:
         return f"ecdsa_verify {self._idx}"
 
+    def input_size(self) -> int:
+        return 5
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Ecdsa_pk_decompress(Instruction):
     """`ecdsa_pk_decompress v` decompress elliptic curve point to it's components.
@@ -1124,6 +1290,12 @@ class Ecdsa_pk_decompress(Instruction):
 
     def __str__(self) -> str:
         return f"ecdsa_pk_decompress {self._idx}"
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 2
 
 
 class Ecdsa_pk_recover(Instruction):
@@ -1173,6 +1345,12 @@ class Ecdsa_pk_recover(Instruction):
     def __str__(self) -> str:
         return f"ecdsa_pk_recover {self._idx}"
 
+    def input_size(self) -> int:
+        return 4
+
+    def output_size(self) -> int:
+        return 2
+
 
 class Global(Instruction):
     """`global f` is used to access the value of global field f.
@@ -1202,6 +1380,12 @@ class Global(Instruction):
 class Dup(Instruction):
     """`dup` duplicates the top value on stack."""
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 2
+
 
 class Dup2(Instruction):
     """`dup2` duplicates the top two values of the stack."""
@@ -1209,6 +1393,12 @@ class Dup2(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 4
 
 
 class Select(Instruction):
@@ -1227,6 +1417,12 @@ class Select(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 3
+
+    def input_size(self) -> int:
+        return 3
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Cover(Instruction):
@@ -1274,6 +1470,12 @@ class Uncover(Instruction):
     def __str__(self) -> str:
         return f"uncover {self._idx}"
 
+    def input_size(self) -> int:
+        return 1 + self._idx
+
+    def output_size(self) -> int:
+        return 1 + self._idx
+
 
 class Concat(Instruction):
     """`concat` concatenates two bytearrays and pushes the result.
@@ -1293,6 +1495,12 @@ class Concat(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class InstructionWithLabel(Instruction):
@@ -1345,6 +1553,9 @@ class BZ(InstructionWithLabel):
     def __str__(self) -> str:
         return f"bz {self._label}"
 
+    def input_size(self) -> int:
+        return 1
+
 
 class BNZ(InstructionWithLabel):
     """`bnz target` branches to target if top of the stack is not zero.
@@ -1360,6 +1571,9 @@ class BNZ(InstructionWithLabel):
 
     def __str__(self) -> str:
         return f"bnz {self._label}"
+
+    def input_size(self) -> int:
+        return 1
 
 
 class Label(InstructionWithLabel):
@@ -1415,6 +1629,9 @@ class Return(Instruction):
         super().__init__()
         self._version: int = 2
 
+    def input_size(self) -> int:
+        return 1
+
 
 class Retsub(Instruction):
     """`retsub` returns from a subroutine using the callstack"""
@@ -1444,6 +1661,9 @@ class AppGlobalGet(Instruction):
     def __str__(self) -> str:
         return "app_global_get"
 
+    def input_size(self) -> int:
+        return 1
+
 
 class AppGlobalGetEx(Instruction):
     """`app_global_get_ex` allows reading the global state of the any application.
@@ -1471,6 +1691,12 @@ class AppGlobalGetEx(Instruction):
     def __str__(self) -> str:
         return "app_global_get_ex"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 2
+
 
 class AppGlobalPut(Instruction):
     """`app_global_put` allows modifying the global state of the current application.
@@ -1490,6 +1716,9 @@ class AppGlobalPut(Instruction):
 
     def __str__(self) -> str:
         return "app_global_put"
+
+    def input_size(self) -> int:
+        return 2
 
 
 class AppGlobalDel(Instruction):
@@ -1511,6 +1740,9 @@ class AppGlobalDel(Instruction):
 
     def __str__(self) -> str:
         return "app_global_del"
+
+    def input_size(self) -> int:
+        return 1
 
 
 class AppLocalGetEx(Instruction):
@@ -1542,6 +1774,12 @@ class AppLocalGetEx(Instruction):
     def __str__(self) -> str:
         return "app_local_get_ex"
 
+    def input_size(self) -> int:
+        return 3
+
+    def output_size(self) -> int:
+        return 2
+
 
 class AppLocalGet(Instruction):
     """`app_local_get` allows reading the local state of the current application.
@@ -1568,6 +1806,12 @@ class AppLocalGet(Instruction):
     def __str__(self) -> str:
         return "app_local_get"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class AppLocalPut(Instruction):
     """`app_local_put` allows modifying the local state of the current application.
@@ -1593,6 +1837,9 @@ class AppLocalPut(Instruction):
     def __str__(self) -> str:
         return "app_local_put"
 
+    def input_size(self) -> int:
+        return 3
+
 
 class AppLocalDel(Instruction):
     """`app_local_del` allows deleting a key from local state of the current application.
@@ -1616,6 +1863,9 @@ class AppLocalDel(Instruction):
 
     def __str__(self) -> str:
         return "app_local_del"
+
+    def input_size(self) -> int:
+        return 2
 
 
 class AssetHoldingGet(Instruction):
@@ -1654,6 +1904,12 @@ class AssetHoldingGet(Instruction):
     def __str__(self) -> str:
         return f"asset_holding_get {self._field}"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 2
+
 
 class AssetParamsGet(Instruction):
     """`asset_params_get i` allows reading params field of a given asset.
@@ -1687,6 +1943,12 @@ class AssetParamsGet(Instruction):
 
     def __str__(self) -> str:
         return f"asset_params_get {self._field}"
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 2
 
 
 class AppParamsGet(Instruction):
@@ -1722,6 +1984,12 @@ class AppParamsGet(Instruction):
     def __str__(self) -> str:
         return f"app_params_get {self._field}"
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 2
+
 
 class AppOptedIn(Instruction):
     """`app_opted_in` allows contract to check if given account has opted-in or not.
@@ -1749,6 +2017,12 @@ class AppOptedIn(Instruction):
     def __str__(self) -> str:
         return "app_opted_in"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Balance(Instruction):
     """`balance` reads the balance of an account in microalgos.
@@ -1771,6 +2045,12 @@ class Balance(Instruction):
         super().__init__()
         self._version: int = 2
         self._mode: ContractType = ContractType.STATEFULL
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
 
 
 class MinBalance(Instruction):
@@ -1796,6 +2076,12 @@ class MinBalance(Instruction):
     def __str__(self) -> str:
         return "min_balance"
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Itob(Instruction):
     """`itob` converts integer to big endian bytes.
@@ -1808,6 +2094,12 @@ class Itob(Instruction):
 
     """
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Btoi(Instruction):
     """`btoi` converts bytes as big endian to uint64.
@@ -1819,6 +2111,12 @@ class Btoi(Instruction):
         pushes uint64 value after the conversion.
 
     """
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Addr(Instruction):
@@ -1843,6 +2141,9 @@ class Addr(Instruction):
 class Pop(Instruction):
     """`pop` pops one element from the stack."""
 
+    def input_size(self) -> int:
+        return 1
+
 
 class Not(Instruction):
     """`!` not comparison operator.
@@ -1857,6 +2158,12 @@ class Not(Instruction):
 
     def __str__(self) -> str:
         return "!"
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Neq(Instruction):
@@ -1874,6 +2181,12 @@ class Neq(Instruction):
     def __str__(self) -> str:
         return "!="
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Eq(Instruction):
     """`==` equal to comparison operator.
@@ -1889,6 +2202,12 @@ class Eq(Instruction):
 
     def __str__(self) -> str:
         return "=="
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Greater(Instruction):
@@ -1906,6 +2225,12 @@ class Greater(Instruction):
     def __str__(self) -> str:
         return ">"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class GreaterE(Instruction):
     """`>=` greater than or equal to comparison operator.
@@ -1921,6 +2246,12 @@ class GreaterE(Instruction):
 
     def __str__(self) -> str:
         return ">="
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Less(Instruction):
@@ -1938,6 +2269,12 @@ class Less(Instruction):
     def __str__(self) -> str:
         return "<"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class LessE(Instruction):
     """`<=` less than or equal to comparison operator.
@@ -1953,6 +2290,12 @@ class LessE(Instruction):
 
     def __str__(self) -> str:
         return "<="
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class And(Instruction):
@@ -1970,6 +2313,12 @@ class And(Instruction):
     def __str__(self) -> str:
         return "&&"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Or(Instruction):
     """`||` logical and.
@@ -1985,6 +2334,12 @@ class Or(Instruction):
 
     def __str__(self) -> str:
         return "||"
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Add(Instruction):
@@ -2005,6 +2360,12 @@ class Add(Instruction):
     def __str__(self) -> str:
         return "+"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Sub(Instruction):
     """`-` arthimetic subtraction.
@@ -2023,6 +2384,12 @@ class Sub(Instruction):
 
     def __str__(self) -> str:
         return "-"
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Mul(Instruction):
@@ -2043,6 +2410,12 @@ class Mul(Instruction):
     def __str__(self) -> str:
         return "*"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Div(Instruction):
     """`/` arthimetic divison.
@@ -2061,6 +2434,12 @@ class Div(Instruction):
 
     def __str__(self) -> str:
         return "/"
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Modulo(Instruction):
@@ -2081,6 +2460,12 @@ class Modulo(Instruction):
     def __str__(self) -> str:
         return "%"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BitwiseOr(Instruction):
     """`|` bitwise or.
@@ -2096,6 +2481,12 @@ class BitwiseOr(Instruction):
 
     def __str__(self) -> str:
         return "|"
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class BitwiseAnd(Instruction):
@@ -2113,6 +2504,12 @@ class BitwiseAnd(Instruction):
     def __str__(self) -> str:
         return "&"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BitwiseXor(Instruction):
     """`^` bitwise xor.
@@ -2129,6 +2526,12 @@ class BitwiseXor(Instruction):
     def __str__(self) -> str:
         return "^"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BitwiseInvert(Instruction):
     """`~` bitwise invert.
@@ -2143,6 +2546,12 @@ class BitwiseInvert(Instruction):
 
     def __str__(self) -> str:
         return "~"
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
 
 
 class BitLen(Instruction):
@@ -2160,6 +2569,12 @@ class BitLen(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 4
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
 
 
 class BModulo(Instruction):
@@ -2206,6 +2621,12 @@ class BModulo(Instruction):
     def __str__(self) -> str:
         return "b%"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BNeq(Instruction):
     """`b!=` not equal comparison operator.
@@ -2228,6 +2649,12 @@ class BNeq(Instruction):
     def __str__(self) -> str:
         return "b!="
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BEq(Instruction):
     """`b==` equal to comparison operator.
@@ -2249,6 +2676,12 @@ class BEq(Instruction):
 
     def __str__(self) -> str:
         return "b=="
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class BBitwiseAnd(Instruction):
@@ -2292,6 +2725,12 @@ class BBitwiseAnd(Instruction):
     def __str__(self) -> str:
         return "b&"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BBitwiseOr(Instruction):
     """`b|` bitwise or.
@@ -2334,6 +2773,12 @@ class BBitwiseOr(Instruction):
     def __str__(self) -> str:
         return "b|"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BAdd(Instruction):
     """`b+` arthimetic addition.
@@ -2375,6 +2820,12 @@ class BAdd(Instruction):
 
     def __str__(self) -> str:
         return "b+"
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class BSubtract(Instruction):
@@ -2421,6 +2872,12 @@ class BSubtract(Instruction):
     def __str__(self) -> str:
         return "b-"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BDiv(Instruction):
     """`b/` arthimetic divison.
@@ -2466,6 +2923,12 @@ class BDiv(Instruction):
     def __str__(self) -> str:
         return "b/"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BMul(Instruction):
     """`b*` arthimetic multiplication.
@@ -2508,6 +2971,12 @@ class BMul(Instruction):
     def __str__(self) -> str:
         return "b*"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BGreaterE(Instruction):
     """`b>=` greater than or equal to comparison operator.
@@ -2529,6 +2998,12 @@ class BGreaterE(Instruction):
 
     def __str__(self) -> str:
         return "b>="
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class BGreater(Instruction):
@@ -2552,6 +3027,12 @@ class BGreater(Instruction):
     def __str__(self) -> str:
         return "b>"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BLessE(Instruction):
     """`b<=` less than or equal to comparison operator.
@@ -2574,6 +3055,12 @@ class BLessE(Instruction):
     def __str__(self) -> str:
         return "b<="
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BLess(Instruction):
     """`b<` less than comparison operator.
@@ -2595,6 +3082,12 @@ class BLess(Instruction):
 
     def __str__(self) -> str:
         return "b<"
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class BBitwiseXor(Instruction):
@@ -2638,6 +3131,12 @@ class BBitwiseXor(Instruction):
     def __str__(self) -> str:
         return "b^"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BBitwiseInvert(Instruction):
     """`b~` bitwise invert.
@@ -2678,6 +3177,12 @@ class BBitwiseInvert(Instruction):
             return 4
         return 0
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class BZero(Instruction):
     """`bzero` pushes byte array containing all zeroes.
@@ -2693,6 +3198,12 @@ class BZero(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 4
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Log(Instruction):
@@ -2711,6 +3222,9 @@ class Log(Instruction):
         super().__init__()
         self._version: int = 5
         self._mode: ContractType = ContractType.STATEFULL
+
+    def input_size(self) -> int:
+        return 1
 
 
 class Itxn_begin(Instruction):
@@ -2760,6 +3274,9 @@ class Itxn_field(Instruction):
     def __str__(self) -> str:
         return f"itxn_field {self._field}"
 
+    def input_size(self) -> int:
+        return 1
+
 
 class Itxn_submit(Instruction):
     """`itxn_submit` executes the current inner transaction.
@@ -2806,6 +3323,9 @@ class Itxn(Instruction):
     def __str__(self) -> str:
         return f"itxn {self._field}"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Itxna(Instruction):
     """`itxna f i` pushes ith value of array transaction field f of last inner transaction.
@@ -2822,6 +3342,9 @@ class Itxna(Instruction):
         pushes value at index i of array transaction field f.
 
     """
+
+    def output_size(self) -> int:
+        return 1
 
     def __init__(self, field: TransactionField):
         super().__init__()
@@ -2869,6 +3392,12 @@ class Txnas(Instruction):
     def __str__(self) -> str:
         return f"txnas {self._field}"
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Gtxnas(Instruction):
     """`gtxnas t f` pushes a value of array transaction field f of transaction t in the group using top of the stack as index.
@@ -2908,6 +3437,12 @@ class Gtxnas(Instruction):
     def __str__(self) -> str:
         return f"Gtxnas {self._idx} {self._field}"
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Gtxnsas(Instruction):
     """`gtxnas f` pushes a value of array transaction field f of a transaction in the group.
@@ -2941,6 +3476,12 @@ class Gtxnsas(Instruction):
     def __str__(self) -> str:
         return f"gtxnsas {self._field}"
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Args(Instruction):
     """`args` pushes a LogicSig argument to stack using top of stack as index.
@@ -2958,6 +3499,12 @@ class Args(Instruction):
         self._version: int = 5
         self._mode: ContractType = ContractType.STATELESS
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Mulw(Instruction):
     """`mulw` multiplies two unit64 and pushes 128-bit long result.
@@ -2971,6 +3518,12 @@ class Mulw(Instruction):
         high (uint64): value of high 64 bits of result.
 
     """
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 2
 
 
 class Addw(Instruction):
@@ -2989,6 +3542,12 @@ class Addw(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 2
 
 
 class Divmodw(Instruction):
@@ -3035,6 +3594,12 @@ class Divmodw(Instruction):
             return 20
         return 0
 
+    def input_size(self) -> int:
+        return 4
+
+    def output_size(self) -> int:
+        return 4
+
 
 class Exp(Instruction):
     """`exp` allows calculating powers of a number.
@@ -3054,6 +3619,12 @@ class Exp(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 4
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Expw(Instruction):
@@ -3096,6 +3667,12 @@ class Expw(Instruction):
             return 10
         return 0
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 2
+
 
 class Shl(Instruction):
     """`shl` shifts left the given element by given bits.
@@ -3113,6 +3690,12 @@ class Shl(Instruction):
         super().__init__()
         self._version: int = 4
 
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Shr(Instruction):
     """`shl` shifts right the given element by given bits.
@@ -3129,6 +3712,12 @@ class Shr(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 4
+
+    def input_size(self) -> int:
+        return 2
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Sqrt(Instruction):
@@ -3166,6 +3755,12 @@ class Sqrt(Instruction):
             return 4
         return 0
 
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
+
 
 class Intcblock(Instruction):
     """`intcblock x ...` resets and replaces integer constants in constant storage space.
@@ -3202,6 +3797,9 @@ class Intc(Instruction):
     def __str__(self) -> str:
         return f"intc {self._idx}"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Intc0(Instruction):
     """`intc_0` push integer constant 0 from constant storage space.
@@ -3213,6 +3811,9 @@ class Intc0(Instruction):
 
     def __str__(self) -> str:
         return "intc_0"
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Intc1(Instruction):
@@ -3226,6 +3827,9 @@ class Intc1(Instruction):
     def __str__(self) -> str:
         return "intc_1"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Intc2(Instruction):
     """`intc_2` push integer constant 2 from constant storage space.
@@ -3237,6 +3841,9 @@ class Intc2(Instruction):
 
     def __str__(self) -> str:
         return "intc_2"
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Intc3(Instruction):
@@ -3281,6 +3888,9 @@ class Bytec0(Instruction):
     def __str__(self) -> str:
         return "bytec_0"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Bytec1(Instruction):
     """`bytec_1` push byte constant 1 from constant storage space.
@@ -3292,6 +3902,9 @@ class Bytec1(Instruction):
 
     def __str__(self) -> str:
         return "bytec_1"
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Bytec2(Instruction):
@@ -3305,6 +3918,9 @@ class Bytec2(Instruction):
     def __str__(self) -> str:
         return "bytec_2"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Bytec3(Instruction):
     """`bytec_3` push byte constant 3 from constant storage space.
@@ -3316,6 +3932,9 @@ class Bytec3(Instruction):
 
     def __str__(self) -> str:
         return "bytec_3"
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Arg(Instruction):
@@ -3337,6 +3956,9 @@ class Arg(Instruction):
     def __str__(self) -> str:
         return f"arg {self._idx}"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Arg0(Instruction):
     """`arg_0` pushes 0th LogicSig argument to stack.
@@ -3352,6 +3974,9 @@ class Arg0(Instruction):
 
     def __str__(self) -> str:
         return "arg_0"
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Arg1(Instruction):
@@ -3369,6 +3994,9 @@ class Arg1(Instruction):
     def __str__(self) -> str:
         return "arg_1"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Arg2(Instruction):
     """`arg_2` pushes 2nd LogicSig argument to stack.
@@ -3385,6 +4013,9 @@ class Arg2(Instruction):
     def __str__(self) -> str:
         return "arg_2"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Arg3(Instruction):
     """`arg_3` pushes 3rd LogicSig argument to stack.
@@ -3400,6 +4031,9 @@ class Arg3(Instruction):
 
     def __str__(self) -> str:
         return "arg_3"
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Byte(Instruction):
@@ -3422,6 +4056,9 @@ class Byte(Instruction):
 
     def __str__(self) -> str:
         return f"byte {self._bytes}"
+
+    def output_size(self) -> int:
+        return 1
 
 
 class PushBytes(Instruction):
@@ -3451,6 +4088,9 @@ class PushBytes(Instruction):
     def __str__(self) -> str:
         return f"pushbytes {self._bytes}"
 
+    def output_size(self) -> int:
+        return 1
+
 
 class Len(Instruction):
     """`len` calculates the length of the given byte array.
@@ -3462,6 +4102,12 @@ class Len(Instruction):
         (uint64): pushes the length of the byte array X.
 
     """
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Bytecblock(Instruction):
@@ -3508,6 +4154,12 @@ class Substring(Instruction):
 
     def __str__(self) -> str:
         return f"substring {self._start} {self._stop}"
+
+    def input_size(self) -> int:
+        return 1
+
+    def output_size(self) -> int:
+        return 1
 
 
 class Substring3(Instruction):
