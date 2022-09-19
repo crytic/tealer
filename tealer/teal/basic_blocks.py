@@ -16,6 +16,8 @@ Classes:
 from typing import List, Optional, TYPE_CHECKING
 
 from tealer.teal.instructions.instructions import Instruction
+from tealer.teal.context.block_transaction_context import BlockTransactionContext
+
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
@@ -37,6 +39,7 @@ class BasicBlock:
         self._next: List[BasicBlock] = []
         self._idx: int = 0
         self._teal: Optional["Teal"] = None
+        self._transaction_context = BlockTransactionContext()
 
     def add_instruction(self, instruction: Instruction) -> None:
         """Append instruction to this basic block.
@@ -126,6 +129,10 @@ class BasicBlock:
     @teal.setter
     def teal(self, teal_instance: "Teal") -> None:
         self._teal = teal_instance
+
+    @property
+    def transaction_context(self) -> "BlockTransactionContext":
+        return self._transaction_context
 
     def __str__(self) -> str:
         ret = ""

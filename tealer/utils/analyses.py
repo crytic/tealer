@@ -19,7 +19,7 @@ from tealer.teal.instructions.instructions import (
 from tealer.teal.instructions.transaction_field import TransactionField, OnCompletion, ApplicationID
 
 
-def _is_int_push_ins(ins: Instruction) -> Tuple[bool, Optional[Union[int, str]]]:
+def is_int_push_ins(ins: Instruction) -> Tuple[bool, Optional[Union[int, str]]]:
     if isinstance(ins, Int) or isinstance(  # pylint: disable=consider-merging-isinstance
         ins, PushInt
     ):
@@ -123,7 +123,7 @@ def detect_missing_txn_check(
         if isinstance(ins, Return):
             if len(ins.prev) == 1:
                 prev = ins.prev[0]
-                is_int_push, value = _is_int_push_ins(prev)
+                is_int_push, value = is_int_push_ins(prev)
                 if is_int_push and value == 0:
                     return
 
@@ -172,7 +172,7 @@ def is_oncompletion_check(ins1: Instruction, ins2: Instruction, checked_values: 
             integer_checked_values.append(ENUM_NAMES_TO_INT[named_constant])
 
     if isinstance(ins1, Txn) and isinstance(ins1.field, OnCompletion):
-        is_int_push, value = _is_int_push_ins(ins2)
+        is_int_push, value = is_int_push_ins(ins2)
         return is_int_push and (value in checked_values or value in integer_checked_values)
     return False
 
@@ -200,7 +200,7 @@ def is_application_creation_check(ins1: Instruction, ins2: Instruction) -> bool:
     """
 
     if isinstance(ins1, Txn) and isinstance(ins1.field, ApplicationID):
-        is_int_push, value = _is_int_push_ins(ins2)
+        is_int_push, value = is_int_push_ins(ins2)
         return is_int_push and value == 0
     return False
 
@@ -256,7 +256,7 @@ def detect_missing_on_completion(  # pylint: disable=too-many-branches, too-many
         if isinstance(ins, Return):
             if len(ins.prev) == 1:
                 prev = ins.prev[0]
-                is_int_push, value = _is_int_push_ins(prev)
+                is_int_push, value = is_int_push_ins(prev)
                 if is_int_push and value == 0:
                     return
 

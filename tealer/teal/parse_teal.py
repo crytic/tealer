@@ -25,6 +25,7 @@ contract represented by sequence of the basic blocks.
 
 """
 
+import inspect
 import sys
 from typing import Optional, Dict, List
 
@@ -48,6 +49,8 @@ from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
 from tealer.teal.teal import Teal
+from tealer.analyses.dataflow import all_constraints
+from tealer.analyses.dataflow.generic import DataflowTransactionContext
 
 
 def _detect_contract_type(instructions: List[Instruction]) -> ContractType:
@@ -455,6 +458,19 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
     return error
 
 
+def _apply_transaction_context_analysis(teal: "Teal") -> None:
+    analyses_classes = [getattr(all_constraints, name) for name in dir(all_constraints)]
+    analyses_classes = [
+        c
+        for c in analyses_classes
+        if inspect.isclass(c) and issubclass(c, DataflowTransactionContext)
+    ]
+
+    for cl in analyses_classes:
+        obj = cl(teal)
+        obj.run_analysis()
+
+
 def parse_teal(source_code: str) -> Teal:
     """Parse algorand smart contracts written in teal.
 
@@ -514,5 +530,7 @@ def parse_teal(source_code: str) -> Teal:
     # set teal instance to it's basic blocks
     for bb in teal.bbs:
         bb.teal = teal
+
+    _apply_transaction_context_analysis(teal)
 
     return teal
