@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Set, Tuple, Dict
+from typing import TYPE_CHECKING, List, Set, Tuple, Dict, Type
 
 from tealer.analyses.dataflow.generic import DataflowTransactionContext
 from tealer.teal.instructions.instructions import (
@@ -10,26 +10,47 @@ from tealer.teal.instructions.instructions import (
     Less,
     LessE,
     Txn,
+    Gtxn,
+    Not,
 )
 from tealer.teal.global_field import GroupSize
-from tealer.teal.instructions.transaction_field import GroupIndex
+from tealer.teal.instructions.transaction_field import (
+    GroupIndex,
+    ApplicationID,
+    TypeEnum,
+    OnCompletion,
+)
+from tealer.utils.teal_enums import TealerTransactionType
+from tealer.utils.teal_enums import (
+    ALL_TRANSACTION_TYPES,
+    APPLICATION_TRANSACTION_TYPES,
+    TYPEENUM_TRANSACTION_TYPES,
+)
+from tealer.utils.teal_enums import oncompletion_to_tealer_type, transaction_type_to_tealer_type
 from tealer.utils.analyses import is_int_push_ins
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
+    from tealer.teal.instructions.transaction_field import TransactionField
 
 group_size_key = "GroupSize"
 group_index_key = "GroupIndex"
-analysis_keys = [group_size_key, group_index_key]
-universal_sets = {}
+transaction_type_key = "TransactionType"
+analysis_keys = [group_size_key, group_index_key, transaction_type_key]
+analysis_keys += [f"GTXN_{i:02d}_{transaction_type_key}" for i in range(16)]
+universal_sets: Dict[str, List] = {
+    f"GTXN_{i:02d}_{transaction_type_key}": list(ALL_TRANSACTION_TYPES) for i in range(16)
+}
 universal_sets[group_size_key] = list(range(1, 17))
 universal_sets[group_index_key] = list(range(0, 16))
+universal_sets[transaction_type_key] = list(ALL_TRANSACTION_TYPES)
 
 
 class IntFields(DataflowTransactionContext):  # pylint: disable=too-few-public-methods
 
     GROUP_SIZE_KEY = group_size_key
     GROUP_INDEX_KEY = group_index_key
+    TRANSACTION_TYPE_KEY = transaction_type_key
     KEYS = analysis_keys
     UNIVERSAL_SETS: Dict[str, List] = universal_sets
 
@@ -169,10 +190,123 @@ class IntFields(DataflowTransactionContext):  # pylint: disable=too-few-public-m
             return set(asserted_values), set(U) - set(asserted_values)
         return set(U), set(U)
 
+    def _is_ins_tx_field(  # pylint: disable=no-self-use
+        self, key: str, ins: "Instruction", field: Type["TransactionField"]
+    ) -> bool:
+        """return True if ins is "txn {field}" or ins is gtxn {idx} field"""
+        if key.startswith("GTXN_"):
+            idx = int(key[len("GTXN_") :][:2])
+            return isinstance(ins, Gtxn) and ins.idx == idx and isinstance(ins.field, field)
+        return isinstance(ins, Txn) and isinstance(ins.field, field)
+
+    def _get_asserted_transaction_types(  # pylint: disable=too-many-branches
+        self, key: str, ins_stack: List["Instruction"]
+    ) -> Tuple[Set["TealerTransactionType"], Set["TealerTransactionType"]]:
+        """return set of transaction type that make the comparison true and a set that make false.
+
+        considered instruction patterns:
+        [g]txn [idx] ApplicationID
+        bz/bnz
+
+        [g]txn [idx] ApplicationID
+        !
+        bz/bnz
+
+        [g]txn [idx] ApplicationID
+        int 0
+        ( == | != )
+        bz/bnz
+
+        [g]txn [idx] TypeEnum
+        int [pay | acfg | axfer | appl ..]
+        ( == | != )
+        bz/bnz
+
+        [g]txn [idx] OnCompletion
+        int [UpdateApplication | DeleteApplication | ...]
+        ( == | != )
+        bz/bnz
+        """
+        U = set(self.UNIVERSAL_SETS[self.TRANSACTION_TYPE_KEY])
+        if len(ins_stack) == 0:
+            return set(U), set(U)
+
+        ins1 = ins_stack[-1]
+        if self._is_ins_tx_field(key, ins1, ApplicationID):
+            # txn ApplicationID pushes 0 if this Application creation transaction elses pushes nonzero
+            return set(APPLICATION_TRANSACTION_TYPES) - set(
+                [TealerTransactionType.ApplCreation]
+            ), set([TealerTransactionType.ApplCreation])
+
+        if len(ins_stack) > 1:
+            ins2 = ins_stack[-2]
+            if isinstance(ins1, Not) and self._is_ins_tx_field(key, ins2, ApplicationID):
+                # txn ApplicationID
+                # !
+                # return
+                return set([TealerTransactionType.ApplCreation]), set(
+                    APPLICATION_TRANSACTION_TYPES
+                ) - set([TealerTransactionType.ApplCreation])
+
+        if len(ins_stack) < 3:
+            return set(U), set(U)
+
+        if isinstance(ins1, (Eq, Neq)):
+            ins2 = ins_stack[-2]
+            ins3 = ins_stack[-3]
+
+            is_int_ins2, value_2 = is_int_push_ins(ins2)
+            is_int_ins3, value_3 = is_int_push_ins(ins3)
+
+            if (is_int_ins2 and is_int_ins3) or ((not is_int_ins2) and (not is_int_ins3)):
+                # if both are ints or both are not ints
+                return set(U), set(U)
+
+            true_values, false_values = None, None
+            if self._is_ins_tx_field(key, ins2, ApplicationID):
+                true_values, false_values = set([TealerTransactionType.ApplCreation]), set(
+                    APPLICATION_TRANSACTION_TYPES
+                ) - set([TealerTransactionType.ApplCreation])
+            elif self._is_ins_tx_field(key, ins3, ApplicationID):
+                true_values, false_values = set([TealerTransactionType.ApplCreation]), set(
+                    APPLICATION_TRANSACTION_TYPES
+                ) - set([TealerTransactionType.ApplCreation])
+
+            if self._is_ins_tx_field(key, ins2, TypeEnum) and value_3 is not None:
+                compared_type = transaction_type_to_tealer_type(value_3)
+                true_values, false_values = set([compared_type]), set(
+                    TYPEENUM_TRANSACTION_TYPES
+                ) - set([compared_type])
+            elif self._is_ins_tx_field(key, ins3, TypeEnum) and value_2 is not None:
+                compared_type = transaction_type_to_tealer_type(value_2)
+                true_values, false_values = set([compared_type]), set(
+                    TYPEENUM_TRANSACTION_TYPES
+                ) - set([compared_type])
+
+            if self._is_ins_tx_field(key, ins2, OnCompletion) and value_3 is not None:
+                compared_on_completion = oncompletion_to_tealer_type(value_3)
+                true_values, false_values = set([compared_on_completion]), set(
+                    APPLICATION_TRANSACTION_TYPES
+                ) - set([compared_on_completion])
+            elif self._is_ins_tx_field(key, ins3, OnCompletion) and value_2 is not None:
+                compared_on_completion = oncompletion_to_tealer_type(value_2)
+                true_values, false_values = set([compared_on_completion]), set(
+                    APPLICATION_TRANSACTION_TYPES
+                ) - set([compared_on_completion])
+
+            if true_values is not None and false_values is not None:
+                if isinstance(ins1, Eq):
+                    return true_values, false_values
+                return false_values, true_values
+
+        return set(U), set(U)
+
     def _get_asserted(self, key: str, ins_stack: List["Instruction"]) -> Tuple[Set, Set]:
-        if key == self.GROUP_SIZE_KEY:
+        if key == self.GROUP_SIZE_KEY:  # pylint: disable=no-else-return
             return self._get_asserted_groupsizes(ins_stack)
-        return self._get_asserted_groupindices(ins_stack)
+        elif key == self.GROUP_INDEX_KEY:
+            return self._get_asserted_groupindices(ins_stack)
+        return self._get_asserted_transaction_types(key, ins_stack)
 
     def _store_results(self) -> None:
         group_size_block_context = self._block_contexts[self.GROUP_SIZE_KEY]
@@ -182,3 +316,11 @@ class IntFields(DataflowTransactionContext):  # pylint: disable=too-few-public-m
         group_index_block_context = self._block_contexts[self.GROUP_INDEX_KEY]
         for block in self._teal.bbs:
             block.transaction_context.group_indices = list(group_index_block_context[block])
+
+        transaction_type_context = self._block_contexts[self.TRANSACTION_TYPE_KEY]
+        for block in self._teal.bbs:
+            block.transaction_context.transaction_types = list(transaction_type_context[block])
+
+            for idx in range(16):
+                values = self._block_contexts[self._gtx_key(idx, self.TRANSACTION_TYPE_KEY)][block]
+                block.transaction_context.gtxn_context(idx).transaction_types = values
