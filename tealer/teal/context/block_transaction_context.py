@@ -13,6 +13,7 @@ class BlockTransactionContext:  # pylint: disable=too-few-public-methods
 
         # set default values
         self.group_sizes = list(range(1, 17))
+        self.group_indices = list(range(0, 16))
 
     def gtxn_context(self, txn_index: int) -> "BlockTransactionContext":
         """context information collected from gtxn {txn_index} field instructions"""
