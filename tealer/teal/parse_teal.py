@@ -26,10 +26,9 @@ contract represented by sequence of the basic blocks.
 """
 
 import sys
-from typing import Optional, Dict, List, Set
+from typing import Optional, Dict, List, Set, Tuple
 
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.subroutines import Subroutine
 from tealer.teal.instructions.instructions import (
     Instruction,
     Label,
@@ -222,7 +221,6 @@ def _first_pass(
         call = None
         if isinstance(ins, Callsub):
             call = ins
-            subroutines.add(ins.label)
 
         # Finally, add the instruction to the instruction list
         instructions.append(ins)
@@ -333,12 +331,6 @@ def _fourth_pass(instructions: List[Instruction]) -> None:
                 if ins.bb and branch.bb:
                     ins.bb.add_next(branch.bb)
 
-def _fifth_pass(bb: List[BasicBlock], sub_entries: Set[str], subroutines: List[Subroutine]):
-    # Fifth pass over the basic blocks: reconstruct the subroutines
-    for block in bb:
-        first_ins = block.entry_instr
-        if isinstance(first_ins, Label) and first_ins.label in sub_entries:
-            subroutines.append(Subroutine(block))
 
 def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
     """Set index of basic blocks based on their entry instruction line number.
@@ -356,8 +348,8 @@ def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
     return bbs
 
 
-def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
-    """find all the basic blocks part of a subroutine given it's label instruction.
+def _identify_subroutine_blocks(label: "Label") -> Tuple[List["BasicBlock"], List["BasicBlock"]]:
+    """find all the basic blocks and exit blocks part of a subroutine given its label instruction.
 
     Args:
         label ("Label"): label instruction of the subroutine.
@@ -371,6 +363,7 @@ def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
         return []
 
     subroutines_blocks: List["BasicBlock"] = []
+    subroutines_exits: List["BasicBlock"] = []
     stack: List["BasicBlock"] = []
 
     stack.append(label.bb)
@@ -380,6 +373,7 @@ def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
 
         # check for retsub before exploring as retsubs are connected to return points
         if isinstance(bb.exit_instr, Retsub):
+            subroutines_exits.append(bb)
             continue
 
         # callsub return point is part of the subroutine
@@ -395,7 +389,7 @@ def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
             if next_bb not in subroutines_blocks:
                 stack.append(next_bb)
 
-    return subroutines_blocks
+    return (subroutines_blocks, subroutines_exits)
 
 
 def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
@@ -463,6 +457,118 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
     return error
 
 
+def _recover_stack_sizes(
+    blocks: List[BasicBlock], subs: List[Tuple[List[BasicBlock], List[BasicBlock]]]
+) -> Dict[str, Tuple[int, int]]:
+    from ortools.linear_solver import pywraplp as lp
+
+    solver: lp.Solver = lp.Solver.CreateSolver("SCIP")
+
+    def create_var(name: str) -> lp.Variable:
+        return solver.IntVar(0, 1000, name)
+
+    # LP variables that hold input and output info for subroutines
+    sub_inputs: Dict[str, lp.Variable] = {}
+    sub_outputs: Dict[str, lp.Variable] = {}
+
+    labels: Dict[str, BasicBlock] = {}  # Map from labels to blocks
+
+    # LP variables that hold input and output info for blocks
+    bb_inputs: Dict[BasicBlock, lp.Variable] = {}
+    bb_outputs: Dict[BasicBlock, lp.Variable] = {}
+
+    def get_block_name(bb: BasicBlock) -> str:
+        """Get the name of the BasicBlock
+
+        This is either its label (if the blocks starts with one) or the line of its first instruction
+        """
+        if isinstance(bb.entry_instr, Label):
+            return bb.entry_instr.label
+        else:
+            return bb.entry_instr.line
+
+    # Create LP variables for each subroutine
+    for (sub_blocks, exit_blocks) in subs:
+        name = get_block_name(sub_blocks[0])
+        sub_inputs[name] = create_var(f"sub_{name}_input")
+        sub_outputs[name] = create_var(f"sub_{name}_output")
+
+    for bb in blocks:
+        labels[get_block_name(bb)] = bb
+
+    def get_block_input(bb: BasicBlock) -> lp.Variable:
+        """Gets or creates the LP variable associated with the inputs of this block"""
+        bb_name = get_block_name(bb)
+        if not bb in bb_inputs:
+            bb_inputs[bb] = create_var(f"block_{bb_name}_input")
+        return bb_inputs[bb]
+
+    def get_block_output(bb: BasicBlock) -> lp.Variable:
+        """Gets or creates the LP variable associated with the outputs of this block"""
+        bb_name = get_block_name(bb)
+        if not bb in bb_outputs:
+            bb_outputs[bb] = create_var(f"block_{bb_name}_output")
+        return bb_outputs[bb]
+
+    for bb in blocks:
+        input_size = get_block_input(bb)
+        for inst in bb.instructions:
+            output_size = create_var(f"stack_after_{inst.line}")
+            if isinstance(inst, Callsub):
+                sub_input = sub_inputs[inst.label]
+                sub_output = sub_outputs[inst.label]
+                solver.Add(input_size >= sub_input)
+                solver.Add(output_size == (input_size - sub_input + sub_output))
+            else:
+                solver.Add(input_size >= inst.input_size())
+                solver.Add(output_size == (input_size - inst.input_size() + inst.output_size()))
+            input_size = output_size
+
+        # At this point, input_size will already contain the output size of the block
+        output_size = get_block_output(bb)
+        solver.Add(output_size == input_size)
+
+        if not isinstance(bb.exit_instr, Retsub):
+            for next in bb.next:
+                next_input = get_block_input(next)
+                solver.Add(output_size >= next_input)
+
+    # Associate the inputs and outputs of each subroutine with the variables of its body
+    for (sub_blocks, exit_blocks) in subs:
+        bb = sub_blocks[0]
+        name = get_block_name(bb)
+        sub_input = sub_inputs[name]
+        sub_output = sub_outputs[name]
+        bb_input = get_block_input(bb)
+
+        solver.Add(sub_input == bb_input)
+        for exit in exit_blocks:
+            solver.Add(sub_output == get_block_output(exit))
+
+    # The first block receives no inputs
+    solver.Add(get_block_input(blocks[0]) == 0)
+
+    objective = 0
+    for v in solver.variables():
+        objective += v
+    solver.Minimize(objective)
+
+    status = solver.Solve()
+    if status == lp.Solver.INFEASIBLE:
+        raise Exception("Cannot find solution")
+
+    for bb in blocks:
+        bb.inputs = get_block_input(bb).solution_value()
+        bb.outputs = get_block_output(bb).solution_value()
+
+    result: Dict[str, Tuple[int, int]] = {}
+    for (sub_blocks, exit_blocks) in subs:
+        bb = sub_blocks[0]
+        name = get_block_name(bb)
+        result[name] = (sub_inputs[name].solution_value(), sub_outputs[name].solution_value())
+    return result
+
+
 def parse_teal(source_code: str) -> Teal:
     """Parse algorand smart contracts written in teal.
 
@@ -489,13 +595,11 @@ def parse_teal(source_code: str) -> Teal:
 
     instructions: List[Instruction] = []  # Parsed instructions list
     labels: Dict[str, Instruction] = {}  # Global map of label names to label instructions
-    sub_entries: Set[str] = set() # Set of all subroutine entry points
     rets: Dict[str, List[Instruction]] = {}  # Lists of return points corresponding to labels
-    subroutines: List[Subroutine] = []
 
     lines = source_code.splitlines()
 
-    _first_pass(lines, labels, sub_entries, rets, instructions)
+    _first_pass(lines, labels, rets, instructions)
     _second_pass(instructions, labels, rets)
 
     # Third pass over the instructions list: Construct the basic blocks and sequential links
@@ -503,7 +607,6 @@ def parse_teal(source_code: str) -> Teal:
     create_bb(instructions, all_bbs)
 
     _fourth_pass(instructions)
-    _fifth_pass(all_bbs, sub_entries, subroutines)
 
     all_bbs = _add_basic_blocks_idx(all_bbs)
     mode = _detect_contract_type(instructions)
@@ -514,13 +617,15 @@ def parse_teal(source_code: str) -> Teal:
 
     _verify_version(instructions, version)
 
-    subroutines = []
+    subroutines: List[Tuple[List[BasicBlock], List[BasicBlock]]] = []
     if version >= 4:
         for subroutine_label in rets:
             label_ins = labels[subroutine_label]
             subroutines.append(_identify_subroutine_blocks(label_ins))
 
-    teal = Teal(instructions, all_bbs, version, mode, subroutines)
+    sub_stacks = _recover_stack_sizes(all_bbs, subroutines)
+
+    teal = Teal(instructions, all_bbs, version, mode, list(map(lambda x: x[0], subroutines)))
 
     # set teal instance to it's basic blocks
     for bb in teal.bbs:

@@ -13,6 +13,7 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         "prettytable>=0.7.2",
+        "ortools>=9.4"
     ],
     extras_require={"dev": ["pylint==2.8.2", "black==21.10b0", "mypy==0.910"]},
     license="AGPL-3.0",

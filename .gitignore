@@ -4,3 +4,5 @@
 build/
 dist/
 tealer.egg-info/
+venv/
+__pycache__

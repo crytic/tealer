@@ -37,6 +37,8 @@ class BasicBlock:
         self._next: List[BasicBlock] = []
         self._idx: int = 0
         self._teal: Optional["Teal"] = None
+        self._inputs: Optional[int] = None
+        self._outputs: Optional[int] = None
 
     def add_instruction(self, instruction: Instruction) -> None:
         """Append instruction to this basic block.
@@ -126,6 +128,22 @@ class BasicBlock:
     @teal.setter
     def teal(self, teal_instance: "Teal") -> None:
         self._teal = teal_instance
+
+    @property
+    def inputs(self) -> Optional[int]:
+        return self._inputs
+    
+    @inputs.setter
+    def inputs(self, value: int) -> None:
+        self._inputs = value
+
+    @property
+    def outputs(self) -> Optional[int]:
+        return self._outputs
+    
+    @outputs.setter
+    def outputs(self, value: int) -> None:
+        self._outputs = value
 
     def __str__(self) -> str:
         ret = ""

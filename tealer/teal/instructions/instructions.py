@@ -144,7 +144,7 @@ class Instruction:
 
     def input_size(self) -> int:
         return 0
-    
+
     def output_size(self) -> int:
         return 0
 
