@@ -109,8 +109,8 @@ def test_subroutine_identification(test: Tuple[str, List[List[BasicBlock]]]) -> 
     teal = parse_teal(code.strip())
     subroutines = teal.subroutines
     assert len(subroutines) == len(expected_subroutines)
-    subroutines = sorted(subroutines, key=lambda x: x[0].idx)
-    expected_subroutines = sorted(expected_subroutines, key=lambda x: x[0].idx)
+    subroutines = sorted(subroutines, key=lambda x: x.blocks[0].idx)
+    expected_subroutines = sorted(expected_subroutines, key=lambda x: x.blocks[0].idx)
 
     for sub, ex_sub in zip(subroutines, expected_subroutines):
         assert cmp_cfg(sub, ex_sub)

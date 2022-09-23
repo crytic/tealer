@@ -29,6 +29,7 @@ import sys
 from typing import Optional, Dict, List, Set, Tuple
 
 from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.subroutines import Subroutine
 from tealer.teal.instructions.instructions import (
     Instruction,
     Label,
@@ -459,7 +460,7 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
 
 def _recover_stack_sizes(
     blocks: List[BasicBlock], subs: List[Tuple[List[BasicBlock], List[BasicBlock]]]
-) -> Dict[str, Tuple[int, int]]:
+) -> Dict[int, Tuple[int, int]]:
     from ortools.linear_solver import pywraplp as lp
 
     solver: lp.Solver = lp.Solver.CreateSolver("SCIP")
@@ -468,14 +469,18 @@ def _recover_stack_sizes(
         return solver.IntVar(0, 1000, name)
 
     # LP variables that hold input and output info for subroutines
-    sub_inputs: Dict[str, lp.Variable] = {}
-    sub_outputs: Dict[str, lp.Variable] = {}
-
-    labels: Dict[str, BasicBlock] = {}  # Map from labels to blocks
+    sub_inputs: Dict[int, lp.Variable] = {}
+    sub_outputs: Dict[int, lp.Variable] = {}
 
     # LP variables that hold input and output info for blocks
     bb_inputs: Dict[BasicBlock, lp.Variable] = {}
     bb_outputs: Dict[BasicBlock, lp.Variable] = {}
+
+    labels: Dict[str, int] = {} # Map from label to line number
+
+    for block in blocks:
+        if isinstance(block.entry_instr, Label):
+            labels[block.entry_instr.label] = block.entry_instr.line
 
     def get_block_name(bb: BasicBlock) -> str:
         """Get the name of the BasicBlock
@@ -490,11 +495,9 @@ def _recover_stack_sizes(
     # Create LP variables for each subroutine
     for (sub_blocks, exit_blocks) in subs:
         name = get_block_name(sub_blocks[0])
-        sub_inputs[name] = create_var(f"sub_{name}_input")
-        sub_outputs[name] = create_var(f"sub_{name}_output")
-
-    for bb in blocks:
-        labels[get_block_name(bb)] = bb
+        line = sub_blocks[0].entry_instr.line
+        sub_inputs[line] = create_var(f"sub_{name}_input")
+        sub_outputs[line] = create_var(f"sub_{name}_output")
 
     def get_block_input(bb: BasicBlock) -> lp.Variable:
         """Gets or creates the LP variable associated with the inputs of this block"""
@@ -515,8 +518,8 @@ def _recover_stack_sizes(
         for inst in bb.instructions:
             output_size = create_var(f"stack_after_{inst.line}")
             if isinstance(inst, Callsub):
-                sub_input = sub_inputs[inst.label]
-                sub_output = sub_outputs[inst.label]
+                sub_input = sub_inputs[labels[inst.label]]
+                sub_output = sub_outputs[labels[inst.label]]
                 solver.Add(input_size >= sub_input)
                 solver.Add(output_size == (input_size - sub_input + sub_output))
             else:
@@ -537,8 +540,9 @@ def _recover_stack_sizes(
     for (sub_blocks, exit_blocks) in subs:
         bb = sub_blocks[0]
         name = get_block_name(bb)
-        sub_input = sub_inputs[name]
-        sub_output = sub_outputs[name]
+        line = bb.entry_instr.line
+        sub_input = sub_inputs[line]
+        sub_output = sub_outputs[line]
         bb_input = get_block_input(bb)
 
         solver.Add(sub_input == bb_input)
@@ -565,7 +569,8 @@ def _recover_stack_sizes(
     for (sub_blocks, exit_blocks) in subs:
         bb = sub_blocks[0]
         name = get_block_name(bb)
-        result[name] = (sub_inputs[name].solution_value(), sub_outputs[name].solution_value())
+        line = bb.entry_instr.line
+        result[line] = (sub_inputs[line].solution_value(), sub_outputs[line].solution_value())
     return result
 
 
@@ -617,15 +622,24 @@ def parse_teal(source_code: str) -> Teal:
 
     _verify_version(instructions, version)
 
-    subroutines: List[Tuple[List[BasicBlock], List[BasicBlock]]] = []
+    subroutine_info: List[Tuple[List[BasicBlock], List[BasicBlock]]] = []
     if version >= 4:
         for subroutine_label in rets:
             label_ins = labels[subroutine_label]
-            subroutines.append(_identify_subroutine_blocks(label_ins))
+            subroutine_info.append(_identify_subroutine_blocks(label_ins))
 
-    sub_stacks = _recover_stack_sizes(all_bbs, subroutines)
+    sub_stacks = _recover_stack_sizes(all_bbs, subroutine_info)
 
-    teal = Teal(instructions, all_bbs, version, mode, list(map(lambda x: x[0], subroutines)))
+    def subroutine_from_info(info: Tuple[List[BasicBlock], List[BasicBlock]]) -> Subroutine:
+        blocks = info[0]
+        exit_blocks = info[1]
+        entry_block = blocks[0]
+        line = entry_block.entry_instr.line
+        return Subroutine(blocks, exit_blocks, sub_stacks[line][0], sub_stacks[line][1])
+
+    subroutines = list(map(subroutine_from_info, subroutine_info))
+
+    teal = Teal(instructions, all_bbs, version, mode, subroutines)
 
     # set teal instance to it's basic blocks
     for bb in teal.bbs:

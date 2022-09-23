@@ -136,10 +136,10 @@ class PrinterHumanSummary(AbstractPrinter):
         txt += f"Number of subroutines: {len(teal.subroutines)}\n"
         txt += "Subroutines:\n"
         for sub in teal.subroutines:
-            if isinstance(sub[0].entry_instr, Label):
-                sub_name = sub[0].entry_instr.label
+            if isinstance(sub.blocks[0].entry_instr, Label):
+                sub_name = sub.blocks[0].entry_instr.label
             else:
-                sub_name = str(sub[0].entry_instr)
+                sub_name = str(sub.blocks[0].entry_instr)
             txt += f"\t{sub_name}\n"
         txt += "\n"
 

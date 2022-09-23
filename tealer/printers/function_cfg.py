@@ -91,10 +91,10 @@ class PrinterFunctionCFG(AbstractPrinter):  # pylint: disable=too-few-public-met
 
         print()
         for sub in self.teal.subroutines:
-            if isinstance(sub[0].entry_instr, Label):
-                sub_name = sub[0].entry_instr.label
+            if isinstance(sub.blocks[0].entry_instr, Label):
+                sub_name = sub.blocks[0].entry_instr.label
             else:
-                sub_name = str(sub[0].entry_instr)
+                sub_name = str(sub.blocks[0].entry_instr)
 
             dot_output = self._subroutine_to_dot(sub)
 

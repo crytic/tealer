@@ -16,6 +16,7 @@ from tealer.detectors.abstract_detector import AbstractDetector, DetectorClassif
 from tealer.printers.abstract_printer import AbstractPrinter
 
 from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.subroutines import Subroutine
 from tealer.teal.instructions.instructions import Instruction, ContractType
 from tealer.exceptions import TealerException
 
@@ -80,7 +81,7 @@ class Teal:
         bbs: List[BasicBlock],
         version: int,
         mode: ContractType,
-        subroutines: List[List["BasicBlock"]],
+        subroutines: List[Subroutine],
     ):
         self._instructions = instructions
         self._bbs = bbs
@@ -102,11 +103,10 @@ class Teal:
         return self._bbs
 
     @property
-    def subroutines(self) -> List[List["BasicBlock"]]:
+    def subroutines(self) -> List[Subroutine]:
         """Returns list of subroutines.
 
-        Each subroutine is represented by the list of basic blocks that constitute
-        that particular subroutine. Subroutines are supported from Teal version 4 onwards.
+        Subroutines are supported from Teal version 4 onwards.
         For Teal version 3 or less this property will return empty List.
         """
 

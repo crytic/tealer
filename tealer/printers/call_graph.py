@@ -38,15 +38,15 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
         graph = {}
         for sub in self.teal.subroutines:
             # graph node
-            if isinstance(sub[0].entry_instr, Label):
-                sub_name = sub[0].entry_instr.label
+            if isinstance(sub.blocks[0].entry_instr, Label):
+                sub_name = sub.blocks[0].entry_instr.label
             else:
                 # should be unreachable
-                sub_name = str(sub[0].entry_instr)
+                sub_name = str(sub.blocks[0].entry_instr)
 
             # graph edges
             edges = []
-            for bb in sub:
+            for bb in sub.blocks:
                 for ins in bb.instructions:
                     if isinstance(ins, Callsub):
                         edges.append(ins.label)
@@ -54,7 +54,7 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
             graph[sub_name] = edges
 
         # treat entry point of the contract as a separate function
-        subroutine_blocks = [bb for sub in self.teal.subroutines for bb in sub]
+        subroutine_blocks = [bb for sub in self.teal.subroutines for bb in sub.blocks]
         entry_function_blocks = [bb for bb in self.teal.bbs if bb not in subroutine_blocks]
 
         # use __entry__ as function name for entry point
