@@ -461,6 +461,17 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
 def _recover_stack_sizes(
     blocks: List[BasicBlock], subs: List[Tuple[List[BasicBlock], List[BasicBlock]]]
 ) -> Dict[int, Tuple[int, int]]:
+    """Recover stack size info for basic blocks and subroutines.
+
+    Compute the number of stack elements that will be popped and pushed by entering in each block
+    or subroutine.
+
+    Sets the inputs and outputs property for each basic block.
+
+    Returns:
+        A dictionary that has a tuple containing the input and output size of each subroutine,
+        identified by their entry line number.
+    """
     from ortools.linear_solver import pywraplp as lp
 
     solver: lp.Solver = lp.Solver.CreateSolver("SCIP")
