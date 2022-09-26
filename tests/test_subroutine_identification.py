@@ -56,8 +56,8 @@ bbs_links = [(0, 6), (6, 2), (2, 3), (2, 5), (3, 1), (1, 4), (4, 7), (5, 7)]
 
 bbs = construct_cfg(ins_list, ins_partitions, bbs_links)
 MULTIPLE_RETSUB_SUBROUTINES = [
-    [bbs[1]],  # push_zero
-    [bbs[2], bbs[3], bbs[4], bbs[5]],  # is_even
+    ([bbs[1]], 0, 1),  # push_zero
+    ([bbs[2], bbs[3], bbs[4], bbs[5]], 1, 1),  # is_even
 ]
 
 
@@ -95,7 +95,7 @@ ins_partitions = [(0, 2), (2, 5), (5, 8), (8, 11), (11, 12)]
 bbs_links = [(0, 3), (3, 2), (2, 1), (1, 4)]
 
 bbs = construct_cfg(ins_list, ins_partitions, bbs_links)
-SUBROUTINE_BACK_JUMP_SUBROUTINES = [[bbs[1], bbs[2]]]  # is_odd
+SUBROUTINE_BACK_JUMP_SUBROUTINES = [([bbs[1], bbs[2]], 1, 1)]  # is_odd
 
 ALL_TESTS = [
     (MULTIPLE_RETSUB, MULTIPLE_RETSUB_SUBROUTINES),
@@ -104,13 +104,15 @@ ALL_TESTS = [
 
 
 @pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
-def test_subroutine_identification(test: Tuple[str, List[List[BasicBlock]]]) -> None:
+def test_subroutine_identification(test: Tuple[str, List[Tuple[List[BasicBlock], int, int]]]) -> None:
     code, expected_subroutines = test
     teal = parse_teal(code.strip())
-    subroutines = teal.subroutines
+    subroutines = map(lambda x: (x.blocks, x.input_size, x.output_size), teal.subroutines)
     assert len(subroutines) == len(expected_subroutines)
-    subroutines = sorted(subroutines, key=lambda x: x.blocks[0].idx)
-    expected_subroutines = sorted(expected_subroutines, key=lambda x: x.blocks[0].idx)
+    subroutines = sorted(subroutines, key=lambda x: x[0][0].idx)
+    expected_subroutines = sorted(expected_subroutines, key=lambda x: x[0][0].idx)
 
     for sub, ex_sub in zip(subroutines, expected_subroutines):
-        assert cmp_cfg(sub, ex_sub)
+        assert cmp_cfg(sub[0], ex_sub[0])
+        assert sub[1] == ex_sub[1] # Input size must be the same
+        assert sub[2] == ex_sub[2] # Output size must be the same
