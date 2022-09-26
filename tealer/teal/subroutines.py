@@ -15,6 +15,8 @@ class Subroutine:
         self._exit_blocks = exit_blocks
         self._input_size = input_size
         self._output_size = output_size
+        self._input_types = []
+        self._output_types = []
 
     @property
     def blocks(self) -> List[BasicBlock]:
@@ -31,3 +33,19 @@ class Subroutine:
     @property
     def output_size(self) -> int:
         return self._output_size
+
+    @property
+    def input_types(self) -> List[str]:
+        return self._input_types
+
+    @input_types.setter
+    def input_types(self, t) -> None:
+        self._input_types = t
+
+    @property
+    def output_types(self) -> List[str]:
+        return self._output_types
+
+    @output_types.setter
+    def output_types(self, t) -> None:
+        self._output_types = t

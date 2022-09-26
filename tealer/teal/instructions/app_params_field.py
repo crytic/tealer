@@ -21,6 +21,9 @@ class AppParamsField:
         """Teal version this field is introduced in and supported from."""
         return self._version
 
+    def type(self) -> str:
+        ...
+
     def __str__(self) -> str:
         return self.__class__.__qualname__
 
@@ -28,34 +31,61 @@ class AppParamsField:
 class AppApprovalProgram(AppParamsField):
     """Bytecode of approval program of the App."""
 
+    def type(self):
+        return "[]byte"
+
 
 class AppClearStateProgram(AppParamsField):
     """Bytecode of clear state program of the App."""
+
+    def type(self):
+        return "[]byte"
 
 
 class AppGlobalNumUint(AppParamsField):
     """Number of uint64 values allowed in Global State."""
 
+    def type(self):
+        return "uint64"
+
 
 class AppGlobalNumByteSlice(AppParamsField):
     """Number of byte array values allowed in Global State."""
+
+    def type(self):
+        return "uint64"
 
 
 class AppLocalNumUint(AppParamsField):
     """Number of uint64 values allowed in Local State."""
 
+    def type(self):
+        return "uint64"
+
 
 class AppLocalNumByteSlice(AppParamsField):
     """Number of byte array values allowed in Local State."""
+
+    def type(self):
+        return "uint64"
 
 
 class AppExtraProgramPages(AppParamsField):
     """Number of extra program pages of code space."""
 
+    def type(self):
+        return "uint64"
+
 
 class AppCreator(AppParamsField):
     """Address of Creator(deployer) of the application."""
 
+    def type(self):
+        return "[]byte"
+
 
 class AppAddress(AppParamsField):
     """Address for which this application has authority."""
+
+    def type(self):
+        return "[]byte"

@@ -39,6 +39,8 @@ class BasicBlock:
         self._teal: Optional["Teal"] = None
         self._inputs: Optional[int] = None
         self._outputs: Optional[int] = None
+        self._input_types: Optional[List[str]] = None
+        self._output_types: Optional[List[str]] = None
 
     def add_instruction(self, instruction: Instruction) -> None:
         """Append instruction to this basic block.
@@ -132,7 +134,7 @@ class BasicBlock:
     @property
     def inputs(self) -> Optional[int]:
         return self._inputs
-    
+
     @inputs.setter
     def inputs(self, value: int) -> None:
         self._inputs = value
@@ -140,10 +142,26 @@ class BasicBlock:
     @property
     def outputs(self) -> Optional[int]:
         return self._outputs
-    
+
     @outputs.setter
     def outputs(self, value: int) -> None:
         self._outputs = value
+
+    @property
+    def input_types(self) -> Optional[List[str]]:
+        return self._input_types
+
+    @inputs.setter
+    def input_types(self, value: List[str]) -> None:
+        self._input_types = value
+
+    @property
+    def output_types(self) -> Optional[List[str]]:
+        return self._output_types
+
+    @inputs.setter
+    def output_types(self, value: List[str]) -> None:
+        self._output_types = value
 
     def __str__(self) -> str:
         ret = ""

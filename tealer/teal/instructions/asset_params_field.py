@@ -21,6 +21,9 @@ class AssetParamsField:
         """Teal version this field is introduced in and supported from."""
         return self._version
 
+    def type(self) -> str:
+        ...
+
     def __str__(self) -> str:
         return self.__class__.__qualname__
 
@@ -28,29 +31,50 @@ class AssetParamsField:
 class AssetTotal(AssetParamsField):
     """Total number of units of this asset."""
 
+    def type(self):
+        return "uint64"
+
 
 class AssetDecimals(AssetParamsField):
     """Number of digits to display after the decimal place."""
+
+    def type(self):
+        return "uint64"
 
 
 class AssetDefaultFrozen(AssetParamsField):
     """Whether the asset is frozen by default or not."""
 
+    def type(self):
+        return "uint64"
+
 
 class AssetUnitName(AssetParamsField):
     """Unit name of the asset."""
+
+    def type(self):
+        return "[]byte"
 
 
 class AssetName(AssetParamsField):
     """The asset name."""
 
+    def type(self):
+        return "[]byte"
+
 
 class AssetURL(AssetParamsField):
     """Url associated with the asset."""
 
+    def type(self):
+        return "[]byte"
+
 
 class AssetMetadataHash(AssetParamsField):
     """32 byte commitment to some unspecified asset metadata."""
+
+    def type(self):
+        return "[]byte"
 
 
 class AssetManager(AssetParamsField):
@@ -60,6 +84,9 @@ class AssetManager(AssetParamsField):
     to re-configure or destroy an asset.
     """
 
+    def type(self):
+        return "[]byte"
+
 
 class AssetReserve(AssetParamsField):
     """Reserve address of the asset.
@@ -67,6 +94,9 @@ class AssetReserve(AssetParamsField):
     Non-minted assets will reside in Reserve address instead of creator
     address if specified.
     """
+
+    def type(self):
+        return "[]byte"
 
 
 class AssetFreeze(AssetParamsField):
@@ -84,9 +114,15 @@ class AssetClawback(AssetParamsField):
     assets from and to any asset holder.
     """
 
+    def type(self):
+        return "[]byte"
+
 
 class AssetCreator(AssetParamsField):
     """Creator address of this asset."""
+
+    def type(self):
+        return "[]byte"
 
     def __init__(self) -> None:
         super().__init__()

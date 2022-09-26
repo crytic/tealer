@@ -21,6 +21,9 @@ class AssetHoldingField:
         """Teal version this field is introduced in and supported from."""
         return self._version
 
+    def type(self) -> str:
+        ...
+
     def __str__(self) -> str:
         return self.__class__.__qualname__
 
@@ -28,6 +31,12 @@ class AssetHoldingField:
 class AssetBalance(AssetHoldingField):
     """Amount of the asset unit held by this account."""
 
+    def type(self):
+        return "uint64"
+
 
 class AssetFrozen(AssetHoldingField):
     """Is asset frozen for this account or not."""
+
+    def type(self):
+        return "uint64"

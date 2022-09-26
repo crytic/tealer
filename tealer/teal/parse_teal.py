@@ -487,7 +487,7 @@ def _recover_stack_sizes(
     bb_inputs: Dict[BasicBlock, lp.Variable] = {}
     bb_outputs: Dict[BasicBlock, lp.Variable] = {}
 
-    labels: Dict[str, int] = {} # Map from label to line number
+    labels: Dict[str, int] = {}  # Map from label to line number
 
     for block in blocks:
         if isinstance(block.entry_instr, Label):

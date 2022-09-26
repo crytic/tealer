@@ -21,6 +21,9 @@ class GlobalField:
         """Teal version this field is introduced in and supported from."""
         return self._version
 
+    def type(self) -> str:
+        ...
+
     def __str__(self) -> str:
         return self.__class__.__qualname__
 
@@ -28,17 +31,29 @@ class GlobalField:
 class GroupSize(GlobalField):
     """Number of transactions in this atomic transaction group."""
 
+    def type(self) -> str:
+        return "uint64"
+
 
 class MinTxnFee(GlobalField):
     """Minimum transaction fee in micro algos."""
+
+    def type(self) -> str:
+        return "uint64"
 
 
 class ZeroAddress(GlobalField):
     """32 byte address of all zero bytes"""
 
+    def type(self) -> str:
+        return "[]byte"
+
 
 class MinBalance(GlobalField):
     """Minimum balance in micro algos."""
+
+    def type(self) -> str:
+        return "uint64"
 
 
 class MaxTxnLife(GlobalField):
@@ -52,6 +67,9 @@ class LogicSigVersion(GlobalField):
         super().__init__()
         self._version = 2
 
+    def type(self) -> str:
+        return "uint64"
+
 
 class Round(GlobalField):
     """Current round number."""
@@ -59,6 +77,9 @@ class Round(GlobalField):
     def __init__(self) -> None:
         super().__init__()
         self._version = 2
+
+    def type(self) -> str:
+        return "uint64"
 
 
 class LatestTimestamp(GlobalField):
@@ -68,6 +89,9 @@ class LatestTimestamp(GlobalField):
         super().__init__()
         self._version = 2
 
+    def type(self) -> str:
+        return "uint64"
+
 
 class CurrentApplicationID(GlobalField):
     """ID of the current application executing."""
@@ -75,6 +99,9 @@ class CurrentApplicationID(GlobalField):
     def __init__(self) -> None:
         super().__init__()
         self._version = 2
+
+    def type(self) -> str:
+        return "uint64"
 
 
 class CreatorAddress(GlobalField):
@@ -84,6 +111,9 @@ class CreatorAddress(GlobalField):
         super().__init__()
         self._version = 3
 
+    def type(self) -> str:
+        return "[]byte"
+
 
 class CurrentApplicationAddress(GlobalField):
     """Address that the current application controls."""
@@ -91,6 +121,9 @@ class CurrentApplicationAddress(GlobalField):
     def __init__(self) -> None:
         super().__init__()
         self._version = 5
+
+    def type(self) -> str:
+        return "[]byte"
 
 
 class GroupID(GlobalField):
@@ -103,3 +136,6 @@ class GroupID(GlobalField):
     def __init__(self) -> None:
         super().__init__()
         self._version = 5
+
+    def type(self) -> str:
+        return "[]byte"
