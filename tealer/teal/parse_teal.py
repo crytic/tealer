@@ -585,6 +585,107 @@ def _recover_stack_sizes(
     return result
 
 
+def _recover_types(blocks: List[BasicBlock], subs: List[Subroutine]) -> None:
+    import unification
+
+    block_inputs: Dict[int, List[unification.Var]] = {}
+    block_outputs: Dict[int, List[unification.Var]] = {}
+    sub_inputs: Dict[str, List[unification.Var]] = {}
+    sub_outputs: Dict[str, List[unification.Var]] = {}
+
+    def create_block_vars(block: BasicBlock) -> None:
+        line = block.entry_instr.line
+        block_inputs[line] = [
+            unification.var(f"block_{line}_input_{i}") for i in range(block.inputs)
+        ]
+        block_outputs[line] = [
+            unification.var(f"block_{line}_output_{i}") for i in range(block.outputs)
+        ]
+
+    for block in blocks:
+        create_block_vars(block)
+
+    for sub in subs:
+        entry_instr: Label = sub.blocks[0].entry_instr
+        name = entry_instr.label
+        line = entry_instr.line
+        sub_inputs[name] = [block_inputs[line][i] for i in range(sub.input_size)]
+        sub_outputs[name] = [
+            unification.var(f"sub_{name}_output_{i}") for i in range(sub.output_size)
+        ]
+
+    visited_blocks: Set[int] = set()
+    inst_type_vars: Dict[int, List[str | unification.Var]] = {}
+    left_side: List[str | unification.Var] = []
+    right_side: List[str | unification.Var] = []
+
+    def set_equal(a, b):
+        if isinstance(a, str) and isinstance(b, str) and a != b:
+            raise Exception()
+        else:
+            left_side.append(a)
+            right_side.append(b)
+
+    def visit_block(block: BasicBlock, sub: Subroutine) -> None:
+        line = block.entry_instr.line
+        if line in visited_blocks:
+            return
+        visited_blocks.add(line)
+
+        stack = list(block_inputs[line])
+        for inst in block.instructions:
+            vars: List[str | unification.Var] = []
+            line = inst.line
+
+            def push(type: str | unification.Var) -> None:
+                vars.append(type)
+                stack.append(type)
+
+            def pop(type: Optional[str | unification.Var]) -> str | unification.Var:
+                t = stack.pop()
+                vars.append(t)
+                if type is not None:
+                    set_equal(t, type)
+                return t
+
+            def new_var() -> unification.Var:
+                return unification.var(f"inst_{line}_var_{len(vars)}")
+
+            if isinstance(inst, Callsub):
+                call_inputs = list(sub_inputs[inst.label])
+                call_outputs = list(sub_outputs[inst.label])
+                for i in range(len(call_inputs)):
+                    pop(call_inputs.pop())
+                stack.extend(call_outputs)
+            elif isinstance(inst, Retsub):
+                assert sub is not None
+                entry_instr: Label = sub.blocks[0].entry_instr
+                name = entry_instr.label
+                output = list(sub_outputs[name])
+                assert len(output) == len(stack)
+                for i in range(len(output)):
+                    set_equal(stack[i], output[i])
+            else:
+                inst.sym_execute(push, pop, new_var)
+        block_output = block_outputs[line]
+        assert len(block_output) == len(stack)
+        for i in range(len(block_output)):
+            set_equal(stack[i], block_output[i])
+        for succ in block.next:
+            succ_inputs = list(block_inputs[succ.entry_instr.line])
+            output = list(block_output)
+            for i in range(len(succ_inputs)):
+                set_equal(output.pop(), succ_inputs.pop())
+            visit_block(succ, sub)
+
+    visit_block(blocks[0], None)
+    for sub in subs:
+        visit_block(sub.blocks[0], sub)
+
+    types = unification.unify(left_side, right_side)
+    assert types is not None
+
+
 def parse_teal(source_code: str) -> Teal:
     """Parse algorand smart contracts written in teal.
 

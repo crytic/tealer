@@ -23,7 +23,7 @@ Attributes:
 """
 
 # pylint: disable=too-many-lines
-from typing import Union, List, TYPE_CHECKING, Optional
+from typing import TypeVar, Union, List, TYPE_CHECKING, Optional, Callable
 
 from tealer.teal.global_field import GlobalField
 from tealer.teal.instructions.transaction_field import TransactionField
@@ -34,6 +34,12 @@ from tealer.utils.comparable_enum import ComparableEnum
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
+
+    TypeVariable = TypeVar("TypeVariable")
+    Type = str | TypeVariable
+    PushFunc = Callable[[Type], None]
+    PopFunc = Callable[[Optional[Type]], Type]
+    NewVarFunc = Callable[[Optional[str]], TypeVariable]
 
 
 class ContractType(ComparableEnum):
@@ -66,6 +72,7 @@ class Instruction:
         self._bb: Optional["BasicBlock"] = None
         self._version: int = 1
         self._mode: ContractType = ContractType.ANY
+        self._types: List[str] = []
 
     def add_prev(self, prev_ins: "Instruction") -> None:
         """Add instruction that may execute just before this instruction.
@@ -148,7 +155,6 @@ class Instruction:
     def output_size(self) -> int:
         return 0
 
-
     @property
     def mode(self) -> ContractType:
         """Type of smart contract this instruction execution is supported in.
@@ -180,6 +186,13 @@ class Instruction:
         """
 
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pass
+
+    @property
+    def types(self):
+        return self._types
 
     def __str__(self) -> str:
         return self.__class__.__qualname__.lower()
@@ -257,6 +270,9 @@ class Assert(Instruction):
     def input_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+
 
 class Int(Instruction):
     """`int x` instruction pushes immediate value to the top of the stack.
@@ -288,6 +304,9 @@ class Int(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("uint64")
 
 
 class PushInt(Instruction):
@@ -327,6 +346,9 @@ class PushInt(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("uint64")
+
 
 class Txn(Instruction):
     """`txn f` pushes the value of transaction field f.
@@ -348,6 +370,9 @@ class Txn(Instruction):
     def field(self) -> TransactionField:
         """Transaction field being accessed using the txn instruction."""
         return self._field
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push(self.field.type())
 
     def __str__(self) -> str:
         return f"txn {self._field}"
@@ -385,6 +410,9 @@ class Txna(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push(self.field.type())
+
 
 class Gtxn(Instruction):
     """`gtxn t f` pushes value of transaction field f of transaction t in the group.
@@ -418,6 +446,9 @@ class Gtxn(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push(self.field.type())
 
 
 class Gtxna(Instruction):
@@ -459,6 +490,9 @@ class Gtxna(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push(self.field.type())
+
 
 class Gtxns(Instruction):
     """`gtxns f` pushes value of transaction field f of given transaction in the group.
@@ -492,6 +526,10 @@ class Gtxns(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push(self.field.type())
 
 
 class Gtxnsa(Instruction):
@@ -528,6 +566,10 @@ class Gtxnsa(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push(self.field.type())
+
 
 class Load(Instruction):
     """`load i` pushes the value at scratch space position i.
@@ -550,6 +592,9 @@ class Load(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push(new_var())
+
 
 class Store(Instruction):
     """`store i` store value on top of the stack at scratch space position i.
@@ -571,6 +616,9 @@ class Store(Instruction):
 
     def input_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop()
 
 
 class Gload(Instruction):
@@ -601,6 +649,9 @@ class Gload(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push(new_var())
 
 
 class Gloads(Instruction):
@@ -636,6 +687,10 @@ class Gloads(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push(new_var())
+
 
 class Gaid(Instruction):
     """`gaid t` pushes the id of asset or application created in transaction t in the group.
@@ -663,6 +718,9 @@ class Gaid(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("uint64")
+
 
 class Gaids(Instruction):
     """`gaids` pushes the id of asset or application created in transaction X in the group.
@@ -689,6 +747,10 @@ class Gaids(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push("uint64")
+
 
 class Loads(Instruction):
     """`loads` pushes the value at scratch space position X.
@@ -711,6 +773,10 @@ class Loads(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push(new_var())
+
 
 class Stores(Instruction):
     """`stores` store value on top of the stack (B) at scratch space position (A).
@@ -727,6 +793,10 @@ class Stores(Instruction):
 
     def input_size(self) -> int:
         return 2
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop()
+        pop("uint64")
 
 
 class Dig(Instruction):
@@ -754,6 +824,16 @@ class Dig(Instruction):
     def output_size(self) -> int:
         return 2 + self._idx
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        elems = []
+        for i in range(self._idx):
+            elems.append(pop())
+        elem = pop()
+        push(elem)
+        for i in elems:
+            push(i)
+        push(elem)
+
 
 class Swap(Instruction):
     """`swap` swaps top two elements of the stack.
@@ -772,6 +852,12 @@ class Swap(Instruction):
 
     def output_size(self) -> int:
         return 2
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        a = pop()
+        b = pop()
+        push(b)
+        push(a)
 
 
 class GetBit(Instruction):
@@ -798,6 +884,11 @@ class GetBit(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop()
+        push("uint64")
 
 
 class SetBit(Instruction):
@@ -826,6 +917,12 @@ class SetBit(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        value = pop()
+        push(value)
+
 
 class GetByte(Instruction):
     """`getbyte` pushes the byte value of given element at given position.
@@ -848,6 +945,11 @@ class GetByte(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("[]byte")
+        push("uint64")
 
 
 class SetByte(Instruction):
@@ -872,6 +974,12 @@ class SetByte(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        pop("[]byte")
+        push("[]byte")
 
 
 class Extract(Instruction):
@@ -917,6 +1025,10 @@ class Extract(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        push("[]byte")
+
 
 class Extract3(Instruction):
     """`extract3` extracts the bytes from the given position of given length.
@@ -944,6 +1056,12 @@ class Extract3(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        pop("[]byte")
+        push("[]byte")
+
 
 class Extract_uint16(Instruction):
     """`extract_uint16` converts the two bytes at given position as uint16.
@@ -969,6 +1087,11 @@ class Extract_uint16(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("[]byte")
+        push("uint64")
 
 
 class Extract_uint32(Instruction):
@@ -996,6 +1119,11 @@ class Extract_uint32(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("[]byte")
+        push("uint64")
+
 
 class Extract_uint64(Instruction):
     """`extract_uint64` converts the eight bytes at given position as uint64.
@@ -1021,6 +1149,11 @@ class Extract_uint64(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("[]byte")
+        push("uint64")
 
 
 class Sha256(Instruction):
@@ -1059,6 +1192,10 @@ class Sha256(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        push("[]byte")
+
 
 class Sha512_256(Instruction):
     """`sha512_256` calculate the sha512_256 hash of the given element.
@@ -1095,6 +1232,10 @@ class Sha512_256(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        push("[]byte")
 
 
 class Keccak256(Instruction):
@@ -1133,6 +1274,10 @@ class Keccak256(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        push("[]byte")
+
 
 class Ed25519verify(Instruction):
     """`ed25519verify` verifies the ed25519 signature for given public key and data.
@@ -1161,6 +1306,12 @@ class Ed25519verify(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        pop("[]byte")
+        push("uint64")
 
 
 class Ecdsa_verify(Instruction):
@@ -1221,6 +1372,14 @@ class Ecdsa_verify(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        pop("[]byte")
+        pop("[]byte")
+        pop("[]byte")
+        push("uint64")
+
 
 class Ecdsa_pk_decompress(Instruction):
     """`ecdsa_pk_decompress v` decompress elliptic curve point to it's components.
@@ -1271,6 +1430,11 @@ class Ecdsa_pk_decompress(Instruction):
 
     def output_size(self) -> int:
         return 2
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        push("[]byte")
+        push("[]byte")
 
 
 class Ecdsa_pk_recover(Instruction):
@@ -1326,6 +1490,14 @@ class Ecdsa_pk_recover(Instruction):
     def output_size(self) -> int:
         return 2
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        pop("uint64")
+        pop("[]byte")
+        push("[]byte")
+        push("[]byte")
+
 
 class Global(Instruction):
     """`global f` is used to access the value of global field f.
@@ -1351,6 +1523,12 @@ class Global(Instruction):
     def __str__(self) -> str:
         return f"global {self._field}"
 
+    def output_size(self) -> int:
+        return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push(self.field.type())
+
 
 class Dup(Instruction):
     """`dup` duplicates the top value on stack."""
@@ -1360,6 +1538,11 @@ class Dup(Instruction):
 
     def output_size(self) -> int:
         return 2
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        value = pop()
+        push(value)
+        push(value)
 
 
 class Dup2(Instruction):
@@ -1374,6 +1557,14 @@ class Dup2(Instruction):
 
     def output_size(self) -> int:
         return 4
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        b = pop()
+        a = pop()
+        push(a)
+        push(b)
+        push(a)
+        push(b)
 
 
 class Select(Instruction):
@@ -1399,6 +1590,12 @@ class Select(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        value = pop()
+        pop(value)
+        push(value)
+
 
 class Cover(Instruction):
     """`cover n` allows moving top of the stack element to deeper into the stack.
@@ -1421,6 +1618,21 @@ class Cover(Instruction):
 
     def __str__(self) -> str:
         return f"cover {self._idx}"
+
+    def input_size(self) -> int:
+        return 1 + self._idx
+
+    def output_size(self) -> int:
+        return 1 + self._idx
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        elems = []
+        a = pop()
+        for _ in range(self._idx):
+            elems.append(pop())
+        push(a)
+        for elem in elems:
+            push(elem)
 
 
 class Uncover(Instruction):
@@ -1451,6 +1663,15 @@ class Uncover(Instruction):
     def output_size(self) -> int:
         return 1 + self._idx
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        elems = []
+        for i in range(self._idx):
+            elems.append(pop())
+        a = pop()
+        for elem in elems:
+            push(elem)
+        push(a)
+
 
 class Concat(Instruction):
     """`concat` concatenates two bytearrays and pushes the result.
@@ -1476,6 +1697,11 @@ class Concat(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("[]byte")
 
 
 class InstructionWithLabel(Instruction):
@@ -1531,6 +1757,9 @@ class BZ(InstructionWithLabel):
     def input_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+
 
 class BNZ(InstructionWithLabel):
     """`bnz target` branches to target if top of the stack is not zero.
@@ -1549,6 +1778,9 @@ class BNZ(InstructionWithLabel):
 
     def input_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
 
 
 class Label(InstructionWithLabel):
@@ -1607,6 +1839,9 @@ class Return(Instruction):
     def input_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+
 
 class Retsub(Instruction):
     """`retsub` returns from a subroutine using the callstack"""
@@ -1638,6 +1873,10 @@ class AppGlobalGet(Instruction):
 
     def input_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        push(new_var())
 
 
 class AppGlobalGetEx(Instruction):
@@ -1672,6 +1911,12 @@ class AppGlobalGetEx(Instruction):
     def output_size(self) -> int:
         return 2
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("uint64")
+        push(new_var())
+        push("uint64")
+
 
 class AppGlobalPut(Instruction):
     """`app_global_put` allows modifying the global state of the current application.
@@ -1694,6 +1939,10 @@ class AppGlobalPut(Instruction):
 
     def input_size(self) -> int:
         return 2
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop()
+        push("[]byte")
 
 
 class AppGlobalDel(Instruction):
@@ -1718,6 +1967,9 @@ class AppGlobalDel(Instruction):
 
     def input_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
 
 
 class AppLocalGetEx(Instruction):
@@ -1755,6 +2007,13 @@ class AppLocalGetEx(Instruction):
     def output_size(self) -> int:
         return 2
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("uint64")
+        pop()
+        push(new_var())
+        push("uint64")
+
 
 class AppLocalGet(Instruction):
     """`app_local_get` allows reading the local state of the current application.
@@ -1787,6 +2046,11 @@ class AppLocalGet(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop()
+        push(new_var())
+
 
 class AppLocalPut(Instruction):
     """`app_local_put` allows modifying the local state of the current application.
@@ -1815,6 +2079,11 @@ class AppLocalPut(Instruction):
     def input_size(self) -> int:
         return 3
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop()
+        pop("[]byte")
+        pop()
+
 
 class AppLocalDel(Instruction):
     """`app_local_del` allows deleting a key from local state of the current application.
@@ -1841,6 +2110,10 @@ class AppLocalDel(Instruction):
 
     def input_size(self) -> int:
         return 2
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop()
 
 
 class AssetHoldingGet(Instruction):
@@ -1885,6 +2158,12 @@ class AssetHoldingGet(Instruction):
     def output_size(self) -> int:
         return 2
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop()
+        push(self.field.type())
+        push("uint64")
+
 
 class AssetParamsGet(Instruction):
     """`asset_params_get i` allows reading params field of a given asset.
@@ -1924,6 +2203,11 @@ class AssetParamsGet(Instruction):
 
     def output_size(self) -> int:
         return 2
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop()
+        push(self.field.type())
+        push("uint64")
 
 
 class AppParamsGet(Instruction):
@@ -1965,6 +2249,11 @@ class AppParamsGet(Instruction):
     def output_size(self) -> int:
         return 2
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push(self.field.type())
+        push("uint64")
+
 
 class AppOptedIn(Instruction):
     """`app_opted_in` allows contract to check if given account has opted-in or not.
@@ -1998,6 +2287,11 @@ class AppOptedIn(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop()
+        push("uint64")
+
 
 class Balance(Instruction):
     """`balance` reads the balance of an account in microalgos.
@@ -2026,6 +2320,10 @@ class Balance(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop()
+        push("uint64")
 
 
 class MinBalance(Instruction):
@@ -2057,6 +2355,10 @@ class MinBalance(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop()
+        push("uint64")
+
 
 class Itob(Instruction):
     """`itob` converts integer to big endian bytes.
@@ -2075,6 +2377,10 @@ class Itob(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push("[]byte")
+
 
 class Btoi(Instruction):
     """`btoi` converts bytes as big endian to uint64.
@@ -2092,6 +2398,10 @@ class Btoi(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        push("uint64")
 
 
 class Addr(Instruction):
@@ -2112,12 +2422,18 @@ class Addr(Instruction):
     def __str__(self) -> str:
         return f"addr {self._addr}"
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
+
 
 class Pop(Instruction):
     """`pop` pops one element from the stack."""
 
     def input_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop()
 
 
 class Not(Instruction):
@@ -2139,6 +2455,10 @@ class Not(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push("uint64")
 
 
 class Neq(Instruction):
@@ -2162,6 +2482,11 @@ class Neq(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        a = pop()
+        pop(a)
+        push("uint64")
+
 
 class Eq(Instruction):
     """`==` equal to comparison operator.
@@ -2183,6 +2508,11 @@ class Eq(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        a = pop()
+        pop(a)
+        push("uint64")
 
 
 class Greater(Instruction):
@@ -2206,6 +2536,11 @@ class Greater(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+
 
 class GreaterE(Instruction):
     """`>=` greater than or equal to comparison operator.
@@ -2227,6 +2562,11 @@ class GreaterE(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
 
 
 class Less(Instruction):
@@ -2250,6 +2590,11 @@ class Less(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+
 
 class LessE(Instruction):
     """`<=` less than or equal to comparison operator.
@@ -2271,6 +2616,11 @@ class LessE(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
 
 
 class And(Instruction):
@@ -2316,6 +2666,11 @@ class Or(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+
 
 class Add(Instruction):
     """`+` arthimetic addition.
@@ -2340,6 +2695,11 @@ class Add(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
 
 
 class Sub(Instruction):
@@ -2366,6 +2726,11 @@ class Sub(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+
 
 class Mul(Instruction):
     """`*` arthimetic multiplication.
@@ -2390,6 +2755,11 @@ class Mul(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
 
 
 class Div(Instruction):
@@ -2416,6 +2786,11 @@ class Div(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+
 
 class Modulo(Instruction):
     """`%` arthimetic modulus.
@@ -2441,6 +2816,11 @@ class Modulo(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+
 
 class BitwiseOr(Instruction):
     """`|` bitwise or.
@@ -2462,6 +2842,11 @@ class BitwiseOr(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
 
 
 class BitwiseAnd(Instruction):
@@ -2485,6 +2870,11 @@ class BitwiseAnd(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+
 
 class BitwiseXor(Instruction):
     """`^` bitwise xor.
@@ -2507,6 +2897,11 @@ class BitwiseXor(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+
 
 class BitwiseInvert(Instruction):
     """`~` bitwise invert.
@@ -2527,6 +2922,10 @@ class BitwiseInvert(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push("uint64")
 
 
 class BitLen(Instruction):
@@ -2550,6 +2949,10 @@ class BitLen(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop()
+        push("uint64")
 
 
 class BModulo(Instruction):
@@ -2602,6 +3005,11 @@ class BModulo(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("[]byte")
+
 
 class BNeq(Instruction):
     """`b!=` not equal comparison operator.
@@ -2630,6 +3038,11 @@ class BNeq(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("uint64")
+
 
 class BEq(Instruction):
     """`b==` equal to comparison operator.
@@ -2657,6 +3070,11 @@ class BEq(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("uint64")
 
 
 class BBitwiseAnd(Instruction):
@@ -2706,6 +3124,11 @@ class BBitwiseAnd(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("[]byte")
+
 
 class BBitwiseOr(Instruction):
     """`b|` bitwise or.
@@ -2754,6 +3177,11 @@ class BBitwiseOr(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("[]byte")
+
 
 class BAdd(Instruction):
     """`b+` arthimetic addition.
@@ -2801,6 +3229,11 @@ class BAdd(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("[]byte")
 
 
 class BSubtract(Instruction):
@@ -2853,6 +3286,11 @@ class BSubtract(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("[]byte")
+
 
 class BDiv(Instruction):
     """`b/` arthimetic divison.
@@ -2904,6 +3342,11 @@ class BDiv(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("[]byte")
+
 
 class BMul(Instruction):
     """`b*` arthimetic multiplication.
@@ -2952,6 +3395,11 @@ class BMul(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("[]byte")
+
 
 class BGreaterE(Instruction):
     """`b>=` greater than or equal to comparison operator.
@@ -2979,6 +3427,11 @@ class BGreaterE(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("uint64")
 
 
 class BGreater(Instruction):
@@ -3008,6 +3461,11 @@ class BGreater(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("uint64")
+
 
 class BLessE(Instruction):
     """`b<=` less than or equal to comparison operator.
@@ -3036,6 +3494,11 @@ class BLessE(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("uint64")
+
 
 class BLess(Instruction):
     """`b<` less than comparison operator.
@@ -3063,6 +3526,11 @@ class BLess(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("uint64")
 
 
 class BBitwiseXor(Instruction):
@@ -3112,6 +3580,11 @@ class BBitwiseXor(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        pop("[]byte")
+        push("[]byte")
+
 
 class BBitwiseInvert(Instruction):
     """`b~` bitwise invert.
@@ -3158,6 +3631,10 @@ class BBitwiseInvert(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        push("[]byte")
+
 
 class BZero(Instruction):
     """`bzero` pushes byte array containing all zeroes.
@@ -3180,6 +3657,10 @@ class BZero(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push("[]byte")
+
 
 class Log(Instruction):
     """`log` writes bytes to log state of the current application.
@@ -3200,6 +3681,9 @@ class Log(Instruction):
 
     def input_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
 
 
 class Itxn_begin(Instruction):
@@ -3252,6 +3736,9 @@ class Itxn_field(Instruction):
     def input_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop(self.field.type())
+
 
 class Itxn_submit(Instruction):
     """`itxn_submit` executes the current inner transaction.
@@ -3301,6 +3788,9 @@ class Itxn(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push(self.field.type())
+
 
 class Itxna(Instruction):
     """`itxna f i` pushes ith value of array transaction field f of last inner transaction.
@@ -3334,6 +3824,12 @@ class Itxna(Instruction):
 
     def __str__(self) -> str:
         return f"itxna {self._field}"
+
+    def output_size(self) -> int:
+        return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push(self.field.type())
 
 
 class Txnas(Instruction):
@@ -3372,6 +3868,10 @@ class Txnas(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push(self.field.type())
 
 
 class Gtxnas(Instruction):
@@ -3418,6 +3918,10 @@ class Gtxnas(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push(self.field.type())
+
 
 class Gtxnsas(Instruction):
     """`gtxnas f` pushes a value of array transaction field f of a transaction in the group.
@@ -3457,6 +3961,11 @@ class Gtxnsas(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push(self.field.type())
+
 
 class Args(Instruction):
     """`args` pushes a LogicSig argument to stack using top of stack as index.
@@ -3480,6 +3989,10 @@ class Args(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push("[]byte")
+
 
 class Mulw(Instruction):
     """`mulw` multiplies two unit64 and pushes 128-bit long result.
@@ -3499,6 +4012,12 @@ class Mulw(Instruction):
 
     def output_size(self) -> int:
         return 2
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+        push("uint64")
 
 
 class Addw(Instruction):
@@ -3523,6 +4042,12 @@ class Addw(Instruction):
 
     def output_size(self) -> int:
         return 2
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+        push("uint64")
 
 
 class Divmodw(Instruction):
@@ -3575,6 +4100,16 @@ class Divmodw(Instruction):
     def output_size(self) -> int:
         return 4
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+        push("uint64")
+        push("uint64")
+        push("uint64")
+
 
 class Exp(Instruction):
     """`exp` allows calculating powers of a number.
@@ -3600,6 +4135,11 @@ class Exp(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
 
 
 class Expw(Instruction):
@@ -3648,6 +4188,12 @@ class Expw(Instruction):
     def output_size(self) -> int:
         return 2
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+        push("uint64")
+
 
 class Shl(Instruction):
     """`shl` shifts left the given element by given bits.
@@ -3671,6 +4217,11 @@ class Shl(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
+
 
 class Shr(Instruction):
     """`shl` shifts right the given element by given bits.
@@ -3693,6 +4244,11 @@ class Shr(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        push("uint64")
 
 
 class Sqrt(Instruction):
@@ -3736,6 +4292,10 @@ class Sqrt(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        push("uint64")
+
 
 class Intcblock(Instruction):
     """`intcblock x ...` resets and replaces integer constants in constant storage space.
@@ -3775,6 +4335,9 @@ class Intc(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("uint64")
+
 
 class Intc0(Instruction):
     """`intc_0` push integer constant 0 from constant storage space.
@@ -3789,6 +4352,9 @@ class Intc0(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("uint64")
 
 
 class Intc1(Instruction):
@@ -3805,6 +4371,9 @@ class Intc1(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("uint64")
+
 
 class Intc2(Instruction):
     """`intc_2` push integer constant 2 from constant storage space.
@@ -3820,6 +4389,9 @@ class Intc2(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("uint64")
+
 
 class Intc3(Instruction):
     """`intc_3` push integer constant 3 from constant storage space.
@@ -3831,6 +4403,9 @@ class Intc3(Instruction):
 
     def __str__(self) -> str:
         return "intc_3"
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("uint64")
 
 
 class Bytec(Instruction):
@@ -3851,6 +4426,9 @@ class Bytec(Instruction):
     def __str__(self) -> str:
         return f"bytec {self._idx}"
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
+
 
 class Bytec0(Instruction):
     """`bytec_0` push byte constant 0 from constant storage space.
@@ -3865,6 +4443,9 @@ class Bytec0(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
 
 
 class Bytec1(Instruction):
@@ -3881,6 +4462,9 @@ class Bytec1(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
+
 
 class Bytec2(Instruction):
     """`bytec_2` push byte constant 2 from constant storage space.
@@ -3896,6 +4480,9 @@ class Bytec2(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
+
 
 class Bytec3(Instruction):
     """`bytec_3` push byte constant 3 from constant storage space.
@@ -3910,6 +4497,9 @@ class Bytec3(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
 
 
 class Arg(Instruction):
@@ -3934,6 +4524,9 @@ class Arg(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
+
 
 class Arg0(Instruction):
     """`arg_0` pushes 0th LogicSig argument to stack.
@@ -3952,6 +4545,9 @@ class Arg0(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
 
 
 class Arg1(Instruction):
@@ -3972,6 +4568,9 @@ class Arg1(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
+
 
 class Arg2(Instruction):
     """`arg_2` pushes 2nd LogicSig argument to stack.
@@ -3991,6 +4590,9 @@ class Arg2(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
+
 
 class Arg3(Instruction):
     """`arg_3` pushes 3rd LogicSig argument to stack.
@@ -4009,6 +4611,9 @@ class Arg3(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
 
 
 class Byte(Instruction):
@@ -4034,6 +4639,9 @@ class Byte(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
 
 
 class PushBytes(Instruction):
@@ -4066,6 +4674,9 @@ class PushBytes(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        push("[]byte")
+
 
 class Len(Instruction):
     """`len` calculates the length of the given byte array.
@@ -4083,6 +4694,10 @@ class Len(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        push("uint64")
 
 
 class Bytecblock(Instruction):
@@ -4136,6 +4751,10 @@ class Substring(Instruction):
     def output_size(self) -> int:
         return 1
 
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("[]byte")
+        push("[]byte")
+
 
 class Substring3(Instruction):
     """`substring3` extracts the bytes from the given range.
@@ -4158,3 +4777,9 @@ class Substring3(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def sym_execute(self, push: PushFunc, pop: PopFunc, new_var: NewVarFunc) -> None:
+        pop("uint64")
+        pop("uint64")
+        pop("[]byte")
+        push("[]byte")
