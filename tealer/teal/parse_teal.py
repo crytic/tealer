@@ -644,11 +644,11 @@ def _recover_types(blocks: List[BasicBlock], subs: List[Subroutine]) -> None:
                 vars.append(type)
                 stack.append(type)
 
-            def pop(type: Optional[str | unification.Var]) -> str | unification.Var:
+            def pop(*args) -> str | unification.Var:
                 t = stack.pop()
                 vars.append(t)
-                if type is not None:
-                    set_equal(t, type)
+                if len(args) > 0:
+                    set_equal(t, args[0])
                 return t
 
             def new_var() -> unification.Var:
@@ -703,6 +703,8 @@ def _recover_types(blocks: List[BasicBlock], subs: List[Subroutine]) -> None:
         block.output_types = list(map(reify_type, block_outputs[line]))
 
         for inst in block.instructions:
+            if inst.line not in inst_type_vars:
+                continue
             inst.types = list(map(reify_type, inst_type_vars[inst.line]))
 
     for sub in subs:
