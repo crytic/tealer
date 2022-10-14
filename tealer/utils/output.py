@@ -80,7 +80,10 @@ def _bb_to_dot(bb: "BasicBlock") -> str:
         entry_loc = next_bb.entry_instr.line
         graph_edges += f"{bb.idx}:{exit_loc}:s -> {next_bb.idx}:{entry_loc}:n;\n"
     table = table_prefix + table_rows + table_suffix
-    bb_xlabel = f'"cost = {bb.cost}; {bb.idx}"'
+    cost_xlabel = f"cost = {bb.cost}; {bb.idx}"
+    inputs_xlabel = f'inputs = [{", ".join(bb.input_types)}]'
+    outputs_xlabel = f'outputs = [{", ".join(bb.output_types)}]'
+    bb_xlabel = f'"{cost_xlabel}\\n{inputs_xlabel}\\n{outputs_xlabel}"'
     return f"{bb.idx}[label={table} xlabel={bb_xlabel}]" + graph_edges
 
 

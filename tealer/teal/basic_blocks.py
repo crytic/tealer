@@ -151,7 +151,7 @@ class BasicBlock:
     def input_types(self) -> Optional[List[str]]:
         return self._input_types
 
-    @inputs.setter
+    @input_types.setter
     def input_types(self, value: List[str]) -> None:
         self._input_types = value
 
@@ -159,7 +159,7 @@ class BasicBlock:
     def output_types(self) -> Optional[List[str]]:
         return self._output_types
 
-    @inputs.setter
+    @output_types.setter
     def output_types(self, value: List[str]) -> None:
         self._output_types = value
 

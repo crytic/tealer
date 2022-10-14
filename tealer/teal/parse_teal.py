@@ -573,15 +573,18 @@ def _recover_stack_sizes(
         raise Exception("Cannot find solution")
 
     for bb in blocks:
-        bb.inputs = get_block_input(bb).solution_value()
-        bb.outputs = get_block_output(bb).solution_value()
+        bb.inputs = int(get_block_input(bb).solution_value())
+        bb.outputs = int(get_block_output(bb).solution_value())
 
     result: Dict[str, Tuple[int, int]] = {}
     for (sub_blocks, exit_blocks) in subs:
         bb = sub_blocks[0]
         name = get_block_name(bb)
         line = bb.entry_instr.line
-        result[line] = (sub_inputs[line].solution_value(), sub_outputs[line].solution_value())
+        result[line] = (
+            int(sub_inputs[line].solution_value()),
+            int(sub_outputs[line].solution_value()),
+        )
     return result
 
 
@@ -627,12 +630,12 @@ def _recover_types(blocks: List[BasicBlock], subs: List[Subroutine]) -> None:
             right_side.append(b)
 
     def visit_block(block: BasicBlock, sub: Subroutine) -> None:
-        line = block.entry_instr.line
-        if line in visited_blocks:
+        block_line = block.entry_instr.line
+        if block_line in visited_blocks:
             return
-        visited_blocks.add(line)
+        visited_blocks.add(block_line)
 
-        stack = list(block_inputs[line])
+        stack = list(block_inputs[block_line])
         for inst in block.instructions:
             vars: List[str | unification.Var] = []
             line = inst.line
@@ -667,7 +670,8 @@ def _recover_types(blocks: List[BasicBlock], subs: List[Subroutine]) -> None:
                     set_equal(stack[i], output[i])
             else:
                 inst.sym_execute(push, pop, new_var)
-        block_output = block_outputs[line]
+            inst_type_vars[inst.line] = vars
+        block_output = block_outputs[block_line]
         assert len(block_output) == len(stack)
         for i in range(len(block_output)):
             set_equal(stack[i], block_output[i])
@@ -678,12 +682,34 @@ def _recover_types(blocks: List[BasicBlock], subs: List[Subroutine]) -> None:
                 set_equal(output.pop(), succ_inputs.pop())
             visit_block(succ, sub)
 
-    visit_block(blocks[0], None)
     for sub in subs:
         visit_block(sub.blocks[0], sub)
+    visit_block(blocks[0], None)
 
     types = unification.unify(left_side, right_side)
     assert types is not None
+
+    def reify_type(var):
+        if isinstance(var, str):
+            return var
+        elif var in types:
+            return reify_type(types[var])
+        else:
+            return "any"
+
+    for block in blocks:
+        line = block.entry_instr.line
+        block.input_types = list(map(reify_type, block_inputs[line]))
+        block.output_types = list(map(reify_type, block_outputs[line]))
+
+        for inst in block.instructions:
+            inst.types = list(map(reify_type, inst_type_vars[inst.line]))
+
+    for sub in subs:
+        entry_instr: Label = sub.blocks[0].entry_instr
+        label = entry_instr.label
+        sub.input_types = list(map(reify_type, sub_inputs[label]))
+        sub.output_types = list(map(reify_type, sub_outputs[label]))
 
 
 def parse_teal(source_code: str) -> Teal:
@@ -750,6 +776,8 @@ def parse_teal(source_code: str) -> Teal:
         return Subroutine(blocks, exit_blocks, sub_stacks[line][0], sub_stacks[line][1])
 
     subroutines = list(map(subroutine_from_info, subroutine_info))
+
+    _recover_types(all_bbs, subroutines)
 
     teal = Teal(instructions, all_bbs, version, mode, subroutines)
 
