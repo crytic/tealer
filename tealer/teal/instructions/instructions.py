@@ -3537,6 +3537,16 @@ class AcctParamsGet(Instruction):
         return f"acct_params_get {self._field}"
 
 class Bsqrt(Instruction):
+    """`bsqrt` calculates the integer square root of given number.
+
+    Pops:
+        A (byte[]): number to calculate the square root of.
+
+    Pushes:
+        pushes largest integer I such that I^2 <= A.
+        A and I are interpreted as big-endian unsigned integers.
+    """
+
     def __init__(self):
         super().__init__()
         self._version: int = 6
@@ -3544,7 +3554,46 @@ class Bsqrt(Instruction):
     def __str__(self) -> str:
         return "bsqrt"
 
+    @property
+    def cost(self) -> int:
+        """cost of executing bsqrt instruction.
+
+        overrides cost property. bsqrt instruction is introduced in Teal version 6.
+        if the cost property is accessed for contracts with lesser version, value 0
+        is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 6:
+            return 40
+        return 0
+
+
 class Divw(Instruction):
+    """`/` arthimetic divison.
+
+    The notation A,B indicates that A and B are interpreted as a uint128 value,
+    with A as the high uint64 and B the low.
+
+    Pops:
+        C (top)(uint64): third argument.
+        B (uint64): second argument.
+        A (uint64): first argument
+
+    Pushes:
+        pushes AB divided by C (floor divison).
+
+    Errors:
+        fails if C == 0 or overflows.
+
+    """
+
     def __init__(self):
         super().__init__()
         self._version: int = 6
@@ -3553,14 +3602,31 @@ class Divw(Instruction):
         return "divw"
 
 class Itxn_next(Instruction):
+    """`itxn_next` signifies start of the next inner transaction.
+
+    It initializes the transaction exactly as itxn_begin does.
+    """
+
     def __init__(self):
         super().__init__()
         self._version: int = 6
+        self._mode: ContractType = ContractType.STATEFULL
 
     def __str__(self) -> str:
-        return "itxn_begin"
+        return "itxn_next"
 
 class Gitxn(Instruction):
+    """`gitxn t f` pushes value of transaction field f of transaction t in the last inner group.
+
+    Immediates:
+        t (int): index of the transaction in the inner group.
+        f (TransactionField): transaction field whose value is being accessed.
+
+    Pushes:
+        push value of trasaction field f of transaction t.
+
+    """
+
     def __init__(self, idx: int, field: TransactionField):
         super().__init__()
         self._version: int = 6
@@ -3575,6 +3641,22 @@ class Gitxn(Instruction):
         return f"gitxn {self._idx} {self._field}"
 
 class Gitxna(Instruction):
+    """`gtxna t f i` pushes ith value of array transaction field f of transaction t in the last inner group.
+
+    Few transaction fields namely "ApplicationArgs", "Accounts",
+    "Applications", "Logs" are arrays and this instruction allows
+    accesing their values by index.
+
+    Immediates:
+        t (int): index of the transaction in the inner group
+        f (TransactionField): Array transaction field whose value is being accessed.
+        i (int): index into the array.
+
+    Pushes:
+        pushes value at index i of array transaction field f of transaction t.
+
+    """
+
     def __init__(self, idx: int, field: TransactionField):
         super().__init__()
         self._version: int = 6
@@ -3593,14 +3675,14 @@ class Gitxna(Instruction):
         return f"gitxna {self._idx} {self._field}"
 
 class Gloadss(Instruction):
-    """`gloadss` loads value at scratch space position i of transaction X.
+    """`gloadss` loads value at scratch space position B of transaction A.
+
+    Pops:
+        B (top)(uint64): 
+        A (uint64):
 
     Pushes:
-        pushes the value at position i of scratch space of transaction t.
-
-    Errors:
-        fails if transaction X is not a ApplicationCall and X < GroupIndex
-        i.e if transaction is not executed before this transaction.
+        pushes the value at position B of scratch space of transaction A.
 
     """
 
@@ -3613,7 +3695,7 @@ class Gloadss(Instruction):
         return "gloadss"
 
 class Itxnas(Instruction):
-    """`itxnas f` pushes ith value of array transaction field f of last inner transaction.
+    """`itxnas f` pushes Ath value of array transaction field f of last inner transaction.
 
     Few transaction fields namely "ApplicationArgs", "Accounts",
     "Applications", "Logs" are arrays and this instruction allows
@@ -3622,8 +3704,11 @@ class Itxnas(Instruction):
     Immediates:
         f (TransactionField): Array transaction field whose value is being accessed.
 
+    Pops:
+        A (uint64): index into the array.
+
     Pushes:
-        pushes value at index i of array transaction field f.
+        pushes value at index A of array transaction field f.
 
     """
 
@@ -3642,6 +3727,25 @@ class Itxnas(Instruction):
         return f"itxnas {self._field}"
 
 class Gitxnas(Instruction):
+    """`gitxnas t f` pushes Ath value of array transaction field f of transaction t in the last inner group.
+
+    Few transaction fields namely "ApplicationArgs", "Accounts",
+    "Applications", "Logs" are arrays and this instruction allows
+    accesing their values by index.
+
+    Immediates:
+        t (uint8): index of the transaction in the inner group
+        f (TransactionField): Array transaction field whose value is being accessed.
+
+    Pops:
+        A (uint64): index into the array.
+
+    Pushes:
+        pushes value at index A of array transaction field f of transaction t.
+
+    """
+
+
     def __init__(self, idx: int, field: TransactionField):
         super().__init__()
         self._version: int = 6
