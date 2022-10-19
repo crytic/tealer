@@ -101,11 +101,11 @@ def handle_gitxn(x: str) -> instructions.Gitxn:
     """Parse gitxn instruction.
 
     Args:
-        x: proper string representation of gtxn instruction immediate
+        x: proper string representation of gitxn instruction immediate
             arguments.
 
     Returns:
-        Gtxn instruction object created after parsing immediate
+        Gitxn instruction object created after parsing immediate
         arguments.
     """
 
@@ -118,11 +118,11 @@ def handle_gitxna(x: str) -> instructions.Gitxna:
     """Parse gitxna instruction.
 
     Args:
-        x: proper string representation of gtxn instruction immediate
+        x: proper string representation of gitxna instruction immediate
             arguments.
 
     Returns:
-        Gtxn instruction object created after parsing immediate
+        Gitxna instruction object created after parsing immediate
         arguments.
     """
 
@@ -135,18 +135,19 @@ def handle_gitxnas(x: str) -> instructions.Gitxnas:
     """Parse gitxnas instruction.
 
     Args:
-        x: proper string representation of gtxn instruction immediate
+        x: proper string representation of gitxnas instruction immediate
             arguments.
 
     Returns:
-        Gtxn instruction object created after parsing immediate
+        Gitxnas instruction object created after parsing immediate
         arguments.
     """
 
     split = x.split(" ")
     idx = _parse_int(split[0])
-    tx_field = parse_transaction_field(" ".join(split[1:]), False)
+    tx_field = parse_transaction_field(" ".join(split[1:]), True)
     return instructions.Gitxnas(idx, tx_field)
+
 
 def _parse_int(x: str) -> int:
     """Parse teal integers.
@@ -485,7 +486,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("gitxn", lambda x: handle_gitxn(x)),
     ("gitxna", lambda x: handle_gitxna(x)),
     ("gloadss", lambda _: instructions.Gloadss()),
-    ("itxnas", lambda x: instructions.Itxnas(parse_transaction_field(x, False))),
+    ("itxnas", lambda x: instructions.Itxnas(parse_transaction_field(x, True))),
     ("gitxnas", lambda x: handle_gitxnas(x)),
 ]
 
