@@ -4,7 +4,7 @@ from tealer.teal.parse_teal import parse_teal
 from tealer.teal.instructions.instructions import ContractType
 
 STATEFULL = """
-#pragma version 5
+#pragma version 6
 itxn_begin
 int pay
 itxn_field TypeEnum
@@ -26,7 +26,7 @@ txn Sender
 
 def test_mode() -> None:
     teal = parse_teal(STATEFULL)
-    assert teal.version == 5
+    assert teal.version == 6
     assert teal.mode == ContractType.STATEFULL
 
     teal = parse_teal(STATELESS)

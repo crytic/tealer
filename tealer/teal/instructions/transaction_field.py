@@ -451,3 +451,11 @@ class CreatedApplicationID(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
+
+class LastLog(TransactionField):
+    def __str__(self) -> str:
+        return "LastLog"
+
+class StakeProofPK(TransactionField):
+    def __str__(self) -> str:
+        return "StakeProofPK"

@@ -26,6 +26,7 @@ Attributes:
 from typing import Union, List, TYPE_CHECKING, Optional
 
 from tealer.teal.global_field import GlobalField
+from tealer.teal.instructions.acct_params_field import AcctParamsField
 from tealer.teal.instructions.transaction_field import TransactionField
 from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
@@ -2881,7 +2882,7 @@ class Gtxnas(Instruction):
         return self._field
 
     def __str__(self) -> str:
-        return f"Gtxnas {self._idx} {self._field}"
+        return f"gtxnas {self._idx} {self._field}"
 
 
 class Gtxnsas(Instruction):
@@ -3506,3 +3507,154 @@ class Substring3(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+class AcctParamsGet(Instruction):
+    """`acct_params_get i` allows reading param field of a given account.
+
+    Immediates:
+        i (AcctParamsField): field to get the value of.
+
+    Pops:
+        A (any): account to read the field from.
+
+    Pushes:
+        did_exist (top)(flag): 1 if the account owns positve ALGOs or else 0.
+        value (any): pushes the value of field account A's param field i.
+    """
+
+    def __init__(self, field: AcctParamsField):
+        super().__init__()
+        self._field: AcctParamsField = field
+        self._version: int = 6
+        self._mode: ContractType = ContractType.STATEFULL
+
+    @property
+    def field(self) -> AcctParamsField:
+        """Application parameter field being accessed."""
+        return self._field
+
+    def __str__(self) -> str:
+        return f"acct_params_get {self._field}"
+
+class Bsqrt(Instruction):
+    def __init__(self):
+        super().__init__()
+        self._version: int = 6
+
+    def __str__(self) -> str:
+        return "bsqrt"
+
+class Divw(Instruction):
+    def __init__(self):
+        super().__init__()
+        self._version: int = 6
+
+    def __str__(self) -> str:
+        return "divw"
+
+class Itxn_next(Instruction):
+    def __init__(self):
+        super().__init__()
+        self._version: int = 6
+
+    def __str__(self) -> str:
+        return "itxn_begin"
+
+class Gitxn(Instruction):
+    def __init__(self, idx: int, field: TransactionField):
+        super().__init__()
+        self._version: int = 6
+        self._idx: int = idx
+        self._field: TransactionField = field
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self) -> str:
+        return f"gitxn {self._idx} {self._field}"
+
+class Gitxna(Instruction):
+    def __init__(self, idx: int, field: TransactionField):
+        super().__init__()
+        self._version: int = 6
+        self._idx: int = idx
+        self._field: TransactionField = field
+
+    @property
+    def idx(self) -> int:
+        return self._idx
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self) -> str:
+        return f"gitxna {self._idx} {self._field}"
+
+class Gloadss(Instruction):
+    """`gloadss` loads value at scratch space position i of transaction X.
+
+    Pushes:
+        pushes the value at position i of scratch space of transaction t.
+
+    Errors:
+        fails if transaction X is not a ApplicationCall and X < GroupIndex
+        i.e if transaction is not executed before this transaction.
+
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._version: int = 6
+        self._mode: ContractType = ContractType.STATEFULL
+
+    def __str__(self) -> str:
+        return "gloadss"
+
+class Itxnas(Instruction):
+    """`itxnas f` pushes ith value of array transaction field f of last inner transaction.
+
+    Few transaction fields namely "ApplicationArgs", "Accounts",
+    "Applications", "Logs" are arrays and this instruction allows
+    accesing their values by index.
+
+    Immediates:
+        f (TransactionField): Array transaction field whose value is being accessed.
+
+    Pushes:
+        pushes value at index i of array transaction field f.
+
+    """
+
+    def __init__(self, field: TransactionField):
+        super().__init__()
+        self._field: TransactionField = field
+        self._version: int = 6
+        self._mode: ContractType = ContractType.STATEFULL
+
+    @property
+    def field(self) -> TransactionField:
+        """Array transaction field being accessed."""
+        return self._field
+
+    def __str__(self) -> str:
+        return f"itxnas {self._field}"
+
+class Gitxnas(Instruction):
+    def __init__(self, idx: int, field: TransactionField):
+        super().__init__()
+        self._version: int = 6
+        self._idx: int = idx
+        self._field: TransactionField = field
+
+    @property
+    def idx(self) -> int:
+        return self._idx
+
+    @property
+    def field(self) -> TransactionField:
+        return self._field
+
+    def __str__(self) -> str:
+        return f"gitxna {self._idx} {self._field}"

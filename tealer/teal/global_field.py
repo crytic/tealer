@@ -76,6 +76,10 @@ class CurrentApplicationID(GlobalField):
         super().__init__()
         self._version = 2
 
+class CurrentAccountlicationID(GlobalField):
+    def __str__(self) -> str:
+        return "CurrentAccountlicationID"
+
 
 class CreatorAddress(GlobalField):
     """Address of the creator of the current application."""
@@ -103,3 +107,19 @@ class GroupID(GlobalField):
     def __init__(self) -> None:
         super().__init__()
         self._version = 5
+
+class CurrentAccountlicationAddress(GlobalField):
+    def __str__(self) -> str:
+        return "CurrentAccountlicationAddress"
+
+class OpcodeBudget(GlobalField):
+    def __str__(self) -> str:
+        return "OpcodeBudget"
+
+class CallerAccountlicationID(GlobalField):
+    def __str__(self) -> str:
+        return "CallerAccountlicationID"
+
+class CallerAccountlicationAddress(GlobalField):
+    def __str__(self) -> str:
+        return "CallerAccountlicationAddress"

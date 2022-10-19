@@ -33,6 +33,7 @@ import base64
 from tealer.teal.instructions import instructions
 from tealer.teal.instructions.instructions import Instruction
 from tealer.teal.instructions.parse_app_params_field import parse_app_params_field
+from tealer.teal.instructions.parse_acct_params_field import parse_acct_params_field
 from tealer.teal.instructions.parse_asset_holding_field import parse_asset_holding_field
 from tealer.teal.instructions.parse_asset_params_field import parse_asset_params_field
 from tealer.teal.instructions.parse_global_field import parse_global_field
@@ -96,6 +97,56 @@ def handle_gtxnas(x: str) -> instructions.Gtxnas:
     tx_field = parse_transaction_field(args[1], True)
     return instructions.Gtxnas(idx, tx_field)
 
+def handle_gitxn(x: str) -> instructions.Gitxn:
+    """Parse gitxn instruction.
+
+    Args:
+        x: proper string representation of gtxn instruction immediate
+            arguments.
+
+    Returns:
+        Gtxn instruction object created after parsing immediate
+        arguments.
+    """
+
+    split = x.split(" ")
+    idx = _parse_int(split[0])
+    tx_field = parse_transaction_field(" ".join(split[1:]), False)
+    return instructions.Gitxn(idx, tx_field)
+
+def handle_gitxna(x: str) -> instructions.Gitxna:
+    """Parse gitxna instruction.
+
+    Args:
+        x: proper string representation of gtxn instruction immediate
+            arguments.
+
+    Returns:
+        Gtxn instruction object created after parsing immediate
+        arguments.
+    """
+
+    split = x.split(" ")
+    idx = _parse_int(split[0])
+    tx_field = parse_transaction_field(" ".join(split[1:]), False)
+    return instructions.Gitxna(idx, tx_field)
+
+def handle_gitxnas(x: str) -> instructions.Gitxnas:
+    """Parse gitxnas instruction.
+
+    Args:
+        x: proper string representation of gtxn instruction immediate
+            arguments.
+
+    Returns:
+        Gtxn instruction object created after parsing immediate
+        arguments.
+    """
+
+    split = x.split(" ")
+    idx = _parse_int(split[0])
+    tx_field = parse_transaction_field(" ".join(split[1:]), False)
+    return instructions.Gitxnas(idx, tx_field)
 
 def _parse_int(x: str) -> int:
     """Parse teal integers.
@@ -348,6 +399,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("asset_holding_get ", lambda x: instructions.AssetHoldingGet(parse_asset_holding_field(x))),
     ("asset_params_get ", lambda x: instructions.AssetParamsGet(parse_asset_params_field(x))),
     ("app_params_get ", lambda x: instructions.AppParamsGet(parse_app_params_field(x))),
+    ("acct_params_get ", lambda x: instructions.AcctParamsGet(parse_acct_params_field(x))),
     ("%", lambda x: instructions.Modulo()),
     ("!=", lambda x: instructions.Neq()),
     ("!", lambda x: instructions.Not()),
@@ -427,6 +479,14 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
         lambda x: instructions.Substring(_parse_int(x.split(" ")[0]), _parse_int(x.split(" ")[1])),
     ),
     ("substring3", lambda x: instructions.Substring3()),
+    ("bsqrt", lambda _: instructions.Bsqrt()),
+    ("divw", lambda _: instructions.Divw()),
+    ("itxn_next", lambda _: instructions.Itxn_next()),
+    ("gitxn", lambda x: handle_gitxn(x)),
+    ("gitxna", lambda x: handle_gitxna(x)),
+    ("gloadss", lambda _: instructions.Gloadss()),
+    ("itxnas", lambda x: instructions.Itxnas(parse_transaction_field(x, False))),
+    ("gitxnas", lambda x: handle_gitxnas(x)),
 ]
 
 
