@@ -699,19 +699,19 @@ def _recover_types(blocks: List[BasicBlock], subs: List[Subroutine]) -> None:
 
     for block in blocks:
         line = block.entry_instr.line
-        block.input_types = list(map(reify_type, block_inputs[line]))
-        block.output_types = list(map(reify_type, block_outputs[line]))
+        block.input_types = [reify_type(t) for t in block_inputs[line]]
+        block.output_types = [reify_type(t) for t in block_outputs[line]]
 
         for inst in block.instructions:
             if inst.line not in inst_type_vars:
                 continue
-            inst.types = list(map(reify_type, inst_type_vars[inst.line]))
+            inst.types = [reify_type(t) for t in inst_type_vars[inst.line]]
 
     for sub in subs:
         entry_instr: Label = sub.blocks[0].entry_instr
         label = entry_instr.label
-        sub.input_types = list(map(reify_type, sub_inputs[label]))
-        sub.output_types = list(map(reify_type, sub_outputs[label]))
+        sub.input_types = [reify_type(t) for t in sub_inputs[label]]
+        sub.output_types = [reify_type(t) for t in sub_outputs[label]]
 
 
 def parse_teal(source_code: str) -> Teal:

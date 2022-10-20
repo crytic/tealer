@@ -201,6 +201,9 @@ class Instruction:
     def __str__(self) -> str:
         return self.__class__.__qualname__.lower()
 
+    def to_dict(self):
+        return None
+
 
 class UnsupportedInstruction(Instruction):
     """
@@ -255,6 +258,9 @@ class Err(Instruction):
         This instruction creates a error resulting in failure of execution.
     """
 
+    def to_dict(self):
+        return {"name": "err", "types": self.types}
+
 
 class Assert(Instruction):
     """`assert` value on top of the stack is non-zero.
@@ -276,6 +282,9 @@ class Assert(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("uint64")
+
+    def to_dict(self):
+        return {"name": "assert", "types": self.types}
 
 
 class Int(Instruction):
@@ -311,6 +320,9 @@ class Int(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "int", "value": self.value, "types": self.types}
 
 
 class PushInt(Instruction):
@@ -353,6 +365,9 @@ class PushInt(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "pushint", "value": self.value, "types": self.types}
+
 
 class Txn(Instruction):
     """`txn f` pushes the value of transaction field f.
@@ -380,6 +395,9 @@ class Txn(Instruction):
 
     def __str__(self) -> str:
         return f"txn {self._field}"
+
+    def to_dict(self):
+        return {"name": "txn", "field": self.field.to_dict(), "types": self.types}
 
 
 class Txna(Instruction):
@@ -417,6 +435,9 @@ class Txna(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push(self.field.type())
 
+    def to_dict(self):
+        return {"name": "txna", "field": self.field.to_dict(), "types": self.types}
+
 
 class Gtxn(Instruction):
     """`gtxn t f` pushes value of transaction field f of transaction t in the group.
@@ -453,6 +474,14 @@ class Gtxn(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push(self.field.type())
+
+    def to_dict(self):
+        return {
+            "name": "gtxn",
+            "field": self.field.to_dict(),
+            "index": self.idx,
+            "types": self.types,
+        }
 
 
 class Gtxna(Instruction):
@@ -497,6 +526,14 @@ class Gtxna(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push(self.field.type())
 
+    def to_dict(self):
+        return {
+            "name": "gtxna",
+            "field": self.field.to_dict(),
+            "index": self.idx,
+            "types": self.types,
+        }
+
 
 class Gtxns(Instruction):
     """`gtxns f` pushes value of transaction field f of given transaction in the group.
@@ -534,6 +571,9 @@ class Gtxns(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("uint64")
         push(self.field.type())
+
+    def to_dict(self):
+        return {"name": "gtxns", "field": self.field.to_dict(), "types": self.types}
 
 
 class Gtxnsa(Instruction):
@@ -574,6 +614,9 @@ class Gtxnsa(Instruction):
         pop("uint64")
         push(self.field.type())
 
+    def to_dict(self):
+        return {"name": "gtxnsa", "field": self.field.to_dict(), "types": self.types}
+
 
 class Load(Instruction):
     """`load i` pushes the value at scratch space position i.
@@ -599,6 +642,9 @@ class Load(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push(new_var())
 
+    def to_dict(self):
+        return {"name": "load", "index": self._idx, "types": self.types}
+
 
 class Store(Instruction):
     """`store i` store value on top of the stack at scratch space position i.
@@ -623,6 +669,9 @@ class Store(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop()
+
+    def to_dict(self):
+        return {"name": "store", "index": self._idx, "types": self.types}
 
 
 class Gload(Instruction):
@@ -656,6 +705,9 @@ class Gload(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push(new_var())
+
+    def to_dict(self):
+        return {"name": "gload", "index": self._idx, "slot": self._slot, "types": self.types}
 
 
 class Gloads(Instruction):
@@ -695,6 +747,9 @@ class Gloads(Instruction):
         pop("uint64")
         push(new_var())
 
+    def to_dict(self):
+        return {"name": "gloads", "slot": self._slot, "types": self.types}
+
 
 class Gaid(Instruction):
     """`gaid t` pushes the id of asset or application created in transaction t in the group.
@@ -724,6 +779,9 @@ class Gaid(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "gaid", "index": self._idx, "types": self.types}
 
 
 class Gaids(Instruction):
@@ -755,6 +813,9 @@ class Gaids(Instruction):
         pop("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "gaids", "types": self.types}
+
 
 class Loads(Instruction):
     """`loads` pushes the value at scratch space position X.
@@ -781,6 +842,9 @@ class Loads(Instruction):
         pop("uint64")
         push(new_var())
 
+    def to_dict(self):
+        return {"name": "loads", "types": self.types}
+
 
 class Stores(Instruction):
     """`stores` store value on top of the stack (B) at scratch space position (A).
@@ -801,6 +865,9 @@ class Stores(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop()
         pop("uint64")
+
+    def to_dict(self):
+        return {"name": "stores", "types": self.types}
 
 
 class Dig(Instruction):
@@ -838,6 +905,9 @@ class Dig(Instruction):
             push(i)
         push(elem)
 
+    def to_dict(self):
+        return {"name": "dig", "index": self._idx, "types": self.types}
+
 
 class Swap(Instruction):
     """`swap` swaps top two elements of the stack.
@@ -862,6 +932,9 @@ class Swap(Instruction):
         b = pop()
         push(b)
         push(a)
+
+    def to_dict(self):
+        return {"name": "swap", "types": self.types}
 
 
 class GetBit(Instruction):
@@ -893,6 +966,9 @@ class GetBit(Instruction):
         pop("uint64")
         pop()
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "getbit", "types": self.types}
 
 
 class SetBit(Instruction):
@@ -927,6 +1003,9 @@ class SetBit(Instruction):
         value = pop()
         push(value)
 
+    def to_dict(self):
+        return {"name": "setbit", "types": self.types}
+
 
 class GetByte(Instruction):
     """`getbyte` pushes the byte value of given element at given position.
@@ -954,6 +1033,9 @@ class GetByte(Instruction):
         pop("uint64")
         pop("[]byte")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "getbyte", "types": self.types}
 
 
 class SetByte(Instruction):
@@ -984,6 +1066,9 @@ class SetByte(Instruction):
         pop("uint64")
         pop("[]byte")
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "setbyte", "types": self.types}
 
 
 class Extract(Instruction):
@@ -1033,6 +1118,14 @@ class Extract(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {
+            "name": "extract",
+            "start": self.start_position,
+            "length": self.length,
+            "types": self.types,
+        }
+
 
 class Extract3(Instruction):
     """`extract3` extracts the bytes from the given position of given length.
@@ -1066,6 +1159,9 @@ class Extract3(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "extract3", "types": self.types}
+
 
 class Extract_uint16(Instruction):
     """`extract_uint16` converts the two bytes at given position as uint16.
@@ -1096,6 +1192,9 @@ class Extract_uint16(Instruction):
         pop("uint64")
         pop("[]byte")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "extract_uint16", "types": self.types}
 
 
 class Extract_uint32(Instruction):
@@ -1128,6 +1227,9 @@ class Extract_uint32(Instruction):
         pop("[]byte")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "extract_uint32", "types": self.types}
+
 
 class Extract_uint64(Instruction):
     """`extract_uint64` converts the eight bytes at given position as uint64.
@@ -1158,6 +1260,9 @@ class Extract_uint64(Instruction):
         pop("uint64")
         pop("[]byte")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "extract_uint64", "types": self.types}
 
 
 class Sha256(Instruction):
@@ -1200,6 +1305,9 @@ class Sha256(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "sha256", "types": self.types}
+
 
 class Sha512_256(Instruction):
     """`sha512_256` calculate the sha512_256 hash of the given element.
@@ -1240,6 +1348,9 @@ class Sha512_256(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("[]byte")
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "sha512_256", "types": self.types}
 
 
 class Keccak256(Instruction):
@@ -1282,6 +1393,9 @@ class Keccak256(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "keccak256", "types": self.types}
+
 
 class Ed25519verify(Instruction):
     """`ed25519verify` verifies the ed25519 signature for given public key and data.
@@ -1316,6 +1430,9 @@ class Ed25519verify(Instruction):
         pop("[]byte")
         pop("[]byte")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "ed25519verify", "types": self.types}
 
 
 class Ecdsa_verify(Instruction):
@@ -1384,6 +1501,9 @@ class Ecdsa_verify(Instruction):
         pop("[]byte")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "ecdsa_verify", "index": self._idx, "types": self.types}
+
 
 class Ecdsa_pk_decompress(Instruction):
     """`ecdsa_pk_decompress v` decompress elliptic curve point to it's components.
@@ -1439,6 +1559,9 @@ class Ecdsa_pk_decompress(Instruction):
         pop("[]byte")
         push("[]byte")
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "ecdsa_pk_decompress", "index": self._idx, "types": self.types}
 
 
 class Ecdsa_pk_recover(Instruction):
@@ -1502,6 +1625,9 @@ class Ecdsa_pk_recover(Instruction):
         push("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "ecdsa_pk_recover", "index": self._idx, "types": self.types}
+
 
 class Global(Instruction):
     """`global f` is used to access the value of global field f.
@@ -1533,6 +1659,9 @@ class Global(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push(self.field.type())
 
+    def to_dict(self):
+        return {"name": "global", "field": self.field.to_dict(), "types": self.types}
+
 
 class Dup(Instruction):
     """`dup` duplicates the top value on stack."""
@@ -1547,6 +1676,9 @@ class Dup(Instruction):
         value = pop()
         push(value)
         push(value)
+
+    def to_dict(self):
+        return {"name": "dup", "types": self.types}
 
 
 class Dup2(Instruction):
@@ -1569,6 +1701,9 @@ class Dup2(Instruction):
         push(b)
         push(a)
         push(b)
+
+    def to_dict(self):
+        return {"name": "dup2", "types": self.types}
 
 
 class Select(Instruction):
@@ -1599,6 +1734,9 @@ class Select(Instruction):
         value = pop()
         pop(value)
         push(value)
+
+    def to_dict(self):
+        return {"name": "select", "types": self.types}
 
 
 class Cover(Instruction):
@@ -1638,6 +1776,9 @@ class Cover(Instruction):
         for elem in elems:
             push(elem)
 
+    def to_dict(self):
+        return {"name": "cover", "index": self._idx, "types": self.types}
+
 
 class Uncover(Instruction):
     """`uncover n` allows moving element at given depth n to top of the stack.
@@ -1676,6 +1817,9 @@ class Uncover(Instruction):
             push(elem)
         push(a)
 
+    def to_dict(self):
+        return {"name": "uncover", "index": self._idx, "types": self.types}
+
 
 class Concat(Instruction):
     """`concat` concatenates two bytearrays and pushes the result.
@@ -1706,6 +1850,9 @@ class Concat(Instruction):
         pop("[]byte")
         pop("[]byte")
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "concat", "types": self.types}
 
 
 class InstructionWithLabel(Instruction):
@@ -1738,6 +1885,9 @@ class B(InstructionWithLabel):
     def __str__(self) -> str:
         return f"b {self._label}"
 
+    def to_dict(self):
+        return {"name": "b", "target": self._label, "types": self.types}
+
 
 class BZ(InstructionWithLabel):
     """`bz target` branches to target if top of the stack is zero.
@@ -1764,6 +1914,9 @@ class BZ(InstructionWithLabel):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("uint64")
 
+    def to_dict(self):
+        return {"name": "bz", "target": self._label, "types": self.types}
+
 
 class BNZ(InstructionWithLabel):
     """`bnz target` branches to target if top of the stack is not zero.
@@ -1785,6 +1938,9 @@ class BNZ(InstructionWithLabel):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("uint64")
+
+    def to_dict(self):
+        return {"name": "bnz", "target": self._label, "types": self.types}
 
 
 class Label(InstructionWithLabel):
@@ -1827,6 +1983,9 @@ class Callsub(InstructionWithLabel):
     def __str__(self) -> str:
         return f"callsub {self._label}"
 
+    def to_dict(self):
+        return {"name": "callsub", "target": self._label, "types": self.types}
+
 
 class Return(Instruction):
     """`return` stops the execution and returns top of the stack as success value.
@@ -1846,6 +2005,9 @@ class Return(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("uint64")
 
+    def to_dict(self):
+        return {"name": "return", "types": self.types}
+
 
 class Retsub(Instruction):
     """`retsub` returns from a subroutine using the callstack"""
@@ -1853,6 +2015,9 @@ class Retsub(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 4
+
+    def to_dict(self):
+        return {"name": "retsub", "types": self.types}
 
 
 class AppGlobalGet(Instruction):
@@ -1881,6 +2046,9 @@ class AppGlobalGet(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("[]byte")
         push(new_var())
+
+    def to_dict(self):
+        return {"name": "app_global_get", "types": self.types}
 
 
 class AppGlobalGetEx(Instruction):
@@ -1921,6 +2089,9 @@ class AppGlobalGetEx(Instruction):
         push(new_var())
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "app_global_get_ex", "types": self.types}
+
 
 class AppGlobalPut(Instruction):
     """`app_global_put` allows modifying the global state of the current application.
@@ -1948,6 +2119,9 @@ class AppGlobalPut(Instruction):
         pop()
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "app_global_put", "types": self.types}
+
 
 class AppGlobalDel(Instruction):
     """`app_global_del` allows deleting a key from global state of the current application.
@@ -1974,6 +2148,9 @@ class AppGlobalDel(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("[]byte")
+
+    def to_dict(self):
+        return {"name": "app_global_del", "types": self.types}
 
 
 class AppLocalGetEx(Instruction):
@@ -2018,6 +2195,9 @@ class AppLocalGetEx(Instruction):
         push(new_var())
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "app_local_get_ex", "types": self.types}
+
 
 class AppLocalGet(Instruction):
     """`app_local_get` allows reading the local state of the current application.
@@ -2055,6 +2235,9 @@ class AppLocalGet(Instruction):
         pop()
         push(new_var())
 
+    def to_dict(self):
+        return {"name": "app_local_get", "types": self.types}
+
 
 class AppLocalPut(Instruction):
     """`app_local_put` allows modifying the local state of the current application.
@@ -2088,6 +2271,9 @@ class AppLocalPut(Instruction):
         pop("[]byte")
         pop()
 
+    def to_dict(self):
+        return {"name": "app_local_put", "types": self.types}
+
 
 class AppLocalDel(Instruction):
     """`app_local_del` allows deleting a key from local state of the current application.
@@ -2118,6 +2304,9 @@ class AppLocalDel(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("[]byte")
         pop()
+
+    def to_dict(self):
+        return {"name": "app_local_del", "types": self.types}
 
 
 class AssetHoldingGet(Instruction):
@@ -2168,6 +2357,9 @@ class AssetHoldingGet(Instruction):
         push(self.field.type())
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "asset_holding_get", "field": self.field.to_dict(), "types": self.types}
+
 
 class AssetParamsGet(Instruction):
     """`asset_params_get i` allows reading params field of a given asset.
@@ -2212,6 +2404,9 @@ class AssetParamsGet(Instruction):
         pop()
         push(self.field.type())
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "asset_params_get", "field": self.field.to_dict(), "types": self.types}
 
 
 class AppParamsGet(Instruction):
@@ -2258,6 +2453,9 @@ class AppParamsGet(Instruction):
         push(self.field.type())
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "app_params_get", "field": self.field.to_dict(), "types": self.types}
+
 
 class AppOptedIn(Instruction):
     """`app_opted_in` allows contract to check if given account has opted-in or not.
@@ -2296,6 +2494,9 @@ class AppOptedIn(Instruction):
         pop()
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "app_opted_in", "types": self.types}
+
 
 class Balance(Instruction):
     """`balance` reads the balance of an account in microalgos.
@@ -2328,6 +2529,9 @@ class Balance(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop()
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "balance", "types": self.types}
 
 
 class MinBalance(Instruction):
@@ -2363,6 +2567,9 @@ class MinBalance(Instruction):
         pop()
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "min_balance", "types": self.types}
+
 
 class Itob(Instruction):
     """`itob` converts integer to big endian bytes.
@@ -2384,6 +2591,9 @@ class Itob(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("uint64")
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "itob", "types": self.types}
 
 
 class Btoi(Instruction):
@@ -2407,6 +2617,9 @@ class Btoi(Instruction):
         pop("[]byte")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "btoi", "types": self.types}
+
 
 class Addr(Instruction):
     """`addr X` pushes address X to top of the stack.
@@ -2429,6 +2642,9 @@ class Addr(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "addr", "addr": self._addr, "types": self.types}
+
 
 class Pop(Instruction):
     """`pop` pops one element from the stack."""
@@ -2438,6 +2654,9 @@ class Pop(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop()
+
+    def to_dict(self):
+        return {"name": "pop", "types": self.types}
 
 
 class Not(Instruction):
@@ -2463,6 +2682,9 @@ class Not(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("uint64")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "not", "types": self.types}
 
 
 class Neq(Instruction):
@@ -2491,6 +2713,9 @@ class Neq(Instruction):
         pop(a)
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "neq", "types": self.types}
+
 
 class Eq(Instruction):
     """`==` equal to comparison operator.
@@ -2517,6 +2742,9 @@ class Eq(Instruction):
         a = pop()
         pop(a)
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "eq", "types": self.types}
 
 
 class Greater(Instruction):
@@ -2545,6 +2773,9 @@ class Greater(Instruction):
         pop("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "gt", "types": self.types}
+
 
 class GreaterE(Instruction):
     """`>=` greater than or equal to comparison operator.
@@ -2571,6 +2802,9 @@ class GreaterE(Instruction):
         pop("uint64")
         pop("uint64")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "geq", "types": self.types}
 
 
 class Less(Instruction):
@@ -2599,6 +2833,9 @@ class Less(Instruction):
         pop("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "lt", "types": self.types}
+
 
 class LessE(Instruction):
     """`<=` less than or equal to comparison operator.
@@ -2626,6 +2863,9 @@ class LessE(Instruction):
         pop("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "leq", "types": self.types}
+
 
 class And(Instruction):
     """`&&` logical and.
@@ -2647,6 +2887,9 @@ class And(Instruction):
 
     def output_size(self) -> int:
         return 1
+
+    def to_dict(self):
+        return {"name": "land", "types": self.types}
 
 
 class Or(Instruction):
@@ -2674,6 +2917,9 @@ class Or(Instruction):
         pop("uint64")
         pop("uint64")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "lor", "types": self.types}
 
 
 class Add(Instruction):
@@ -2705,6 +2951,9 @@ class Add(Instruction):
         pop("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "add", "types": self.types}
+
 
 class Sub(Instruction):
     """`-` arthimetic subtraction.
@@ -2734,6 +2983,9 @@ class Sub(Instruction):
         pop("uint64")
         pop("uint64")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "sub", "types": self.types}
 
 
 class Mul(Instruction):
@@ -2765,6 +3017,9 @@ class Mul(Instruction):
         pop("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "mul", "types": self.types}
+
 
 class Div(Instruction):
     """`/` arthimetic divison.
@@ -2794,6 +3049,9 @@ class Div(Instruction):
         pop("uint64")
         pop("uint64")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "div", "types": self.types}
 
 
 class Modulo(Instruction):
@@ -2825,6 +3083,9 @@ class Modulo(Instruction):
         pop("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "mod", "types": self.types}
+
 
 class BitwiseOr(Instruction):
     """`|` bitwise or.
@@ -2851,6 +3112,9 @@ class BitwiseOr(Instruction):
         pop("uint64")
         pop("uint64")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "bor", "types": self.types}
 
 
 class BitwiseAnd(Instruction):
@@ -2879,6 +3143,9 @@ class BitwiseAnd(Instruction):
         pop("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "band", "types": self.types}
+
 
 class BitwiseXor(Instruction):
     """`^` bitwise xor.
@@ -2906,6 +3173,9 @@ class BitwiseXor(Instruction):
         pop("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "bxor", "types": self.types}
+
 
 class BitwiseInvert(Instruction):
     """`~` bitwise invert.
@@ -2930,6 +3200,9 @@ class BitwiseInvert(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("uint64")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "bnot", "types": self.types}
 
 
 class BitLen(Instruction):
@@ -2957,6 +3230,9 @@ class BitLen(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop()
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "bitlen", "types": self.types}
 
 
 class BModulo(Instruction):
@@ -3014,6 +3290,9 @@ class BModulo(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bmod", "types": self.types}
+
 
 class BNeq(Instruction):
     """`b!=` not equal comparison operator.
@@ -3047,6 +3326,9 @@ class BNeq(Instruction):
         pop("[]byte")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "bneq", "types": self.types}
+
 
 class BEq(Instruction):
     """`b==` equal to comparison operator.
@@ -3079,6 +3361,9 @@ class BEq(Instruction):
         pop("[]byte")
         pop("[]byte")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "beq", "types": self.types}
 
 
 class BBitwiseAnd(Instruction):
@@ -3133,6 +3418,9 @@ class BBitwiseAnd(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bband", "types": self.types}
+
 
 class BBitwiseOr(Instruction):
     """`b|` bitwise or.
@@ -3186,6 +3474,9 @@ class BBitwiseOr(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bbor", "types": self.types}
+
 
 class BAdd(Instruction):
     """`b+` arthimetic addition.
@@ -3238,6 +3529,9 @@ class BAdd(Instruction):
         pop("[]byte")
         pop("[]byte")
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "badd", "types": self.types}
 
 
 class BSubtract(Instruction):
@@ -3295,6 +3589,9 @@ class BSubtract(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bsub", "types": self.types}
+
 
 class BDiv(Instruction):
     """`b/` arthimetic divison.
@@ -3351,6 +3648,9 @@ class BDiv(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bdiv", "types": self.types}
+
 
 class BMul(Instruction):
     """`b*` arthimetic multiplication.
@@ -3404,6 +3704,9 @@ class BMul(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bmul", "types": self.types}
+
 
 class BGreaterE(Instruction):
     """`b>=` greater than or equal to comparison operator.
@@ -3436,6 +3739,9 @@ class BGreaterE(Instruction):
         pop("[]byte")
         pop("[]byte")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "bgeq", "types": self.types}
 
 
 class BGreater(Instruction):
@@ -3470,6 +3776,9 @@ class BGreater(Instruction):
         pop("[]byte")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "bgt", "types": self.types}
+
 
 class BLessE(Instruction):
     """`b<=` less than or equal to comparison operator.
@@ -3503,6 +3812,9 @@ class BLessE(Instruction):
         pop("[]byte")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "bleq", "types": self.types}
+
 
 class BLess(Instruction):
     """`b<` less than comparison operator.
@@ -3535,6 +3847,9 @@ class BLess(Instruction):
         pop("[]byte")
         pop("[]byte")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "blt", "types": self.types}
 
 
 class BBitwiseXor(Instruction):
@@ -3589,6 +3904,9 @@ class BBitwiseXor(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bbxor", "types": self.types}
+
 
 class BBitwiseInvert(Instruction):
     """`b~` bitwise invert.
@@ -3639,6 +3957,9 @@ class BBitwiseInvert(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bbnot", "types": self.types}
+
 
 class BZero(Instruction):
     """`bzero` pushes byte array containing all zeroes.
@@ -3665,6 +3986,9 @@ class BZero(Instruction):
         pop("uint64")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bzero", "types": self.types}
+
 
 class Log(Instruction):
     """`log` writes bytes to log state of the current application.
@@ -3689,6 +4013,9 @@ class Log(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("[]byte")
 
+    def to_dict(self):
+        return {"name": "log", "types": self.types}
+
 
 class Itxn_begin(Instruction):
     """`itxn_begin` signifies start of inner transaction.
@@ -3704,6 +4031,9 @@ class Itxn_begin(Instruction):
         super().__init__()
         self._version: int = 5
         self._mode: ContractType = ContractType.STATEFULL
+
+    def to_dict(self):
+        return {"name": "itxn_begin", "types": self.types}
 
 
 class Itxn_field(Instruction):
@@ -3743,6 +4073,9 @@ class Itxn_field(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop(self.field.type())
 
+    def to_dict(self):
+        return {"name": "itxn_field", "field": self.field.to_dict(), "types": self.types}
+
 
 class Itxn_submit(Instruction):
     """`itxn_submit` executes the current inner transaction.
@@ -3761,6 +4094,9 @@ class Itxn_submit(Instruction):
         super().__init__()
         self._version: int = 5
         self._mode: ContractType = ContractType.STATEFULL
+
+    def to_dict(self):
+        return {"name": "itxn_submit", "types": self.types}
 
 
 class Itxn(Instruction):
@@ -3794,6 +4130,9 @@ class Itxn(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push(self.field.type())
+
+    def to_dict(self):
+        return {"name": "itxn", "field": self.field.to_dict(), "types": self.types}
 
 
 class Itxna(Instruction):
@@ -3834,6 +4173,9 @@ class Itxna(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push(self.field.type())
+
+    def to_dict(self):
+        return {"name": "itxna", "field": self.field.to_dict(), "types": self.types}
 
 
 class Txnas(Instruction):
@@ -3876,6 +4218,9 @@ class Txnas(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         pop("uint64")
         push(self.field.type())
+
+    def to_dict(self):
+        return {"name": "txnas", "field": self.field.to_dict(), "types": self.types}
 
 
 class Gtxnas(Instruction):
@@ -3926,6 +4271,14 @@ class Gtxnas(Instruction):
         pop("uint64")
         push(self.field.type())
 
+    def to_dict(self):
+        return {
+            "name": "gtxnas",
+            "field": self.field.to_dict(),
+            "index": self._idx,
+            "types": self.types,
+        }
+
 
 class Gtxnsas(Instruction):
     """`gtxnas f` pushes a value of array transaction field f of a transaction in the group.
@@ -3970,6 +4323,9 @@ class Gtxnsas(Instruction):
         pop("uint64")
         push(self.field.type())
 
+    def to_dict(self):
+        return {"name": "gtxnsas", "field": self.field.to_dict(), "types": self.types}
+
 
 class Args(Instruction):
     """`args` pushes a LogicSig argument to stack using top of stack as index.
@@ -3997,6 +4353,9 @@ class Args(Instruction):
         pop("uint64")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "args", "types": self.types}
+
 
 class Mulw(Instruction):
     """`mulw` multiplies two unit64 and pushes 128-bit long result.
@@ -4022,6 +4381,9 @@ class Mulw(Instruction):
         pop("uint64")
         push("uint64")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "mulw", "types": self.types}
 
 
 class Addw(Instruction):
@@ -4052,6 +4414,9 @@ class Addw(Instruction):
         pop("uint64")
         push("uint64")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "addw", "types": self.types}
 
 
 class Divmodw(Instruction):
@@ -4114,6 +4479,9 @@ class Divmodw(Instruction):
         push("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "divmodw", "types": self.types}
+
 
 class Exp(Instruction):
     """`exp` allows calculating powers of a number.
@@ -4144,6 +4512,9 @@ class Exp(Instruction):
         pop("uint64")
         pop("uint64")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "exp", "types": self.types}
 
 
 class Expw(Instruction):
@@ -4197,6 +4568,9 @@ class Expw(Instruction):
         pop("uint64")
         push("uint64")
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "expw", "types": self.types}
 
 
 class Shl(Instruction):
@@ -4254,6 +4628,9 @@ class Shr(Instruction):
         pop("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "shr", "types": self.types}
+
 
 class Sqrt(Instruction):
     """`sqrt` calculates the integer square root of given number.
@@ -4300,6 +4677,9 @@ class Sqrt(Instruction):
         pop("uint64")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "sqrt", "types": self.types}
+
 
 class Intcblock(Instruction):
     """`intcblock x ...` resets and replaces integer constants in constant storage space.
@@ -4316,6 +4696,9 @@ class Intcblock(Instruction):
 
     def __str__(self) -> str:
         return " ".join(["intcblock"] + list(map(str, self._constants)))
+
+    def to_dict(self):
+        return {"name": "intcblock", "data": self._constants, "types": self.types}
 
 
 class Intc(Instruction):
@@ -4342,6 +4725,9 @@ class Intc(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "intc", "index": self._idx, "types": self.types}
+
 
 class Intc0(Instruction):
     """`intc_0` push integer constant 0 from constant storage space.
@@ -4359,6 +4745,9 @@ class Intc0(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "intc0", "types": self.types}
 
 
 class Intc1(Instruction):
@@ -4378,6 +4767,9 @@ class Intc1(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "intc1", "types": self.types}
+
 
 class Intc2(Instruction):
     """`intc_2` push integer constant 2 from constant storage space.
@@ -4396,6 +4788,9 @@ class Intc2(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "intc2", "types": self.types}
+
 
 class Intc3(Instruction):
     """`intc_3` push integer constant 3 from constant storage space.
@@ -4410,6 +4805,9 @@ class Intc3(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("uint64")
+
+    def to_dict(self):
+        return {"name": "intc3", "types": self.types}
 
 
 class Bytec(Instruction):
@@ -4433,6 +4831,9 @@ class Bytec(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bytec", "index": self._idx, "types": self.types}
+
 
 class Bytec0(Instruction):
     """`bytec_0` push byte constant 0 from constant storage space.
@@ -4450,6 +4851,9 @@ class Bytec0(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "bytec0", "types": self.types}
 
 
 class Bytec1(Instruction):
@@ -4469,6 +4873,9 @@ class Bytec1(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bytec1", "types": self.types}
+
 
 class Bytec2(Instruction):
     """`bytec_2` push byte constant 2 from constant storage space.
@@ -4487,6 +4894,9 @@ class Bytec2(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "bytec2", "types": self.types}
+
 
 class Bytec3(Instruction):
     """`bytec_3` push byte constant 3 from constant storage space.
@@ -4504,6 +4914,9 @@ class Bytec3(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "bytec3", "types": self.types}
 
 
 class Arg(Instruction):
@@ -4531,6 +4944,9 @@ class Arg(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "arg", "index": self._idx, "types": self.types}
+
 
 class Arg0(Instruction):
     """`arg_0` pushes 0th LogicSig argument to stack.
@@ -4552,6 +4968,9 @@ class Arg0(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "arg0", "types": self.types}
 
 
 class Arg1(Instruction):
@@ -4575,6 +4994,9 @@ class Arg1(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "arg1", "types": self.types}
+
 
 class Arg2(Instruction):
     """`arg_2` pushes 2nd LogicSig argument to stack.
@@ -4597,6 +5019,9 @@ class Arg2(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "arg2", "types": self.types}
+
 
 class Arg3(Instruction):
     """`arg_3` pushes 3rd LogicSig argument to stack.
@@ -4618,6 +5043,9 @@ class Arg3(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "arg3", "types": self.types}
 
 
 class Byte(Instruction):
@@ -4646,6 +5074,9 @@ class Byte(Instruction):
 
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "byte", "data": self._bytes, "types": self.types}
 
 
 class PushBytes(Instruction):
@@ -4681,6 +5112,9 @@ class PushBytes(Instruction):
     def sym_execute(self, push: "PushFunc", pop: "PopFunc", new_var: "NewVarFunc") -> None:
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "pusbytes", "data": self._bytes, "types": self.types}
+
 
 class Len(Instruction):
     """`len` calculates the length of the given byte array.
@@ -4703,6 +5137,9 @@ class Len(Instruction):
         pop("[]byte")
         push("uint64")
 
+    def to_dict(self):
+        return {"name": "len", "types": self.types}
+
 
 class Bytecblock(Instruction):
     """`bytecblock x ...` resets and replaces byte constants in constant storage space.
@@ -4719,6 +5156,9 @@ class Bytecblock(Instruction):
 
     def __str__(self) -> str:
         return " ".join(["bytecblock"] + self._constants)
+
+    def to_dict(self):
+        return {"name": "bytecblock", "data": self._constants, "types": self.types}
 
 
 class Substring(Instruction):
@@ -4759,6 +5199,9 @@ class Substring(Instruction):
         pop("[]byte")
         push("[]byte")
 
+    def to_dict(self):
+        return {"name": "substring", "start": self._start, "stop": self._stop, "types": self.types}
+
 
 class Substring3(Instruction):
     """`substring3` extracts the bytes from the given range.
@@ -4787,3 +5230,6 @@ class Substring3(Instruction):
         pop("uint64")
         pop("[]byte")
         push("[]byte")
+
+    def to_dict(self):
+        return {"name": "substring3", "types": self.types}

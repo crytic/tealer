@@ -27,6 +27,9 @@ class AssetHoldingField:
     def __str__(self) -> str:
         return self.__class__.__qualname__
 
+    def to_dict(self):
+        pass
+
 
 class AssetBalance(AssetHoldingField):
     """Amount of the asset unit held by this account."""
@@ -34,9 +37,15 @@ class AssetBalance(AssetHoldingField):
     def type(self):
         return "uint64"
 
+    def to_dict(self):
+        return {"name": "AssetBalance", "type": self.type}
+
 
 class AssetFrozen(AssetHoldingField):
     """Is asset frozen for this account or not."""
 
     def type(self):
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "AssetFrozen", "type": self.type}

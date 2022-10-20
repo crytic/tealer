@@ -15,7 +15,7 @@ Classes:
 
 from typing import List, Optional, TYPE_CHECKING
 
-from tealer.teal.instructions.instructions import Instruction
+from tealer.teal.instructions.instructions import Instruction, Label
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
@@ -168,3 +168,14 @@ class BasicBlock:
         for ins in self._instructions:
             ret += f"{ins.line}: {ins}\n"
         return ret
+
+    def to_dict(self):
+        res = {
+            "input": self.input_types,
+            "output": self.output_types,
+            "instructions": [x.to_dict() for x in self.instructions if x.to_dict() is not None],
+            "line": self.entry_instr.line,
+        }
+        if isinstance(self.entry_instr, Label):
+            res["label"] = self.entry_instr.label
+        return res

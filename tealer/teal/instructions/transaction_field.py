@@ -30,12 +30,18 @@ class TransactionField:
     def __str__(self) -> str:
         return self.__class__.__qualname__
 
+    def to_dict(self):
+        pass
+
 
 class Sender(TransactionField):
     """address of sender of this transaction."""
 
     def type(self):
         return "[]byte"
+
+    def to_dict(self):
+        return {"name": "Sender", "type": self.type}
 
 
 class Fee(TransactionField):
@@ -44,12 +50,18 @@ class Fee(TransactionField):
     def type(self):
         return "uint64"
 
+    def to_dict(self):
+        return {"name": "Fee", "type": self.type}
+
 
 class FirstValid(TransactionField):
     """minimum round number after which this transaction is valid."""
 
     def type(self):
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "FirstValid", "type": self.type}
 
 
 class FirstValidTime(TransactionField):
@@ -58,12 +70,18 @@ class FirstValidTime(TransactionField):
     def type(self):
         return "uint64"
 
+    def to_dict(self):
+        return {"name": "FirstValidTime", "type": self.type}
+
 
 class LastValid(TransactionField):
     """maximum round number before which this transaction is valid."""
 
     def type(self):
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "LastValid", "type": self.type}
 
 
 class Note(TransactionField):
@@ -72,12 +90,18 @@ class Note(TransactionField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "Note", "type": self.type}
+
 
 class Lease(TransactionField):
     """A lease to enforces mutual exclusion of transactions."""
 
     def type(self):
         return "[]byte"
+
+    def to_dict(self):
+        return {"name": "Lease", "type": self.type}
 
 
 class Receiver(TransactionField):
@@ -86,12 +110,18 @@ class Receiver(TransactionField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "Receiver", "type": self.type}
+
 
 class Amount(TransactionField):
     """The total amount to sent in microAlgos."""
 
     def type(self):
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "Amount", "type": self.type}
 
 
 class CloseRemainderTo(TransactionField):
@@ -100,12 +130,18 @@ class CloseRemainderTo(TransactionField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "CloseRemainderTo", "type": self.type}
+
 
 class VotePK(TransactionField):
     """The root participation public key."""
 
     def type(self):
         return "[]byte"
+
+    def to_dict(self):
+        return {"name": "VotePK", "type": self.type}
 
 
 class SelectionPK(TransactionField):
@@ -114,12 +150,18 @@ class SelectionPK(TransactionField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "SelectionPK", "type": self.type}
+
 
 class VoteFirst(TransactionField):
     """The first round the participation key is valid."""
 
     def type(self):
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "VoteFirst", "type": self.type}
 
 
 class VoteLast(TransactionField):
@@ -128,12 +170,18 @@ class VoteLast(TransactionField):
     def type(self):
         return "uint64"
 
+    def to_dict(self):
+        return {"name": "VoteLast", "type": self.type}
+
 
 class VoteKeyDilution(TransactionField):
     """Dilution for the 2-level participation key."""
 
     def type(self):
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "VoteKeyDilution", "type": self.type}
 
 
 class Type(TransactionField):
@@ -142,12 +190,18 @@ class Type(TransactionField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "Type", "type": self.type}
+
 
 class TypeEnum(TransactionField):
     """Type of the transaction"""
 
     def type(self):
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "Type", "type": self.type}
 
 
 class XferAsset(TransactionField):
@@ -156,12 +210,18 @@ class XferAsset(TransactionField):
     def type(self):
         return "uint64"
 
+    def to_dict(self):
+        return {"name": "XferAsset", "type": self.type}
+
 
 class AssetAmount(TransactionField):
     """The amount of the asset to be transferred."""
 
     def type(self):
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "AssetAmount", "type": self.type}
 
 
 class AssetSender(TransactionField):
@@ -170,12 +230,18 @@ class AssetSender(TransactionField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "AssetSender", "type": self.type}
+
 
 class AssetReceiver(TransactionField):
     """The receiver of the asset transfer."""
 
     def type(self):
         return "[]byte"
+
+    def to_dict(self):
+        return {"name": "AssetReceiver", "type": self.type}
 
 
 class AssetCloseTo(TransactionField):
@@ -184,6 +250,9 @@ class AssetCloseTo(TransactionField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "AssetCloseTo", "type": self.type}
+
 
 class GroupIndex(TransactionField):
     """Position of this transaction within the atomic group transaction."""
@@ -191,12 +260,18 @@ class GroupIndex(TransactionField):
     def type(self):
         return "uint64"
 
+    def to_dict(self):
+        return {"name": "GroupIndex", "type": self.type}
+
 
 class TxID(TransactionField):
     """The computed ID for this transaction."""
 
     def type(self):
         return "[]byte"
+
+    def to_dict(self):
+        return {"name": "TxID", "type": self.type}
 
 
 class ApplicationID(TransactionField):
@@ -209,6 +284,9 @@ class ApplicationID(TransactionField):
         super().__init__()
         self._version: int = 2
 
+    def to_dict(self):
+        return {"name": "ApplicationID", "type": self.type}
+
 
 class OnCompletion(TransactionField):
     """ApplicationCall transaction on completion action."""
@@ -219,6 +297,9 @@ class OnCompletion(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def to_dict(self):
+        return {"name": "OnCompletion", "type": self.type}
 
 
 class ApplicationArgs(TransactionField):
@@ -233,6 +314,9 @@ class ApplicationArgs(TransactionField):
         s = "" if self._idx < 0 else str(self._idx)
         return "ApplicationArgs " + s
 
+    def to_dict(self):
+        return {"name": "ApplicationArgs", "type": self.type, "index": self._idx}
+
 
 class NumAppArgs(TransactionField):
     """Number of Application Args."""
@@ -243,6 +327,9 @@ class NumAppArgs(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def to_dict(self):
+        return {"name": "NumAppArgs", "type": self.type}
 
 
 class Accounts(TransactionField):
@@ -256,6 +343,9 @@ class Accounts(TransactionField):
     def __str__(self) -> str:
         s = "" if self._idx < 0 else str(self._idx)
         return "Accounts " + s
+
+    def to_dict(self):
+        return {"name": "Accounts", "type": self.type, "index": self._idx}
 
 
 class NumAccounts(TransactionField):
@@ -281,6 +371,9 @@ class Applications(TransactionField):
         s = "" if self._idx < 0 else str(self._idx)
         return "Applications " + s
 
+    def to_dict(self):
+        return {"name": "Applications", "type": self.type, "index": self._idx}
+
 
 class NumApplications(TransactionField):
     """Number of Applications."""
@@ -291,6 +384,9 @@ class NumApplications(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 3
+
+    def to_dict(self):
+        return {"name": "NumApplications", "type": self.type}
 
 
 class Assets(TransactionField):
@@ -305,6 +401,9 @@ class Assets(TransactionField):
         s = "" if self._idx < 0 else str(self._idx)
         return "Assets " + s
 
+    def to_dict(self):
+        return {"name": "Assets", "type": self.type, "index": self._idx}
+
 
 class NumAssets(TransactionField):
     """Number of Assets."""
@@ -315,6 +414,9 @@ class NumAssets(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 3
+
+    def to_dict(self):
+        return {"name": "NumAssets", "type": self.type}
 
 
 class ApprovalProgram(TransactionField):
@@ -327,6 +429,9 @@ class ApprovalProgram(TransactionField):
         super().__init__()
         self._version: int = 2
 
+    def to_dict(self):
+        return {"name": "ApprovalProgram", "type": self.type}
+
 
 class ClearStateProgram(TransactionField):
     """Clear state program of the application."""
@@ -337,6 +442,9 @@ class ClearStateProgram(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def to_dict(self):
+        return {"name": "ClearStateProgram", "type": self.type}
 
 
 class RekeyTo(TransactionField):
@@ -349,6 +457,9 @@ class RekeyTo(TransactionField):
         super().__init__()
         self._version: int = 2
 
+    def to_dict(self):
+        return {"name": "RekeyTo", "type": self.type}
+
 
 class ConfigAsset(TransactionField):
     """AssetID in asset config transaction."""
@@ -359,6 +470,9 @@ class ConfigAsset(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def to_dict(self):
+        return {"name": "ConfigAsset", "type": self.type}
 
 
 class ConfigAssetTotal(TransactionField):
@@ -371,6 +485,9 @@ class ConfigAssetTotal(TransactionField):
         super().__init__()
         self._version: int = 2
 
+    def to_dict(self):
+        return {"name": "ConfigAssetTotal", "type": self.type}
+
 
 class ConfigAssetDecimals(TransactionField):
     """Number of digits to display after the decimal place."""
@@ -381,6 +498,9 @@ class ConfigAssetDecimals(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def to_dict(self):
+        return {"name": "ConfigAssetDecimal", "type": self.type}
 
 
 class ConfigAssetDefaultFrozen(TransactionField):
@@ -393,6 +513,9 @@ class ConfigAssetDefaultFrozen(TransactionField):
         super().__init__()
         self._version: int = 2
 
+    def to_dict(self):
+        return {"name": "ConfigAssetDefaultFrozen", "type": self.type}
+
 
 class ConfigAssetUnitName(TransactionField):
     """Unit name of the asset."""
@@ -403,6 +526,9 @@ class ConfigAssetUnitName(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def to_dict(self):
+        return {"name": "ConfigAssetUnitName", "type": self.type}
 
 
 class ConfigAssetName(TransactionField):
@@ -437,6 +563,9 @@ class ConfigAssetMetadataHash(TransactionField):
         super().__init__()
         self._version: int = 2
 
+    def to_dict(self):
+        return {"name": "ConfigAssetMetadataHash", "type": self.type}
+
 
 class ConfigAssetManager(TransactionField):
     """Manager address, only account that can authorize transactions to re-configure or destroy an asset."""
@@ -447,6 +576,9 @@ class ConfigAssetManager(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def to_dict(self):
+        return {"name": "ConfigAssetManager", "type": self.type}
 
 
 class ConfigAssetReserve(TransactionField):
@@ -459,6 +591,9 @@ class ConfigAssetReserve(TransactionField):
         super().__init__()
         self._version: int = 2
 
+    def to_dict(self):
+        return {"name": "ConfigAssetReserve", "type": self.type}
+
 
 class ConfigAssetFreeze(TransactionField):
     """Freeze account, which is allowed to freeze or unfreeze the asset holding for an account."""
@@ -470,6 +605,9 @@ class ConfigAssetFreeze(TransactionField):
         super().__init__()
         self._version: int = 2
 
+    def to_dict(self):
+        return {"name": "ConfigAssetFreeze", "type": self.type}
+
 
 class ConfigAssetClawback(TransactionField):
     """Clawback address, which can transfer assets from and to any asset holder."""
@@ -480,6 +618,9 @@ class ConfigAssetClawback(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+    def to_dict(self):
+        return {"name": "ConfigAssetClawback", "type": self.type}
 
 
 class FreezeAsset(TransactionField):
@@ -503,6 +644,9 @@ class FreezeAssetAccount(TransactionField):
         super().__init__()
         self._version: int = 2
 
+    def to_dict(self):
+        return {"name": "FreezeAssetAccount", "type": self.type}
+
 
 class FreezeAssetFrozen(TransactionField):
     """The new frozen value, 0 or 1."""
@@ -514,6 +658,9 @@ class FreezeAssetFrozen(TransactionField):
         super().__init__()
         self._version: int = 2
 
+    def to_dict(self):
+        return {"name": "FreezeAssetFrozen", "type": self.type}
+
 
 class GlobalNumUint(TransactionField):
     """Number of global state integers in ApplicationCall."""
@@ -524,6 +671,9 @@ class GlobalNumUint(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 3
+
+    def to_dict(self):
+        return {"name": "GlobalNumUint", "type": self.type}
 
 
 class GlobalNumByteSlice(TransactionField):
@@ -547,6 +697,9 @@ class LocalNumUint(TransactionField):
         super().__init__()
         self._version: int = 3
 
+    def to_dict(self):
+        return {"name": "LocalNumUint", "type": self.type}
+
 
 class LocalNumByteSlice(TransactionField):
     """Number of local state byteslices in ApplicationCall."""
@@ -557,6 +710,9 @@ class LocalNumByteSlice(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 3
+
+    def to_dict(self):
+        return {"name": "LocalNumByteSlice", "type": self.type}
 
 
 class ExtraProgramPages(TransactionField):
@@ -569,6 +725,9 @@ class ExtraProgramPages(TransactionField):
         super().__init__()
         self._version: int = 4
 
+    def to_dict(self):
+        return {"name": "ExtraProgramPages", "type": self.type}
+
 
 class Nonparticipation(TransactionField):
     """Marks an account nonparticipating for rewards."""
@@ -579,6 +738,9 @@ class Nonparticipation(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
+
+    def to_dict(self):
+        return {"name": "Nonparticipation", "type": self.type}
 
 
 class Logs(TransactionField):
@@ -593,6 +755,9 @@ class Logs(TransactionField):
         s = "" if self._idx < 0 else str(self._idx)
         return "Logs " + s
 
+    def to_dict(self):
+        return {"name": "Logs", "type": self.type, "index": self._idx}
+
 
 class NumLogs(TransactionField):
     """Number of log messages(itxn only)."""
@@ -603,6 +768,9 @@ class NumLogs(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
+
+    def to_dict(self):
+        return {"name": "NumLogs", "type": self.type}
 
 
 class CreatedAssetID(TransactionField):
@@ -625,3 +793,6 @@ class CreatedApplicationID(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
+
+    def to_dict(self):
+        return {"name": "CreatedApplicationID", "type": self.type}

@@ -27,12 +27,18 @@ class GlobalField:
     def __str__(self) -> str:
         return self.__class__.__qualname__
 
+    def to_dict(self):
+        pass
+
 
 class GroupSize(GlobalField):
     """Number of transactions in this atomic transaction group."""
 
     def type(self) -> str:
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "GroupSize", "type": self.type}
 
 
 class MinTxnFee(GlobalField):
@@ -41,12 +47,18 @@ class MinTxnFee(GlobalField):
     def type(self) -> str:
         return "uint64"
 
+    def to_dict(self):
+        return {"name": "MinTxnFee", "type": self.type}
+
 
 class ZeroAddress(GlobalField):
     """32 byte address of all zero bytes"""
 
     def type(self) -> str:
         return "[]byte"
+
+    def to_dict(self):
+        return {"name": "ZeroAddress", "type": self.type}
 
 
 class MinBalance(GlobalField):
@@ -55,9 +67,18 @@ class MinBalance(GlobalField):
     def type(self) -> str:
         return "uint64"
 
+    def to_dict(self):
+        return {"name": "MinBalance", "type": self.type}
+
 
 class MaxTxnLife(GlobalField):
     """Maximum Transaction Life in number of rounds."""
+
+    def type(self) -> str:
+        return "uint64"
+
+    def to_dict(self):
+        return {"name": "MaxTxnLife", "type": self.type}
 
 
 class LogicSigVersion(GlobalField):
@@ -70,6 +91,9 @@ class LogicSigVersion(GlobalField):
     def type(self) -> str:
         return "uint64"
 
+    def to_dict(self):
+        return {"name": "LogicSigVersion", "type": self.type}
+
 
 class Round(GlobalField):
     """Current round number."""
@@ -80,6 +104,9 @@ class Round(GlobalField):
 
     def type(self) -> str:
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "Round", "type": self.type}
 
 
 class LatestTimestamp(GlobalField):
@@ -92,6 +119,9 @@ class LatestTimestamp(GlobalField):
     def type(self) -> str:
         return "uint64"
 
+    def to_dict(self):
+        return {"name": "LatestTimestamp", "type": self.type}
+
 
 class CurrentApplicationID(GlobalField):
     """ID of the current application executing."""
@@ -102,6 +132,9 @@ class CurrentApplicationID(GlobalField):
 
     def type(self) -> str:
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "CurrentApplicationID", "type": self.type}
 
 
 class CreatorAddress(GlobalField):
@@ -114,6 +147,9 @@ class CreatorAddress(GlobalField):
     def type(self) -> str:
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "CreatorAddress", "type": self.type}
+
 
 class CurrentApplicationAddress(GlobalField):
     """Address that the current application controls."""
@@ -124,6 +160,9 @@ class CurrentApplicationAddress(GlobalField):
 
     def type(self) -> str:
         return "[]byte"
+
+    def to_dict(self):
+        return {"name": "CurrentApplicationAddress", "type": self.type}
 
 
 class GroupID(GlobalField):
@@ -139,3 +178,6 @@ class GroupID(GlobalField):
 
     def type(self) -> str:
         return "[]byte"
+
+    def to_dict(self):
+        return {"name": "GroupID", "type": self.type}

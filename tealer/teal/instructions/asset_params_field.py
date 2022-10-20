@@ -27,12 +27,18 @@ class AssetParamsField:
     def __str__(self) -> str:
         return self.__class__.__qualname__
 
+    def to_dict(self):
+        pass
+
 
 class AssetTotal(AssetParamsField):
     """Total number of units of this asset."""
 
     def type(self):
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "AssetTotal", "type": self.type}
 
 
 class AssetDecimals(AssetParamsField):
@@ -41,12 +47,18 @@ class AssetDecimals(AssetParamsField):
     def type(self):
         return "uint64"
 
+    def to_dict(self):
+        return {"name": "AssetDecimal", "type": self.type}
+
 
 class AssetDefaultFrozen(AssetParamsField):
     """Whether the asset is frozen by default or not."""
 
     def type(self):
         return "uint64"
+
+    def to_dict(self):
+        return {"name": "AssetDefaultFrozen", "type": self.type}
 
 
 class AssetUnitName(AssetParamsField):
@@ -55,12 +67,18 @@ class AssetUnitName(AssetParamsField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "AssetUnitName", "type": self.type}
+
 
 class AssetName(AssetParamsField):
     """The asset name."""
 
     def type(self):
         return "[]byte"
+
+    def to_dict(self):
+        return {"name": "AssetName", "type": self.type}
 
 
 class AssetURL(AssetParamsField):
@@ -69,12 +87,18 @@ class AssetURL(AssetParamsField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "AssetURL", "type": self.type}
+
 
 class AssetMetadataHash(AssetParamsField):
     """32 byte commitment to some unspecified asset metadata."""
 
     def type(self):
         return "[]byte"
+
+    def to_dict(self):
+        return {"name": "AssetMetadataHash", "type": self.type}
 
 
 class AssetManager(AssetParamsField):
@@ -87,6 +111,9 @@ class AssetManager(AssetParamsField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "AssetManager", "type": self.type}
+
 
 class AssetReserve(AssetParamsField):
     """Reserve address of the asset.
@@ -98,6 +125,9 @@ class AssetReserve(AssetParamsField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "AssetReserve", "type": self.type}
+
 
 class AssetFreeze(AssetParamsField):
     """Freeze address of the asset.
@@ -105,6 +135,9 @@ class AssetFreeze(AssetParamsField):
     The freeze account is allowed to freeze or unfreeze the asset holdings
     for a specific account.
     """
+
+    def to_dict(self):
+        return {"name": "AssetFreeze", "type": self.type}
 
 
 class AssetClawback(AssetParamsField):
@@ -117,6 +150,9 @@ class AssetClawback(AssetParamsField):
     def type(self):
         return "[]byte"
 
+    def to_dict(self):
+        return {"name": "AssetClawback", "type": self.type}
+
 
 class AssetCreator(AssetParamsField):
     """Creator address of this asset."""
@@ -127,3 +163,6 @@ class AssetCreator(AssetParamsField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
+
+    def to_dict(self):
+        return {"name": "AssetCreator", "type": self.type}

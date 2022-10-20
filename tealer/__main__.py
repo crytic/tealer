@@ -206,6 +206,13 @@ def parse_args(
         const="cfg.dot",
     )
 
+    parser.add_argument(
+        "--json-cfg",
+        nargs="?",
+        help="export cfg in JSON format to given file, default cfg.json",
+        const="cfg.json",
+    )
+
     group_detector = parser.add_argument_group("Detectors")
     group_printer = parser.add_argument_group("Printers")
     group_misc = parser.add_argument_group("Additional options")
@@ -518,6 +525,21 @@ def main() -> None:
         if args.print_cfg is not None:
             handle_print_cfg(args, teal)
             return
+
+        if args.json_cfg is not None:
+            bbs = [bb.to_dict() for bb in teal.bbs]
+            subs = [
+                {
+                    "label": sub.blocks[0].entry_instr.label,
+                    "input": sub.input_types,
+                    "output": sub.output_types,
+                }
+                for sub in teal.subroutines
+            ]
+            with (open(args.json_cfg, "w") as file):
+                import json
+
+                json.dump({"blocks": bbs, "subroutines": subs}, file)
 
         results_detectors, _results_printers = handle_detectors_and_printers(
             args, teal, detector_classes, printer_classes
