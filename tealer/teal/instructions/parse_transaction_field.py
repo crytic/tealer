@@ -77,6 +77,8 @@ TX_FIELD_TXT_TO_OBJECT = {
     "NumLogs": transaction_field.NumLogs,
     "CreatedAssetID": transaction_field.CreatedAssetID,
     "CreatedApplicationID": transaction_field.CreatedApplicationID,
+    "LastLog": transaction_field.LastLog,
+    "StateProofPK": transaction_field.StateProofPK,
 }
 
 

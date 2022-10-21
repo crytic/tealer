@@ -1,0 +1,58 @@
+#pragma version 6
+
+// new txn fields LastLog, StateProofPK
+txn LastLog
+txn StateProofPK
+
+// new global fields OpcodeBudget, CallerApplicationID, CallerApplicationAddress
+global OpcodeBudget
+global CallerApplicationID
+global CallerApplicationAddress
+
+// new ins: acct_params_get f, f can be AcctBalance, AcctMinBalance, AcctAuthAddr,
+
+acct_params_get AcctBalance
+acct_params_get AcctMinBalance
+acct_params_get AcctAuthAddr
+
+// new ins: bsqrt
+int 2
+bsqrt
+
+// new ins: divw
+
+int 100
+int 99
+int 2
+divw
+
+// new ins: itxn_next
+
+itxn_next
+
+// new ins: gitxn t f, t is transaction index and f is transaction field
+
+gitxn 1 LastLog
+gitxn 2 StateProofPK
+gitxn 3 Fee
+
+// new ins: gitxna t f i, t is transaction index, f is array transaction field and i is array index
+
+gitxna 1 ApplicationArgs 0
+gitxna 2 Accounts 1
+gitxna 3 Assets 0
+
+// new ins: gloadss
+
+gloadss
+
+// newins: itxnas f. A(top) th value of array transaction field f.
+
+int 0
+itxnas ApplicationArgs
+
+// new ins: gitxnas t f, A(top) th value of array transaction field of t th transaction
+
+gitxnas 1 ApplicationArgs
+gitxnas 2 Accounts
+gitxnas 3 Assets

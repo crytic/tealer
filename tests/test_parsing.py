@@ -33,6 +33,7 @@ TARGETS = [
     "tests/parsing/multiple_retsub.teal",
     "tests/parsing/subroutine_jump_back.teal",
     "tests/parsing/teal6-acct_params_get.teal",
+    "tests/parsing/teal6-instructions.teal",    
 ]
 
 TEST_CODE = """
@@ -78,6 +79,7 @@ def test_parsing(target: str) -> None:
         teal = parse_teal(f.read())
     # print instruction to trigger __str__ on each ins
     for i in teal.instructions:
+        assert not isinstance(i, instructions.UnsupportedInstruction) , f'ins "{i}" is not supported'
         print(i, i.cost)
 
 

@@ -34,6 +34,7 @@ from tealer.utils.comparable_enum import ComparableEnum
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
+    from tealer.teal.instructions.acct_params_field import AcctParamsField
 
 
 class ContractType(ComparableEnum):
@@ -3506,3 +3507,280 @@ class Substring3(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
+
+
+class AcctParamsGet(Instruction):
+    """`acct_params_get i` allows reading param field of a given account.
+
+    Immediates:
+        i (AcctParamsField): field to get the value of.
+
+    Pops:
+        A (any): account to read the field from.
+
+    Pushes:
+        did_exist (top)(flag): 1 if the account existed or else 0.
+        value (any): pushes the value of account A's field i.
+    """
+
+    def __init__(self, field: "AcctParamsField"):
+        super().__init__()
+        self._field: "AcctParamsField" = field
+        self._version: int = 6
+        self._mode: ContractType = ContractType.STATEFULL
+
+    @property
+    def field(self) -> "AcctParamsField":
+        """Account parameter field being accessed."""
+        return self._field
+
+    def __str__(self) -> str:
+        return f"acct_params_get {self._field}"
+
+
+class BSqrt(Instruction):
+    """`bsqrt` floor square root.
+
+    For a given A, Calculates the largest integer I such that I^2 <= A.
+
+    Pops:
+        A (top)([]byte): byte value which will be interpreted as
+            big-endian unsigned integer.
+
+    Pushes:
+        pushes byte representation(big-endian) of I.
+
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 6
+
+    @property
+    def cost(self) -> int:
+        """cost of executing bsqrt instruction.
+
+        overrides cost property. bsqrt instruction is introduced in Teal version 6.
+        if the cost property is accessed for contracts with lesser version,
+        value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= 6:
+            return 40
+        return 0
+
+    def __str__(self) -> str:
+        return "bsqrt"
+
+
+class Itxn_next(Instruction):
+    """`itxn_next` signifies start of a new inner transaction in the same transaction group.
+
+    It initializes Sender to the application address, Fee to minimum allowable,
+    taking into account MinTxnFee and credit from overpaying in earlier transactions.
+    Sets FirstValid/LastValid to the values in the top-level transaction, and all other
+    fields to zero values.
+
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 6
+        self._mode: ContractType = ContractType.STATEFULL
+
+
+class Divw(Instruction):
+    """`divw` divides uint128 value with a uint64 value and pushes the uint64 result.
+
+    Pops:
+        C (top)(uint64): Divisor.
+        B (uint64): value of lower 64 bits of dividend.
+        A (uint64): value of high 64 bits of dividend.
+
+    Pushes:
+        pushes result = (A,B)/C (floor division).
+
+    Errors:
+        Fails if C == 0 or if result overflows
+
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 6
+
+
+class Gitxn(Instruction):
+    """`gitxn t f` pushes value of transaction field f of transaction t in the last inner group submitted.
+
+    Immediates:
+        t (int): index of the transaction in the inner transaction group.
+        f (TransactionField): transaction field whose value is being accessed.
+
+    Pushes:
+        push value of trasaction field f of transaction t of inner transaction group.
+
+    """
+
+    def __init__(self, idx: int, field: TransactionField):
+        super().__init__()
+        self._idx = idx
+        self._field: TransactionField = field
+        self._version = 6
+        self._mode: ContractType = ContractType.STATEFULL
+
+    @property
+    def idx(self) -> int:
+        """Index of the transaction in the last inner group"""
+        return self._idx
+
+    @property
+    def field(self) -> TransactionField:
+        """Transaction field of the instruction being accessed."""
+        return self._field
+
+    def __str__(self) -> str:
+        return f"gitxn {self._idx} {self._field}"
+
+
+class Gitxna(Instruction):
+    """`gitxna t f i` pushes ith value of array transaction field f of transaction t in the last inner group submitted.
+
+    Few transaction fields namely "ApplicationArgs", "Accounts",
+    "Applications", "Logs" are arrays and this instruction allows
+    accesing their values by index.
+
+    Immediates:
+        t (int): index of the transaction in the last inner group
+        f (TransactionField): Array transaction field whose value is being accessed.
+        i (int): index into the array.
+
+    Pushes:
+        pushes value at index i of array transaction field f of transaction t.
+
+    """
+
+    def __init__(self, idx: int, field: TransactionField):
+        super().__init__()
+        self._idx = idx
+        self._field: TransactionField = field
+        self._version: int = 6
+        self._mode: ContractType = ContractType.STATEFULL
+
+    @property
+    def idx(self) -> int:
+        """Index of the transaction in the last inner transaction group."""
+        return self._idx
+
+    @property
+    def field(self) -> TransactionField:
+        """Array transaction field being accessed."""
+        return self._field
+
+    def __str__(self) -> str:
+        return f"gitxna {self._idx} {self._field}"
+
+
+class Gloadss(Instruction):
+    """`gloadss` loads value at scratch space position B of transaction A.
+
+    Pops:
+        B (top)(int): position of the scratch space to load the value from.
+        A (int): index of the transaction in the group.
+
+    Pushes:
+        pushes the value at position B of scratch space of transaction A.
+
+    Errors:
+        fails if transaction A is not a ApplicationCall and A < GroupIndex
+        i.e if transaction is not executed before this transaction.
+
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 6
+        self._mode: ContractType = ContractType.STATEFULL
+
+    def __str__(self) -> str:
+        return "gloadss"
+
+
+class Itxnas(Instruction):
+    """`itxnas f` pushes a value of array transaction field f of last inner transaction.
+
+    Few transaction fields namely "ApplicationArgs", "Accounts",
+    "Applications", "Logs" are arrays and this instruction allows
+    accesing their values by index.
+
+    Immediates:
+        f (TransactionField): Array transaction field whose value is being accessed.
+
+    Pops:
+        X (int): index into the array.
+
+    Pushes:
+        pushes value at index X of array transaction field f of last inner transaction.
+
+    """
+
+    def __init__(self, field: TransactionField):
+        super().__init__()
+        self._field: TransactionField = field
+        self._version: int = 6
+        self._mode: ContractType = ContractType.STATEFULL
+
+    @property
+    def field(self) -> TransactionField:
+        """Array transaction field being accessed."""
+        return self._field
+
+    def __str__(self) -> str:
+        return f"itxnas {self._field}"
+
+
+class Gitxnas(Instruction):
+    """`gitxnas t f` pushes a value of array transaction field f of transaction t in the last inner group using top of the stack as index.
+
+    Few transaction fields namely "ApplicationArgs", "Accounts",
+    "Applications", "Logs" are arrays and this instruction allows
+    accesing their values by index.
+
+    Immediates:
+        t (int): index of the transaction in the last inner transaction group
+        f (TransactionField): Array transaction field whose value is being accessed.
+
+    Pops:
+        X (int): index into the array.
+
+    Pushes:
+        pushes value at index X of array transaction field f of transaction t of the last inner transaction group.
+
+    """
+
+    def __init__(self, idx: int, field: TransactionField):
+        super().__init__()
+        self._idx: int = idx
+        self._field: TransactionField = field
+        self._version: int = 6
+        self._mode: ContractType = ContractType.STATEFULL
+
+    @property
+    def idx(self) -> int:
+        """Index into array of array transaction field."""
+        return self._idx
+
+    @property
+    def field(self) -> TransactionField:
+        """Transaction field being accessed."""
+        return self._field
+
+    def __str__(self) -> str:
+        return f"Gitxnas {self._idx} {self._field}"

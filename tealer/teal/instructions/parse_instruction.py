@@ -32,6 +32,7 @@ import base64
 
 from tealer.teal.instructions import instructions
 from tealer.teal.instructions.instructions import Instruction
+from tealer.teal.instructions.parse_acct_params_field import parse_acct_params_field
 from tealer.teal.instructions.parse_app_params_field import parse_app_params_field
 from tealer.teal.instructions.parse_asset_holding_field import parse_asset_holding_field
 from tealer.teal.instructions.parse_asset_params_field import parse_asset_params_field
@@ -43,12 +44,13 @@ class ParseError(Exception):
     """Exception class to represent instruction parsing errors."""
 
 
-def handle_gtxn(x: str) -> instructions.Gtxn:
+def handle_gtxn(x: str, itxn: bool = False) -> Instruction:
     """Parse gtxn instruction.
 
     Args:
         x: proper string representation of gtxn instruction immediate
             arguments.
+        itxn: True if the instruction is gitxn
 
     Returns:
         Gtxn instruction object created after parsing immediate
@@ -58,15 +60,18 @@ def handle_gtxn(x: str) -> instructions.Gtxn:
     split = x.split(" ")
     idx = _parse_int(split[0])
     tx_field = parse_transaction_field(" ".join(split[1:]), False)
+    if itxn:
+        return instructions.Gitxn(idx, tx_field)
     return instructions.Gtxn(idx, tx_field)
 
 
-def handle_gtxna(x: str) -> instructions.Gtxna:
+def handle_gtxna(x: str, itxn: bool = False) -> Instruction:
     """Parse gtxna instruction.
 
     Args:
         x: proper string representation of gtxna instruction immediate
             arguments.
+        itxn: True if the instruction is gitxna
 
     Returns:
         Gtxna instruction object created after parsing immediate
@@ -76,15 +81,18 @@ def handle_gtxna(x: str) -> instructions.Gtxna:
     split = x.split(" ")
     idx = _parse_int(split[0])
     tx_field = parse_transaction_field(" ".join(split[1:]), False)
+    if itxn:
+        return instructions.Gitxna(idx, tx_field)
     return instructions.Gtxna(idx, tx_field)
 
 
-def handle_gtxnas(x: str) -> instructions.Gtxnas:
+def handle_gtxnas(x: str, itxn: bool = False) -> Instruction:
     """Parse gtxnas instruction.
 
     Args:
         x: proper string representation of gtxnas instruction
             immediate arguments.
+        itxn: True if the instruction is gitxnas
 
     Returns:
         Gtxnas instruction object created after parsing immediate
@@ -94,6 +102,8 @@ def handle_gtxnas(x: str) -> instructions.Gtxnas:
     args = x.split(" ")
     idx = _parse_int(args[0])
     tx_field = parse_transaction_field(args[1], True)
+    if itxn:
+        return instructions.Gitxnas(idx, tx_field)
     return instructions.Gtxnas(idx, tx_field)
 
 
@@ -296,6 +306,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
         lambda x: instructions.Gload(_parse_int(x.split(" ")[0]), _parse_int(x.split(" ")[1])),
     ),
     ("gloads ", lambda x: instructions.Gloads(_parse_int(x))),
+    ("gloadss", lambda _x: instructions.Gloadss()),
     ("gaid ", lambda x: instructions.Gaid(_parse_int(x))),
     ("gaids", lambda x: instructions.Gaids()),
     ("loads", lambda _x: instructions.Loads()),
@@ -348,6 +359,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("asset_holding_get ", lambda x: instructions.AssetHoldingGet(parse_asset_holding_field(x))),
     ("asset_params_get ", lambda x: instructions.AssetParamsGet(parse_asset_params_field(x))),
     ("app_params_get ", lambda x: instructions.AppParamsGet(parse_app_params_field(x))),
+    ("acct_params_get ", lambda x: instructions.AcctParamsGet(parse_acct_params_field(x))),
     ("%", lambda x: instructions.Modulo()),
     ("!=", lambda x: instructions.Neq()),
     ("!", lambda x: instructions.Not()),
@@ -383,13 +395,19 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("b^", lambda x: instructions.BBitwiseXor()),
     ("b~", lambda x: instructions.BBitwiseInvert()),
     ("bzero", lambda x: instructions.BZero()),
+    ("bsqrt", lambda x: instructions.BSqrt()),
     ("log", lambda _x: instructions.Log()),
     ("itxn_begin", lambda _x: instructions.Itxn_begin()),
+    ("itxn_next", lambda _x: instructions.Itxn_next()),
     ("itxn_field ", lambda x: instructions.Itxn_field(parse_transaction_field(x, False))),
     ("itxn_submit", lambda _x: instructions.Itxn_submit()),
     ("itxn ", lambda x: instructions.Itxn(parse_transaction_field(x, False))),
     ("itxna ", lambda x: instructions.Itxna(parse_transaction_field(x, False))),
+    ("gitxn ", lambda x: handle_gtxn(x, itxn=True)),
+    ("gitxna ", lambda x: handle_gtxna(x, itxn=True)),
+    ("gitxnas ", lambda x: handle_gtxnas(x, itxn=True)),
     ("txnas ", lambda x: instructions.Txnas(parse_transaction_field(x, True))),
+    ("itxnas ", lambda x: instructions.Itxnas(parse_transaction_field(x, True))),
     ("gtxnas ", lambda x: handle_gtxnas(x)),
     ("gtxnsas ", lambda x: instructions.Gtxnsas(parse_transaction_field(x, True))),
     ("args", lambda _x: instructions.Args()),
@@ -400,6 +418,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("mulw", lambda x: instructions.Mulw()),
     ("addw", lambda x: instructions.Addw()),
     ("divmodw", lambda x: instructions.Divmodw()),
+    ("divw", lambda x: instructions.Divw()),
     ("expw", lambda x: instructions.Expw()),
     ("exp", lambda x: instructions.Exp()),
     ("shl", lambda x: instructions.Shl()),

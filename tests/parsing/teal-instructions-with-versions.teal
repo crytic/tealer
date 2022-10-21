@@ -1,4 +1,4 @@
-#pragma version 5
+#pragma version 6
 err                 // (version: 1, mode: Any)
 assert              // (version: 3, mode: Any)
 int 1               // (version: 1, mode: Any)
@@ -143,3 +143,16 @@ len                 // (version: 1, mode: Any)
 bytecblock          // (version: 1, mode: Any)
 substring 0 1       // (version: 2, mode: Any)
 substring3          // (version: 2, mode: Any)
+
+
+// version 6
+
+acct_params_get AcctBalance     // (version: 6, mode: Stateful)
+bsqrt                           // (version: 6, mode: Any)
+divw                            // (version: 6, mode: Any)
+itxn_next                       // (version: 6, mode: Stateful)
+gitxn 1 Fee                     // (version: 6, mode: Stateful)
+gitxna 1 ApplicationArgs 0      // (version: 6, mode: Stateful)
+gloadss                         // (version: 6, mode: Stateful)
+itxnas ApplicationArgs          // (version: 6, mode: Stateful)
+gitxnas 1 ApplicationArgs       // (version: 6, mode: Stateful)
