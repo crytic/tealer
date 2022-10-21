@@ -510,7 +510,7 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
             ins = f(line[len(key) :].strip())
             ins.comment = comment
             return ins
-    if line:
-        print(f"Not found {line}")
-        return instructions.UnsupportedInstruction(line)
-    return None
+
+    # line is checked to not empty at the start of the function.
+    print(f"Not found {line}")
+    return instructions.UnsupportedInstruction(line)

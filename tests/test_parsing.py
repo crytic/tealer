@@ -1,3 +1,4 @@
+from ast import parse
 from typing import Type, Tuple
 import pytest
 
@@ -72,6 +73,9 @@ byte "1" "2"    // byte expects only one immediate arg.
 byte sdf        // incorrect byte format
 """
 
+unsupported_instructions = """
+not an instruction
+"""
 
 @pytest.mark.parametrize("target", TARGETS)  # type: ignore
 def test_parsing(target: str) -> None:
@@ -153,3 +157,16 @@ def test_invalid_instructions() -> None:
     for line in invalid_instructions.strip().splitlines():
         with pytest.raises(ParseError):
             parse_line(line)
+
+
+def test_unsupported_instructions() -> None:
+    for line in unsupported_instructions.strip().splitlines():
+        ins = parse_line(line)
+        assert isinstance(ins, instructions.UnsupportedInstruction)
+
+def test_field_properties() -> None:
+    ins = parse_line("gitxnas 1 ApplicationArgs")
+    assert isinstance(ins, instructions.Gitxnas) and ins.idx == 1
+
+    ins = parse_line("gitxna 1 ApplicationArgs 0")
+    assert isinstance(ins, instructions.Gitxna) and ins.idx == 1

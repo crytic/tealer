@@ -47,6 +47,7 @@ from tealer.teal.instructions.transaction_field import TransactionField
 from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
+from tealer.teal.instructions.acct_params_field import AcctParamsField
 from tealer.teal.teal import Teal
 
 
@@ -425,7 +426,14 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
         else:
             field = getattr(ins, "field", None)
             if field is not None and isinstance(
-                field, (TransactionField, AssetHoldingField, AssetParamsField, AppParamsField)
+                field,
+                (
+                    TransactionField,
+                    AssetHoldingField,
+                    AssetParamsField,
+                    AppParamsField,
+                    AcctParamsField,
+                ),
             ):
                 if program_version < field.version:
                     print(

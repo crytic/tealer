@@ -30,11 +30,11 @@ from tealer.teal.instructions.transaction_field import TransactionField
 from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
+from tealer.teal.instructions.acct_params_field import AcctParamsField
 from tealer.utils.comparable_enum import ComparableEnum
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
-    from tealer.teal.instructions.acct_params_field import AcctParamsField
 
 
 class ContractType(ComparableEnum):
@@ -3523,14 +3523,14 @@ class AcctParamsGet(Instruction):
         value (any): pushes the value of account A's field i.
     """
 
-    def __init__(self, field: "AcctParamsField"):
+    def __init__(self, field: AcctParamsField):
         super().__init__()
-        self._field: "AcctParamsField" = field
+        self._field: AcctParamsField = field
         self._version: int = 6
         self._mode: ContractType = ContractType.STATEFULL
 
     @property
-    def field(self) -> "AcctParamsField":
+    def field(self) -> AcctParamsField:
         """Account parameter field being accessed."""
         return self._field
 
