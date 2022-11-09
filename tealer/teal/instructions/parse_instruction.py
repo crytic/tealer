@@ -328,6 +328,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("sha256", lambda _x: instructions.Sha256()),
     ("sha512_256", lambda _x: instructions.Sha512_256()),
     ("keccak256", lambda _x: instructions.Keccak256()),
+    ("ed25519verify_bare", lambda _x: instructions.Ed25519verify_bare()),
     ("ed25519verify", lambda _x: instructions.Ed25519verify()),
     ("ecdsa_verify", lambda x: instructions.Ecdsa_verify(x)),
     ("ecdsa_pk_decompress", lambda x: instructions.Ecdsa_pk_decompress(x)),
@@ -446,6 +447,14 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
         lambda x: instructions.Substring(_parse_int(x.split(" ")[0]), _parse_int(x.split(" ")[1])),
     ),
     ("substring3", lambda x: instructions.Substring3()),
+    ("replace2 ", lambda x: instructions.Replace2(_parse_int(x))),
+    ("replace3", lambda _x: instructions.Replace3()),
+    ("replace", lambda x: instructions.Replace(None if x == "" else _parse_int(x))),
+    ("base64_decode ", lambda x: instructions.Base64_decode(x)),
+    ("json_ref ", lambda x: instructions.Json_ref(x)),
+    ("sha3_256", lambda _x: instructions.Sha3_256()),
+    ("vrf_verify ", lambda x: instructions.Vrf_verify(x)),
+    ("block ", lambda x: instructions.Block(x)),
 ]
 
 
@@ -467,7 +476,6 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
         ParseError: raises ParseError if the instruction present in the given
             line is not correctly formatted and if is not valid.
     """
-
     if not line.strip():
         return None
 

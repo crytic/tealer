@@ -7,14 +7,15 @@ string representation.
 Most of the transaction fields doesn't have immediate arguments
 and their string representation consists of single sequence of characters.
 Few transaction fields are arrays and have single immediate argument
-which is the index into the array. Transaction fields with single immediate
-argument are parsed case by case. For other fields, a map(dict) from the
-string representation of transaction field to corresponding class is
-constructed and are parsed by a simple lookup.
+which is the index into the array. Array Transaction fields with single immediate
+argument are parsed using ARRAY_TX_FIELD_TO_OBJECT. For other fields,
+TX_FIELD_TXT_TO_OJECT is used as lookup.
 
 Attributes:
     TX_FIELD_TXT_TO_OBJECT: Map(dict) from string representation
         of transaction field to the corresponding class.
+    ARRAY_TX_FIELD_TXT_TO_OBJECT: Map(dict) from string representation
+        of array transaction field to the corresponding class.
 """
 
 from tealer.teal.instructions import transaction_field
@@ -79,6 +80,19 @@ TX_FIELD_TXT_TO_OBJECT = {
     "CreatedApplicationID": transaction_field.CreatedApplicationID,
     "LastLog": transaction_field.LastLog,
     "StateProofPK": transaction_field.StateProofPK,
+    "NumApprovalProgramPages": transaction_field.NumApprovalProgramPages,
+    "NumClearStateProgramPages": transaction_field.NumClearStateProgramPages,
+}
+
+
+ARRAY_TX_FIELD_TO_OBJECT = {
+    "Accounts": transaction_field.Accounts,
+    "ApplicationArgs": transaction_field.ApplicationArgs,
+    "Applications": transaction_field.Applications,
+    "Assets": transaction_field.Assets,
+    "Logs": transaction_field.Logs,
+    "ApprovalProgramPages": transaction_field.ApprovalProgramPages,
+    "ClearStateProgramPages": transaction_field.ClearStateProgramPages,
 }
 
 
@@ -115,23 +129,11 @@ def parse_transaction_field(tx_field: str, use_stack: bool) -> transaction_field
     Returns:
         object of class corresponding to the given transaction field.
     """
-
-    if tx_field.startswith("Accounts"):
-        return transaction_field.Accounts(
-            -1 if use_stack else _parse_int(tx_field[len("Accounts ") :])
-        )
-    if tx_field.startswith("ApplicationArgs"):
-        return transaction_field.ApplicationArgs(
-            -1 if use_stack else _parse_int(tx_field[len("ApplicationArgs ") :])
-        )
-    if tx_field.startswith("Applications"):
-        return transaction_field.Applications(
-            -1 if use_stack else _parse_int(tx_field[len("Applications ") :])
-        )
-    if tx_field.startswith("Assets"):
-        return transaction_field.Assets(-1 if use_stack else _parse_int(tx_field[len("Assets ") :]))
-    if tx_field.startswith("Logs"):
-        return transaction_field.Logs(-1 if use_stack else _parse_int(tx_field[len("Logs ") :]))
+    # parse array transaction fields
+    for field in ARRAY_TX_FIELD_TO_OBJECT:
+        if tx_field.startswith(field):
+            index = -1 if use_stack else _parse_int(tx_field[len(field) + 1 :])  # +1 for space(" ")
+            return ARRAY_TX_FIELD_TO_OBJECT[field](index)
 
     tx_field = tx_field.replace(" ", "")
     return TX_FIELD_TXT_TO_OBJECT[tx_field]()
