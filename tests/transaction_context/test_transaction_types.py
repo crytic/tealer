@@ -104,11 +104,6 @@ end:
     return
 """
 
-# NOTE: for the blocks 9, 10, 11 which are part of the loop, the values are not exact. given values are superset of actual possible values.
-# This is mostly because of conservative nature of analysis. For every block, by default, set of possible values is considered to be equal to universal set.
-# blocks that are part of loop body are not constrained using the blocks information that are not in the loop body.
-# Solution for this is to find the dominator block for a given block and use the dominator block information while considering the predecessor information
-
 CAN_UPDATE_LOOP_TX_TYPES = [
     [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplCreation],
     [TealerTransactionType.ApplCreation],
@@ -119,10 +114,64 @@ CAN_UPDATE_LOOP_TX_TYPES = [
     [TealerTransactionType.ApplNoOp],
     [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn],
     [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplCreation],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplCreation],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplCreation],
+    [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
+    [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
+    [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
 ]
+
+SUBROUTINE = """
+#pragma version 5
+b main
+push_zero:
+    int 0
+    retsub
+is_even:
+    int 2
+    %
+    bz return_1
+    callsub push_zero
+    retsub
+return_1:
+    int 1
+    retsub
+main:
+    int 4
+    bz path_1
+    b path_2
+path_1:
+   txn OnCompletion
+   int UpdateApplication
+   ==
+   assert
+   callsub is_even
+   int 1
+   return
+path_2:
+   txn OnCompletion
+   int DeleteApplication
+   ==
+   assert
+   callsub is_even
+   int 1
+   int 1
+   return
+"""
+
+SUBROUTINE_TX_TYPES = [
+    [TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
+    [TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
+    [TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
+    [TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
+    [TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
+    [TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
+    [TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
+    [TealerTransactionType.ApplDeleteApplication],
+    [TealerTransactionType.ApplUpdateApplication],
+    [TealerTransactionType.ApplUpdateApplication],
+    [TealerTransactionType.ApplDeleteApplication],
+    [TealerTransactionType.ApplDeleteApplication],
+]
+
 
 CAN_UPDATE_GTXN_0 = """
 #pragma version 2
@@ -210,12 +259,13 @@ end:
 ALL_TESTS_TXN = [
     (CAN_UPDATE, CAN_UPDATE_TX_TYPES, -1),
     (CAN_UPDATE_LOOP, CAN_UPDATE_LOOP_TX_TYPES, -1),
+    (SUBROUTINE, SUBROUTINE_TX_TYPES, -1),
     (CAN_UPDATE_GTXN_0, CAN_UPDATE_TX_TYPES, 0),
     (CAN_UPDATE_LOOP_GTXN_0, CAN_UPDATE_LOOP_TX_TYPES, 0),
 ]
 
 @pytest.mark.parametrize("test", ALL_TESTS_TXN)  # type: ignore
-def test_cfg_construction(test: Tuple[str, List[List[int]]]) -> None:
+def test_tx_types(test: Tuple[str, List[List[int]]]) -> None:
     code, tx_types_list, idx = test
     teal = parse_teal(code.strip())
 
