@@ -91,7 +91,7 @@ ALL_TESTS_TXN = [
 
 
 @pytest.mark.parametrize("test", ALL_TESTS_TXN)  # type: ignore
-def test_cfg_construction(test: Tuple[str, List[List[int]]]) -> None:
+def test_addr_fields(test: Tuple[str, List[List[int]]]) -> None:
     code, values, idx = test
     teal = parse_teal(code.strip())
 

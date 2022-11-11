@@ -66,11 +66,11 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         if ANY_ADDRESS in a or ANY_ADDRESS in b:
             return self._universal_set()
 
-        if NO_ADDRESS in a and NO_ADDRESS in b:  # pylint: disable=no-else-return
+        if NO_ADDRESS in a and NO_ADDRESS in b:
             return self._null_set()
-        elif NO_ADDRESS in a:
+        if NO_ADDRESS in a:
             return b
-        elif NO_ADDRESS in b:
+        if NO_ADDRESS in b:
             return a
 
         return a | b
@@ -80,12 +80,12 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         if NO_ADDRESS in a or NO_ADDRESS in b:
             return self._null_set()
 
-        if ANY_ADDRESS in a and ANY_ADDRESS in b:  # pylint: disable=no-else-return
+        if ANY_ADDRESS in a and ANY_ADDRESS in b:
             return self._universal_set()
-        elif ANY_ADDRESS in a:
-            return b
-        elif ANY_ADDRESS in b:
-            return a
+        if ANY_ADDRESS in a:
+            return set(b)
+        if ANY_ADDRESS in b:
+            return set(a)
 
         return a & b
 
@@ -103,7 +103,8 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
             return set([ins.addr])
         return self._universal_set()
 
-    def _is_txn_or_gtxn(self, key: str, ins: "Instruction") -> bool:  # pylint: disable=no-self-use
+    @staticmethod
+    def _is_txn_or_gtxn(key: str, ins: "Instruction") -> bool:
         if key.startswith("GTXN_"):
             idx = int(key[len("GTXN_") :][:2])
             field = key[len("GTXN_") + 2 + 1 :]
@@ -140,23 +141,20 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
     def _get_asserted(self, key: str, ins_stack: List["Instruction"]) -> Tuple[Set, Set]:
         return self._get_asserted_txn_gtxn(key, ins_stack)
 
-    def _set_rekeyto_values(
-        self, ctx: "BlockTransactionContext", addr_values: Set[str]
-    ) -> None:  # pylint: disable=no-self-use
+    @staticmethod
+    def _set_rekeyto_values(ctx: "BlockTransactionContext", addr_values: Set[str]) -> None:
         ctx.any_rekeyto = ANY_ADDRESS in addr_values
         ctx.none_rekeyto = NO_ADDRESS in addr_values
         ctx.rekeyto = list(addr_values - set([ANY_ADDRESS, NO_ADDRESS]))
 
-    def _set_closeto_values(
-        self, ctx: "BlockTransactionContext", addr_values: Set[str]
-    ) -> None:  # pylint: disable=no-self-use
+    @staticmethod
+    def _set_closeto_values(ctx: "BlockTransactionContext", addr_values: Set[str]) -> None:
         ctx.any_closeto = ANY_ADDRESS in addr_values
         ctx.none_closeto = NO_ADDRESS in addr_values
         ctx.closeto = list(addr_values - set([ANY_ADDRESS, NO_ADDRESS]))
 
-    def _set_assetcloseto_values(  # pylint: disable=no-self-use
-        self, ctx: "BlockTransactionContext", addr_values: Set[str]
-    ) -> None:
+    @staticmethod
+    def _set_assetcloseto_values(ctx: "BlockTransactionContext", addr_values: Set[str]) -> None:
         ctx.any_assetcloseto = ANY_ADDRESS in addr_values
         ctx.none_assetcloseto = NO_ADDRESS in addr_values
         ctx.assetcloseto = list(addr_values - set([ANY_ADDRESS, NO_ADDRESS]))
