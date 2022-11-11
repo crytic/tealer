@@ -127,6 +127,14 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> Non
         bb.add_instruction(ins)
         ins.bb = bb
 
+        if ins.callsub_ins is not None and ins.bb is not None:
+            # callsub is before this instruction in the code. so, bb should have been assigned
+            # already
+            callsub_basic_block = ins.callsub_ins.bb
+            if callsub_basic_block is not None:
+                ins.bb.callsub_block = callsub_basic_block
+                callsub_basic_block.sub_return_point = ins.bb
+
         if len(ins.next) > 1 and not isinstance(ins, Retsub):
             if not isinstance(ins.next[0], Label):
                 next_bb = BasicBlock()
@@ -213,6 +221,7 @@ def _first_pass(
                 rets[call.label].append(ins)
             else:
                 rets[call.label] = [ins]
+            ins.callsub_ins = call  # ins is the return point when call is executed.
 
         # Now prepare for the next-line instruction
         # A flag that says that this was an unconditional jump
