@@ -103,7 +103,7 @@ int 0
 loop:
     dup
     txn GroupIndex
-    int 1
+    int 3
     >=
     bz end
     int 1
@@ -124,7 +124,7 @@ end:
 
 
 
-LOOPS_GROUP_INDICES = [[1, 2], [1, 2], [1, 2], []]
+LOOPS_GROUP_INDICES = [[2], [2], [], [2]]
 
 
 ALL_TESTS = [
@@ -136,7 +136,7 @@ ALL_TESTS = [
 
 
 @pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
-def test_cfg_construction(test: Tuple[str, List[List[int]]]) -> None:
+def test_group_indices(test: Tuple[str, List[List[int]]]) -> None:
     code, group_indices = test
     teal = parse_teal(code.strip())
 

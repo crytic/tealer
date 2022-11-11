@@ -205,7 +205,7 @@ int 0
 loop:
     dup
     global GroupSize
-    int 1
+    int 3
     >=
     bz end
     int 1
@@ -234,7 +234,7 @@ ins_list = [
     instructions.Label("loop"),
     instructions.Dup(),
     instructions.Global(global_field.GroupSize()),
-    instructions.Int(1),
+    instructions.Int(3),
     instructions.GreaterE(),
     instructions.BZ("end"),
     instructions.Int(1),
@@ -256,7 +256,7 @@ ins_list = [
 ins_partitions = [(0, 6), (6, 12), (12, 19), (19, 26)]
 bbs_links = [(0, 1), (1, 2), (1, 3), (2, 1)]
 
-LOOPS_CFG_GROUP_SIZES = [[1, 2], [1, 2], [1, 2], []]
+LOOPS_CFG_GROUP_SIZES = [[2], [2], [], [2]]
 LOOPS_CFG = construct_cfg(ins_list, ins_partitions, bbs_links)
 
 cfg_group_sizes = [
@@ -281,7 +281,7 @@ ALL_TESTS = [
 
 
 @pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
-def test_cfg_construction(test: Tuple[str, List[BasicBlock]]) -> None:
+def test_group_sizes(test: Tuple[str, List[BasicBlock]]) -> None:
     code, cfg = test
     teal = parse_teal(code.strip())
     for bb in cfg:
