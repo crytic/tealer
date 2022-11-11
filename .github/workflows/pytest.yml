@@ -54,3 +54,8 @@ jobs:
     - name: Run detectors tests
       run: |
         pytest tests/test_detectors.py
+    
+    - name: Run dataflow analysis tests
+      run: |
+        pytest tests/transaction_context/test_group_sizes.py
+        pytest tests/transaction_context/test_group_indices.py
