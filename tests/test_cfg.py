@@ -178,12 +178,53 @@ bbs_links = [(0, 1), (1, 2), (1, 3), (2, 1)]
 
 LOOPS_CFG = construct_cfg(ins_list, ins_partitions, bbs_links)
 
+SWITCH_N_MATCH = """
+#pragma version 8
+int 1
+switch label1 label2
+int 1
+int 2
+int 1
+match label1 label2
+int 0
+return
+label1:
+int 2
+return
+label2:
+int 3
+return
+"""
+
+ins_list = [
+    instructions.Pragma(8),
+    instructions.Int(1),
+    instructions.Switch(["label1", "label2"]),
+    instructions.Int(1),
+    instructions.Int(2),
+    instructions.Int(1),
+    instructions.Match(["label1", "label2"]),
+    instructions.Int(0),
+    instructions.Return(),
+    instructions.Label("label1"),
+    instructions.Int(2),
+    instructions.Return(),
+    instructions.Label("label2"),
+    instructions.Int(3),
+    instructions.Return(),
+]
+
+ins_partitions = [(0, 3), (3, 7), (7, 9), (9, 12), (12, 15)]
+bbs_links = [(0, 1), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4)]
+
+SWITCH_N_MATCH_CFG = construct_cfg(ins_list, ins_partitions, bbs_links)
 
 ALL_TESTS = [
     (MULTIPLE_RETSUB, MULTIPLE_RETSUB_CFG),
     (SUBROUTINE_BACK_JUMP, SUBROUTINE_BACK_JUMP_CFG),
     (BRANCHING, BRANCHING_CFG),
     (LOOPS, LOOPS_CFG),
+    (SWITCH_N_MATCH, SWITCH_N_MATCH_CFG),
 ]
 
 
@@ -192,6 +233,8 @@ def test_cfg_construction(test: Tuple[str, List[BasicBlock]]) -> None:
     code, cfg = test
     teal = parse_teal(code.strip())
     for bb in cfg:
+        print(bb)
+    for bb in teal.bbs:
         print(bb)
     print("*" * 20)
     assert cmp_cfg(teal.bbs, cfg)

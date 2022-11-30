@@ -168,3 +168,26 @@ ed25519verify_bare              // (version: 7, mode: Any)
 sha3_256                        // (version: 7, mode: Any)
 vrf_verify VrfAlgorand          // (version: 7, mode: Any)
 block BlkTimestamp              // (version: 7, mode: Any)
+
+// version 8
+bury 1                                      // (version: 8, mode: Any)
+popn 1                                      // (version: 8, mode: Any)
+dupn 1                                      // (version: 8, mode: Any)
+pushbytess b32(AA) base64 AA 0x00 "00"      // (version: 8, mode: Any)
+pushints 1 2 3 4 0x5                        // (version: 8, mode: Any)
+proto 1 2                                   // (version: 8, mode: Any)
+frame_dig 1                                 // (version: 8, mode: Any)
+frame_bury 1                                // (version: 8, mode: Any)
+switch label2 label3                        // (version: 8, mode: Any)
+match label2 label3                         // (version: 8, mode: Any)
+box_create                                  // (version: 8, mode: Stateful)
+box_extract                                 // (version: 8, mode: Stateful)
+box_replace                                 // (version: 8, mode: Stateful)
+box_del                                     // (version: 8, mode: Stateful)
+box_len                                     // (version: 8, mode: Stateful)
+box_get                                     // (version: 8, mode: Stateful)
+box_put                                     // (version: 8, mode: Stateful)
+label2:
+int 2
+label3:
+int 3

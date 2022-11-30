@@ -292,6 +292,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("err", lambda _x: instructions.Err()),
     ("assert", lambda _x: instructions.Assert()),
     ("int ", lambda x: instructions.Int(_parse_int(x) if _is_int(x) else x)),
+    ("pushints ", lambda x: instructions.PushInts(list(map(_parse_int, x.split(" "))))),
     ("pushint ", lambda x: instructions.PushInt(_parse_int(x) if _is_int(x) else x)),
     ("txn ", lambda x: instructions.Txn(parse_transaction_field(x, False))),
     ("txna ", lambda x: instructions.Txna(parse_transaction_field(x, False))),
@@ -334,6 +335,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("ecdsa_pk_decompress", lambda x: instructions.Ecdsa_pk_decompress(x)),
     ("ecdsa_pk_recover", lambda x: instructions.Ecdsa_pk_recover(x)),
     ("global ", lambda x: instructions.Global(parse_global_field(x))),
+    ("dupn ", lambda x: instructions.Dupn(_parse_int(x))),
     ("dup2", lambda _x: instructions.Dup2()),
     ("dup", lambda _x: instructions.Dup()),
     ("select", lambda _x: instructions.Select()),
@@ -414,6 +416,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("args", lambda _x: instructions.Args()),
     ("itob", lambda x: instructions.Itob()),
     ("btoi", lambda x: instructions.Btoi()),
+    ("popn ", lambda x: instructions.Popn(_parse_int(x))),
     ("pop", lambda x: instructions.Pop()),
     ("addr ", lambda x: instructions.Addr(x)),
     ("mulw", lambda x: instructions.Mulw()),
@@ -455,6 +458,22 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("sha3_256", lambda _x: instructions.Sha3_256()),
     ("vrf_verify ", lambda x: instructions.Vrf_verify(x)),
     ("block ", lambda x: instructions.Block(x)),
+    ("bury ", lambda x: instructions.Bury(_parse_int(x))),
+    (
+        "proto ",
+        lambda x: instructions.Proto(_parse_int(x.split(" ")[0]), _parse_int(x.split(" ")[1])),
+    ),
+    ("frame_dig ", lambda x: instructions.FrameDig(_parse_int(x))),
+    ("frame_bury ", lambda x: instructions.FrameBury(_parse_int(x))),
+    ("switch ", lambda x: instructions.Switch(x.split(" "))),
+    ("match ", lambda x: instructions.Match(x.split(" "))),
+    ("box_create", lambda x: instructions.BoxCreate()),
+    ("box_extract", lambda x: instructions.BoxExtract()),
+    ("box_replace", lambda x: instructions.BoxReplace()),
+    ("box_del", lambda x: instructions.BoxDel()),
+    ("box_len", lambda x: instructions.BoxLen()),
+    ("box_get", lambda x: instructions.BoxGet()),
+    ("box_put", lambda x: instructions.BoxPut()),
 ]
 
 
@@ -505,6 +524,10 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
     if fields[0] == "bytecblock":
         imm = _parse_byte_arguments(fields[1:])
         ins = instructions.Bytecblock(imm)
+
+    if fields[0] == "pushbytess":
+        imm = _parse_byte_arguments(fields[1:])
+        ins = instructions.PushBytess(imm)
 
     if ins is not None:
         ins.comment = comment
