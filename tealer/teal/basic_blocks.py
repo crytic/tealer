@@ -163,3 +163,6 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes
         for ins in self._instructions:
             ret += f"{ins.line}: {ins}\n"
         return ret
+
+    def __repr__(self) -> str:
+        return f"B{self._idx}"

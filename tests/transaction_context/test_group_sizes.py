@@ -294,3 +294,25 @@ def test_group_sizes(test: Tuple[str, List[BasicBlock]]) -> None:
     for b1, b2 in zip(bbs, cfg):
         print(b1.transaction_context.group_sizes, b2.transaction_context.group_sizes)
         assert b1.transaction_context.group_sizes == b2.transaction_context.group_sizes
+
+
+MULTIPLE_RETSUB_CFG_GROUP_INDICES = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
+SUBROUTINE_BACK_JUMP_GROUP_INDICES = [[0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2]]
+BRANCHING_GROUP_INDICES = [[0, 1, 2, 3], [0], [], [0], [], [0, 1, 2, 3]]
+LOOPS_GROUP_INDICES = [[0, 1], [0, 1], [0, 1], [0, 1]]
+
+GROUP_INDICES_TESTS = [
+    (MULTIPLE_RETSUB, MULTIPLE_RETSUB_CFG_GROUP_INDICES),
+    (SUBROUTINE_BACK_JUMP, SUBROUTINE_BACK_JUMP_GROUP_INDICES),
+    (BRANCHING, BRANCHING_GROUP_INDICES),
+    (LOOPS, LOOPS_GROUP_INDICES),
+]
+@pytest.mark.parametrize("test", GROUP_INDICES_TESTS)  # type: ignore
+def test_group_indices(test: Tuple[str, List[List[int]]]) -> None:
+    code, group_indices_list = test
+    teal = parse_teal(code.strip())
+
+    bbs = order_basic_blocks(teal.bbs)
+    for b, group_indices in zip(bbs, group_indices_list):
+        print(b.transaction_context.group_indices, group_indices)
+        assert b.transaction_context.group_indices == group_indices

@@ -33,16 +33,19 @@ if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
     from tealer.teal.instructions.transaction_field import TransactionField
 
+MAX_GROUP_SIZE = 16
+
 group_size_key = "GroupSize"
 group_index_key = "GroupIndex"
 transaction_type_key = "TransactionType"
 analysis_keys = [group_size_key, group_index_key, transaction_type_key]
-analysis_keys += [f"GTXN_{i:02d}_{transaction_type_key}" for i in range(16)]
+analysis_keys += [f"GTXN_{i:02d}_{transaction_type_key}" for i in range(MAX_GROUP_SIZE)]
 universal_sets: Dict[str, List] = {
-    f"GTXN_{i:02d}_{transaction_type_key}": list(ALL_TRANSACTION_TYPES) for i in range(16)
+    f"GTXN_{i:02d}_{transaction_type_key}": list(ALL_TRANSACTION_TYPES)
+    for i in range(MAX_GROUP_SIZE)
 }
-universal_sets[group_size_key] = list(range(1, 17))
-universal_sets[group_index_key] = list(range(0, 16))
+universal_sets[group_size_key] = list(range(1, MAX_GROUP_SIZE + 1))
+universal_sets[group_index_key] = list(range(0, MAX_GROUP_SIZE))
 universal_sets[transaction_type_key] = list(ALL_TRANSACTION_TYPES)
 
 
@@ -165,8 +168,18 @@ class IntFields(DataflowTransactionContext):  # pylint: disable=too-few-public-m
             List of groupindex values that will make the comparison true.
         """
         U = list(self.UNIVERSAL_SETS[self.GROUP_INDEX_KEY])
+        true_group_sizes, false_group_sizes = self._get_asserted_groupsizes(ins_stack)
+        # group index must be less than maximum possible group size.
+        # true_group_sizes -> possible values for group size that will return true_value.
+        # false_group_sizes -> possible values for group size that will return false_value.
+        true_group_indices, false_group_indices = set(
+            range(0, max(true_group_sizes, default=0))
+        ), set(range(0, max(false_group_sizes, default=0)))
+
         if len(ins_stack) < 3:
-            return set(U), set(U)
+            # U intersection A = A, where U is universal set
+            # set(U) & true_group_indices = true_group_indices, same for false_group_indices
+            return true_group_indices, false_group_indices
 
         if isinstance(ins_stack[-1], (Eq, Neq, Less, LessE, Greater, GreaterE)):
             ins1 = ins_stack[-2]
@@ -183,12 +196,17 @@ class IntFields(DataflowTransactionContext):  # pylint: disable=too-few-public-m
                     compared_value = value
 
             if compared_value is None or not isinstance(compared_value, int):
-                return set(U), set(U)
+                # set(U) & true_group_indices = true_group_indices, same for false_group_indices
+                return true_group_indices, false_group_indices
 
             ins = ins_stack[-1]
             asserted_values = self._get_asserted_int_values(ins, compared_value, U)
-            return set(asserted_values), set(U) - set(asserted_values)
-        return set(U), set(U)
+            return (
+                set(asserted_values) & true_group_indices,
+                (set(U) - set(asserted_values)) & false_group_indices,
+            )
+        # set(U) & true_group_indices = true_group_indices, same for false_group_indices
+        return true_group_indices, false_group_indices
 
     def _is_ins_tx_field(  # pylint: disable=no-self-use
         self, key: str, ins: "Instruction", field: Type["TransactionField"]
