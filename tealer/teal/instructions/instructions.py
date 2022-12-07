@@ -32,6 +32,7 @@ from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
 from tealer.teal.instructions.acct_params_field import AcctParamsField
 from tealer.utils.comparable_enum import ComparableEnum
+from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -1009,7 +1010,7 @@ class Ecdsa_verify(Instruction):
 
     Immediates:
         v (NamedIntegerConstant): elliptic curve used for the signature and public key calculation.
-            currently supports "Secp256k1" curve only.
+            currently supports "Secp256k1" and "Secp256r1" curves.
 
     Pops:
         E (top)([]byte): Y-component of public key.
@@ -1050,7 +1051,10 @@ class Ecdsa_verify(Instruction):
             )
 
         if contract_version >= 5:
-            return 1700
+            if self._idx == "Secp256k1":
+                return 1700
+            if self._idx == "Secp256r1":
+                return 2500
         return 0
 
     def __str__(self) -> str:
@@ -3576,9 +3580,6 @@ class BSqrt(Instruction):
             return 40
         return 0
 
-    def __str__(self) -> str:
-        return "bsqrt"
-
 
 class Itxn_next(Instruction):
     """`itxn_next` signifies start of a new inner transaction in the same transaction group.
@@ -3709,9 +3710,6 @@ class Gloadss(Instruction):
         self._version: int = 6
         self._mode: ContractType = ContractType.STATEFULL
 
-    def __str__(self) -> str:
-        return "gloadss"
-
 
 class Itxnas(Instruction):
     """`itxnas f` pushes a value of array transaction field f of last inner transaction.
@@ -3784,3 +3782,320 @@ class Gitxnas(Instruction):
 
     def __str__(self) -> str:
         return f"Gitxnas {self._idx} {self._field}"
+
+
+class Replace2(Instruction):
+    """`replace2 s` replaces the bytes from the given position s.
+
+    `replace2 s` is semantically equivalent to `replace` instruction with one
+    immediate argument.
+
+    Immediates:
+        s (int): starting position of the replacement.
+
+    Pops:
+        B (top)([]byte): replacement string.
+        A ([]byte): original string.
+
+    Pushes:
+        Copy of A with the bytes starting at S replaced by the bytes of B.
+
+    Errors:
+        fails if S+len(B) is greater than the length of A.
+
+    """
+
+    def __init__(self, idx: int) -> None:
+        super().__init__()
+        self._idx = idx
+        self._version: int = 7
+
+    @property
+    def start_position(self) -> int:
+        """Replacement index."""
+        return self._idx
+
+    def __str__(self) -> str:
+        return f"replace2 {self._idx}"
+
+
+class Replace3(Instruction):
+    """`replace3` same as replace2 with index present on the stack.
+
+    `replace3` is semantically equivalent to `replace` instruction with no
+    immediate arguments.
+
+    Pops:
+        C (top)([]byte): replacement string.
+        B (int): replacement position.
+        A ([]byte): original string.
+
+    Pushes:
+        Copy of A with the bytes starting at B replaced by the bytes of C.
+
+    Errors:
+        fails if B + len(C) exceeds len(A).
+
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 7
+
+
+class Replace(Instruction):
+    """`replace {s}` is equivalent to `replace2 s` if there's a immediate else equivalent to `replace3`.
+
+
+    Immediates:
+        s (int)(Optional): starting position of the replacement.
+
+    Pops:
+        B (top)([]byte): replacement string.
+        S (int): Pops this parameter if no immediate argument is given.
+        A ([]byte): original string.
+
+    Pushes:
+        Copy of A with the bytes starting at S replaced by the bytes of B.
+
+    Errors:
+        fails if S+len(B) is greater than the length of A.
+
+    """
+
+    def __init__(self, idx: Optional[int]) -> None:
+        super().__init__()
+        self._idx = idx
+        self._version: int = 7
+
+    @property
+    def is_replace2(self) -> bool:
+        return self._idx is not None
+
+    @property
+    def is_replace3(self) -> bool:
+        return self._idx is None
+
+    @property
+    def start_position(self) -> int:
+        """Replacement index."""
+        if self._idx is None:
+            raise TealerException("replace instruction does not have any immediates")
+        return self._idx
+
+    def __str__(self) -> str:
+        if self._idx is not None:
+            return f"replace {self._idx}"
+        return "replace"
+
+
+class Base64_decode(Instruction):
+    """`base64_decode e` decodes top of the stack byte element using `e` base64 encoding.
+
+    Immediates:
+        e : base64 encoding standard, can be 0 -> URLEncoding and 1 -> StdEncoding.
+
+    Pops:
+        A (top)([]byte): base64-encoded string.
+
+    Pushes:
+        base64-decoded value of A.
+
+    Errors:
+        fails if A is not base64 encoded with encoding E.
+    """
+
+    def __init__(self, encoding: str) -> None:
+        super().__init__()
+        self._encoding: str = encoding
+        self._version: int = 7
+
+    @property
+    def cost(self) -> int:
+        """cost of executing base64_decode instruction.
+
+        base cost is 1 and cost increases by 1 per 16 bytes of A. returns base cost of 1.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= self._version:
+            return 1
+        return 0
+
+    def __str__(self) -> str:
+        return f"base64_decode {self._encoding}"
+
+
+class Json_ref(Instruction):
+    """`json_ref r` pushes `r` type value of the given key present in the json object.
+
+    Immediates:
+        r : value type, can be 0 -> JSONString, 1 -> JSONUint64 and 2 -> JSONObject.
+
+    Pops:
+        B (top)([]byte): json key.
+        A ([]byte): utf-8 encoded json object.
+
+    Pushes:
+        key B's value, of type R, from json object A.
+
+    Errors:
+        fails if A is not a valid json object.
+    """
+
+    def __init__(self, r: str) -> None:
+        super().__init__()
+        self._type: str = r
+        self._version: int = 7
+
+    @property
+    def cost(self) -> int:
+        """cost of executing json_ref instruction.
+
+        base cost is 25 and cost increases by 2 per 7 bytes of A. returns base cost of 25.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= self._version:
+            return 25
+        return 0
+
+    def __str__(self) -> str:
+        return f"json_ref {self._type}"
+
+
+class Ed25519verify_bare(Instruction):
+    """`ed25519verify_bare` verifies the ed25519 signature for given public key and data.
+
+    Pops:
+        C (top)([]byte): 32 byte public key.
+        B ([]byte): 64 byte signature.
+        A ([]byte): input data.
+
+    Pushes:
+        pushes 1 if the B is a valid signature of A for the public key C or else 0.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 7
+
+    @property
+    def cost(self) -> int:
+        """cost of executing json_ref instruction.
+
+        base cost is 25 and cost increases by 2 per 7 bytes of A. returns base cost of 1.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= self._version:
+            return 1900
+        return 0
+
+
+class Sha3_256(Instruction):
+    """`sha3_256` calculates sha3_256 hash of data.
+
+    Pops:
+        A (top)([]byte): input data.
+
+    Pushes:
+        pushes sha3_256 hash of value A ([32]byte).
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 7
+
+
+class Vrf_verify(Instruction):
+    """`vrf_verify s` verify the proof of message against public key.
+
+    Immediates:
+        s (NamedIntegerConstant): VRF standard, can be 0 -> VrfAlgorand.
+
+    Pops:
+        C (top)([]byte): Public key.
+        B ([]byte): Proof.
+        A ([]byte): message.
+
+    Pushes:
+        Y (top)(uint64): Verification flag.
+        X ([]byte): vrf output
+    """
+
+    def __init__(self, idx: str):
+        super().__init__()
+        self._idx = idx
+        self._version: int = 7
+
+    @property
+    def cost(self) -> int:
+        """cost of executing vrf_verify instruction.
+
+        overrides cost property. vrf_verify instruction is introduced in
+        Teal version 7. if the cost property is accessed for contracts with
+        lesser version, value 0 is returned instead of raising an error.
+        """
+
+        if self.bb and self.bb.teal:
+            contract_version = self.bb.teal.version
+        else:
+            raise ValueError(
+                "instruction cost is accessed without setting basic block or teal instance."
+            )
+
+        if contract_version >= self._version:
+            return 5700
+        return 0
+
+    def __str__(self) -> str:
+        return f"vrf_verify {self._idx}"
+
+
+class Block(Instruction):
+    """`block f` pushes the value of block field f.
+
+    Immediates:
+        f (str): block field whose value is being accessed.
+
+    Pops:
+        A (top)(uint64): block number.
+
+    Pushes:
+        pushes the value of the field `f` of block A.
+
+    Errors:
+        Fail unless A falls between txn.LastValid - 1002 and the current round.
+    """
+
+    def __init__(self, field: str):
+        super().__init__()
+        self._field: str = field
+        self._version: int = 7
+
+    @property
+    def field(self) -> str:
+        """block field"""
+        return self._field
+
+    def __str__(self) -> str:
+        return f"block {self._field}"

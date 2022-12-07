@@ -1,4 +1,4 @@
-#pragma version 6
+#pragma version 7
 err                 // (version: 1, mode: Any)
 assert              // (version: 3, mode: Any)
 int 1               // (version: 1, mode: Any)
@@ -156,3 +156,15 @@ gitxna 1 ApplicationArgs 0      // (version: 6, mode: Stateful)
 gloadss                         // (version: 6, mode: Stateful)
 itxnas ApplicationArgs          // (version: 6, mode: Stateful)
 gitxnas 1 ApplicationArgs       // (version: 6, mode: Stateful)
+
+// version 7
+replace2 1                      // (version: 7, mode: Any)
+replace3                        // (version: 7, mode: Any)
+replace 1                       // (version: 7, mode: Any)
+replace                         // (version: 7, mode: Any)
+base64_decode StdEncoding       // (version: 7, mode: Any)
+json_ref JSONUint64             // (version: 7, mode: Any)
+ed25519verify_bare              // (version: 7, mode: Any)
+sha3_256                        // (version: 7, mode: Any)
+vrf_verify VrfAlgorand          // (version: 7, mode: Any)
+block BlkTimestamp              // (version: 7, mode: Any)

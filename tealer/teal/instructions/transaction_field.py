@@ -28,6 +28,25 @@ class TransactionField:
         return self.__class__.__qualname__
 
 
+class TransactionArrayField(TransactionField):
+    """Base class to represent array transaction fields.
+
+    Array transaction fields have an additional index parameter.
+    """
+
+    def __init__(self, idx: int):
+        super().__init__()
+        self._idx = idx
+
+    @property
+    def idx(self) -> int:
+        return self._idx
+
+    def __str__(self) -> str:
+        s = "" if self._idx < 0 else " " + str(self._idx)
+        return self.__class__.__qualname__ + s
+
+
 class Sender(TransactionField):
     """address of sender of this transaction."""
 
@@ -38,10 +57,6 @@ class Fee(TransactionField):
 
 class FirstValid(TransactionField):
     """minimum round number after which this transaction is valid."""
-
-
-class FirstValidTime(TransactionField):
-    """reserved for future use. causes program to fail if used."""
 
 
 class LastValid(TransactionField):
@@ -140,17 +155,12 @@ class OnCompletion(TransactionField):
         self._version: int = 2
 
 
-class ApplicationArgs(TransactionField):
+class ApplicationArgs(TransactionArrayField):
     """Arguments passed to the application in the ApplicationCall."""
 
     def __init__(self, idx: int):
-        super().__init__()
-        self._idx = idx
+        super().__init__(idx)
         self._version: int = 2
-
-    def __str__(self) -> str:
-        s = "" if self._idx < 0 else str(self._idx)
-        return "ApplicationArgs " + s
 
 
 class NumAppArgs(TransactionField):
@@ -161,17 +171,12 @@ class NumAppArgs(TransactionField):
         self._version: int = 2
 
 
-class Accounts(TransactionField):
+class Accounts(TransactionArrayField):
     """Accounts listed in the ApplicationCall transaction."""
 
     def __init__(self, idx: int):
-        super().__init__()
-        self._idx = idx
+        super().__init__(idx)
         self._version: int = 2
-
-    def __str__(self) -> str:
-        s = "" if self._idx < 0 else str(self._idx)
-        return "Accounts " + s
 
 
 class NumAccounts(TransactionField):
@@ -182,17 +187,12 @@ class NumAccounts(TransactionField):
         self._version: int = 2
 
 
-class Applications(TransactionField):
+class Applications(TransactionArrayField):
     """Foreign Apps listed in the ApplicationCall transaction."""
 
     def __init__(self, idx: int):
-        super().__init__()
-        self._idx = idx
+        super().__init__(idx)
         self._version: int = 3
-
-    def __str__(self) -> str:
-        s = "" if self._idx < 0 else str(self._idx)
-        return "Applications " + s
 
 
 class NumApplications(TransactionField):
@@ -203,17 +203,12 @@ class NumApplications(TransactionField):
         self._version: int = 3
 
 
-class Assets(TransactionField):
+class Assets(TransactionArrayField):
     """Foreign Assets listed in the ApplicationCall transaction."""
 
     def __init__(self, idx: int):
-        super().__init__()
-        self._idx = idx
+        super().__init__(idx)
         self._version: int = 3
-
-    def __str__(self) -> str:
-        s = "" if self._idx < 0 else str(self._idx)
-        return "Assets " + s
 
 
 class NumAssets(TransactionField):
@@ -416,17 +411,12 @@ class Nonparticipation(TransactionField):
         self._version: int = 5
 
 
-class Logs(TransactionField):
+class Logs(TransactionArrayField):
     """Log messages emitted by an application call(itxn only)."""
 
     def __init__(self, idx: int):
-        super().__init__()
-        self._idx = idx
+        super().__init__(idx)
         self._version: int = 5
-
-    def __str__(self) -> str:
-        s = "" if self._idx < 0 else str(self._idx)
-        return "Logs " + s
 
 
 class NumLogs(TransactionField):
@@ -467,3 +457,47 @@ class StateProofPK(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 6
+
+
+class FirstValidTime(TransactionField):
+    """(uint64) UNIX timestamp of block before txn.FirstValid. Fails if negative.
+
+    FirstValidTime is present from Teal v1 itself. However, execution would fail if this
+    field is used in versions less than v7.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 7
+
+
+class NumApprovalProgramPages(TransactionField):
+    """(uint64) Number of Approval Program pages"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 7
+
+
+class NumClearStateProgramPages(TransactionField):
+    """(uint64) Number of clear state program pages"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 7
+
+
+class ApprovalProgramPages(TransactionArrayField):
+    """Approval Program as an array of pages"""
+
+    def __init__(self, idx: int):
+        super().__init__(idx)
+        self._version: int = 7
+
+
+class ClearStateProgramPages(TransactionArrayField):
+    """Approval Program as an array of pages"""
+
+    def __init__(self, idx: int):
+        super().__init__(idx)
+        self._version: int = 7
