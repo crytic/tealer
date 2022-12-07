@@ -21,6 +21,15 @@ from tealer.teal.instructions.acct_params_field import (
     AcctBalance,
     AcctMinBalance,
     AcctAuthAddr,
+    AcctTotalNumUint,
+    AcctTotalNumByteSlice,
+    AcctTotalExtraAppPages,
+    AcctTotalAppsCreated,
+    AcctTotalAppsOptedIn,
+    AcctTotalAssetsCreated,
+    AcctTotalAssets,
+    AcctTotalBoxes,
+    AcctTotalBoxBytes,
 )
 
 
@@ -28,6 +37,15 @@ ACCT_PARAMS_FIELD_TXT_TO_OBJECT = {
     "AcctBalance": AcctBalance,
     "AcctMinBalance": AcctMinBalance,
     "AcctAuthAddr": AcctAuthAddr,
+    "AcctTotalNumUint": AcctTotalNumUint,
+    "AcctTotalNumByteSlice": AcctTotalNumByteSlice,
+    "AcctTotalExtraAppPages": AcctTotalExtraAppPages,
+    "AcctTotalAppsCreated": AcctTotalAppsCreated,
+    "AcctTotalAppsOptedIn": AcctTotalAppsOptedIn,
+    "AcctTotalAssetsCreated": AcctTotalAssetsCreated,
+    "AcctTotalAssets": AcctTotalAssets,
+    "AcctTotalBoxes": AcctTotalBoxes,
+    "AcctTotalBoxBytes": AcctTotalBoxBytes,
 }
 
 

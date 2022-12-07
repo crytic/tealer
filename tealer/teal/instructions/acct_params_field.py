@@ -35,3 +35,75 @@ class AcctMinBalance(AcctParamsField):
 
 class AcctAuthAddr(AcctParamsField):
     """Address the account is rekeyed to."""
+
+
+class AcctTotalNumUint(AcctParamsField):
+    """The total number of uint64 values allocated by this account in Global and Local States."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+
+
+class AcctTotalNumByteSlice(AcctParamsField):
+    """The total number of byte array values allocated by this account in Global and Local States."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+
+
+class AcctTotalExtraAppPages(AcctParamsField):
+    """The number of extra app code pages used by this account."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+
+
+class AcctTotalAppsCreated(AcctParamsField):
+    """The number of existing apps created by this account"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+
+
+class AcctTotalAppsOptedIn(AcctParamsField):
+    """The number of apps this account is opted into."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+
+
+class AcctTotalAssetsCreated(AcctParamsField):
+    """The number of existing ASAs created by this account."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+
+
+class AcctTotalAssets(AcctParamsField):
+    """The numbers of ASAs held by this account (including ASAs this account created)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+
+
+class AcctTotalBoxes(AcctParamsField):
+    """The number of existing boxes created by this account's app."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+
+
+class AcctTotalBoxBytes(AcctParamsField):
+    """The total number of bytes used by this account's app's box keys and values."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8

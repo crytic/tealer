@@ -38,6 +38,7 @@ TARGETS = [
     "tests/parsing/teal6-acct_params_get.teal",
     "tests/parsing/teal6-instructions.teal",    
     "tests/parsing/teal7-instructions.teal",
+    "tests/parsing/teal8-instructions.teal",
 ]
 
 TEST_CODE = """
@@ -67,6 +68,12 @@ gtxnas 1 Applications
 gitxn 1 Sender
 replace 1
 replace2 1
+match label1 label2
+switch label1 label2
+label1:
+int 1
+label2:
+int 2
 """
 
 invalid_instructions = """
@@ -146,6 +153,12 @@ def test_parsing_2() -> None:
         instructions.Gitxn(1, transaction_field.Sender),
         instructions.Replace(1),
         instructions.Replace2(1),
+        instructions.Match(["label1", "label2"]),
+        instructions.Switch(["label1", "label2"]),
+        instructions.Label("label1"),
+        instructions.Int(1),
+        instructions.Label("label2"),
+        instructions.Int(2),
     ]
     t = [
         (instructions.Intcblock, ("_constants",)),
@@ -174,6 +187,12 @@ def test_parsing_2() -> None:
         (instructions.Gitxn, ("idx",)),
         (instructions.Replace, ("start_position", "is_replace2", "is_replace3")),
         (instructions.Replace2, ("start_position",)),
+        (instructions.Match, ("labels",)),
+        (instructions.Switch, ("labels",)),
+        (instructions.Label, ("label",)),
+        (instructions.Int, ("value",)),
+        (instructions.Label, ("label",)),
+        (instructions.Int, ("value",)),
     ]
 
     for (b1, b2, (target, attributes)) in zip(ins1, ins2, t):

@@ -4099,3 +4099,362 @@ class Block(Instruction):
 
     def __str__(self) -> str:
         return f"block {self._field}"
+
+
+class Bury(Instruction):
+    """`bury n` replace the nth value from top of the stack with given value.
+
+    Immediates:
+        n (uint)
+
+    Pops:
+        A (top)(uint64): value to replace with.
+
+    Pushes:
+        replaces the nth value from the top of the stack with A.
+
+    Errors:
+        bury 0 fails. Fails if stack depth is less than n.
+    """
+
+    def __init__(self, index: int):
+        super().__init__()
+        self._index: int = index
+        self._version: int = 8
+
+    def __str__(self) -> str:
+        return f"bury {self._index}"
+
+
+class Popn(Instruction):
+    """`popn n` removes n values from top of the stack.
+
+    Immediates:
+        n (uint): number of elements to remove
+
+    Pops:
+        Pops n elements from top of the stack
+
+    Errors:
+        Fails if stack depth is less than n.
+    """
+
+    def __init__(self, n: int):
+        super().__init__()
+        self._nelements: int = n
+        self._version: int = 8
+
+    def __str__(self) -> str:
+        return f"popn {self._nelements}"
+
+
+class Dupn(Instruction):
+    """`dupn n` duplicate top value n times.
+
+    Immediates:
+        n (uint): number of times to duplicate
+
+    Pushes:
+        Pushes n copies of A(top)
+    """
+
+    def __init__(self, count: int):
+        super().__init__()
+        self._count: int = count
+        self._version: int = 8
+
+    def __str__(self) -> str:
+        return f"dupn {self._count}"
+
+
+class PushBytess(Instruction):
+    """`pushbytess x ...` pushes sequences of immediate byte arrays to stack.
+
+    pushbytess args are not added to the bytecblock during assembly processes
+
+    Immediates:
+        x ... ([][]byte): bytearrays to push onto stack
+
+    Pushes:
+        Pushes sequences of immediate byte arrays to stack (first byte array being deepest)
+    """
+
+    def __init__(self, bytes_list: List[str]):
+        super().__init__()
+        self._bytes_list = bytes_list
+        self._version: int = 8
+
+    def __str__(self) -> str:
+        return " ".join(["pushbytess"] + self._bytes_list)
+
+
+class PushInts(Instruction):
+    """`pushints x ...` pushes multiple numbers onto stack.
+
+    pushints args are not added to the intcblock during assembly processes
+
+    Immediates:
+        x ... ([]uint64): numbers to push onto stack
+
+    Pushes:
+        pushes sequence of immediate uints to stack in the order they appear (first uint being deepest)
+    """
+
+    def __init__(self, int_list: List[int]):
+        super().__init__()
+        self._int_list = int_list
+        self._version: int = 8
+
+    def __str__(self) -> str:
+        return " ".join(["pushints"] + list(map(str, self._int_list)))
+
+
+class Proto(Instruction):
+    """`proto a r`.
+
+    Prepare top call frame for a retsub that will assume A args and R return values.
+
+    Immediates:
+        a (uint): number of args
+        r (uint): number of return values
+
+    Errors:
+        Fails unless the last instruction executed was a `callsub`.
+    """
+
+    def __init__(self, a: int, r: int):
+        super().__init__()
+        self._nargs: int = a
+        self._nreturnvals: int = r
+        self._version: int = 8
+
+    def __str__(self) -> str:
+        return f"proto {self._nargs} {self._nreturnvals}"
+
+
+class FrameDig(Instruction):
+    """`frame_dig i` pushes ith (signed) value from the frame pointer.
+
+    Immediates:
+        i (uint)
+
+    Pushes:
+       Nth (signed) value from the frame pointer
+    """
+
+    def __init__(self, index: int):
+        super().__init__()
+        self._index: int = index
+        self._version: int = 8
+
+    def __str__(self) -> str:
+        return f"frame_dig {self._index}"
+
+
+class FrameBury(Instruction):
+    """`frame_bury i` replace the ith value from frame pointer in the stack with given value.
+
+    Immediates:
+        i (uint)
+
+    Pops:
+        A (top):
+
+    Pushes:
+       Nth (signed) value from the frame pointer
+    """
+
+    def __init__(self, index: int):
+        super().__init__()
+        self._index: int = index
+        self._version: int = 8
+
+    def __str__(self) -> str:
+        return f"frame_bury {self._index}"
+
+
+class Switch(Instruction):
+    """`switch target ...`.
+
+    Branch to the Ath(top) label. Continue execution at following instruction
+    if index A exceeds the number of labels.
+
+    Immediates:
+        targets ([][]byte): A list of labels
+
+    Pops:
+        A (top)(uint64): index into targets list.
+    """
+
+    def __init__(self, lables: List[str]):
+        super().__init__()
+        self._labels: List[str] = lables
+        self._version: int = 8
+
+    @property
+    def labels(self) -> List[str]:
+        return self._labels
+
+    def __str__(self) -> str:
+        return " ".join(["switch"] + self._labels)
+
+
+class Match(Instruction):
+    """`match target ...`.
+
+    Stack: ..., [A1, A2, ..., AN], B -> ...
+
+    Given match cases from A[1] to A[N], branch to the Ith label where A[I] = B. Continue to
+    the following instruction if no matches are found.
+
+    `match` consumes N+1 values from the stack. Let the top stack value be B. The following N values represent
+    an ordered list of match cases (A), where the first value (A[0]) is the deepest in the stack. The immediate arguments
+    are an ordered list of N labels(T). `match` will branch to T[I], where A[I] = B. If there are no matches then
+    execution continues on to next instruction.
+
+    Immediates:
+        targets ([N][]byte): A list of labels
+
+    Pops:
+        B (top): value.
+        A1(deepest), A2, .., An : match cases.
+    """
+
+    def __init__(self, labels: List[str]):
+        super().__init__()
+        self._labels: List[str] = labels
+        self._version: int = 8
+
+    @property
+    def labels(self) -> List[str]:
+        return self._labels
+
+    def __str__(self) -> str:
+        return " ".join(["match"] + self._labels)
+
+
+class BoxCreate(Instruction):
+    """`box_create` creates a box.
+
+    Stack: ...., A: []byte, B: uint64 -> ...., uint64
+
+    create a box named A, of length B. Fail if A is empty or B exceeds 32,768. Returns 0 if A
+    already existed, else 1.
+
+    Newly created boxes are filled with 0 bytes. `box_create` will fail if the referenced box already
+    exists with a different size. Otherwise, existing boxes are unchanged by `box_create`.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+        self._mode: ContractType = ContractType.STATEFULL
+
+    def __str__(self) -> str:
+        return "box_create"
+
+
+class BoxExtract(Instruction):
+    """`box_extract` extracts data from a box.
+
+    Stack: ...., A: []byte, B: uint64, C: uint64 -> ...., []byte
+
+    Read C bytes from box A, starting at offset B. Fail if A does not exist or byte range is outside
+    A's size.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+        self._mode: ContractType = ContractType.STATEFULL
+
+    def __str__(self) -> str:
+        return "box_extract"
+
+
+class BoxReplace(Instruction):
+    """`box_replace` replace data of a box.
+
+    Stack: ...., A: []byte, B: uint64, C: []byte -> ...., uint64
+
+    Write byte-array C into box A, starting at offset B. Fail if A does not exist, or the byte range
+    is outside A's size.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+        self._mode: ContractType = ContractType.STATEFULL
+
+    def __str__(self) -> str:
+        return "box_replace"
+
+
+class BoxDel(Instruction):
+    """`box_del` deletes a box.
+
+    Stack: ...., A: []byte -> ...., uint64
+
+    Delete box named A if it exists. Return 1 if A existed, 0 otherwise.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+        self._mode: ContractType = ContractType.STATEFULL
+
+    def __str__(self) -> str:
+        return "box_del"
+
+
+class BoxLen(Instruction):
+    """`box_len` returns length of the box.
+
+    Stack: ...., A: []byte -> ...., X: uint64, Y: uint64
+
+    X is the length of box A if A exists else 0. Y is 1 if A exists, else 0.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+        self._mode: ContractType = ContractType.STATEFULL
+
+    def __str__(self) -> str:
+        return "box_len"
+
+
+class BoxGet(Instruction):
+    """`box_get` gets data of a box.
+
+    Stack: ...., A: []byte -> ...., X: []byte, Y: uint64
+
+    X is the contents of box A if A exists, else ''. Y is 1 if A exists, else 0.
+    Fails if box size exceeds 4,096 bytes.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+        self._mode: ContractType = ContractType.STATEFULL
+
+    def __str__(self) -> str:
+        return "box_get"
+
+
+class BoxPut(Instruction):
+    """`box_put` updates the data of a box.
+
+    Stack: ...., A: []byte, B: []byte -> ....
+
+    Replaces the contents of box A with byte-array B. Fails if A exists and len(B) != len(box A).
+    Creates A if it does not exist.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 8
+        self._mode: ContractType = ContractType.STATEFULL
+
+    def __str__(self) -> str:
+        return "box_put"
