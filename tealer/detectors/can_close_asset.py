@@ -8,11 +8,11 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions.transaction_field import AssetCloseTo
-from tealer.utils.analyses import detect_missing_txn_check
+from tealer.detectors.utils import detect_missing_tx_field_validations
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
+    from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
 class CanCloseAsset(AbstractDetector):  # pylint: disable=too-few-public-methods
@@ -66,8 +66,14 @@ Always check that AssetCloseTo transaction field is set to a ZeroAddress or inte
             information.
         """
 
-        paths_without_check: List[List[BasicBlock]] = []
-        detect_missing_txn_check(AssetCloseTo, self.teal.bbs[0], [], paths_without_check)
+        def checks_field(block_ctx: "BlockTransactionContext") -> bool:
+            # return False if AssetCloseTo field can have any address.
+            # return True if AssetCloseTo should have some address or zero address
+            return not block_ctx.assetcloseto.any_addr
+
+        paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
+            self.teal.bbs[0], checks_field
+        )
 
         description = "Lack of AssetCloseTo check allows to close the asset holdings"
         description += " of the account."
