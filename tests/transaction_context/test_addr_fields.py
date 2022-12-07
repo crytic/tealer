@@ -106,14 +106,14 @@ def test_addr_fields(test: Tuple[str, List[List[int]]]) -> None:
         else:
             ctx = b.transaction_context.gtxn_context(idx)
 
-        assert ctx.any_rekeyto == rekeyto_any[b.idx]
-        assert ctx.none_rekeyto == rekeyto_none[b.idx]
-        assert set(ctx.rekeyto) == set(rekeyto[b.idx])
+        assert ctx.rekeyto.any_addr == rekeyto_any[b.idx]
+        assert ctx.rekeyto.no_addr == rekeyto_none[b.idx]
+        assert set(ctx.rekeyto.possible_addr) == set(rekeyto[b.idx])
         
-        assert ctx.any_closeto == closeto_any[b.idx]
-        assert ctx.none_closeto == closeto_none[b.idx]
-        assert set(ctx.closeto) == set(closeto[b.idx])
+        assert ctx.closeto.any_addr == closeto_any[b.idx]
+        assert ctx.closeto.no_addr == closeto_none[b.idx]
+        assert set(ctx.closeto.possible_addr) == set(closeto[b.idx])
         
-        assert ctx.any_assetcloseto == assetcloseto_any[b.idx]
-        assert ctx.none_assetcloseto == assetcloseto_none[b.idx]
-        assert set(ctx.assetcloseto) == set(assetcloseto[b.idx])
+        assert ctx.assetcloseto.any_addr == assetcloseto_any[b.idx]
+        assert ctx.assetcloseto.no_addr == assetcloseto_none[b.idx]
+        assert set(ctx.assetcloseto.possible_addr) == set(assetcloseto[b.idx])
