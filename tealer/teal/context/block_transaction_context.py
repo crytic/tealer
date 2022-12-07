@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from tealer.utils.teal_enums import ALL_TRANSACTION_TYPES
 from tealer.exceptions import TealerException
+from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 
 
 class BlockTransactionContext:  # pylint: disable=too-few-public-methods
@@ -13,14 +14,19 @@ class BlockTransactionContext:  # pylint: disable=too-few-public-methods
             self._group_transactions_context = [BlockTransactionContext(True) for _ in range(16)]
 
         # set default values
-        self.group_sizes = list(range(1, 17))
-        self.group_indices = list(range(0, 16))
+        if tail:
+            # information from gtxn {i} instructions.
+            self.group_indices = []
+            self.group_sizes = []
+        else:
+            self.group_sizes = list(range(1, MAX_GROUP_SIZE + 1))
+            self.group_indices = list(range(0, MAX_GROUP_SIZE))
         self.transaction_types = list(ALL_TRANSACTION_TYPES)
 
     def gtxn_context(self, txn_index: int) -> "BlockTransactionContext":
         """context information collected from gtxn {txn_index} field instructions"""
         if self._group_transactions_context is None:
             raise TealerException()
-        if txn_index >= 16:
+        if txn_index >= MAX_GROUP_SIZE:
             raise TealerException()
         return self._group_transactions_context[txn_index]

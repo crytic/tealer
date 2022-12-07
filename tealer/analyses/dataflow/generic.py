@@ -153,6 +153,7 @@ from tealer.teal.instructions.instructions import (
 )
 
 from tealer.utils.analyses import is_int_push_ins
+from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
@@ -167,7 +168,10 @@ class IncorrectDataflowTransactionContextInitialization(Exception):
 class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
     # List of keys, unique and separate context is stored for each key.
-    KEYS: List[str] = []
+    # each key represents a transaction field.
+    BASE_KEYS: List[str] = []
+    # BASE_KEYS for which transaction context information from `gtxn {i} {field}` is also stored.
+    KEYS_WITH_GTXN: List[str] = []  # every key in this list should also present in BASE_KEYS.
 
     def __init__(self, teal: "Teal"):
         self._teal: "Teal" = teal
@@ -179,14 +183,13 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         self._block_contexts: Dict[str, Dict["BasicBlock", Any]] = {}
         # self._path_contexts[KEY][Bi][Bj] -> path_context of KEY for path Bj -> Bi
         self._path_contexts: Dict[str, Dict["BasicBlock", Dict["BasicBlock", Any]]] = {}
-        self._reachout: Dict[str, Dict["BasicBlock", Any]] = {}  # used for forward analysis
-        self._liveout: Dict[str, Dict["BasicBlock", Any]] = {}  # used for backward analysis
-        if not self.KEYS:
+        if not self.BASE_KEYS:
             raise IncorrectDataflowTransactionContextInitialization(
-                f"KEYS are not initialized {self.__class__.__name__}"
+                f"BASE_KEYS are not initialized {self.__class__.__name__}"
             )
 
-    def _gtx_key(self, idx: int, key: str) -> str:  # pylint: disable=no-self-use
+    @staticmethod
+    def gtx_key(idx: int, key: str) -> str:
         """return key used for tracking context of gtxn {idx} {field represented by key}"""
         return f"GTXN_{idx:02d}_{key}"
 
@@ -220,7 +223,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
     def _store_results(self) -> None:
         """Store the collected information in the context object of each block"""
 
-    def _block_level_constraints(self, block: "BasicBlock") -> None:
+    def _block_level_constraints(self, analysis_keys: List[str], block: "BasicBlock") -> None:
         """Calculate and store constraints on keys applied within the block.
 
         By default, no constraints are considered i.e values are assumed to be universal_set
@@ -230,7 +233,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         asserted. Values are stored in self._block_contexts
         self._block_contexts[KEY][B] -> block_context of KEY for block B
         """
-        for key in self.KEYS:
+        for key in analysis_keys:
             if key not in self._block_contexts:
                 self._block_contexts[key] = {}
             self._block_contexts[key][block] = self._universal_set(key)
@@ -238,7 +241,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         stack: List["Instruction"] = []
         for ins in block.instructions:
             if isinstance(ins, Assert):
-                for key in self.KEYS:
+                for key in analysis_keys:
                     asserted_values, _ = self._get_asserted(key, stack)
                     present_values = self._block_contexts[key][block]
                     self._block_contexts[key][block] = self._intersection(
@@ -250,16 +253,16 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                 if len(ins.prev) == 1:
                     is_int, value = is_int_push_ins(ins.prev[0])
                     if is_int and value == 0:
-                        for key in self.KEYS:
+                        for key in analysis_keys:
                             self._block_contexts[key][block] = self._null_set(key)
 
             if isinstance(ins, Err):
-                for key in self.KEYS:
+                for key in analysis_keys:
                     self._block_contexts[key][block] = self._null_set(key)
 
             stack.append(ins)
 
-    def _path_level_constraints(self, block: "BasicBlock") -> None:
+    def _path_level_constraints(self, analysis_keys: List[str], block: "BasicBlock") -> None:
         """Calculate and store constraints on keys applied along each path.
 
         By default, no constraints are considered i.e values are assumed to be universal_set
@@ -269,7 +272,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         self._path_contexts[KEY][Bi][Bj] -> path_context of KEY for path Bj -> Bi
         """
 
-        for key in self.KEYS:
+        for key in analysis_keys:
             if key not in self._path_contexts:
                 self._path_contexts[key] = {}
             path_context = self._path_contexts[key]
@@ -281,7 +284,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                 path_context[b][block] = self._universal_set(key)
 
         if isinstance(block.exit_instr, (BZ, BNZ)):
-            for key in self.KEYS:
+            for key in analysis_keys:
                 # true_values: possible values for {key} which result in non-zero value on top of the stack
                 # false_values: possible values for {key} which result in zero value on top of the stack
                 # if the check is not related to the field, true_values and false_values will be universal sets
@@ -308,14 +311,52 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                     if default_branch is not None:
                         self._path_contexts[key][default_branch][block] = false_values
 
-    def _calculate_reachin(self, key: str, block: "BasicBlock") -> Any:
+    def _update_gtxn_constraints(self, keys_with_gtxn: List[str], block: "BasicBlock") -> None:
+        """Use information from txn constraints on gtxn_
+
+        `block.transaction_context.group_indices` will contain indices the `txn` can have.
+
+        The values of each key represent possible values for that field. Values of `GTXN_0_RekeyTo` are
+        possible values for `gtxn 0 RekeyTo` i.e possible `RekeyTo` field values of transaction present at index 0.
+
+        self._block_contexts[f"GTXN_{idx}_{key}"] stores the information collected from
+        instructions `gtxn {idx} {field}`. This information represents validations performed
+        on the `txn {field}` by accessing it through `gtxn {idx} {field}`.
+
+        e.g if index of the `txn` should be 0 then `txn RekeyTo` is same as `gtxn 0 RekeyTo`.
+        similary, if index of `txn` can be `0` or `1` then checking `txn RekeyTo` is equaivalent to
+        checking both `gtxn 0 RekeyTo` and `gtxn 1 RekeyTo`.
+
+        if `i` is not a possible index of `txn` for basic block `B`, then possible values for `txn {field}` when
+        accessed through `gtxn {i} {field}` is Null. Because, `txn` can never have index `i` and `gtxn {i} {field}` is field
+        of `txn` when index of `txn` is `i`.
+
+        This requires that group_indices analysis is done before any other analysis.
+        """
+        for key in keys_with_gtxn:
+            for ind in range(MAX_GROUP_SIZE):
+                gtx_key = self.gtx_key(ind, key)
+                if ind in block.transaction_context.group_indices:
+                    # txn can have index {ind}
+                    # gtxn {ind} {field} can have a value if and only if {txn} {field} can also have that value
+                    self._block_contexts[gtx_key][block] = self._intersection(
+                        gtx_key,
+                        self._block_contexts[gtx_key][block],
+                        self._block_contexts[key][block],
+                    )
+                else:
+                    # txn cannot have index {ind}
+                    self._block_contexts[gtx_key][block] = self._null_set(gtx_key)
+
+    def _calculate_reachin(
+        self, key: str, block: "BasicBlock", reachout: Dict["BasicBlock", Any]
+    ) -> Any:
         if block == self._entry_block:
             # We are considering each possible value as a definition defined at the start of entry block.
             reachin_information = self._universal_set(key)
         else:
             reachin_information = self._null_set(key)
 
-        reachout = self._reachout[key]
         path_context = self._path_contexts[key]
         for prev_b in block.prev:
             reachin_information = self._union(
@@ -333,8 +374,52 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
         return reachin_information
 
-    def _calculate_livein(self, key: str, block: "BasicBlock") -> Any:
-        liveout = self._liveout[key]
+    def _merge_information_forward(
+        self,
+        analysis_keys: List[str],
+        block: "BasicBlock",
+        global_reachout: Dict[str, Dict["BasicBlock", Any]],
+    ) -> bool:
+        updated = False
+        for key in analysis_keys:
+            # RCHout(b) = intersection(RCHin(b), PRSV(b))
+            new_reachout = self._intersection(
+                key,
+                self._calculate_reachin(key, block, global_reachout[key]),
+                self._block_contexts[key][block],
+            )
+            if new_reachout != global_reachout[key][block]:
+                global_reachout[key][block] = new_reachout
+                updated = True
+        return updated
+
+    def forward_analyis(self, analysis_keys: List[str], worklist: List["BasicBlock"]) -> None:
+        """Perform forward analysis for analysis_keys and update self._block_contexts"""
+        # reachout for all analysis keys. global_reachout[key] -> reachout of key.
+        # global_reachout[key][block] -> reachout of block for key.
+        global_reachout: Dict[str, Dict["BasicBlock", Any]] = {}
+        for key in analysis_keys:
+            global_reachout[key] = {}
+            for b in self._teal.bbs:
+                global_reachout[key][b] = self._null_set(key)
+
+        while worklist:
+            b = worklist[0]
+            worklist = worklist[1:]
+            updated = self._merge_information_forward(analysis_keys, b, global_reachout)
+
+            if updated:
+                return_point_block = [b.sub_return_point] if b.sub_return_point is not None else []
+                for bi in b.next + return_point_block:
+                    if bi not in worklist:
+                        worklist.append(bi)
+
+        for key in analysis_keys:
+            self._block_contexts[key] = global_reachout[key]
+
+    def _calculate_livein(
+        self, key: str, block: "BasicBlock", liveout: Dict["BasicBlock", Any]
+    ) -> Any:
         livein_information = self._null_set(key)
 
         for next_b in block.next:
@@ -347,31 +432,51 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
             )
         return livein_information
 
-    def _merge_information_forward(self, block: "BasicBlock") -> bool:
-        updated = False
-        for key in self.KEYS:
-            # RCHout(b) = intersection(RCHin(b), PRSV(b))
-            new_reachout = self._intersection(
-                key, self._calculate_reachin(key, block), self._block_contexts[key][block]
-            )
-            if new_reachout != self._reachout[key][block]:
-                self._reachout[key][block] = new_reachout
-                updated = True
-        return updated
-
-    def _merge_information_backward(self, block: "BasicBlock") -> bool:
+    def _merge_information_backward(
+        self,
+        analysis_keys: List[str],
+        block: "BasicBlock",
+        global_liveout: Dict[str, Dict["BasicBlock", Any]],
+    ) -> bool:
         if len(block.next) == 0:  # leaf block
             return False
 
         updated = False
-        for key in self.KEYS:
+        for key in analysis_keys:
             new_liveout = self._intersection(
-                key, self._calculate_livein(key, block), self._block_contexts[key][block]
+                key,
+                self._calculate_livein(key, block, global_liveout[key]),
+                self._block_contexts[key][block],
             )
-            if new_liveout != self._liveout[key][block]:
-                self._liveout[key][block] = new_liveout
+            if new_liveout != global_liveout[key][block]:
+                global_liveout[key][block] = new_liveout
                 updated = True
         return updated
+
+    def backward_analysis(self, analysis_keys: List[str], worklist: List["BasicBlock"]) -> None:
+        """Perform backward analysis for analysis_keys and update self._block_contexts"""
+        global_liveout: Dict[str, Dict["BasicBlock", Any]] = {}
+        for key in analysis_keys:
+            global_liveout[key] = {}
+            for b in self._teal.bbs:
+                if len(b.next) == 0:  # leaf block
+                    global_liveout[key][b] = self._block_contexts[key][b]
+                else:
+                    global_liveout[key][b] = self._null_set(key)
+
+        while worklist:
+            b = worklist[0]
+            worklist = worklist[1:]
+            updated = self._merge_information_backward(analysis_keys, b, global_liveout)
+
+            if updated:
+                callsub_block = [b.callsub_block] if b.callsub_block is not None else []
+                for bi in b.prev + callsub_block:
+                    if bi not in worklist:
+                        worklist.append(bi)
+
+        for key in analysis_keys:
+            self._block_contexts[key] = global_liveout[key]
 
     @staticmethod
     def _postorder(entry: "BasicBlock") -> List["BasicBlock"]:
@@ -388,55 +493,44 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         dfs(entry)
         return order
 
-    def run_analysis(self) -> None:  # pylint: disable=too-many-branches
+    def run_analysis(self) -> None:
         """Run analysis"""
-        # step 1
-        for block in self._teal.bbs:
-            self._block_level_constraints(block)
-            self._path_level_constraints(block)
 
-        # step 2 initialization
-        for key in self.KEYS:
-            self._reachout[key] = {}
-            for b in self._teal.bbs:
-                self._reachout[key][b] = self._null_set(key)
+        gtx_keys = []
+        for key in self.KEYS_WITH_GTXN:
+            for ind in range(MAX_GROUP_SIZE):
+                gtx_keys.append(self.gtx_key(ind, key))
+
+        all_keys = self.BASE_KEYS + gtx_keys
+
+        # step 1: initialise information
+        for block in self._teal.bbs:
+            self._block_level_constraints(all_keys, block)  # initialise information for all keys
+            self._path_level_constraints(all_keys, block)
 
         postorder = self._postorder(self._entry_block)
+
+        # perform analysis of base keys first. Information of these base keys will be used for
+        # gtxn keys. see `self._update_gtxn_constraints`
+        analysis_keys = list(self.BASE_KEYS)
+
         worklist = postorder[::-1]  # Reverse postorder
+        self.forward_analyis(analysis_keys, worklist)
 
-        while worklist:
-            b = worklist[0]
-            worklist = worklist[1:]
-            updated = self._merge_information_forward(b)
+        worklist = [b for b in postorder if len(b.next) != 0]  # postorder, exclude leaf blocks
+        self.backward_analysis(analysis_keys, worklist)
 
-            if updated:
-                return_point_block = [b.sub_return_point] if b.sub_return_point is not None else []
-                for bi in b.next + return_point_block:
-                    if bi not in worklist:
-                        worklist.append(bi)
+        # update gtxn constraints using possible group indices and txn constraints.
+        for block in self._teal.bbs:
+            self._update_gtxn_constraints(self.KEYS_WITH_GTXN, block)
 
-        # step 3
-        self._block_contexts = self._reachout
-        for key in self.KEYS:
-            self._liveout[key] = {}
-            for b in self._teal.bbs:
-                if len(b.next) == 0:  # leaf block
-                    self._liveout[key][b] = self._block_contexts[key][b]
-                else:
-                    self._liveout[key][b] = self._null_set(key)
+        # Now perform analysis for gtx_keys
+        analysis_keys = gtx_keys
 
-        worklist = [b for b in postorder if len(b.next) != 0]
+        worklist = postorder[::-1]  # Reverse postorder
+        self.forward_analyis(analysis_keys, worklist)
 
-        while worklist:
-            b = worklist[0]
-            worklist = worklist[1:]
-            updated = self._merge_information_backward(b)
+        worklist = [b for b in postorder if len(b.next) != 0]  # postorder, exclude leaf blocks
+        self.backward_analysis(analysis_keys, worklist)
 
-            if updated:
-                callsub_block = [b.callsub_block] if b.callsub_block is not None else []
-                for bi in b.prev + callsub_block:
-                    if bi not in worklist:
-                        worklist.append(bi)
-
-        self._block_contexts = self._liveout
         self._store_results()
