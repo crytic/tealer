@@ -451,3 +451,19 @@ class CreatedApplicationID(TransactionField):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
+
+
+class LastLog(TransactionField):
+    """([]byte) The last message emitted. Empty bytes if none were emitted. Application mode only"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 6
+
+
+class StateProofPK(TransactionField):
+    """([]byte) 64 byte state proof public key"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 6

@@ -30,6 +30,9 @@ from tealer.teal.global_field import (
     CreatorAddress,
     CurrentApplicationAddress,
     GroupID,
+    OpcodeBudget,
+    CallerApplicationID,
+    CallerApplicationAddress,
 )
 
 GLOBAL_FIELD_TXT_TO_OBJECT = {
@@ -45,6 +48,9 @@ GLOBAL_FIELD_TXT_TO_OBJECT = {
     "CreatorAddress": CreatorAddress,
     "CurrentApplicationAddress": CurrentApplicationAddress,
     "GroupID": GroupID,
+    "OpcodeBudget": OpcodeBudget,
+    "CallerApplicationID": CallerApplicationID,
+    "CallerApplicationAddress": CallerApplicationAddress,
 }
 
 

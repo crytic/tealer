@@ -1,4 +1,4 @@
-#pragma version 5
+#pragma version 6
 
 // Transaction Fields
 
@@ -64,6 +64,9 @@ itxna Logs 0                    // (version: 5)
 itxn NumLogs                    // (version: 5)
 itxn CreatedAssetID             // (version: 5)
 itxn CreatedApplicationID       // (version: 5)
+txn LastLog                     // (version: 6)
+txn StateProofPK                // (version: 6)
+
 
 // Global Fields
 global MinTxnFee                    // (version: 1)
@@ -78,6 +81,11 @@ global CurrentApplicationID         // (version: 2)
 global CreatorAddress               // (version: 3)
 global CurrentApplicationAddress    // (version: 5)
 global GroupID                      // (version: 5)
+global OpcodeBudget                 // (version: 6)
+global CallerApplicationID          // (version: 6)
+global CallerApplicationAddress     // (version: 6)
+
+
 
 // Asset Holding Fields
 
@@ -110,3 +118,9 @@ app_params_get AppLocalNumByteSlice         // (version: 5)
 app_params_get AppExtraProgramPages         // (version: 5)
 app_params_get AppCreator                   // (version: 5)
 app_params_get AppAddress                   // (version: 5)
+
+// Acct Params Fields
+
+acct_params_get AcctBalance                 // (version: 6)
+acct_params_get AcctMinBalance              // (version: 6)
+acct_params_get AcctAuthAddr                // (version: 6)
