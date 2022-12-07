@@ -468,16 +468,19 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
 
 
 def _apply_transaction_context_analysis(teal: "Teal") -> None:
+    group_indices_cls = all_constraints.GroupIndices
     analyses_classes = [getattr(all_constraints, name) for name in dir(all_constraints)]
     analyses_classes = [
         c
         for c in analyses_classes
-        if inspect.isclass(c) and issubclass(c, DataflowTransactionContext)
+        if inspect.isclass(c)
+        and issubclass(c, DataflowTransactionContext)
+        and c != group_indices_cls
     ]
-
+    # Run group indices analysis first as other analysis use them.
+    group_indices_cls(teal).run_analysis()
     for cl in analyses_classes:
-        obj = cl(teal)
-        obj.run_analysis()
+        cl(teal).run_analysis()
 
 
 def parse_teal(source_code: str) -> Teal:

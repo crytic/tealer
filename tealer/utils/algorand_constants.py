@@ -1,0 +1,2 @@
+MAX_GROUP_SIZE = 16
+MIN_ALGORAND_FEE = 1000  # in micro algos

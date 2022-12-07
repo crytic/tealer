@@ -122,16 +122,52 @@ end:
     return
 """
 
-
-
 LOOPS_GROUP_INDICES = [[2], [2], [], [2]]
 
+LOOPS_GROUP_SIZES = """
+#pragma version 5
+txn GroupIndex
+int 4
+!=
+assert
+global GroupSize
+int 6
+<=
+int 0
+loop:
+    dup
+    txn GroupIndex
+    int 3
+    >
+    bz end
+    int 1
+    +
+    txn GroupIndex
+    int 6
+    <
+    assert
+    b loop
+end:
+    int 2
+    txn GroupIndex
+    >
+    assert
+    int 5
+    global GroupSize
+    <=
+    assert
+    int 1
+    return
+"""
+
+LOOPS_GROUP_SIZES_GROUP_INDICES = [[3], [3], [], [3]]
 
 ALL_TESTS = [
     (MULTIPLE_RETSUB, MULTIPLE_RETSUB_GROUP_INDICES),
     (SUBROUTINE_BACK_JUMP, SUBROUTINE_BACK_JUMP_GROUP_INDICES),
     (BRANCHING, BRANCHING_GROUP_INDICES),
     (LOOPS, LOOPS_GROUP_INDICES),
+    (LOOPS_GROUP_SIZES, LOOPS_GROUP_SIZES_GROUP_INDICES),
 ]
 
 
