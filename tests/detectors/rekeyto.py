@@ -247,3 +247,142 @@ missing_rekeyto_tests = [
     (MISSING_REKEYTO_LOOP, MissingRekeyTo, MISSING_REKEYTO_LOOP_VULNERABLE_PATHS),
     (MISSING_REKEYTO_STATELESS, MissingRekeyTo, MISSING_REKEYTO_STATELESS_VULNERABLE_PATHS),
 ]
+
+
+MISSING_REKEYTO_GROUP_INDEX_0 = """
+#pragma version 6
+txn GroupIndex
+int 0
+!=
+bnz index_not_0
+gtxn 0 RekeyTo  // index must be 0
+global ZeroAddress
+==
+assert
+b process_txn
+index_not_0:
+global GroupSize // index is not zero and groupsize is 2. So, txn index must be 1
+int 2
+==
+assert
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+process_txn:
+int 1
+return
+"""
+
+MISSING_REKEYTO_GROUP_INDEX_0_VULNERABLE_PATHS = [] # not vulnerable
+
+
+MISSING_REKEYTO_GROUP_INDEX_1 = """
+#pragma version 6
+txn GroupIndex
+int 0
+!=
+bnz index_not_0
+gtxn 0 RekeyTo  // index must be 0
+addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEVAL4QAJS7JHB4
+==
+assert
+b process_txn
+index_not_0:
+global GroupSize    // index is not zero and groupsize is **3**. So, txn index can be 1 or 2
+int 3
+==
+assert
+gtxn 1 RekeyTo     // only checks gtxn 1. so, is vulnerable if txn index is 2
+global ZeroAddress
+==
+assert
+process_txn:
+int 1
+return
+"""
+
+MISSING_REKEYTO_GROUP_INDEX_1_VULNERABLE_PATHS = [[0, 2, 3]]
+
+
+MISSING_REKEYTO_GROUP_INDEX_2 = """
+#pragma version 6
+global GroupSize
+int 2
+!=
+bnz group_size_is_not_2
+gtxn 0 RekeyTo  // group size is 2. so check index 0 and 1.
+addr SKSOWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEVAL4QAJS7JHB4
+==
+assert
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+b process_txn
+group_size_is_not_2:
+global GroupSize    // group_size is not 2
+int 3
+<
+assert              // group_size is less than 3 and is not 2. So, it must be 1 => index must be 0
+gtxn 0 RekeyTo    
+global ZeroAddress
+!=
+bnz fail_txn
+process_txn:
+int 1
+return
+fail_txn:
+err
+"""
+
+MISSING_REKEYTO_GROUP_INDEX_2_VULNERABLE_PATHS = [] # not vulnerable
+
+
+MISSING_REKEYTO_GROUP_INDEX_3 = """
+#pragma version 6
+global GroupSize
+int 2
+!=
+bnz group_size_is_not_2
+gtxn 0 RekeyTo  // group size is 2. so check index 0 and 1.
+global ZeroAddress
+==
+assert
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+b process_txn
+group_size_is_not_2:
+global GroupSize    // group_size is not 2
+int 3
+==
+assert              // group_size is 3. check at indices 0, 1, 2
+gtxn 0 RekeyTo    
+global ZeroAddress
+==
+bz fail_txn
+gtxn 2 RekeyTo
+global ZeroAddress
+==
+bz fail_txn
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+bz fail_txn
+process_txn:
+int 1
+return
+fail_txn:
+err
+"""
+
+MISSING_REKEYTO_GROUP_INDEX_3_VULNERABLE_PATHS = [] # not vulnerable
+
+new_missing_rekeyto_tests = [
+    (MISSING_REKEYTO_GROUP_INDEX_0, MissingRekeyTo, MISSING_REKEYTO_GROUP_INDEX_0_VULNERABLE_PATHS),
+    (MISSING_REKEYTO_GROUP_INDEX_1, MissingRekeyTo, MISSING_REKEYTO_GROUP_INDEX_1_VULNERABLE_PATHS),
+    (MISSING_REKEYTO_GROUP_INDEX_2, MissingRekeyTo, MISSING_REKEYTO_GROUP_INDEX_2_VULNERABLE_PATHS),
+    (MISSING_REKEYTO_GROUP_INDEX_3, MissingRekeyTo, MISSING_REKEYTO_GROUP_INDEX_3_VULNERABLE_PATHS),
+]
