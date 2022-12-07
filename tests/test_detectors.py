@@ -10,7 +10,7 @@ from tests.detectors.fee_check import missing_fee_check_tests
 from tests.detectors.can_close_account import can_close_account_tests, new_can_close_account_tests
 from tests.detectors.can_close_asset import can_close_asset_tests, new_can_close_asset_tests
 from tests.detectors.can_delete import can_delete_tests
-from tests.detectors.can_update import can_update_tests
+from tests.detectors.can_update import can_update_tests, new_can_update_tests
 from tests.detectors.rekeyto import missing_rekeyto_tests, new_missing_rekeyto_tests
 
 from tests.utils import cmp_cfg
@@ -42,6 +42,7 @@ ALL_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[BasicBlock]]]]  = [
     *new_can_close_account_tests,
     *new_missing_rekeyto_tests,
     *new_can_close_asset_tests,
+    *new_can_update_tests,
 ]
 
 @pytest.mark.parametrize("test", ALL_TESTS) # type: ignore
