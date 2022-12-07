@@ -14,6 +14,7 @@ from tealer.teal.instructions.instructions import (
 from tealer.teal.global_field import GroupSize
 from tealer.teal.instructions.transaction_field import GroupIndex
 from tealer.utils.analyses import is_int_push_ins
+from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
@@ -22,31 +23,33 @@ group_size_key = "GroupSize"
 group_index_key = "GroupIndex"
 analysis_keys = [group_size_key, group_index_key]
 universal_sets = {}
-universal_sets[group_size_key] = list(range(1, 17))
-universal_sets[group_index_key] = list(range(0, 16))
+universal_sets[group_size_key] = list(range(1, MAX_GROUP_SIZE + 1))
+universal_sets[group_index_key] = list(range(0, MAX_GROUP_SIZE))
 
 
-class IntFields(DataflowTransactionContext):  # pylint: disable=too-few-public-methods
+class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-public-methods
 
     GROUP_SIZE_KEY = group_size_key
     GROUP_INDEX_KEY = group_index_key
-    KEYS = analysis_keys
+    BASE_KEYS: List[str] = analysis_keys
+    KEYS_WITH_GTXN: List[str] = []  # gtxn information is not collected for any of the keys
     UNIVERSAL_SETS: Dict[str, List] = universal_sets
 
-    def _universal_set(self, key: str) -> Set:  # pylint: disable=no-self-use
+    def _universal_set(self, key: str) -> Set:
         return set(self.UNIVERSAL_SETS[key])
 
-    def _null_set(self, key: str) -> Set:  # pylint: disable=no-self-use
+    def _null_set(self, key: str) -> Set:
         return set()
 
-    def _union(self, key: str, a: Set, b: Set) -> Set:  # pylint: disable=no-self-use
+    def _union(self, key: str, a: Set, b: Set) -> Set:
         return a | b
 
-    def _intersection(self, key: str, a: Set, b: Set) -> Set:  # pylint: disable=no-self-use
+    def _intersection(self, key: str, a: Set, b: Set) -> Set:
         return a & b
 
-    def _get_asserted_int_values(  # pylint: disable=no-self-use
-        self, comparison_ins: "Instruction", compared_int: int, universal_set: List[int]
+    @staticmethod
+    def _get_asserted_int_values(
+        comparison_ins: "Instruction", compared_int: int, universal_set: List[int]
     ) -> List[int]:
         """return list of ints from universal set(U) that will satisfy the comparison.
 
@@ -65,7 +68,7 @@ class IntFields(DataflowTransactionContext):  # pylint: disable=too-few-public-m
         Returns:
             list of ints that will satisfy the comparison
         """
-        U = universal_set
+        U = list(universal_set)
 
         if isinstance(comparison_ins, Eq):  # pylint: disable=no-else-return
             return [compared_int]
@@ -175,6 +178,14 @@ class IntFields(DataflowTransactionContext):  # pylint: disable=too-few-public-m
         return self._get_asserted_groupindices(ins_stack)
 
     def _store_results(self) -> None:
+        # use group_sizes to update group_indices
+        group_sizes_context = self._block_contexts[self.GROUP_SIZE_KEY]
+        group_indices_context = self._block_contexts[self.GROUP_INDEX_KEY]
+        for bi in self._teal.bbs:
+            group_indices_context[bi] = group_indices_context[bi] & set(
+                range(0, max(group_sizes_context[bi], default=0))
+            )
+
         group_size_block_context = self._block_contexts[self.GROUP_SIZE_KEY]
         for block in self._teal.bbs:
             block.transaction_context.group_sizes = list(group_size_block_context[block])
