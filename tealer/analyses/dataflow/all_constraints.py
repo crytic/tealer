@@ -2,3 +2,4 @@
 from tealer.analyses.dataflow.int_fields import GroupIndices
 from tealer.analyses.dataflow.txn_types import TxnType
 from tealer.analyses.dataflow.addr_fields import AddrFields
+from tealer.analyses.dataflow.fee_field import FeeField
