@@ -226,3 +226,144 @@ can_close_account_tests = [
     (CAN_CLOSE_ACCOUNT, CanCloseAccount, CAN_CLOSE_ACCOUNT_VULNERABLE_PATHS),
     (CAN_CLOSE_ACCOUNT_LOOP, CanCloseAccount, CAN_CLOSE_ACCOUNT_LOOP_VULNERABLE_PATHS),
 ]
+
+
+
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_0 = """
+#pragma version 6
+txn GroupIndex
+int 0
+!=
+bnz index_not_0
+gtxn 0 CloseRemainderTo  // index must be 0
+global ZeroAddress
+==
+assert
+b process_txn
+index_not_0:
+global GroupSize // index is not zero and groupsize is 2. So, txn index must be 1
+int 2
+==
+assert
+gtxn 1 CloseRemainderTo
+global ZeroAddress
+==
+assert
+process_txn:
+int 1
+return
+"""
+
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_0_VULNERABLE_PATHS = [] # not vulnerable
+
+
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_1 = """
+#pragma version 6
+txn GroupIndex
+int 0
+!=
+bnz index_not_0
+gtxn 0 CloseRemainderTo  // index must be 0
+addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEVAL4QAJS7JHB4
+==
+assert
+b process_txn
+index_not_0:
+global GroupSize    // index is not zero and groupsize is **3**. So, txn index can be 1 or 2
+int 3
+==
+assert
+gtxn 1 CloseRemainderTo     // only checks gtxn 1. so, is vulnerable if txn index is 2
+global ZeroAddress
+==
+assert
+process_txn:
+int 1
+return
+"""
+
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_1_VULNERABLE_PATHS = [[0, 2, 3]]
+
+
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_2 = """
+#pragma version 6
+global GroupSize
+int 2
+!=
+bnz group_size_is_not_2
+gtxn 0 CloseRemainderTo  // group size is 2. so check index 0 and 1.
+byte base32 SKSOWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEVAL4QAJS7JHB4
+==
+assert
+gtxn 1 CloseRemainderTo
+global ZeroAddress
+==
+assert
+b process_txn
+group_size_is_not_2:
+global GroupSize    // group_size is not 2
+int 3
+<
+assert              // group_size is less than 3 and is not 2. So, it must be 1 => index must be 0
+gtxn 0 CloseRemainderTo    
+global ZeroAddress
+!=
+bnz fail_txn
+process_txn:
+int 1
+return
+fail_txn:
+err
+"""
+
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_2_VULNERABLE_PATHS = [] # not vulnerable
+
+
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_3 = """
+#pragma version 6
+global GroupSize
+int 2
+!=
+bnz group_size_is_not_2
+gtxn 0 CloseRemainderTo  // group size is 2. so check index 0 and 1.
+global ZeroAddress
+==
+assert
+gtxn 1 CloseRemainderTo
+global ZeroAddress
+==
+assert
+b process_txn
+group_size_is_not_2:
+global GroupSize    // group_size is not 2
+int 3
+==
+assert              // group_size is 3. check at indices 0, 1, 2
+gtxn 0 CloseRemainderTo    
+global ZeroAddress
+==
+bz fail_txn
+gtxn 1 CloseRemainderTo
+global ZeroAddress
+==
+bz fail_txn
+gtxn 2 CloseRemainderTo
+global ZeroAddress
+==
+bz fail_txn
+process_txn:
+int 1
+return
+fail_txn:
+err
+"""
+
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_3_VULNERABLE_PATHS = [] # not vulnerable
+
+
+new_can_close_account_tests = [
+    (CAN_CLOSE_ACCOUNT_GROUP_INDEX_0, CanCloseAccount, CAN_CLOSE_ACCOUNT_GROUP_INDEX_0_VULNERABLE_PATHS),
+    (CAN_CLOSE_ACCOUNT_GROUP_INDEX_1, CanCloseAccount, CAN_CLOSE_ACCOUNT_GROUP_INDEX_1_VULNERABLE_PATHS),
+    (CAN_CLOSE_ACCOUNT_GROUP_INDEX_2, CanCloseAccount, CAN_CLOSE_ACCOUNT_GROUP_INDEX_2_VULNERABLE_PATHS),
+    (CAN_CLOSE_ACCOUNT_GROUP_INDEX_3, CanCloseAccount, CAN_CLOSE_ACCOUNT_GROUP_INDEX_3_VULNERABLE_PATHS),
+]
