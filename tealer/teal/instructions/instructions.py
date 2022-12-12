@@ -51,7 +51,7 @@ contract_type_to_txt = {
 }
 
 
-class Instruction:
+class Instruction:  # pylint: disable=too-many-instance-attributes
     """Base class for Teal instructions.
 
     Any class that represents a teal instruction must inherit from
@@ -68,6 +68,7 @@ class Instruction:
         self._bb: Optional["BasicBlock"] = None
         self._version: int = 1
         self._mode: ContractType = ContractType.ANY
+        self._callsub_ins: Optional["Instruction"] = None
 
     def add_prev(self, prev_ins: "Instruction") -> None:
         """Add instruction that may execute just before this instruction.
@@ -138,6 +139,25 @@ class Instruction:
     @bb.setter
     def bb(self, b: "BasicBlock") -> None:
         self._bb = b
+
+    @property
+    def callsub_ins(self) -> Optional["Instruction"]:
+        """if this instruction is a return point to a callsub instruction i.e callsub instruction is
+        present right before this instruction, then callsub_ins returns a reference to that callsub
+        instruction object.
+
+        e.g
+        callsub main
+        int 1
+        return
+
+        callsub_ins of `int 1` will be instruction obj of `callsub main`.
+        """
+        return self._callsub_ins
+
+    @callsub_ins.setter
+    def callsub_ins(self, ins: "Instruction") -> None:
+        self._callsub_ins = ins
 
     @property
     def version(self) -> int:

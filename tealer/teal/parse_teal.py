@@ -25,6 +25,7 @@ contract represented by sequence of the basic blocks.
 
 """
 
+import inspect
 import sys
 from typing import Optional, Dict, List
 
@@ -51,6 +52,8 @@ from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
 from tealer.teal.instructions.acct_params_field import AcctParamsField
 from tealer.teal.teal import Teal
+from tealer.analyses.dataflow import all_constraints
+from tealer.analyses.dataflow.generic import DataflowTransactionContext
 
 
 def _detect_contract_type(instructions: List[Instruction]) -> ContractType:
@@ -126,6 +129,14 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> Non
                 bb = next_bb
         bb.add_instruction(ins)
         ins.bb = bb
+
+        if ins.callsub_ins is not None and ins.bb is not None:
+            # callsub is before this instruction in the code. so, bb should have been assigned
+            # already
+            callsub_basic_block = ins.callsub_ins.bb
+            if callsub_basic_block is not None:
+                ins.bb.callsub_block = callsub_basic_block
+                callsub_basic_block.sub_return_point = ins.bb
 
         if len(ins.next) > 1 and not isinstance(ins, Retsub):
             if not isinstance(ins.next[0], Label):
@@ -213,6 +224,7 @@ def _first_pass(
                 rets[call.label].append(ins)
             else:
                 rets[call.label] = [ins]
+            ins.callsub_ins = call  # ins is the return point when call is executed.
 
         # Now prepare for the next-line instruction
         # A flag that says that this was an unconditional jump
@@ -480,6 +492,22 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
     return error
 
 
+def _apply_transaction_context_analysis(teal: "Teal") -> None:
+    group_indices_cls = all_constraints.GroupIndices
+    analyses_classes = [getattr(all_constraints, name) for name in dir(all_constraints)]
+    analyses_classes = [
+        c
+        for c in analyses_classes
+        if inspect.isclass(c)
+        and issubclass(c, DataflowTransactionContext)
+        and c != group_indices_cls
+    ]
+    # Run group indices analysis first as other analysis use them.
+    group_indices_cls(teal).run_analysis()
+    for cl in analyses_classes:
+        cl(teal).run_analysis()
+
+
 def parse_teal(source_code: str) -> Teal:
     """Parse algorand smart contracts written in teal.
 
@@ -539,5 +567,7 @@ def parse_teal(source_code: str) -> Teal:
     # set teal instance to it's basic blocks
     for bb in teal.bbs:
         bb.teal = teal
+
+    _apply_transaction_context_analysis(teal)
 
     return teal
