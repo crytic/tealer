@@ -1834,6 +1834,10 @@ class Addr(Instruction):
     def __str__(self) -> str:
         return f"addr {self._addr}"
 
+    @property
+    def addr(self) -> str:
+        return self._addr
+
 
 class Pop(Instruction):
     """`pop` pops one element from the stack."""

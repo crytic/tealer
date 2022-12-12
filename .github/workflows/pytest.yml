@@ -60,3 +60,4 @@ jobs:
         pytest tests/transaction_context/test_group_sizes.py
         pytest tests/transaction_context/test_group_indices.py
         pytest tests/transaction_context/test_transaction_types.py
+        pytest tests/transaction_context/test_addr_fields.py
