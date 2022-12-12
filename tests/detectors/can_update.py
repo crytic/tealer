@@ -256,3 +256,136 @@ can_update_tests = [
     (CAN_UPDATE, CanUpdate, CAN_UPDATE_VULNERABLE_PATHS),
     (CAN_UPDATE_LOOP, CanUpdate, CAN_UPDATE_LOOP_VULNERABLE_PATHS),
 ]
+
+
+CAN_UPDATE_GROUP_INDEX_0 = """
+#pragma version 6
+txn GroupIndex
+int 0
+==
+assert
+int 0
+gtxn 0 ApplicationID
+==
+bz not_creation
+int 1
+return
+not_creation:
+    gtxn 0 OnCompletion
+    int NoOp
+    ==
+    bnz handle_noop
+    gtxn 0 OnCompletion
+    int OptIn
+    ==
+    bnz handle_optin
+    gtxn 0 OnCompletion
+    int CloseOut
+    ==
+    bnz handle_closeout
+    gtxn 0 OnCompletion
+    int UpdateApplication
+    ==
+    bnz handle_updateapp
+    int 1
+    return
+handle_noop:
+handle_optin:
+handle_closeout:
+int 1
+return
+handle_updateapp:
+err
+"""
+
+CAN_UPDATE_GROUP_INDEX_0_VULNERABLE_PATHS = []
+
+CAN_UPDATE_GROUP_INDEX_1 = """
+#pragma version 6
+global GroupSize
+int 1
+==
+assert
+int 0
+txn ApplicationID
+==
+bz not_creation
+int 1
+return
+not_creation:
+    gtxn 0 OnCompletion
+    int NoOp
+    ==
+    bnz handle_noop
+    gtxn 0 OnCompletion
+    int OptIn
+    ==
+    bnz handle_optin
+    gtxn 0 OnCompletion
+    int CloseOut
+    ==
+    bnz handle_closeout
+    txn OnCompletion
+    int UpdateApplication
+    ==
+    bnz handle_updateapp
+    int 1
+    return
+handle_noop:
+handle_optin:
+handle_closeout:
+int 1
+return
+handle_updateapp:
+err
+"""
+
+CAN_UPDATE_GROUP_INDEX_1_VULNERABLE_PATHS = []
+
+CAN_UPDATE_GROUP_INDEX_2 = """
+#pragma version 6
+global GroupSize
+int 2
+==
+assert
+int 0
+txn ApplicationID
+==
+bz not_creation
+int 1
+return
+not_creation:
+    gtxn 1 OnCompletion
+    int NoOp
+    ==
+    bnz handle_noop
+    gtxn 1 OnCompletion
+    int OptIn
+    ==
+    bnz handle_optin
+    gtxn 1 OnCompletion
+    int CloseOut
+    ==
+    bz handle_closeout
+    gtxn 0 OnCompletion
+    int UpdateApplication
+    ==
+    bnz handle_updateapp
+    int 1
+    return
+handle_noop:
+handle_optin:
+handle_closeout:
+int 1
+return
+handle_updateapp:
+err
+"""
+
+CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS = [[0, 2, 3, 4, 9], [0, 2, 3, 8, 9], [0, 2, 7, 8, 9]]
+
+new_can_update_tests = [
+    (CAN_UPDATE_GROUP_INDEX_0, CanUpdate, CAN_UPDATE_GROUP_INDEX_0_VULNERABLE_PATHS),
+    (CAN_UPDATE_GROUP_INDEX_1, CanUpdate, CAN_UPDATE_GROUP_INDEX_1_VULNERABLE_PATHS),
+    (CAN_UPDATE_GROUP_INDEX_2, CanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS),
+]
