@@ -193,6 +193,18 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         """return key used for tracking context of gtxn {idx} {field represented by key}"""
         return f"GTXN_{idx:02d}_{key}"
 
+    @staticmethod
+    def is_gtx_key(key: str) -> bool:
+        """return if given key represents gtxn {i} {field}"""
+        return key.startswith("GTXN_")
+
+    @staticmethod
+    def get_gtx_ind_and_base_key(key: str) -> Tuple[int, str]:
+        """given a gtx key, return it's index and base key"""
+        # will fail if the key is not a GTXN key.
+        _, ind, base_key = key.split("_")
+        return int(ind), base_key
+
     @abstractmethod
     def _universal_set(self, key: str) -> Any:
         """Return universal set for the field corresponding to given key"""
