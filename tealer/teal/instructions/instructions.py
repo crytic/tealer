@@ -164,12 +164,13 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         """Teal version this instruction is introduced in and supported from."""
         return self._version
 
-    def input_size(self) -> int:
-        return 0
-    
-    def output_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 0
 
+    @property
+    def stack_push_size(self) -> int:
+        return 0
 
     @property
     def mode(self) -> ContractType:
@@ -276,7 +277,8 @@ class Assert(Instruction):
         super().__init__()
         self._version: int = 3
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
 
@@ -308,7 +310,8 @@ class Int(Instruction):
     def __str__(self) -> str:
         return f"int {self._value}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -346,7 +349,8 @@ class PushInt(Instruction):
     def __str__(self) -> str:
         return f"pushint {self._value}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -404,7 +408,8 @@ class Txna(Instruction):
     def __str__(self) -> str:
         return f"txna {self._field}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -438,7 +443,8 @@ class Gtxn(Instruction):
     def __str__(self) -> str:
         return f"gtxn {self._idx} {self._field}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -478,7 +484,8 @@ class Gtxna(Instruction):
     def __str__(self) -> str:
         return f"gtxna {self._idx} {self._field}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -509,10 +516,12 @@ class Gtxns(Instruction):
     def __str__(self) -> str:
         return f"Gtxns {self._field}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -544,10 +553,12 @@ class Gtxnsa(Instruction):
     def __str__(self) -> str:
         return f"Gtxnsa {self._field}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -569,7 +580,8 @@ class Load(Instruction):
     def __str__(self) -> str:
         return f"load {self._idx}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -591,7 +603,8 @@ class Store(Instruction):
     def __str__(self) -> str:
         return f"store {self._idx}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
 
@@ -621,7 +634,8 @@ class Gload(Instruction):
     def __str__(self) -> str:
         return f"gload {self._idx} {self._slot}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -652,10 +666,12 @@ class Gloads(Instruction):
     def __str__(self) -> str:
         return f"gloads {self._slot}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -682,7 +698,8 @@ class Gaid(Instruction):
     def __str__(self) -> str:
         return f"gaid {self._idx}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -705,10 +722,12 @@ class Gaids(Instruction):
         self._version: int = 4
         self._mode: ContractType = ContractType.STATEFULL
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -727,10 +746,12 @@ class Loads(Instruction):
         super().__init__()
         self._version: int = 5
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -747,7 +768,8 @@ class Stores(Instruction):
         super().__init__()
         self._version: int = 5
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
 
@@ -770,10 +792,12 @@ class Dig(Instruction):
     def __str__(self) -> str:
         return f"dig {self._idx}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1 + self._idx
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2 + self._idx
 
 
@@ -789,10 +813,12 @@ class Swap(Instruction):
         super().__init__()
         self._version: int = 3
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -815,10 +841,12 @@ class GetBit(Instruction):
         super().__init__()
         self._version: int = 3
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -842,10 +870,12 @@ class SetBit(Instruction):
         super().__init__()
         self._version: int = 3
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 3
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -865,10 +895,12 @@ class GetByte(Instruction):
         super().__init__()
         self._version: int = 3
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -889,10 +921,12 @@ class SetByte(Instruction):
         super().__init__()
         self._version: int = 3
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 3
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -933,10 +967,12 @@ class Extract(Instruction):
     def __str__(self) -> str:
         return f"extract {self._idx} {self._idy}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -960,10 +996,12 @@ class Extract3(Instruction):
         super().__init__()
         self._version: int = 5
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 3
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -986,10 +1024,12 @@ class Extract_uint16(Instruction):
         super().__init__()
         self._version: int = 5
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1012,10 +1052,12 @@ class Extract_uint32(Instruction):
         super().__init__()
         self._version: int = 5
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1038,10 +1080,12 @@ class Extract_uint64(Instruction):
         super().__init__()
         self._version: int = 5
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1075,10 +1119,12 @@ class Sha256(Instruction):
             return 7
         return 35
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1112,10 +1158,12 @@ class Sha512_256(Instruction):
             return 9
         return 45
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1149,10 +1197,12 @@ class Keccak256(Instruction):
             return 26
         return 130
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1178,10 +1228,12 @@ class Ed25519verify(Instruction):
         """cost of executing ed25519verify instruction."""
         return 1900
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 3
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1240,10 +1292,12 @@ class Ecdsa_verify(Instruction):
     def __str__(self) -> str:
         return f"ecdsa_verify {self._idx}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 5
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1291,10 +1345,12 @@ class Ecdsa_pk_decompress(Instruction):
     def __str__(self) -> str:
         return f"ecdsa_pk_decompress {self._idx}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -1345,10 +1401,12 @@ class Ecdsa_pk_recover(Instruction):
     def __str__(self) -> str:
         return f"ecdsa_pk_recover {self._idx}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 4
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -1380,10 +1438,12 @@ class Global(Instruction):
 class Dup(Instruction):
     """`dup` duplicates the top value on stack."""
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -1394,10 +1454,12 @@ class Dup2(Instruction):
         super().__init__()
         self._version: int = 2
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 4
 
 
@@ -1418,10 +1480,12 @@ class Select(Instruction):
         super().__init__()
         self._version: int = 3
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 3
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1470,10 +1534,12 @@ class Uncover(Instruction):
     def __str__(self) -> str:
         return f"uncover {self._idx}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1 + self._idx
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1 + self._idx
 
 
@@ -1496,10 +1562,12 @@ class Concat(Instruction):
         super().__init__()
         self._version: int = 2
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1553,7 +1621,8 @@ class BZ(InstructionWithLabel):
     def __str__(self) -> str:
         return f"bz {self._label}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
 
@@ -1572,7 +1641,8 @@ class BNZ(InstructionWithLabel):
     def __str__(self) -> str:
         return f"bnz {self._label}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
 
@@ -1629,7 +1699,8 @@ class Return(Instruction):
         super().__init__()
         self._version: int = 2
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
 
@@ -1661,7 +1732,8 @@ class AppGlobalGet(Instruction):
     def __str__(self) -> str:
         return "app_global_get"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
 
@@ -1691,10 +1763,12 @@ class AppGlobalGetEx(Instruction):
     def __str__(self) -> str:
         return "app_global_get_ex"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -1717,7 +1791,8 @@ class AppGlobalPut(Instruction):
     def __str__(self) -> str:
         return "app_global_put"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
 
@@ -1741,7 +1816,8 @@ class AppGlobalDel(Instruction):
     def __str__(self) -> str:
         return "app_global_del"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
 
@@ -1774,10 +1850,12 @@ class AppLocalGetEx(Instruction):
     def __str__(self) -> str:
         return "app_local_get_ex"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 3
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -1806,10 +1884,12 @@ class AppLocalGet(Instruction):
     def __str__(self) -> str:
         return "app_local_get"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1837,7 +1917,8 @@ class AppLocalPut(Instruction):
     def __str__(self) -> str:
         return "app_local_put"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 3
 
 
@@ -1864,7 +1945,8 @@ class AppLocalDel(Instruction):
     def __str__(self) -> str:
         return "app_local_del"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
 
@@ -1904,10 +1986,12 @@ class AssetHoldingGet(Instruction):
     def __str__(self) -> str:
         return f"asset_holding_get {self._field}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -1944,10 +2028,12 @@ class AssetParamsGet(Instruction):
     def __str__(self) -> str:
         return f"asset_params_get {self._field}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -1984,10 +2070,12 @@ class AppParamsGet(Instruction):
     def __str__(self) -> str:
         return f"app_params_get {self._field}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -2017,10 +2105,12 @@ class AppOptedIn(Instruction):
     def __str__(self) -> str:
         return "app_opted_in"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2046,10 +2136,12 @@ class Balance(Instruction):
         self._version: int = 2
         self._mode: ContractType = ContractType.STATEFULL
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2076,10 +2168,12 @@ class MinBalance(Instruction):
     def __str__(self) -> str:
         return "min_balance"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2094,10 +2188,12 @@ class Itob(Instruction):
 
     """
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2112,10 +2208,12 @@ class Btoi(Instruction):
 
     """
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2141,7 +2239,8 @@ class Addr(Instruction):
 class Pop(Instruction):
     """`pop` pops one element from the stack."""
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
 
@@ -2159,10 +2258,12 @@ class Not(Instruction):
     def __str__(self) -> str:
         return "!"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2181,10 +2282,12 @@ class Neq(Instruction):
     def __str__(self) -> str:
         return "!="
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2203,10 +2306,12 @@ class Eq(Instruction):
     def __str__(self) -> str:
         return "=="
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2225,10 +2330,12 @@ class Greater(Instruction):
     def __str__(self) -> str:
         return ">"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2247,10 +2354,12 @@ class GreaterE(Instruction):
     def __str__(self) -> str:
         return ">="
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2269,10 +2378,12 @@ class Less(Instruction):
     def __str__(self) -> str:
         return "<"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2291,10 +2402,12 @@ class LessE(Instruction):
     def __str__(self) -> str:
         return "<="
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2313,10 +2426,12 @@ class And(Instruction):
     def __str__(self) -> str:
         return "&&"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2335,10 +2450,12 @@ class Or(Instruction):
     def __str__(self) -> str:
         return "||"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2360,10 +2477,12 @@ class Add(Instruction):
     def __str__(self) -> str:
         return "+"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2385,10 +2504,12 @@ class Sub(Instruction):
     def __str__(self) -> str:
         return "-"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2410,10 +2531,12 @@ class Mul(Instruction):
     def __str__(self) -> str:
         return "*"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2435,10 +2558,12 @@ class Div(Instruction):
     def __str__(self) -> str:
         return "/"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2460,10 +2585,12 @@ class Modulo(Instruction):
     def __str__(self) -> str:
         return "%"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2482,10 +2609,12 @@ class BitwiseOr(Instruction):
     def __str__(self) -> str:
         return "|"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2504,10 +2633,12 @@ class BitwiseAnd(Instruction):
     def __str__(self) -> str:
         return "&"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2526,10 +2657,12 @@ class BitwiseXor(Instruction):
     def __str__(self) -> str:
         return "^"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2547,10 +2680,12 @@ class BitwiseInvert(Instruction):
     def __str__(self) -> str:
         return "~"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2570,10 +2705,12 @@ class BitLen(Instruction):
         super().__init__()
         self._version: int = 4
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2621,10 +2758,12 @@ class BModulo(Instruction):
     def __str__(self) -> str:
         return "b%"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2649,10 +2788,12 @@ class BNeq(Instruction):
     def __str__(self) -> str:
         return "b!="
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2677,10 +2818,12 @@ class BEq(Instruction):
     def __str__(self) -> str:
         return "b=="
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2725,10 +2868,12 @@ class BBitwiseAnd(Instruction):
     def __str__(self) -> str:
         return "b&"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2773,10 +2918,12 @@ class BBitwiseOr(Instruction):
     def __str__(self) -> str:
         return "b|"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2821,10 +2968,12 @@ class BAdd(Instruction):
     def __str__(self) -> str:
         return "b+"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2872,10 +3021,12 @@ class BSubtract(Instruction):
     def __str__(self) -> str:
         return "b-"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2923,10 +3074,12 @@ class BDiv(Instruction):
     def __str__(self) -> str:
         return "b/"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2971,10 +3124,12 @@ class BMul(Instruction):
     def __str__(self) -> str:
         return "b*"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2999,10 +3154,12 @@ class BGreaterE(Instruction):
     def __str__(self) -> str:
         return "b>="
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3027,10 +3184,12 @@ class BGreater(Instruction):
     def __str__(self) -> str:
         return "b>"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3055,10 +3214,12 @@ class BLessE(Instruction):
     def __str__(self) -> str:
         return "b<="
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3083,10 +3244,12 @@ class BLess(Instruction):
     def __str__(self) -> str:
         return "b<"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3131,10 +3294,12 @@ class BBitwiseXor(Instruction):
     def __str__(self) -> str:
         return "b^"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3177,10 +3342,12 @@ class BBitwiseInvert(Instruction):
             return 4
         return 0
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3199,10 +3366,12 @@ class BZero(Instruction):
         super().__init__()
         self._version: int = 4
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3223,7 +3392,8 @@ class Log(Instruction):
         self._version: int = 5
         self._mode: ContractType = ContractType.STATEFULL
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
 
@@ -3274,7 +3444,8 @@ class Itxn_field(Instruction):
     def __str__(self) -> str:
         return f"itxn_field {self._field}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
 
@@ -3323,7 +3494,8 @@ class Itxn(Instruction):
     def __str__(self) -> str:
         return f"itxn {self._field}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3343,7 +3515,8 @@ class Itxna(Instruction):
 
     """
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
     def __init__(self, field: TransactionField):
@@ -3392,10 +3565,12 @@ class Txnas(Instruction):
     def __str__(self) -> str:
         return f"txnas {self._field}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3437,10 +3612,12 @@ class Gtxnas(Instruction):
     def __str__(self) -> str:
         return f"Gtxnas {self._idx} {self._field}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3476,10 +3653,12 @@ class Gtxnsas(Instruction):
     def __str__(self) -> str:
         return f"gtxnsas {self._field}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3499,10 +3678,12 @@ class Args(Instruction):
         self._version: int = 5
         self._mode: ContractType = ContractType.STATELESS
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3519,10 +3700,12 @@ class Mulw(Instruction):
 
     """
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -3543,10 +3726,12 @@ class Addw(Instruction):
         super().__init__()
         self._version: int = 2
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -3594,10 +3779,12 @@ class Divmodw(Instruction):
             return 20
         return 0
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 4
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 4
 
 
@@ -3620,10 +3807,12 @@ class Exp(Instruction):
         super().__init__()
         self._version: int = 4
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3667,10 +3856,12 @@ class Expw(Instruction):
             return 10
         return 0
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 2
 
 
@@ -3690,10 +3881,12 @@ class Shl(Instruction):
         super().__init__()
         self._version: int = 4
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3713,10 +3906,12 @@ class Shr(Instruction):
         super().__init__()
         self._version: int = 4
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 2
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3755,10 +3950,12 @@ class Sqrt(Instruction):
             return 4
         return 0
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3797,7 +3994,8 @@ class Intc(Instruction):
     def __str__(self) -> str:
         return f"intc {self._idx}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3812,7 +4010,8 @@ class Intc0(Instruction):
     def __str__(self) -> str:
         return "intc_0"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3827,7 +4026,8 @@ class Intc1(Instruction):
     def __str__(self) -> str:
         return "intc_1"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3842,7 +4042,8 @@ class Intc2(Instruction):
     def __str__(self) -> str:
         return "intc_2"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3888,7 +4089,8 @@ class Bytec0(Instruction):
     def __str__(self) -> str:
         return "bytec_0"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3903,7 +4105,8 @@ class Bytec1(Instruction):
     def __str__(self) -> str:
         return "bytec_1"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3918,7 +4121,8 @@ class Bytec2(Instruction):
     def __str__(self) -> str:
         return "bytec_2"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3933,7 +4137,8 @@ class Bytec3(Instruction):
     def __str__(self) -> str:
         return "bytec_3"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3956,7 +4161,8 @@ class Arg(Instruction):
     def __str__(self) -> str:
         return f"arg {self._idx}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3975,7 +4181,8 @@ class Arg0(Instruction):
     def __str__(self) -> str:
         return "arg_0"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -3994,7 +4201,8 @@ class Arg1(Instruction):
     def __str__(self) -> str:
         return "arg_1"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -4013,7 +4221,8 @@ class Arg2(Instruction):
     def __str__(self) -> str:
         return "arg_2"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -4032,7 +4241,8 @@ class Arg3(Instruction):
     def __str__(self) -> str:
         return "arg_3"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -4057,7 +4267,8 @@ class Byte(Instruction):
     def __str__(self) -> str:
         return f"byte {self._bytes}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -4088,7 +4299,8 @@ class PushBytes(Instruction):
     def __str__(self) -> str:
         return f"pushbytes {self._bytes}"
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -4103,10 +4315,12 @@ class Len(Instruction):
 
     """
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -4155,10 +4369,12 @@ class Substring(Instruction):
     def __str__(self) -> str:
         return f"substring {self._start} {self._stop}"
 
-    def input_size(self) -> int:
+    @property
+    def stack_pop_size(self) -> int:
         return 1
 
-    def output_size(self) -> int:
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -4213,6 +4429,14 @@ class AcctParamsGet(Instruction):
     def __str__(self) -> str:
         return f"acct_params_get {self._field}"
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 2
+
 
 class BSqrt(Instruction):
     """`bsqrt` floor square root.
@@ -4231,6 +4455,14 @@ class BSqrt(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 6
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     @property
     def cost(self) -> int:
@@ -4289,6 +4521,14 @@ class Divw(Instruction):
         super().__init__()
         self._version: int = 6
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 3
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
 
 class Gitxn(Instruction):
     """`gitxn t f` pushes value of transaction field f of transaction t in the last inner group submitted.
@@ -4318,6 +4558,14 @@ class Gitxn(Instruction):
     def field(self) -> TransactionField:
         """Transaction field of the instruction being accessed."""
         return self._field
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __str__(self) -> str:
         return f"gitxn {self._idx} {self._field}"
@@ -4357,6 +4605,10 @@ class Gitxna(Instruction):
         """Array transaction field being accessed."""
         return self._field
 
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return f"gitxna {self._idx} {self._field}"
 
@@ -4376,6 +4628,14 @@ class Gloadss(Instruction):
         i.e if transaction is not executed before this transaction.
 
     """
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 2
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __init__(self) -> None:
         super().__init__()
@@ -4411,6 +4671,10 @@ class Itxnas(Instruction):
     def field(self) -> TransactionField:
         """Array transaction field being accessed."""
         return self._field
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __str__(self) -> str:
         return f"itxnas {self._field}"
@@ -4452,6 +4716,14 @@ class Gitxnas(Instruction):
         """Transaction field being accessed."""
         return self._field
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return f"Gitxnas {self._idx} {self._field}"
 
@@ -4487,6 +4759,14 @@ class Replace2(Instruction):
         """Replacement index."""
         return self._idx
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 2
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return f"replace2 {self._idx}"
 
@@ -4509,6 +4789,14 @@ class Replace3(Instruction):
         fails if B + len(C) exceeds len(A).
 
     """
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 3
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __init__(self) -> None:
         super().__init__()
@@ -4555,6 +4843,14 @@ class Replace(Instruction):
             raise TealerException("replace instruction does not have any immediates")
         return self._idx
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 3
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         if self._idx is not None:
             return f"replace {self._idx}"
@@ -4600,6 +4896,14 @@ class Base64_decode(Instruction):
             return 1
         return 0
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return f"base64_decode {self._encoding}"
 
@@ -4644,6 +4948,14 @@ class Json_ref(Instruction):
             return 25
         return 0
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 2
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return f"json_ref {self._type}"
 
@@ -4682,6 +4994,14 @@ class Ed25519verify_bare(Instruction):
             return 1900
         return 0
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 3
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
 
 class Sha3_256(Instruction):
     """`sha3_256` calculates sha3_256 hash of data.
@@ -4692,6 +5012,14 @@ class Sha3_256(Instruction):
     Pushes:
         pushes sha3_256 hash of value A ([32]byte).
     """
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __init__(self) -> None:
         super().__init__()
@@ -4739,6 +5067,14 @@ class Vrf_verify(Instruction):
             return 5700
         return 0
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 3
+
+    @property
+    def stack_push_size(self) -> int:
+        return 2
+
     def __str__(self) -> str:
         return f"vrf_verify {self._idx}"
 
@@ -4769,6 +5105,14 @@ class Block(Instruction):
         """block field"""
         return self._field
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return f"block {self._field}"
 
@@ -4794,6 +5138,14 @@ class Bury(Instruction):
         self._index: int = index
         self._version: int = 8
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return f"bury {self._index}"
 
@@ -4816,6 +5168,10 @@ class Popn(Instruction):
         self._nelements: int = n
         self._version: int = 8
 
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return f"popn {self._nelements}"
 
@@ -4834,6 +5190,10 @@ class Dupn(Instruction):
         super().__init__()
         self._count: int = count
         self._version: int = 8
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __str__(self) -> str:
         return f"dupn {self._count}"
@@ -4856,6 +5216,10 @@ class PushBytess(Instruction):
         self._bytes_list = bytes_list
         self._version: int = 8
 
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return " ".join(["pushbytess"] + self._bytes_list)
 
@@ -4876,6 +5240,10 @@ class PushInts(Instruction):
         super().__init__()
         self._int_list = int_list
         self._version: int = 8
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __str__(self) -> str:
         return " ".join(["pushints"] + list(map(str, self._int_list)))
@@ -4919,6 +5287,10 @@ class FrameDig(Instruction):
         self._index: int = index
         self._version: int = 8
 
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return f"frame_dig {self._index}"
 
@@ -4940,6 +5312,14 @@ class FrameBury(Instruction):
         super().__init__()
         self._index: int = index
         self._version: int = 8
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __str__(self) -> str:
         return f"frame_bury {self._index}"
@@ -4966,6 +5346,10 @@ class Switch(Instruction):
     @property
     def labels(self) -> List[str]:
         return self._labels
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
 
     def __str__(self) -> str:
         return " ".join(["switch"] + self._labels)
@@ -4998,6 +5382,10 @@ class Match(Instruction):
         self._version: int = 8
 
     @property
+    def stack_pop_size(self) -> int:
+        return None
+
+    @property
     def labels(self) -> List[str]:
         return self._labels
 
@@ -5022,6 +5410,14 @@ class BoxCreate(Instruction):
         self._version: int = 8
         self._mode: ContractType = ContractType.STATEFULL
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 2
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return "box_create"
 
@@ -5039,6 +5435,14 @@ class BoxExtract(Instruction):
         super().__init__()
         self._version: int = 8
         self._mode: ContractType = ContractType.STATEFULL
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 3
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __str__(self) -> str:
         return "box_extract"
@@ -5058,6 +5462,14 @@ class BoxReplace(Instruction):
         self._version: int = 8
         self._mode: ContractType = ContractType.STATEFULL
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 3
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return "box_replace"
 
@@ -5075,6 +5487,14 @@ class BoxDel(Instruction):
         self._version: int = 8
         self._mode: ContractType = ContractType.STATEFULL
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return "box_del"
 
@@ -5091,6 +5511,14 @@ class BoxLen(Instruction):
         super().__init__()
         self._version: int = 8
         self._mode: ContractType = ContractType.STATEFULL
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 2
 
     def __str__(self) -> str:
         return "box_len"
@@ -5110,6 +5538,14 @@ class BoxGet(Instruction):
         self._version: int = 8
         self._mode: ContractType = ContractType.STATEFULL
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return 2
+
     def __str__(self) -> str:
         return "box_get"
 
@@ -5127,6 +5563,10 @@ class BoxPut(Instruction):
         super().__init__()
         self._version: int = 8
         self._mode: ContractType = ContractType.STATEFULL
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 2
 
     def __str__(self) -> str:
         return "box_put"
