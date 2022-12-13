@@ -60,7 +60,14 @@ main:
     return
 """
 
-SUBROUTINE_BACK_JUMP_GROUP_INDICES = [[0, 1, 3], [0, 1, 3], [0, 1, 3], [0, 1, 3], [0, 1, 3], [0, 1, 3]]
+SUBROUTINE_BACK_JUMP_GROUP_INDICES = [
+    [0, 1, 3],
+    [0, 1, 3],
+    [0, 1, 3],
+    [0, 1, 3],
+    [0, 1, 3],
+    [0, 1, 3],
+]
 
 BRANCHING = """
 #pragma version 4
@@ -179,4 +186,3 @@ def test_group_indices(test: Tuple[str, List[List[int]]]) -> None:
     bbs = order_basic_blocks(teal.bbs)
     for b, indices in zip(bbs, group_indices):
         assert b.transaction_context.group_indices == indices
-

@@ -130,10 +130,10 @@ def parse_transaction_field(tx_field: str, use_stack: bool) -> transaction_field
         object of class corresponding to the given transaction field.
     """
     # parse array transaction fields
-    for field in ARRAY_TX_FIELD_TO_OBJECT:
+    for field, obj in ARRAY_TX_FIELD_TO_OBJECT.items():
         if tx_field.startswith(field):
             index = -1 if use_stack else _parse_int(tx_field[len(field) + 1 :])  # +1 for space(" ")
-            return ARRAY_TX_FIELD_TO_OBJECT[field](index)
+            return obj(index)
 
     tx_field = tx_field.replace(" ", "")
     return TX_FIELD_TXT_TO_OBJECT[tx_field]()
