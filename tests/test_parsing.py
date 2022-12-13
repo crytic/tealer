@@ -1,11 +1,11 @@
-from ast import parse
 from typing import Type, Tuple
+
 import pytest
 
-from tealer.teal.parse_teal import parse_teal
-from tealer.teal.instructions.parse_instruction import parse_line, ParseError
 from tealer.teal.instructions import instructions
 from tealer.teal.instructions import transaction_field
+from tealer.teal.instructions.parse_instruction import parse_line, ParseError
+from tealer.teal.parse_teal import parse_teal
 
 TARGETS = [
     "tests/parsing/teal1-instructions.teal",
@@ -36,7 +36,7 @@ TARGETS = [
     "tests/parsing/multiple_retsub.teal",
     "tests/parsing/subroutine_jump_back.teal",
     "tests/parsing/teal6-acct_params_get.teal",
-    "tests/parsing/teal6-instructions.teal",    
+    "tests/parsing/teal6-instructions.teal",
     "tests/parsing/teal7-instructions.teal",
     "tests/parsing/teal8-instructions.teal",
 ]
@@ -95,13 +95,14 @@ unsupported_instructions = """
 not an instruction
 """
 
+
 @pytest.mark.parametrize("target", TARGETS)  # type: ignore
 def test_parsing(target: str) -> None:
     with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     # print instruction to trigger __str__ on each ins
     for i in teal.instructions:
-        assert not isinstance(i, instructions.UnsupportedInstruction) , f'ins "{i}" is not supported'
+        assert not isinstance(i, instructions.UnsupportedInstruction), f'ins "{i}" is not supported'
         print(i, i.cost)
 
 
@@ -146,11 +147,11 @@ def test_parsing_2() -> None:
         instructions.Bytecblock([]),
         instructions.Byte('"not label: // not comment either"'),
         instructions.Label('labelwithqoute"'),
-        instructions.Gtxn(1, transaction_field.Sender),
+        instructions.Gtxn(1, transaction_field.Sender()),
         instructions.Gtxna(1, transaction_field.Applications(0)),
         instructions.Extract(0, 1),
         instructions.Gtxnas(1, transaction_field.Applications(-1)),
-        instructions.Gitxn(1, transaction_field.Sender),
+        instructions.Gitxn(1, transaction_field.Sender()),
         instructions.Replace(1),
         instructions.Replace2(1),
         instructions.Match(["label1", "label2"]),
@@ -195,7 +196,8 @@ def test_parsing_2() -> None:
         (instructions.Int, ("value",)),
     ]
 
-    for (b1, b2, (target, attributes)) in zip(ins1, ins2, t):
+    attributes: Tuple[str]
+    for (b1, b2, (target, attributes)) in zip(ins1, ins2, t):  # type: ignore
         assert _cmp_instructions(b1, b2, target, attributes)
 
 
@@ -215,18 +217,28 @@ def test_unsupported_instructions() -> None:
 
 def test_field_properties() -> None:
     ins = parse_line("gitxnas 1 ApplicationArgs")
-    assert isinstance(ins, instructions.Gitxnas) and ins.idx == 1 and isinstance(ins.field, transaction_field.TransactionArrayField) and ins.field.idx == -1
+    assert (
+        isinstance(ins, instructions.Gitxnas)
+        and ins.idx == 1
+        and isinstance(ins.field, transaction_field.TransactionArrayField)
+        and ins.field.idx == -1
+    )
 
     ins = parse_line("gitxna 1 ApplicationArgs 0")
-    assert isinstance(ins, instructions.Gitxna) and ins.idx == 1 and isinstance(ins.field, transaction_field.TransactionArrayField) and ins.field.idx == 0
+    assert (
+        isinstance(ins, instructions.Gitxna)
+        and ins.idx == 1
+        and isinstance(ins.field, transaction_field.TransactionArrayField)
+        and ins.field.idx == 0
+    )
 
 
 def test_instruction_properties() -> None:
-    TEST_CODE = """
+    CURRENT_TEST_CODE = """
     int 1 // comment
     int 2
     """
-    teal = parse_teal(TEST_CODE)
+    teal = parse_teal(CURRENT_TEST_CODE)
     ins1 = teal.instructions[0]
     ins2 = teal.instructions[1]
     assert ins1.prev == []
@@ -238,16 +250,16 @@ def test_instruction_properties() -> None:
     # cannot set return point of callsub instruction multiple times
     ins = parse_line("callsub main")
     assert isinstance(ins, instructions.Callsub) and ins.return_point is None
-    
+
     ins.return_point = parse_line("int 1")
     with pytest.raises(Exception):
-        ins.return_point = parse_line("int 1") # cannot set multiple times
+        ins.return_point = parse_line("int 1")  # cannot set multiple times
 
     # accessing replace instruction start_position fails if it is None i.e if there's no immediate argument.
     # it should be checked that whether given replace instruction is semantically equivalent to replace2 or replace3.
     ins = parse_line("replace 1")
     assert isinstance(ins, instructions.Replace) and ins.is_replace2 and ins.start_position == 1
-    
+
     ins = parse_line("replace")
     assert isinstance(ins, instructions.Replace) and ins.is_replace3
     with pytest.raises(Exception):
@@ -255,7 +267,7 @@ def test_instruction_properties() -> None:
 
 
 def test_cost_values() -> None:
-    TEST_CODE = """
+    CURRENT_TEST_CODE = """
     sha256
     sha512_256
     keccak256
@@ -280,15 +292,16 @@ def test_cost_values() -> None:
     ed25519verify_bare
     vrf_verify VrfAlgorand
     """
-    for line in TEST_CODE.strip().splitlines():
+    for line in CURRENT_TEST_CODE.strip().splitlines():
         # when cost parameter accessed, it checks that instruction object's BasicBlock is not none. if it is none, then
         # cost property raises exception. These tests are included to cover those brances.
         with pytest.raises(ValueError):
             print(line)
-            parse_line(line).cost
-    
+            # pylint: disable=expression-not-assigned
+            parse_line(line).cost  # type: ignore
+
     # cost should return 0 if the contract version is less than instruction supported version
-    TEST_CODE = """
+    CURRENT_TEST_CODE = """
     ecdsa_verify Secp256k1
     ecdsa_pk_decompress Secp256k1
     ecdsa_pk_recover Secp256k1
@@ -297,7 +310,7 @@ def test_cost_values() -> None:
     json_ref JSONUint64
     ed25519verify_bare
     """
-    teal = parse_teal(TEST_CODE)
+    teal = parse_teal(CURRENT_TEST_CODE)
     for ins in teal.instructions:
         print("DSDF", ins, ins.cost)
         assert ins.cost == 0
