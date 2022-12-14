@@ -5383,7 +5383,7 @@ class Match(Instruction):
 
     @property
     def stack_pop_size(self) -> int:
-        return None
+        return len(self._labels) + 1)
 
     @property
     def labels(self) -> List[str]:
