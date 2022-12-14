@@ -374,6 +374,10 @@ class Txn(Instruction):
     def field(self) -> TransactionField:
         """Transaction field being accessed using the txn instruction."""
         return self._field
+    
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __str__(self) -> str:
         return f"txn {self._field}"
