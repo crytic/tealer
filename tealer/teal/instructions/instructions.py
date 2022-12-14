@@ -374,7 +374,7 @@ class Txn(Instruction):
     def field(self) -> TransactionField:
         """Transaction field being accessed using the txn instruction."""
         return self._field
-    
+
     @property
     def stack_push_size(self) -> int:
         return 1
@@ -5387,7 +5387,7 @@ class Match(Instruction):
 
     @property
     def stack_pop_size(self) -> int:
-        return len(self._labels) + 1)
+        return len(self._labels) + 1
 
     @property
     def labels(self) -> List[str]:
