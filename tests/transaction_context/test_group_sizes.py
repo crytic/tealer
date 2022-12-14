@@ -58,7 +58,7 @@ ins_list = [
     instructions.Global(global_field.GroupSize()),
     instructions.Int(3),
     instructions.Less(),
-    instructions.Assert(),    
+    instructions.Assert(),
     instructions.Int(1),
     instructions.Retsub(),
     instructions.Label("main"),
@@ -268,7 +268,7 @@ cfg_group_sizes = [
 
 for cfg, sizes in cfg_group_sizes:
     bb = order_basic_blocks(cfg)
-    for b, group_sizes in zip(bb, sizes):
+    for b, group_sizes in zip(bb, sizes):  # type: ignore
         b.transaction_context.group_sizes = group_sizes
 
 
@@ -282,22 +282,29 @@ ALL_TESTS = [
 
 @pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
 def test_group_sizes(test: Tuple[str, List[BasicBlock]]) -> None:
-    code, cfg = test
+    code, cfg_tested = test
     teal = parse_teal(code.strip())
-    for bb in cfg:
-        print(bb)
+    for bb_tested in cfg_tested:
+        print(bb_tested)
     print("*" * 20)
-    assert cmp_cfg(teal.bbs, cfg)
+    assert cmp_cfg(teal.bbs, cfg_tested)
 
     bbs = order_basic_blocks(teal.bbs)
-    cfg = order_basic_blocks(cfg)
-    for b1, b2 in zip(bbs, cfg):
+    cfg_tested = order_basic_blocks(cfg_tested)
+    for b1, b2 in zip(bbs, cfg_tested):
         print(b1.transaction_context.group_sizes, b2.transaction_context.group_sizes)
         assert b1.transaction_context.group_sizes == b2.transaction_context.group_sizes
 
 
 MULTIPLE_RETSUB_CFG_GROUP_INDICES = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
-SUBROUTINE_BACK_JUMP_GROUP_INDICES = [[0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2]]
+SUBROUTINE_BACK_JUMP_GROUP_INDICES = [
+    [0, 1, 2],
+    [0, 1, 2],
+    [0, 1, 2],
+    [0, 1, 2],
+    [0, 1, 2],
+    [0, 1, 2],
+]
 BRANCHING_GROUP_INDICES = [[0, 1, 2, 3], [], [], [], [], [0, 1, 2, 3]]
 LOOPS_GROUP_INDICES = [[0, 1], [0, 1], [], [0, 1]]
 
@@ -308,12 +315,13 @@ GROUP_INDICES_TESTS = [
     (LOOPS, LOOPS_GROUP_INDICES),
 ]
 
+
 @pytest.mark.parametrize("test", GROUP_INDICES_TESTS)  # type: ignore
 def test_group_indices(test: Tuple[str, List[List[int]]]) -> None:
     code, group_indices_list = test
     teal = parse_teal(code.strip())
 
     bbs = order_basic_blocks(teal.bbs)
-    for b, group_indices in zip(bbs, group_indices_list):
-        print(b.transaction_context.group_indices, group_indices)
-        assert b.transaction_context.group_indices == group_indices
+    for bb_tested, group_indices in zip(bbs, group_indices_list):
+        print(bb_tested.transaction_context.group_indices, group_indices)
+        assert bb_tested.transaction_context.group_indices == group_indices

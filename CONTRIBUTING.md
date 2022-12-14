@@ -42,6 +42,6 @@ To run them locally in the root dir of the repository:
 - `mypy tealer --config mypy.ini`
 
 Install the linters with `pip install .[dev]`.
-We use pylint `2.8.2` black `21.10b0` and mypy `0.910`.
+We use pylint `2.13.4`, black `22.3.0`, mypy `0.942`.
 
 
