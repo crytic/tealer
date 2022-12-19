@@ -1435,6 +1435,10 @@ class Global(Instruction):
         """Global field being accessed."""
         return self._field
 
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return f"global {self._field}"
 
@@ -1511,6 +1515,14 @@ class Cover(Instruction):
         super().__init__()
         self._idx = idx
         self._version: int = 5
+
+    @property
+    def stack_pop_size(self) -> int:
+        return self._idx + 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return self._idx + 1
 
     def __str__(self) -> str:
         return f"cover {self._idx}"
@@ -1738,6 +1750,10 @@ class AppGlobalGet(Instruction):
 
     @property
     def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -2238,6 +2254,10 @@ class Addr(Instruction):
 
     def __str__(self) -> str:
         return f"addr {self._addr}"
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
 
 class Pop(Instruction):
@@ -3348,7 +3368,7 @@ class BBitwiseInvert(Instruction):
 
     @property
     def stack_pop_size(self) -> int:
-        return 2
+        return 1
 
     @property
     def stack_push_size(self) -> int:
@@ -4059,6 +4079,10 @@ class Intc3(Instruction):
 
     """
 
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
     def __str__(self) -> str:
         return "intc_3"
 
@@ -4077,6 +4101,10 @@ class Bytec(Instruction):
     def __init__(self, idx: int):
         super().__init__()
         self._idx = idx
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __str__(self) -> str:
         return f"bytec {self._idx}"
@@ -4404,6 +4432,14 @@ class Substring3(Instruction):
         super().__init__()
         self._version: int = 2
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 3
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
 
 class AcctParamsGet(Instruction):
     """`acct_params_get i` allows reading param field of a given account.
@@ -4564,10 +4600,6 @@ class Gitxn(Instruction):
         return self._field
 
     @property
-    def stack_pop_size(self) -> int:
-        return 1
-
-    @property
     def stack_push_size(self) -> int:
         return 1
 
@@ -4675,6 +4707,10 @@ class Itxnas(Instruction):
     def field(self) -> TransactionField:
         """Array transaction field being accessed."""
         return self._field
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
 
     @property
     def stack_push_size(self) -> int:
@@ -4849,7 +4885,9 @@ class Replace(Instruction):
 
     @property
     def stack_pop_size(self) -> int:
-        return 3
+        if self._idx is None:
+            return 3
+        return 2
 
     @property
     def stack_push_size(self) -> int:
@@ -5144,11 +5182,12 @@ class Bury(Instruction):
 
     @property
     def stack_pop_size(self) -> int:
-        return 1
+        # Assuming the `stack depth n` includes A value as well. if not this should be `self._index`
+        return 1 + self._index
 
     @property
     def stack_push_size(self) -> int:
-        return 1
+        return self._index
 
     def __str__(self) -> str:
         return f"bury {self._index}"
@@ -5173,8 +5212,8 @@ class Popn(Instruction):
         self._version: int = 8
 
     @property
-    def stack_push_size(self) -> int:
-        return 1
+    def stack_pop_size(self) -> int:
+        return self._nelements
 
     def __str__(self) -> str:
         return f"popn {self._nelements}"
@@ -5196,8 +5235,12 @@ class Dupn(Instruction):
         self._version: int = 8
 
     @property
-    def stack_push_size(self) -> int:
+    def stack_pop_size(self) -> int:
         return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return self._count + 1
 
     def __str__(self) -> str:
         return f"dupn {self._count}"
@@ -5222,7 +5265,7 @@ class PushBytess(Instruction):
 
     @property
     def stack_push_size(self) -> int:
-        return 1
+        return len(self._bytes_list)
 
     def __str__(self) -> str:
         return " ".join(["pushbytess"] + self._bytes_list)
@@ -5247,7 +5290,7 @@ class PushInts(Instruction):
 
     @property
     def stack_push_size(self) -> int:
-        return 1
+        return len(self._int_list)
 
     def __str__(self) -> str:
         return " ".join(["pushints"] + list(map(str, self._int_list)))
@@ -5293,6 +5336,8 @@ class FrameDig(Instruction):
 
     @property
     def stack_push_size(self) -> int:
+        # TODO: It's not clear where the frame pointer is stored and what are the exact
+        # semantics of this opcode. Recheck this later.
         return 1
 
     def __str__(self) -> str:
@@ -5319,6 +5364,8 @@ class FrameBury(Instruction):
 
     @property
     def stack_pop_size(self) -> int:
+        # TODO: It's not clear where the frame pointer is stored and what are the exact
+        # semantics of this opcode. Recheck this later.
         return 1
 
     @property
@@ -5455,7 +5502,7 @@ class BoxExtract(Instruction):
 class BoxReplace(Instruction):
     """`box_replace` replace data of a box.
 
-    Stack: ...., A: []byte, B: uint64, C: []byte -> ...., uint64
+    Stack: ...., A: []byte, B: uint64, C: []byte -> ....
 
     Write byte-array C into box A, starting at offset B. Fail if A does not exist, or the byte range
     is outside A's size.
@@ -5469,10 +5516,6 @@ class BoxReplace(Instruction):
     @property
     def stack_pop_size(self) -> int:
         return 3
-
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
     def __str__(self) -> str:
         return "box_replace"
