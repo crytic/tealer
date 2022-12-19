@@ -14,7 +14,9 @@ FIELDS_TARGETS = [
     "tests/parsing/teal-fields-with-versions.teal",
 ]
 
-instruction_info_pattern = re.compile(r"\(version: ([0-9]+), mode: (Any|Stateful|Stateless), pop: ([0-9]+), push: ([0-9+])\)")
+instruction_info_pattern = re.compile(
+    r"\(version: ([0-9]+), mode: (Any|Stateful|Stateless), pop: ([0-9]+), push: ([0-9+])\)"
+)
 
 field_info_pattern = re.compile(r"\(version: ([0-9]+)\)")
 
