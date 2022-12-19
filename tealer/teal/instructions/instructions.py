@@ -4768,6 +4768,26 @@ class Gitxnas(Instruction):
         return f"Gitxnas {self._idx} {self._field}"
 
 
+class Method(Instruction):
+    """method {s}, pushes 4-byte method selector computed from the method signature `s`"""
+
+    def __init__(self, method_signature: str) -> None:
+        super().__init__()
+        self.method_signature = method_signature[1:][:-1]  # remove double qoutes
+        self._version: int = 6
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 0
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
+    def __str__(self) -> str:
+        return f"method {self.method_signature}"
+
+
 class Replace2(Instruction):
     """`replace2 s` replaces the bytes from the given position s.
 

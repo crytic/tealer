@@ -513,13 +513,15 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
             raise ParseError(f"incorrect format of label: {line}")
         ins = instructions.Label(fields[0][:-1])
 
-    if fields[0] == "byte" or fields[0] == "pushbytes":
+    if fields[0] == "byte" or fields[0] == "pushbytes" or fields[0] == "method":
         imm: List[str] = _parse_byte_arguments(fields[1:])
         if len(imm) != 1:
             raise ParseError(f"{fields[0]} expects exactly one argument: {line}")
-        ins = {"byte": instructions.Byte, "pushbytes": instructions.PushBytes,}[
-            fields[0]
-        ](imm[0])
+        ins = {
+            "byte": instructions.Byte,
+            "pushbytes": instructions.PushBytes,
+            "method": instructions.Method,
+        }[fields[0]](imm[0])
 
     if fields[0] == "bytecblock":
         imm = _parse_byte_arguments(fields[1:])

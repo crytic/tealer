@@ -56,3 +56,5 @@ itxnas ApplicationArgs
 gitxnas 1 ApplicationArgs
 gitxnas 2 Accounts
 gitxnas 3 Assets
+
+method "increment(uint64,pay)uint64"
