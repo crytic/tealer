@@ -19,13 +19,16 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.10"]
 
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.8
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: ${{ matrix.python-version }}
 
         # Used by ci_test.sh
     - name: Install dependencies
@@ -33,10 +36,11 @@ jobs:
         python setup.py install
         pip install pytest
         pip install pytest-cov
+        pip install pyteal
 
     - name: Run Parsing tests
       run: |
-        pytest tests/test_parsing.py tests/test_versions.py --cov=tealer/teal/instructions --cov-branch  --cov-fail-under=96
+        pytest tests/test_parsing.py tests/test_versions.py tests/test_parsing_using_pyteal.py --cov=tealer/teal/instructions --cov-branch  --cov-fail-under=96
 
     - name: Run string tests
       run: |
