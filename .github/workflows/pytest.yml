@@ -36,7 +36,7 @@ jobs:
 
     - name: Run Parsing tests
       run: |
-        pytest tests/test_parsing.py --cov=tealer/teal/instructions --cov-branch  --cov-fail-under=96
+        pytest tests/test_parsing.py tests/test_versions.py --cov=tealer/teal/instructions --cov-branch  --cov-fail-under=96
 
     - name: Run string tests
       run: |
