@@ -1,0 +1,62 @@
+name: CI (python 3.10)
+
+defaults:
+  run:
+    # To load bashrc
+    shell: bash -ieo pipefail {0}
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches: [main, dev]
+  schedule:
+    # run CI every day even if no PRs/merges occur
+    - cron:  '0 12 * * *'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.10"
+
+        # Used by ci_test.sh
+    - name: Install dependencies
+      run: |
+        python setup.py install
+        pip install pytest
+        pip install pytest-cov
+        pip install pyteal
+
+    - name: Run Parsing tests in 3.10
+      run: |
+        pytest tests/test_parsing.py tests/test_versions.py tests/test_parsing_using_pyteal.py --cov=tealer/teal/instructions --cov-branch  --cov-fail-under=96
+    
+    - name: Run string tests
+      run: |
+        pytest tests/test_string_representation.py
+
+    - name: Run version tests in 3.10
+      run: |
+        pytest tests/test_versions.py
+        pytest tests/test_mode_detector.py
+
+    - name: Run cfg recovery tests in 3.10
+      run: |
+        pytest tests/test_cfg.py
+
+    - name: Run detectors tests in 3.10
+      run: |
+        pytest tests/test_detectors.py
+    
+    - name: Run dataflow analysis tests in 3.10
+      run: |
+        pytest tests/transaction_context/test_group_sizes.py
+        pytest tests/transaction_context/test_group_indices.py
