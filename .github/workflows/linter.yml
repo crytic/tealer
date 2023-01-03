@@ -37,7 +37,7 @@ jobs:
           cp mypy.ini .github/linters
           pip install pytest
       - name: Pylint
-        uses: docker://github/super-linter:v4
+        uses: github/super-linter/slim@v4.9.2
         if: always()
         env:
           # run linter on everything to catch preexisting problems
@@ -50,7 +50,7 @@ jobs:
           PYTHON_PYLINT_CONFIG_FILE: pyproject.toml
 
       - name: Black
-        uses: docker://github/super-linter:v4
+        uses: github/super-linter/slim@v4.9.2
         if: always()
         env:
           # run linter on everything to catch preexisting problems
@@ -61,8 +61,8 @@ jobs:
           VALIDATE_PYTHON_BLACK: true
           PYTHON_BLACK_CONFIG_FILE: pyproject.toml
 
-      - name: MyPy
-        uses: docker://github/super-linter:v4
+      - name: Mypy
+        uses: github/super-linter/slim@v4.9.2
         if: always()
         env:
           # run linter on everything to catch preexisting problems
@@ -74,7 +74,7 @@ jobs:
           PYTHON_MYPY_CONFIG_FILE: mypy.ini
 
       - name: Lint everything else
-        uses: docker://github/super-linter:v4
+        uses: github/super-linter/slim@v4.9.2
         if: always()
         env:
           # run linter on everything to catch preexisting problems
@@ -94,4 +94,5 @@ jobs:
           VALIDATE_DOCKERFILE_HADOLINT: false
           VALIDATE_EDITORCONFIG: false
           VALIDATE_JSCPD: false
-          SHELLCHECK_OPTS: "-e SC1090"
+          VALIDATE_PYTHON_MYPY: false
+          SHELLCHECK_OPTS: "-e SC1090 -e SC2181 -e SC2103"

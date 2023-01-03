@@ -1,9 +1,9 @@
-#pragma version 2
+#pragma version 1
 
 // some comment
 
-global GroupSize // another comment
-+
+sha512_256 // another comment
+
 == // one more comment
 
 ///////////////////

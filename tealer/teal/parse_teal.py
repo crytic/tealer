@@ -41,6 +41,8 @@ from tealer.teal.instructions.instructions import (
     Callsub,
     Retsub,
     Pragma,
+    Switch,
+    Match,
 )
 from tealer.teal.instructions.instructions import ContractType
 from tealer.teal.instructions.parse_instruction import parse_line, ParseError
@@ -48,6 +50,7 @@ from tealer.teal.instructions.transaction_field import TransactionField
 from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
+from tealer.teal.instructions.acct_params_field import AcctParamsField
 from tealer.teal.teal import Teal
 from tealer.analyses.dataflow import all_constraints
 from tealer.analyses.dataflow.generic import DataflowTransactionContext
@@ -238,7 +241,7 @@ def _first_pass(
         instructions.append(ins)
 
 
-def _second_pass(
+def _second_pass(  # pylint: disable=too-many-branches
     instructions: List[Instruction],
     labels: Dict[str, Label],
     rets: Dict[str, List[Instruction]],
@@ -267,6 +270,12 @@ def _second_pass(
         if isinstance(ins, (B, BZ, BNZ, Callsub)):
             ins.add_next(labels[ins.label])
             labels[ins.label].add_prev(ins)
+
+        # if switch or match, link the ins to its labels
+        if isinstance(ins, (Switch, Match)):
+            for ins_label in ins.labels:
+                ins.add_next(labels[ins_label])
+                labels[ins_label].add_prev(ins)
 
     # link retsub instructions to return points of corresponding subroutines
     retsubs: Dict[str, List[Retsub]] = {}  # map each subroutine label to list of it's retsubs
@@ -305,7 +314,7 @@ def _second_pass(
                 return_point.add_prev(retsub_ins)
 
 
-def _fourth_pass(instructions: List[Instruction]) -> None:
+def _fourth_pass(instructions: List[Instruction]) -> None:  # pylint: disable=too-many-branches
     """Add jump or non-sequential basic block links.
 
     This function is the fourth pass of the teal parser. Jump links
@@ -320,7 +329,7 @@ def _fourth_pass(instructions: List[Instruction]) -> None:
     # Fourth pass over the instructiions list: Add jump-based basic block links
     for ins in instructions:
         # A branching instruction with more than one target (other than a retsub)
-        if len(ins.next) > 1 and not isinstance(ins, Retsub):
+        if len(ins.next) > 1 and not isinstance(ins, (Retsub, Switch, Match)):
             branch = ins.next[1]
             if branch.bb and ins.bb:
                 branch.bb.add_prev(ins.bb)
@@ -342,6 +351,15 @@ def _fourth_pass(instructions: List[Instruction]) -> None:
                     branch.bb.add_prev(ins.bb)
                 if ins.bb and branch.bb:
                     ins.bb.add_next(branch.bb)
+        # switch and match
+        if isinstance(ins, (Switch, Match)):
+            bb = ins.bb
+            for next_ins in ins.next:
+                if next_ins.bb and bb:
+                    if next_ins.bb not in bb.next:
+                        bb.add_next(next_ins.bb)
+                    if bb not in next_ins.bb.prev:
+                        next_ins.bb.add_prev(bb)
 
 
 def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
@@ -437,7 +455,14 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
         else:
             field = getattr(ins, "field", None)
             if field is not None and isinstance(
-                field, (TransactionField, AssetHoldingField, AssetParamsField, AppParamsField)
+                field,
+                (
+                    TransactionField,
+                    AssetHoldingField,
+                    AssetParamsField,
+                    AppParamsField,
+                    AcctParamsField,
+                ),
             ):
                 if program_version < field.version:
                     print(

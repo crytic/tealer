@@ -103,3 +103,33 @@ class GroupID(GlobalField):
     def __init__(self) -> None:
         super().__init__()
         self._version = 5
+
+
+class OpcodeBudget(GlobalField):
+    """The remaining cost that can be spent by opcodes in the program"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version = 6
+
+
+class CallerApplicationID(GlobalField):
+    """The application ID of the application that called this application.
+
+    ID wil be 0 if the current application is at the top-level. Application mode only.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version = 6
+
+
+class CallerApplicationAddress(GlobalField):
+    """The application address of the application that called this application.
+
+    ZeroAddress if this application is at the top-level. Application mode only.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version = 6

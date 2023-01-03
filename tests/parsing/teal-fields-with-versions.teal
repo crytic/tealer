@@ -1,11 +1,10 @@
-#pragma version 5
+#pragma version 7
 
 // Transaction Fields
 
 txn Sender          // (version: 1)
 txn Fee             // (version: 1)
 txn FirstValid      // (version: 1)
-txn FirstValidTime  // (version: 1)
 txn LastValid       // (version: 1)
 txn Note            // (version: 1)
 txn Lease           // (version: 1)
@@ -64,6 +63,13 @@ itxna Logs 0                    // (version: 5)
 itxn NumLogs                    // (version: 5)
 itxn CreatedAssetID             // (version: 5)
 itxn CreatedApplicationID       // (version: 5)
+txn LastLog                     // (version: 6)
+txn StateProofPK                // (version: 6)
+txn FirstValidTime              // (version: 7)
+txn NumApprovalProgramPages     // (version: 7)
+txn NumClearStateProgramPages   // (version: 7)
+txna ApprovalProgramPages 1     // (version: 7)
+txna ClearStateProgramPages 1   // (version: 7)
 
 // Global Fields
 global MinTxnFee                    // (version: 1)
@@ -78,6 +84,11 @@ global CurrentApplicationID         // (version: 2)
 global CreatorAddress               // (version: 3)
 global CurrentApplicationAddress    // (version: 5)
 global GroupID                      // (version: 5)
+global OpcodeBudget                 // (version: 6)
+global CallerApplicationID          // (version: 6)
+global CallerApplicationAddress     // (version: 6)
+
+
 
 // Asset Holding Fields
 
@@ -110,3 +121,18 @@ app_params_get AppLocalNumByteSlice         // (version: 5)
 app_params_get AppExtraProgramPages         // (version: 5)
 app_params_get AppCreator                   // (version: 5)
 app_params_get AppAddress                   // (version: 5)
+
+// Acct Params Fields
+
+acct_params_get AcctBalance                 // (version: 6)
+acct_params_get AcctMinBalance              // (version: 6)
+acct_params_get AcctAuthAddr                // (version: 6)
+acct_params_get AcctTotalNumUint            // (version: 8)
+acct_params_get AcctTotalNumByteSlice       // (version: 8)
+acct_params_get AcctTotalExtraAppPages      // (version: 8)
+acct_params_get AcctTotalAppsCreated        // (version: 8)
+acct_params_get AcctTotalAppsOptedIn        // (version: 8)
+acct_params_get AcctTotalAssetsCreated      // (version: 8)
+acct_params_get AcctTotalAssets             // (version: 8)
+acct_params_get AcctTotalBoxes              // (version: 8)
+acct_params_get AcctTotalBoxBytes           // (version: 8)
