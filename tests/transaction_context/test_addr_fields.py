@@ -1,7 +1,6 @@
 from typing import Tuple, List
 import pytest
 
-from tealer.teal.context.block_transaction_context import BlockTransactionContext
 from tealer.teal.parse_teal import parse_teal
 from tests.utils import order_basic_blocks
 
@@ -40,17 +39,24 @@ unexpected_group_size:
 
 rekeyto_any = [True] * 6 + [False] * 5
 rekeyto_none = [False] * 6 + [True] * 5
-rekeyto = [list() for _ in range(11)]
+rekeyto: List[List[str]] = [[] for _ in range(11)]
+rekeyto_values = (rekeyto_any, rekeyto_none, rekeyto)
 
 closeto_any = [False] * 11
 closeto_none = [True] * 11
-closeto = [list() for _ in range(11)]
+closeto: List[List[str]] = [[] for _ in range(11)]
+closeto_values = (closeto_any, closeto_none, closeto)
 
 assetcloseto_any = [False] * 11
 assetcloseto_none = [True] * 11
-assetcloseto = [list() for _ in range(11)]
+assetcloseto: List[List[str]] = [[] for _ in range(11)]
+assetcloseto_values = (assetcloseto_any, assetcloseto_none, assetcloseto)
 
-BRANCHING_ADDR_VALUES = [rekeyto_any, rekeyto_none, rekeyto, closeto_any, closeto_none, closeto, assetcloseto_any, assetcloseto_none, assetcloseto]
+BRANCHING_ADDR_VALUES = [
+    rekeyto_values,
+    closeto_values,
+    assetcloseto_values,
+]
 
 BRANCHING_ADDR_GTXN = """
 #pragma version 2
@@ -91,13 +97,15 @@ ALL_TESTS_TXN = [
 
 
 @pytest.mark.parametrize("test", ALL_TESTS_TXN)  # type: ignore
-def test_addr_fields(test: Tuple[str, List[List[int]]]) -> None:
+def test_addr_fields(  # pylint: disable=too-many-locals
+    test: Tuple[str, List[Tuple[List[bool], List[bool], List[List[str]]]], int]
+) -> None:
     code, values, idx = test
     teal = parse_teal(code.strip())
 
-    rekeyto_any, rekeyto_none, rekeyto = values[:3]
-    closeto_any, assetcloseto_none, closeto = values[3: 6]
-    assetcloseto_any, assetcloseto_none, assetcloseto = values[6: 9]
+    ex_rekeyto_any, ex_rekeyto_none, ex_rekeyto = values[0]
+    ex_closeto_any, ex_closeto_none, ex_closeto = values[1]
+    ex_assetcloseto_any, ex_assetcloseto_none, ex_assetcloseto = values[2]
 
     bbs = order_basic_blocks(teal.bbs)
     for b in bbs:
@@ -106,14 +114,14 @@ def test_addr_fields(test: Tuple[str, List[List[int]]]) -> None:
         else:
             ctx = b.transaction_context.gtxn_context(idx)
 
-        assert ctx.rekeyto.any_addr == rekeyto_any[b.idx]
-        assert ctx.rekeyto.no_addr == rekeyto_none[b.idx]
-        assert set(ctx.rekeyto.possible_addr) == set(rekeyto[b.idx])
-        
-        assert ctx.closeto.any_addr == closeto_any[b.idx]
-        assert ctx.closeto.no_addr == closeto_none[b.idx]
-        assert set(ctx.closeto.possible_addr) == set(closeto[b.idx])
-        
-        assert ctx.assetcloseto.any_addr == assetcloseto_any[b.idx]
-        assert ctx.assetcloseto.no_addr == assetcloseto_none[b.idx]
-        assert set(ctx.assetcloseto.possible_addr) == set(assetcloseto[b.idx])
+        assert ctx.rekeyto.any_addr == ex_rekeyto_any[b.idx]
+        assert ctx.rekeyto.no_addr == ex_rekeyto_none[b.idx]
+        assert set(ctx.rekeyto.possible_addr) == set(ex_rekeyto[b.idx])
+
+        assert ctx.closeto.any_addr == ex_closeto_any[b.idx]
+        assert ctx.closeto.no_addr == ex_closeto_none[b.idx]
+        assert set(ctx.closeto.possible_addr) == set(ex_closeto[b.idx])
+
+        assert ctx.assetcloseto.any_addr == ex_assetcloseto_any[b.idx]
+        assert ctx.assetcloseto.no_addr == ex_assetcloseto_none[b.idx]
+        assert set(ctx.assetcloseto.possible_addr) == set(ex_assetcloseto[b.idx])

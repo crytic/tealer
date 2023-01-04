@@ -30,10 +30,7 @@ retsub
 """
 
 txn_fees = [1000, 1000, 1000, 0, 1000]
-gtxn_fees = [
-    [1000, 1000, 1000, 0, 1000],
-    *[[0]*5 for _ in range(MAX_GROUP_SIZE - 1)]
-]
+gtxn_fees = [[1000, 1000, 1000, 0, 1000], *[[0] * 5 for _ in range(MAX_GROUP_SIZE - 1)]]
 
 BASIC_LISTS = [txn_fees, gtxn_fees]
 
@@ -50,9 +47,7 @@ retsub
 """
 
 txn_fees = [MAX_UINT64] * 3
-gtxn_fees = [
-    [MAX_UINT64] * 3 for _ in range(MAX_GROUP_SIZE)
-]
+gtxn_fees = [[MAX_UINT64] * 3 for _ in range(MAX_GROUP_SIZE)]
 
 NO_CHECKS_LISTS = [txn_fees, gtxn_fees]
 
@@ -85,10 +80,17 @@ perform_validations:
 """
 
 txn_fees = [MAX_UINT64] * 6
-txn_fees[4] = 0 # fail_txn block
+txn_fees[4] = 0  # fail_txn block
 gtxn_fees = [
-    [999, 999, 999, 999, 0, 999,],
-    *[[0] * 6 for _ in range(MAX_GROUP_SIZE - 1)]
+    [
+        999,
+        999,
+        999,
+        999,
+        0,
+        999,
+    ],
+    *[[0] * 6 for _ in range(MAX_GROUP_SIZE - 1)],
 ]
 
 GTXN_0_LISTS = [txn_fees, gtxn_fees]
@@ -176,11 +178,11 @@ validate_fee:
 """
 
 txn_fees = [9999] * 10
-txn_fees[4] = 0 # fail_txn block
+txn_fees[4] = 0  # fail_txn block
 gtxn_fees = [
     [9999, 9999, 9999, 9999, 0, 9999, 9999, 9999, 999, 999],
     [999, 999, 999, 999, 0, 999, 999, 0, 999, 999, 999],
-    *[[0]*10 for _ in range(MAX_GROUP_SIZE - 2)],
+    *[[0] * 10 for _ in range(MAX_GROUP_SIZE - 2)],
 ]
 
 
@@ -239,12 +241,12 @@ validate_fee_group_size_2:
 """
 
 txn_fees = [MAX_UINT64] * 12
-txn_fees[7] = 0 # fail_txn block
+txn_fees[7] = 0  # fail_txn block
 gtxn_fees = [
-    #[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     [9999, 9999, 9999, 1000, 1000, 9999, 9999, 0, 9999, 9999, 1000, 1000],
     [1000, 0, 0, 1000, 1000, 1000, 1000, 0, 1000, 0, 1000, 1000, 1000],
-    *[[0]*12 for _ in range(MAX_GROUP_SIZE - 2)],
+    *[[0] * 12 for _ in range(MAX_GROUP_SIZE - 2)],
 ]
 
 
@@ -302,7 +304,7 @@ ALL_TESTS = [
 
 
 @pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
-def test_tx_types_gtxn(test: Tuple[str, List[int], List[List[int]], List[List[int]]]) -> None:
+def test_tx_types_gtxn(test: Tuple[str, List[int], List[List[int]]]) -> None:
     code, max_fees_list, gtxn_fees_list = test
 
     teal = parse_teal(code.strip())

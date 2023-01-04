@@ -38,7 +38,7 @@ def test_detectors(test: Tuple[str, Type[AbstractDetector], List[List[BasicBlock
         assert cmp_cfg(path, ex_path)
 
 
-ALL_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[BasicBlock]]]]  = [
+ALL_NEW_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     *new_can_close_account_tests,
     *new_missing_rekeyto_tests,
     *new_can_close_asset_tests,
@@ -46,17 +46,29 @@ ALL_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[BasicBlock]]]]  = [
     *new_can_delete_tests,
 ]
 
-@pytest.mark.parametrize("test", ALL_TESTS) # type: ignore
+
+@pytest.mark.parametrize("test", ALL_NEW_TESTS)  # type: ignore
 def test_just_detectors(test: Tuple[str, Type[AbstractDetector], List[List[int]]]) -> None:
     code, detector, expected_paths = test
     teal = parse_teal(code.strip())
     teal.register_detector(detector)
     result = teal.run_detectors()[0]
     for bi in teal.bbs:
-        print(bi, bi.idx, bi.transaction_context.transaction_types, bi.transaction_context.group_indices)
-        print(bi.transaction_context.gtxn_context(0).transaction_types, bi.transaction_context.group_indices)
-        print(bi.transaction_context.gtxn_context(1).transaction_types, bi.transaction_context.group_indices)
-    
+        print(
+            bi,
+            bi.idx,
+            bi.transaction_context.transaction_types,
+            bi.transaction_context.group_indices,
+        )
+        print(
+            bi.transaction_context.gtxn_context(0).transaction_types,
+            bi.transaction_context.group_indices,
+        )
+        print(
+            bi.transaction_context.gtxn_context(1).transaction_types,
+            bi.transaction_context.group_indices,
+        )
+
     assert len(result.paths) == len(expected_paths)
     for path, expected_path in zip(result.paths, expected_paths):
         assert len(path) == len(expected_path)

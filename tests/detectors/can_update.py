@@ -1,3 +1,5 @@
+from typing import List
+
 from tealer.teal.instructions import instructions
 from tealer.teal.instructions import transaction_field
 from tealer.detectors.all_detectors import CanUpdate
@@ -298,7 +300,7 @@ handle_updateapp:
 err
 """
 
-CAN_UPDATE_GROUP_INDEX_0_VULNERABLE_PATHS = []
+CAN_UPDATE_GROUP_INDEX_0_VULNERABLE_PATHS: List[List[int]] = []
 
 CAN_UPDATE_GROUP_INDEX_1 = """
 #pragma version 6
@@ -340,7 +342,7 @@ handle_updateapp:
 err
 """
 
-CAN_UPDATE_GROUP_INDEX_1_VULNERABLE_PATHS = []
+CAN_UPDATE_GROUP_INDEX_1_VULNERABLE_PATHS: List[List[int]] = []
 
 CAN_UPDATE_GROUP_INDEX_2 = """
 #pragma version 6
@@ -382,7 +384,11 @@ handle_updateapp:
 err
 """
 
-CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS = [[0, 2, 3, 4, 9], [0, 2, 3, 8, 9], [0, 2, 7, 8, 9]]
+CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS: List[List[int]] = [
+    [0, 2, 3, 4, 9],
+    [0, 2, 3, 8, 9],
+    [0, 2, 7, 8, 9],
+]
 
 new_can_update_tests = [
     (CAN_UPDATE_GROUP_INDEX_0, CanUpdate, CAN_UPDATE_GROUP_INDEX_0_VULNERABLE_PATHS),

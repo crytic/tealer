@@ -1,3 +1,5 @@
+from typing import List
+
 from tealer.teal.instructions import instructions, transaction_field
 from tealer.teal import global_field
 from tealer.detectors.all_detectors import MissingRekeyTo
@@ -274,7 +276,7 @@ int 1
 return
 """
 
-MISSING_REKEYTO_GROUP_INDEX_0_VULNERABLE_PATHS = [] # not vulnerable
+MISSING_REKEYTO_GROUP_INDEX_0_VULNERABLE_PATHS: List[List[int]] = []  # not vulnerable
 
 
 MISSING_REKEYTO_GROUP_INDEX_1 = """
@@ -302,7 +304,7 @@ int 1
 return
 """
 
-MISSING_REKEYTO_GROUP_INDEX_1_VULNERABLE_PATHS = [[0, 2, 3]]
+MISSING_REKEYTO_GROUP_INDEX_1_VULNERABLE_PATHS: List[List[int]] = [[0, 2, 3]]
 
 
 MISSING_REKEYTO_GROUP_INDEX_2 = """
@@ -336,7 +338,7 @@ fail_txn:
 err
 """
 
-MISSING_REKEYTO_GROUP_INDEX_2_VULNERABLE_PATHS = [] # not vulnerable
+MISSING_REKEYTO_GROUP_INDEX_2_VULNERABLE_PATHS: List[List[int]] = []  # not vulnerable
 
 
 MISSING_REKEYTO_GROUP_INDEX_3 = """
@@ -378,7 +380,7 @@ fail_txn:
 err
 """
 
-MISSING_REKEYTO_GROUP_INDEX_3_VULNERABLE_PATHS = [] # not vulnerable
+MISSING_REKEYTO_GROUP_INDEX_3_VULNERABLE_PATHS: List[List[int]] = []  # not vulnerable
 
 new_missing_rekeyto_tests = [
     (MISSING_REKEYTO_GROUP_INDEX_0, MissingRekeyTo, MISSING_REKEYTO_GROUP_INDEX_0_VULNERABLE_PATHS),

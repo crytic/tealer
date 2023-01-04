@@ -1,3 +1,5 @@
+from typing import List
+
 from tealer.teal.instructions import instructions, transaction_field
 from tealer.detectors.all_detectors import CanCloseAccount
 from tealer.teal import global_field
@@ -228,7 +230,6 @@ can_close_account_tests = [
 ]
 
 
-
 CAN_CLOSE_ACCOUNT_GROUP_INDEX_0 = """
 #pragma version 6
 txn GroupIndex
@@ -254,7 +255,7 @@ int 1
 return
 """
 
-CAN_CLOSE_ACCOUNT_GROUP_INDEX_0_VULNERABLE_PATHS = [] # not vulnerable
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_0_VULNERABLE_PATHS: List[List[int]] = []  # not vulnerable
 
 
 CAN_CLOSE_ACCOUNT_GROUP_INDEX_1 = """
@@ -282,7 +283,7 @@ int 1
 return
 """
 
-CAN_CLOSE_ACCOUNT_GROUP_INDEX_1_VULNERABLE_PATHS = [[0, 2, 3]]
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_1_VULNERABLE_PATHS: List[List[int]] = [[0, 2, 3]]
 
 
 CAN_CLOSE_ACCOUNT_GROUP_INDEX_2 = """
@@ -316,7 +317,7 @@ fail_txn:
 err
 """
 
-CAN_CLOSE_ACCOUNT_GROUP_INDEX_2_VULNERABLE_PATHS = [] # not vulnerable
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_2_VULNERABLE_PATHS: List[List[int]] = []  # not vulnerable
 
 
 CAN_CLOSE_ACCOUNT_GROUP_INDEX_3 = """
@@ -358,12 +359,28 @@ fail_txn:
 err
 """
 
-CAN_CLOSE_ACCOUNT_GROUP_INDEX_3_VULNERABLE_PATHS = [] # not vulnerable
+CAN_CLOSE_ACCOUNT_GROUP_INDEX_3_VULNERABLE_PATHS: List[List[int]] = []  # not vulnerable
 
 
 new_can_close_account_tests = [
-    (CAN_CLOSE_ACCOUNT_GROUP_INDEX_0, CanCloseAccount, CAN_CLOSE_ACCOUNT_GROUP_INDEX_0_VULNERABLE_PATHS),
-    (CAN_CLOSE_ACCOUNT_GROUP_INDEX_1, CanCloseAccount, CAN_CLOSE_ACCOUNT_GROUP_INDEX_1_VULNERABLE_PATHS),
-    (CAN_CLOSE_ACCOUNT_GROUP_INDEX_2, CanCloseAccount, CAN_CLOSE_ACCOUNT_GROUP_INDEX_2_VULNERABLE_PATHS),
-    (CAN_CLOSE_ACCOUNT_GROUP_INDEX_3, CanCloseAccount, CAN_CLOSE_ACCOUNT_GROUP_INDEX_3_VULNERABLE_PATHS),
+    (
+        CAN_CLOSE_ACCOUNT_GROUP_INDEX_0,
+        CanCloseAccount,
+        CAN_CLOSE_ACCOUNT_GROUP_INDEX_0_VULNERABLE_PATHS,
+    ),
+    (
+        CAN_CLOSE_ACCOUNT_GROUP_INDEX_1,
+        CanCloseAccount,
+        CAN_CLOSE_ACCOUNT_GROUP_INDEX_1_VULNERABLE_PATHS,
+    ),
+    (
+        CAN_CLOSE_ACCOUNT_GROUP_INDEX_2,
+        CanCloseAccount,
+        CAN_CLOSE_ACCOUNT_GROUP_INDEX_2_VULNERABLE_PATHS,
+    ),
+    (
+        CAN_CLOSE_ACCOUNT_GROUP_INDEX_3,
+        CanCloseAccount,
+        CAN_CLOSE_ACCOUNT_GROUP_INDEX_3_VULNERABLE_PATHS,
+    ),
 ]

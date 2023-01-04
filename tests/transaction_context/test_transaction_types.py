@@ -1,9 +1,9 @@
-
-from tealer.utils.teal_enums import TealerTransactionType
 from typing import List, Tuple
 import pytest
 
 from tealer.teal.parse_teal import parse_teal
+from tealer.utils.teal_enums import TealerTransactionType
+from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 
 from tests.utils import order_basic_blocks
 
@@ -45,16 +45,42 @@ err
 """
 
 CAN_UPDATE_TX_TYPES = [
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplCreation],
+    [
+        TealerTransactionType.ApplNoOp,
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+        TealerTransactionType.ApplCreation,
+    ],
     [TealerTransactionType.ApplCreation],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
-    [TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
-    [TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
+    [
+        TealerTransactionType.ApplNoOp,
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+    ],
+    [
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+    ],
+    [
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+    ],
     [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
     [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
     [TealerTransactionType.ApplNoOp],
     [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut],
+    [
+        TealerTransactionType.ApplNoOp,
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+    ],
     [],
 ]
 
@@ -105,15 +131,41 @@ end:
 """
 
 CAN_UPDATE_LOOP_TX_TYPES = [
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplCreation],
+    [
+        TealerTransactionType.ApplNoOp,
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+        TealerTransactionType.ApplCreation,
+    ],
     [TealerTransactionType.ApplCreation],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
-    [TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
-    [TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
+    [
+        TealerTransactionType.ApplNoOp,
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+    ],
+    [
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+    ],
+    [
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+    ],
     [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
     [TealerTransactionType.ApplNoOp],
     [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut],
+    [
+        TealerTransactionType.ApplNoOp,
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+    ],
     [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
     [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
     [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
@@ -264,8 +316,9 @@ ALL_TESTS_TXN = [
     (CAN_UPDATE_LOOP_GTXN_0, CAN_UPDATE_LOOP_TX_TYPES, 0),
 ]
 
+
 @pytest.mark.parametrize("test", ALL_TESTS_TXN)  # type: ignore
-def test_tx_types(test: Tuple[str, List[List[int]]]) -> None:
+def test_tx_types(test: Tuple[str, List[List[int]], int]) -> None:
     code, tx_types_list, idx = test
     teal = parse_teal(code.strip())
 
@@ -319,58 +372,145 @@ err
 """
 
 txn_types_list = [
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication, TealerTransactionType.ApplCreation],
+    [
+        TealerTransactionType.ApplNoOp,
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+        TealerTransactionType.ApplDeleteApplication,
+        TealerTransactionType.ApplCreation,
+    ],
     [TealerTransactionType.ApplCreation],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
-    [TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
-    [TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
-    [TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
-    [TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
+    [
+        TealerTransactionType.ApplNoOp,
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+        TealerTransactionType.ApplDeleteApplication,
+    ],
+    [
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+        TealerTransactionType.ApplDeleteApplication,
+    ],
+    [
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+        TealerTransactionType.ApplDeleteApplication,
+    ],
+    [
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+        TealerTransactionType.ApplDeleteApplication,
+    ],
+    [
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+        TealerTransactionType.ApplDeleteApplication,
+    ],
     [TealerTransactionType.ApplNoOp],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplDeleteApplication],
+    [
+        TealerTransactionType.ApplNoOp,
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+        TealerTransactionType.ApplDeleteApplication,
+    ],
+    [
+        TealerTransactionType.ApplNoOp,
+        TealerTransactionType.ApplOptIn,
+        TealerTransactionType.ApplCloseOut,
+        TealerTransactionType.ApplClearState,
+        TealerTransactionType.ApplUpdateApplication,
+        TealerTransactionType.ApplDeleteApplication,
+    ],
     [],
 ]
 
-gtxn_types_list: List[List[TealerTransactionType]] = [
-[
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication, TealerTransactionType.ApplCreation],
-    [TealerTransactionType.ApplCreation],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
-    [TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
-    [TealerTransactionType.ApplCloseOut, TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
-    [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
-    [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
-    [TealerTransactionType.ApplNoOp],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn],
-    [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn, TealerTransactionType.ApplCloseOut],
-    [],
-]
+# { for each index: {
+#           for each block: {
+#               possible transaction types
+#       }
+# }
+gtxn_types_list: List[List[List[TealerTransactionType]]] = [
+    [
+        [
+            TealerTransactionType.ApplNoOp,
+            TealerTransactionType.ApplOptIn,
+            TealerTransactionType.ApplCloseOut,
+            TealerTransactionType.ApplClearState,
+            TealerTransactionType.ApplUpdateApplication,
+            TealerTransactionType.ApplCreation,
+        ],
+        [TealerTransactionType.ApplCreation],
+        [
+            TealerTransactionType.ApplNoOp,
+            TealerTransactionType.ApplOptIn,
+            TealerTransactionType.ApplCloseOut,
+            TealerTransactionType.ApplClearState,
+            TealerTransactionType.ApplUpdateApplication,
+        ],
+        [
+            TealerTransactionType.ApplOptIn,
+            TealerTransactionType.ApplCloseOut,
+            TealerTransactionType.ApplClearState,
+            TealerTransactionType.ApplUpdateApplication,
+        ],
+        [
+            TealerTransactionType.ApplCloseOut,
+            TealerTransactionType.ApplClearState,
+            TealerTransactionType.ApplUpdateApplication,
+        ],
+        [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
+        [TealerTransactionType.ApplClearState, TealerTransactionType.ApplUpdateApplication],
+        [TealerTransactionType.ApplNoOp],
+        [TealerTransactionType.ApplNoOp, TealerTransactionType.ApplOptIn],
+        [
+            TealerTransactionType.ApplNoOp,
+            TealerTransactionType.ApplOptIn,
+            TealerTransactionType.ApplCloseOut,
+        ],
+        [],
+    ],
 ]
 
-possible_indices = [0]
+gtxn_types_list += [[[]] * 11 for _ in range(MAX_GROUP_SIZE - 1)]
+
 
 ALL_TESTS_GTXN = [
-    (TEST_GROUP_INDICES, txn_types_list, gtxn_types_list, possible_indices),
+    (TEST_GROUP_INDICES, txn_types_list, gtxn_types_list),
 ]
+
+
 @pytest.mark.parametrize("test", ALL_TESTS_GTXN)  # type: ignore
-def test_tx_types_gtxn(test: Tuple[str, List[List[TealerTransactionType]], List[List[List[TealerTransactionType]]], List[List[int]]], ) -> None:
-    code, txn_types_list, gtxn_types_list, possible_indices = test
+def test_tx_types_gtxn(
+    test: Tuple[
+        str,
+        List[List[TealerTransactionType]],
+        List[List[List[TealerTransactionType]]],
+    ],
+) -> None:
+    code, ex_txn_types_list, ex_gtxn_types_list = test
 
     teal = parse_teal(code.strip())
-
     bbs = order_basic_blocks(teal.bbs)
-    for i, b in enumerate(bbs):
-        print(i, b)
-        assert set(b.transaction_context.transaction_types) == set(txn_types_list[i])
-        print(i, b)
-        for x, ind in enumerate(possible_indices):
-            ctx = b.transaction_context.gtxn_context(ind)
-            print(x, ind)
-            print(ctx.transaction_types, gtxn_types_list[x][i])
-            assert set(ctx.transaction_types) == set(gtxn_types_list[x][i])
-       
-        for i in range(0, 16):
-            if i not in possible_indices:
-                ctx = b.transaction_context.gtxn_context(i)
-                assert set(ctx.transaction_types) == set()
+    print("number of blocks:", len(bbs))
+    for block_num, b in enumerate(bbs):
+        print(block_num, b)
+        assert set(b.transaction_context.transaction_types) == set(ex_txn_types_list[block_num])
+        print(block_num, b)
+        for txn_ind in range(MAX_GROUP_SIZE):
+            ctx = b.transaction_context.gtxn_context(txn_ind)
+            print("txn_ind =", txn_ind)
+            assert set(ctx.transaction_types) == set(ex_gtxn_types_list[txn_ind][block_num])
