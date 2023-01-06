@@ -12,6 +12,7 @@ from tests.detectors.can_close_asset import can_close_asset_tests, new_can_close
 from tests.detectors.can_delete import can_delete_tests, new_can_delete_tests
 from tests.detectors.can_update import can_update_tests, new_can_update_tests
 from tests.detectors.rekeyto import missing_rekeyto_tests, new_missing_rekeyto_tests
+from tests.detectors.false_positive_contracts import FP_TESTS
 
 from tests.utils import cmp_cfg
 
@@ -45,6 +46,9 @@ ALL_NEW_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     *new_can_update_tests,
     *new_can_delete_tests,
 ]
+
+print("FP_TESTS:", len(FP_TESTS))
+ALL_NEW_TESTS += FP_TESTS
 
 
 @pytest.mark.parametrize("test", ALL_NEW_TESTS)  # type: ignore
