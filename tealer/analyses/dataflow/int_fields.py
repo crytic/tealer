@@ -12,7 +12,9 @@ from tealer.teal.instructions.instructions import (
     Txn,
 )
 from tealer.teal.global_field import GroupSize
-from tealer.teal.instructions.transaction_field import GroupIndex
+from tealer.teal.instructions.transaction_field import (
+    GroupIndex,
+)
 from tealer.utils.analyses import is_int_push_ins
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 
@@ -173,7 +175,7 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
         return set(U), set(U)
 
     def _get_asserted(self, key: str, ins_stack: List["Instruction"]) -> Tuple[Set, Set]:
-        if key == self.GROUP_SIZE_KEY:
+        if key == self.GROUP_SIZE_KEY:  # pylint: disable=no-else-return
             return self._get_asserted_groupsizes(ins_stack)
         return self._get_asserted_groupindices(ins_stack)
 

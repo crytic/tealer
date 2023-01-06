@@ -150,8 +150,10 @@ from tealer.teal.instructions.instructions import (
     BZ,
     BNZ,
     Err,
+    Txn,
+    Gtxn,
 )
-
+from tealer.teal.instructions.parse_transaction_field import TX_FIELD_TXT_TO_OBJECT
 from tealer.utils.analyses import is_int_push_ins
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 
@@ -192,6 +194,34 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
     def gtx_key(idx: int, key: str) -> str:
         """return key used for tracking context of gtxn {idx} {field represented by key}"""
         return f"GTXN_{idx:02d}_{key}"
+
+    @staticmethod
+    def is_gtx_key(key: str) -> bool:
+        """return if given key represents gtxn {i} {field}"""
+        return key.startswith("GTXN_")
+
+    @staticmethod
+    def get_gtx_ind_and_base_key(key: str) -> Tuple[int, str]:
+        """given a gtx key, return it's index and base key"""
+        # will fail if the key is not a GTXN key.
+        _, ind, base_key = key.split("_")
+        return int(ind), base_key
+
+    @staticmethod
+    def _is_txn_or_gtxn(key: str, ins: "Instruction") -> bool:
+        """return True if ins is of form txn {key} or gtxn {ind} {key} else False
+
+        "key" should be string representation of the field. e.g if field is RekeyTo, then
+        key should also be "RekeyTo".
+        """
+        if DataflowTransactionContext.is_gtx_key(key):
+            idx, field = DataflowTransactionContext.get_gtx_ind_and_base_key(key)
+            return (
+                isinstance(ins, Gtxn)
+                and ins.idx == idx
+                and isinstance(ins.field, TX_FIELD_TXT_TO_OBJECT[field])
+            )
+        return isinstance(ins, Txn) and isinstance(ins.field, TX_FIELD_TXT_TO_OBJECT[key])
 
     @abstractmethod
     def _universal_set(self, key: str) -> Any:

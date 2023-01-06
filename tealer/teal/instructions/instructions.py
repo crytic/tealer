@@ -2256,6 +2256,10 @@ class Addr(Instruction):
         return f"addr {self._addr}"
 
     @property
+    def addr(self) -> str:
+        return self._addr
+
+    @property
     def stack_push_size(self) -> int:
         return 1
 
