@@ -15,15 +15,45 @@ from tealer.teal.instructions.instructions import (
     BZ,
     BNZ,
     Assert,
+    Byte,
+    PushBytes,
+    IntcInstruction,
+    BytecInstruction,
 )
 from tealer.teal.instructions.transaction_field import TransactionField, OnCompletion, ApplicationID
 
+from tealer.exceptions import TealerException
+
 
 def is_int_push_ins(ins: Instruction) -> Tuple[bool, Optional[Union[int, str]]]:
+    """Return true if :ins: pushes a int literal on to the stack"""
     if isinstance(ins, Int) or isinstance(  # pylint: disable=consider-merging-isinstance
         ins, PushInt
     ):
         return True, ins.value
+    if isinstance(ins, IntcInstruction):
+        if not ins.bb or not ins.bb.teal:
+            # TODO: move the check to respective class property
+            raise TealerException("Block or teal property is not set")
+        teal = ins.bb.teal
+        is_known, value = teal.get_int_constant(ins.index)
+        if is_known:
+            return True, value
+    return False, None
+
+
+def is_byte_push_ins(ins: Instruction) -> Tuple[bool, Optional[str]]:
+    """Return true if :ins: pushes a byte literal on to the stack."""
+    if isinstance(ins, (Byte, PushBytes)):
+        return True, ins.value
+    if isinstance(ins, BytecInstruction):
+        if not ins.bb or not ins.bb.teal:
+            # TODO: move the check to respective class property
+            raise TealerException("Block or teal property is not set")
+        teal = ins.bb.teal
+        is_known, value = teal.get_byte_constant(ins.index)
+        if is_known:
+            return True, value
     return False, None
 
 
