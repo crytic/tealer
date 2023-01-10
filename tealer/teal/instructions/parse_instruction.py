@@ -402,7 +402,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("log", lambda _x: instructions.Log()),
     ("itxn_begin", lambda _x: instructions.Itxn_begin()),
     ("itxn_next", lambda _x: instructions.Itxn_next()),
-    ("itxn_field ", lambda x: instructions.Itxn_field(parse_transaction_field(x, False))),
+    ("itxn_field ", lambda x: instructions.Itxn_field(parse_transaction_field(x, True))),
     ("itxn_submit", lambda _x: instructions.Itxn_submit()),
     ("itxn ", lambda x: instructions.Itxn(parse_transaction_field(x, False))),
     ("itxna ", lambda x: instructions.Itxna(parse_transaction_field(x, False))),
