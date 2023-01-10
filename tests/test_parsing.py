@@ -330,7 +330,7 @@ INTCBLOCK_TESTS = [
 ]
 
 
-@pytest.mark.parametrize("test", INTCBLOCK_TESTS)
+@pytest.mark.parametrize("test", INTCBLOCK_TESTS)  # type: ignore
 def test_intc_bytec(test: str) -> None:
     with open(test, encoding="utf-8") as f:
         teal = parse_teal(f.read())
@@ -422,7 +422,7 @@ INTCBLOCK_FALSE_TESTS = [
 ]
 
 
-@pytest.mark.parametrize("test", INTCBLOCK_FALSE_TESTS)
+@pytest.mark.parametrize("test", INTCBLOCK_FALSE_TESTS)  # type: ignore
 def test_intc_bytec_false(test: str) -> None:
     teal = parse_teal(test)
     for ins in teal.instructions:
