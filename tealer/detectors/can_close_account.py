@@ -9,7 +9,7 @@ from tealer.detectors.abstract_detector import (
 )
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.detectors.utils import detect_missing_tx_field_validations
-
+from tealer.utils.teal_enums import TealerTransactionType
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
@@ -74,7 +74,11 @@ Always check that CloseRemainderTo transaction field is set to a ZeroAddress or 
         def checks_field(block_ctx: "BlockTransactionContext") -> bool:
             # return False if CloseRemainderTo field can have any address.
             # return True if CloseRemainderTo should have some address or zero address
-            return not block_ctx.closeto.any_addr
+            # CloseRemainderTo field can only be set for Payment type transactions.
+            return not (
+                block_ctx.closeto.any_addr
+                and TealerTransactionType.Pay in block_ctx.transaction_types
+            )
 
         paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
             self.teal.bbs[0], checks_field
