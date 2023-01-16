@@ -12,10 +12,12 @@ from tealer.detectors.abstract_detector import (
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import Gtxn, Return, Int
 from tealer.teal.instructions.transaction_field import RekeyTo
-from tealer.utils.analyses import detect_missing_txn_check
+from tealer.detectors.utils import detect_missing_tx_field_validations
+
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
+    from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
 class MissingRekeyTo(AbstractDetector):
@@ -132,7 +134,12 @@ Add a check in the contract code verifying that `RekeyTo` property of any transa
             self.teal.bbs[0], defaultdict(set), set(), [], paths_without_check
         )
 
-        detect_missing_txn_check(RekeyTo, self.teal.bbs[0], [], paths_without_check)
+        def checks_field(block_ctx: "BlockTransactionContext") -> bool:
+            # return False if RekeyTo field can have any address.
+            # return True if RekeyTo should have some address or zero address
+            return not block_ctx.rekeyto.any_addr
+
+        paths_without_check += detect_missing_tx_field_validations(self.teal.bbs[0], checks_field)
 
         # paths might repeat as cfg traversed twice, once for each check
         paths_without_check_unique = []
