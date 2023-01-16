@@ -704,30 +704,8 @@ def test_just_detectors(test: Tuple[str, List[KnownStackValue]]) -> None:
 if __name__ == "__main__":
     teal_obj = parse_teal(T2)
     for bb in teal_obj.bbs:
-        # print(bb)
+        print(bb)
         result = emulate_stack(bb)
         for i in bb.instructions:
-            print(result[i], end="")
-            print(",")
-        # print(emulate_stack(bb))
-        # print("----------"*10)
-
-    # print("*"*40 + "Convert to equations" + "*"*40)
-
-    # for bb in teal.bbs:
-    #     print(bb)
-    #     result = emulate_stack(bb)
-    #     for ins in bb.instructions:
-    #         if isinstance(ins, (Assert, BZ, BNZ)):
-    #             print(ins, result[ins])
-    #             arg = result[ins].args[0]
-    #             if isinstance(arg, UnknownStackValue):
-    #                 print("unknown arg:", arg)
-    #                 continue
-    #             node_ins = And
-    #             if isinstance(arg.instruction, Or):
-    #                 node_ins = Or
-    #             print("\n", convert_ast_to_equations(arg, node_ins))
-    #     # print(emulate_stack(bb))
-    #     print("----------"*10)
-    #     print(set(bb.instructions))
+            print(i, result[i])
+        print("----------" * 10)

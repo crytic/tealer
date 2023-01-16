@@ -331,17 +331,10 @@ def emulate_stack(bb: BasicBlock) -> Dict[Instruction, KnownStackValue]:
     stack = Stack()
     ins_stack_value = {}
     for ins in bb.instructions:
-        # if isinstance(ins, Retsub):
-        # print("ins:", ins)
-        # print("sizes:", ins.stack_pop_size, ins.stack_pop_size)
-        # print("Before stack:", stack)
         # TODO: emulate other stack manipulating instructions if necessary:
         #   swap, dup, dup2, dupn n, bury n, dig n, cover n, uncover n,
         popped_values = stack.pop(ins.stack_pop_size)
-        # print("popped_values:", popped_values)
         for i in range(ins.stack_push_size):
             stack.push(KnownStackValue(ins, popped_values, i))
-        # TODO: simulate dup, swap, dig operations if necessary
         ins_stack_value[ins] = KnownStackValue(ins, popped_values)
-        # print("After stack:", stack)
     return ins_stack_value
