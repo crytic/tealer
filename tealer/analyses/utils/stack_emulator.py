@@ -142,6 +142,8 @@ Unclear/recent(v8) instructions:
 """
 
 from typing import List, Union, Dict
+from functools import lru_cache
+
 
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import (
@@ -275,6 +277,7 @@ class Stack:
         return str(self)
 
 
+@lru_cache(maxsize=None)
 def emulate_stack(bb: BasicBlock) -> Dict[Instruction, KnownStackValue]:
     r"""Emulates instructions in the basic block and return values produced by each instruction.
 

@@ -156,6 +156,7 @@ from tealer.teal.instructions.instructions import (
 from tealer.teal.instructions.parse_transaction_field import TX_FIELD_TXT_TO_OBJECT
 from tealer.utils.analyses import is_int_push_ins
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
+from tealer.analyses.utils.stack_emulator import KnownStackValue, UnknownStackValue, emulate_stack
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
@@ -223,6 +224,10 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
             )
         return isinstance(ins, Txn) and isinstance(ins.field, TX_FIELD_TXT_TO_OBJECT[key])
 
+    @staticmethod
+    def _get_stack_value(ins: "Instruction") -> KnownStackValue:
+        return emulate_stack(ins.bb)[ins]
+
     @abstractmethod
     def _universal_set(self, key: str) -> Any:
         """Return universal set for the field corresponding to given key"""
@@ -240,7 +245,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         """return intersection of a and b, where a, b represent values for the given key"""
 
     @abstractmethod
-    def _get_asserted(self, key: str, ins_stack: List["Instruction"]) -> Tuple[Any, Any]:
+    def _get_asserted(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Any, Any]:
         """For the given key and ins_stack, return true_values and false_values
 
         true_values for a key are considered to be values which result in non-zero value on
@@ -271,28 +276,37 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         stack: List["Instruction"] = []
         for ins in block.instructions:
             if isinstance(ins, Assert):
+                assert_ins_stack_value = self._get_stack_value(ins)
+                assert_ins_arg = assert_ins_stack_value.args[0]
+                if isinstance(assert_ins_arg, UnknownStackValue):
+                    continue
                 for key in analysis_keys:
-                    asserted_values, _ = self._get_asserted(key, stack)
+                    # asserted_values, _ = self._get_asserted(key, stack)
+                    asserted_values, _ = self._get_asserted(key, assert_ins_arg)
                     present_values = self._block_contexts[key][block]
                     self._block_contexts[key][block] = self._intersection(
                         key, present_values, asserted_values
                     )
-
-            # if return 0, set possible values to NullSet()
-            if isinstance(ins, Return):
-                if len(ins.prev) == 1:
-                    is_int, value = is_int_push_ins(ins.prev[0])
-                    if is_int and value == 0:
-                        for key in analysis_keys:
-                            self._block_contexts[key][block] = self._null_set(key)
-
-            if isinstance(ins, Err):
+            elif isinstance(ins, Return):
+                # if return 0, set possible values to NullSet()
+                return_ins_value = self._get_stack_value(ins)
+                return_ins_arg = return_ins_value.args[0]
+                if isinstance(return_ins_arg, UnknownStackValue):
+                    continue
+                is_int, value = is_int_push_ins(return_ins_arg.instruction)
+                if is_int and value == 0:
+                    for key in analysis_keys:
+                        self._block_contexts[key][block] = self._null_set(key)
+            elif isinstance(ins, Err):
+                # if err, set possible values to NullSet()
                 for key in analysis_keys:
                     self._block_contexts[key][block] = self._null_set(key)
 
             stack.append(ins)
 
-    def _path_level_constraints(self, analysis_keys: List[str], block: "BasicBlock") -> None:
+    def _path_level_constraints(  # pylint: disable=too-many-branches
+        self, analysis_keys: List[str], block: "BasicBlock"
+    ) -> None:
         """Calculate and store constraints on keys applied along each path.
 
         By default, no constraints are considered i.e values are assumed to be universal_set
@@ -314,11 +328,15 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                 path_context[b][block] = self._universal_set(key)
 
         if isinstance(block.exit_instr, (BZ, BNZ)):
+            exit_ins_stack_value = self._get_stack_value(block.exit_instr)
+            exit_ins_arg = exit_ins_stack_value.args[0]
+            if isinstance(exit_ins_arg, UnknownStackValue):
+                return
             for key in analysis_keys:
                 # true_values: possible values for {key} which result in non-zero value on top of the stack
                 # false_values: possible values for {key} which result in zero value on top of the stack
                 # if the check is not related to the field, true_values and false_values will be universal sets
-                true_values, false_values = self._get_asserted(key, block.instructions[:-1])
+                true_values, false_values = self._get_asserted(key, exit_ins_arg)
 
                 if len(block.next) == 1:
                     # happens when bz/bnz is the last instruction in the contract and there is no default branch

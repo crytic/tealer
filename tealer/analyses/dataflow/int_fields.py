@@ -17,6 +17,7 @@ from tealer.teal.instructions.transaction_field import (
 )
 from tealer.utils.analyses import is_int_push_ins
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
+from tealer.analyses.utils.stack_emulator import KnownStackValue, UnknownStackValue
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
@@ -89,7 +90,9 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
         else:
             return U
 
-    def _get_asserted_groupsizes(self, ins_stack: List["Instruction"]) -> Tuple[Set[int], Set[int]]:
+    def _get_asserted_groupsizes(
+        self, ins_stack_value: KnownStackValue
+    ) -> Tuple[Set[int], Set[int]]:
         """return set of values for groupsize that will make the comparison true and false
 
         checks for instruction sequence and returns group size values that will make the comparison true.
@@ -105,12 +108,15 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
             set of groupsize values that will make the comparison true, set of groupsize values that will make the comparison false.
         """
         U = list(self.UNIVERSAL_SETS[self.GROUP_SIZE_KEY])
-        if len(ins_stack) < 3:
-            return set(U), set(U)
 
-        if isinstance(ins_stack[-1], (Eq, Neq, Less, LessE, Greater, GreaterE)):
-            ins1 = ins_stack[-2]
-            ins2 = ins_stack[-3]
+        if isinstance(ins_stack_value.instruction, (Eq, Neq, Less, LessE, Greater, GreaterE)):
+            arg1 = ins_stack_value.args[0]
+            arg2 = ins_stack_value.args[1]
+            if isinstance(arg1, UnknownStackValue) or isinstance(arg2, UnknownStackValue):
+                # if one of the args is unknown
+                return set(U), set(U)
+            ins1 = arg1.instruction
+            ins2 = arg2.instruction
             compared_value = None
 
             if isinstance(ins1, Global) and isinstance(ins1.field, GroupSize):
@@ -126,13 +132,13 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
                 # if the comparison does not check groupsize, return U as values that make the comparison false
                 return set(U), set(U)
 
-            ins = ins_stack[-1]
+            ins = ins_stack_value.instruction
             asserted_values = self._get_asserted_int_values(ins, compared_value, U)
             return set(asserted_values), set(U) - set(asserted_values)
         return set(U), set(U)
 
     def _get_asserted_groupindices(
-        self, ins_stack: List["Instruction"]
+        self, ins_stack_value: KnownStackValue
     ) -> Tuple[Set[int], Set[int]]:
         """return list of values for group index that will make the comparison true and false
 
@@ -149,12 +155,15 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
             List of groupindex values that will make the comparison true.
         """
         U = list(self.UNIVERSAL_SETS[self.GROUP_INDEX_KEY])
-        if len(ins_stack) < 3:
-            return set(U), set(U)
 
-        if isinstance(ins_stack[-1], (Eq, Neq, Less, LessE, Greater, GreaterE)):
-            ins1 = ins_stack[-2]
-            ins2 = ins_stack[-3]
+        if isinstance(ins_stack_value.instruction, (Eq, Neq, Less, LessE, Greater, GreaterE)):
+            arg1 = ins_stack_value.args[0]
+            arg2 = ins_stack_value.args[1]
+            if isinstance(arg1, UnknownStackValue) or isinstance(arg2, UnknownStackValue):
+                # if one of the args is unknown
+                return set(U), set(U)
+            ins1 = arg1.instruction
+            ins2 = arg2.instruction
             compared_value = None
 
             if isinstance(ins1, Txn) and isinstance(ins1.field, GroupIndex):
@@ -169,15 +178,15 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
             if compared_value is None or not isinstance(compared_value, int):
                 return set(U), set(U)
 
-            ins = ins_stack[-1]
+            ins = ins_stack_value.instruction
             asserted_values = self._get_asserted_int_values(ins, compared_value, U)
             return set(asserted_values), set(U) - set(asserted_values)
         return set(U), set(U)
 
-    def _get_asserted(self, key: str, ins_stack: List["Instruction"]) -> Tuple[Set, Set]:
-        if key == self.GROUP_SIZE_KEY:  # pylint: disable=no-else-return
-            return self._get_asserted_groupsizes(ins_stack)
-        return self._get_asserted_groupindices(ins_stack)
+    def _get_asserted(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Set, Set]:
+        if key == self.GROUP_SIZE_KEY:
+            return self._get_asserted_groupsizes(ins_stack_value)
+        return self._get_asserted_groupindices(ins_stack_value)
 
     def _store_results(self) -> None:
         # use group_sizes to update group_indices

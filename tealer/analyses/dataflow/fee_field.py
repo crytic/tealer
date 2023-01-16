@@ -11,6 +11,7 @@ from tealer.teal.instructions.instructions import (
 )
 from tealer.utils.analyses import is_int_push_ins
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE, MAX_UINT64
+from tealer.analyses.utils.stack_emulator import KnownStackValue, UnknownStackValue
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
@@ -73,14 +74,17 @@ class FeeField(DataflowTransactionContext):
             return U, max(0, compared_int - 1)
         return U, U
 
-    def _get_asserted_fee(self, key: str, ins_stack: List["Instruction"]) -> Tuple[int, int]:
+    def _get_asserted_fee(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[int, int]:
         U = self._universal_set(key)  # max value for the field
-        if len(ins_stack) < 3:
-            return U, U
 
-        if isinstance(ins_stack[-1], (Eq, Neq, Less, LessE, Greater, GreaterE)):
-            ins1 = ins_stack[-2]
-            ins2 = ins_stack[-3]
+        if isinstance(ins_stack_value.instruction, (Eq, Neq, Less, LessE, Greater, GreaterE)):
+            arg1 = ins_stack_value.args[0]
+            arg2 = ins_stack_value.args[1]
+            if isinstance(arg1, UnknownStackValue) or isinstance(arg2, UnknownStackValue):
+                # if one of the args is unknown
+                return U, U
+            ins1 = arg1.instruction
+            ins2 = arg2.instruction
             compared_value = None
 
             if self._is_txn_or_gtxn(key, ins1):
@@ -96,12 +100,12 @@ class FeeField(DataflowTransactionContext):
                 # compared_value is not int.
                 return U, U
 
-            ins = ins_stack[-1]
+            ins = ins_stack_value.instruction
             return self._get_asserted_max_value(ins, compared_value, U)
         return U, U
 
-    def _get_asserted(self, key: str, ins_stack: List["Instruction"]) -> Tuple[int, int]:
-        res = self._get_asserted_fee(key, ins_stack)
+    def _get_asserted(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[int, int]:
+        res = self._get_asserted_fee(key, ins_stack_value)
         return res
 
     def _store_results(self) -> None:

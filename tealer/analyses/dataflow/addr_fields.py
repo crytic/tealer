@@ -9,10 +9,10 @@ from tealer.teal.instructions.instructions import (
 )
 from tealer.teal.global_field import ZeroAddress
 from tealer.utils.algorand_constants import ZERO_ADDRESS
+from tealer.analyses.utils.stack_emulator import KnownStackValue, UnknownStackValue
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
-    from tealer.teal.context.block_transaction_context import BlockTransactionContext
     from tealer.teal.context.block_transaction_context import AddrFieldValue
 
 
@@ -93,30 +93,49 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         return set([f"{SOME_ADDRESS}_{ins}"])
 
     def _get_asserted_txn_gtxn(
-        self, key: str, ins_stack: List["Instruction"]
+        self, key: str, ins_stack_value: KnownStackValue
     ) -> Tuple[Set[str], Set[str]]:
-        if len(ins_stack) < 3 or not isinstance(ins_stack[-1], (Eq, Neq)):
+        if not isinstance(ins_stack_value.instruction, (Eq, Neq)):
             return self._universal_set(), self._universal_set()
 
-        ins1 = ins_stack[-1]
-        ins2 = ins_stack[-2]
-        ins3 = ins_stack[-3]
+        arg1 = ins_stack_value.args[0]
+        arg2 = ins_stack_value.args[1]
 
         asserted_addresses = None
-        if self._is_txn_or_gtxn(key, ins2):
-            asserted_addresses = self._get_asserted_address(ins3)
-        elif self._is_txn_or_gtxn(key, ins3):
-            asserted_addresses = self._get_asserted_address(ins2)
+        if isinstance(arg1, UnknownStackValue) and isinstance(arg2, UnknownStackValue):
+            # arg1 and arg2 are unknown value.
+            return self._universal_set(), self._universal_set()
+
+        if isinstance(arg1, UnknownStackValue):
+            if not isinstance(arg2, UnknownStackValue) and not self._is_txn_or_gtxn(
+                key, arg2.instruction
+            ):
+                # arg1 is unknown and arg2 is not related to "key"
+                return self._universal_set(), self._universal_set()
+            # arg2 is related to "key" but arg1 is unknown
+            asserted_addresses = set([SOME_ADDRESS])
+        elif isinstance(arg2, UnknownStackValue):
+            if not isinstance(arg1, UnknownStackValue) and not self._is_txn_or_gtxn(
+                key, arg1.instruction
+            ):
+                # arg2 is unknown and arg1 is not related to "key"
+                return self._universal_set(), self._universal_set()
+            # arg1 is related to "key" but arg2 is unknown
+            asserted_addresses = set([SOME_ADDRESS])
+        elif self._is_txn_or_gtxn(key, arg1.instruction):
+            asserted_addresses = self._get_asserted_address(arg2.instruction)
+        elif self._is_txn_or_gtxn(key, arg2.instruction):
+            asserted_addresses = self._get_asserted_address(arg1.instruction)
 
         if asserted_addresses is None:
             return self._universal_set(), self._universal_set()
 
-        if isinstance(ins1, Eq):
+        if isinstance(ins_stack_value.instruction, Eq):
             return asserted_addresses, self._universal_set()
         return self._universal_set(), asserted_addresses
 
-    def _get_asserted(self, key: str, ins_stack: List["Instruction"]) -> Tuple[Set, Set]:
-        return self._get_asserted_txn_gtxn(key, ins_stack)
+    def _get_asserted(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Set, Set]:
+        return self._get_asserted_txn_gtxn(key, ins_stack_value)
 
     @staticmethod
     def _set_addr_values(ctx_addr_value: "AddrFieldValue", addr_values: Set[str]) -> None:
