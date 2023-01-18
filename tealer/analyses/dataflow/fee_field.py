@@ -164,7 +164,7 @@ class FeeField(DataflowTransactionContext):
             return self._get_asserted_max_value(ins, compared_value, U)
         return U, U
 
-    def _get_asserted(
+    def _get_asserted_single(
         self, key: str, ins_stack_value: KnownStackValue
     ) -> Tuple[Union[int, str], Union[int, str]]:
         res = self._get_asserted_fee(key, ins_stack_value)

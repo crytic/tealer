@@ -173,7 +173,7 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
 
         return set(U), set(U)
 
-    def _get_asserted(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Set, Set]:
+    def _get_asserted_single(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Set, Set]:
         return self._get_asserted_transaction_types(key, ins_stack_value)
 
     def _store_results(self) -> None:
