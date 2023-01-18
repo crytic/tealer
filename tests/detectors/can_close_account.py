@@ -369,7 +369,7 @@ CAN_CLOSE_ACCOUNT_GROUP_INDEX_3_VULNERABLE_PATHS: List[List[int]] = []  # not vu
 
 
 CAN_CLOSE_ACCOUNT_2 = """
-# pragma version 4
+#pragma version 4
 txn Receiver
 addr 6ZIOGDXGSQSL4YINHLKCHYRV64FSN4LTUIQ6A4VWYK36FXFF42VI2UV7SM
 ==
@@ -422,4 +422,5 @@ new_can_close_account_tests: List[Tuple[str, Type[AbstractDetector], List[List[i
     (CAN_CLOSE_ACCOUNT_2, CanCloseAsset, []),
     (CAN_CLOSE_ACCOUNT_2, MissingRekeyTo, []),
     (CAN_CLOSE_ACCOUNT_2, MissingFeeCheck, []),
+    (CAN_CLOSE_ACCOUNT, MissingFeeCheck, []),
 ]
