@@ -43,10 +43,11 @@ from tealer.teal.instructions.instructions import (
     Pragma,
     Switch,
     Match,
+    Txn,
 )
 from tealer.teal.instructions.instructions import ContractType
 from tealer.teal.instructions.parse_instruction import parse_line, ParseError
-from tealer.teal.instructions.transaction_field import TransactionField
+from tealer.teal.instructions.transaction_field import TransactionField, ApplicationID
 from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
@@ -150,7 +151,13 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> Non
             bb = None
 
 
-def _first_pass(
+def _add_instruction_comments(ins: Instruction) -> None:
+    if isinstance(ins, Txn) and isinstance(ins.field, ApplicationID):
+        # A example. TODO: remove if unnecessary
+        ins.tealer_comments.append("ApplicationID is 0 in Creation Txn")
+
+
+def _first_pass(  # pylint: disable=too-many-branches
     lines: List[str],
     labels: Dict[str, Label],
     rets: Dict[str, List[Instruction]],
@@ -197,9 +204,18 @@ def _first_pass(
     prev: Optional[Instruction] = None  # Flag: last instruction was an unconditional jump
     call: Optional[Callsub] = None  # Flag: last instruction was a callsub
 
+    instruction_comments: List[str] = []
     for line in lines:
         try:
-            ins = parse_line(line.strip())
+            if line.strip().startswith("//"):
+                # is a comment without any instruction
+                instruction_comments.append(line)
+                ins = None
+            else:
+                ins = parse_line(line)
+                if ins and instruction_comments:
+                    ins.comments_before_ins = list(instruction_comments)
+                    instruction_comments = []
         except ParseError as e:
             print(f"Parse error at line {idx}: {e}")
             sys.exit(1)
@@ -207,6 +223,7 @@ def _first_pass(
         if not ins:
             continue
         ins.line = idx
+        _add_instruction_comments(ins)
 
         # A label? Add it to the global label list
         if isinstance(ins, Label):
@@ -392,6 +409,9 @@ def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
     if label.bb is None:
         return []
 
+    # add tealer comment "Subroutine: {label}" to the subroutine entry block
+    label.bb.tealer_comments.append(f"Subroutine {label.label}")
+
     subroutines_blocks: List["BasicBlock"] = []
     stack: List["BasicBlock"] = []
 
@@ -567,6 +587,8 @@ def parse_teal(source_code: str) -> Teal:
     # set teal instance to it's basic blocks
     for bb in teal.bbs:
         bb.teal = teal
+        # Add tealer comment of cost and id
+        bb.tealer_comments.insert(0, f"id = {bb.idx}; cost = {bb.cost}")
 
     _apply_transaction_context_analysis(teal)
 
