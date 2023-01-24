@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Tuple, Type
 
 from tealer.teal.instructions import instructions
 from tealer.teal.instructions import transaction_field
-from tealer.detectors.all_detectors import CanUpdate, CanDelete
+from tealer.detectors.all_detectors import CanUpdate, CanDelete, AnyoneCanUpdate, AnyoneCanDelete
+from tealer.detectors.abstract_detector import AbstractDetector
 
 from tests.utils import construct_cfg
 
@@ -940,3 +941,35 @@ new_can_update_tests = [
     (CAN_UPDATE_GROUP_INDEX_2_X_7, CanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_7),
     (CAN_UPDATE_GROUP_INDEX_2_X_7, CanDelete, CAN_DELETE_GROUP_INDEX_2_VULNERABLE_PATHS_X_7),
 ]
+
+with open("tests/detectors/detector_test_files/app_approval_689168853.teal", encoding="utf-8") as f:
+    APPROVAL_PROGRAM_689168853 = f.read()
+
+# Sender is not verified in any of the above CanUpdate, CanDelete tests.
+new_anyone_can_update_tests: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
+    (CAN_UPDATE_GROUP_INDEX_0, AnyoneCanUpdate, CAN_UPDATE_GROUP_INDEX_0_VULNERABLE_PATHS),
+    (CAN_UPDATE_GROUP_INDEX_1, AnyoneCanUpdate, CAN_UPDATE_GROUP_INDEX_1_VULNERABLE_PATHS),
+    (CAN_UPDATE_GROUP_INDEX_2, AnyoneCanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS),
+    (CAN_UPDATE_GROUP_INDEX_2_X_0, AnyoneCanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_0),
+    (CAN_UPDATE_GROUP_INDEX_2_X_0, AnyoneCanDelete, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_0),
+    (CAN_UPDATE_GROUP_INDEX_2_X_1, AnyoneCanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_1),
+    (CAN_UPDATE_GROUP_INDEX_2_X_2, AnyoneCanDelete, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_1),
+    (CAN_UPDATE_GROUP_INDEX_2_X_2, AnyoneCanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_2),
+    (CAN_UPDATE_GROUP_INDEX_2_X_2, AnyoneCanDelete, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_2),
+    (CAN_UPDATE_GROUP_INDEX_2_X_3, AnyoneCanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_3),
+    (CAN_UPDATE_GROUP_INDEX_2_X_3, AnyoneCanDelete, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_3),
+    (CAN_UPDATE_GROUP_INDEX_2_X_4, AnyoneCanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_4),
+    (CAN_UPDATE_GROUP_INDEX_2_X_4, AnyoneCanDelete, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_4),
+    (CAN_UPDATE_GROUP_INDEX_2_X_5, AnyoneCanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_5),
+    (CAN_UPDATE_GROUP_INDEX_2_X_5, AnyoneCanDelete, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_5),
+    (CAN_UPDATE_GROUP_INDEX_2_X_6, AnyoneCanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_6),
+    (CAN_UPDATE_GROUP_INDEX_2_X_6, AnyoneCanDelete, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_6),
+    (CAN_UPDATE_GROUP_INDEX_2_X_7, AnyoneCanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS_X_7),
+    (CAN_UPDATE_GROUP_INDEX_2_X_7, AnyoneCanDelete, CAN_DELETE_GROUP_INDEX_2_VULNERABLE_PATHS_X_7),
+    # example from benchmarks
+    (APPROVAL_PROGRAM_689168853, AnyoneCanUpdate, []),
+    (APPROVAL_PROGRAM_689168853, AnyoneCanDelete, []),
+]
+
+
+new_can_update_tests += new_anyone_can_update_tests
