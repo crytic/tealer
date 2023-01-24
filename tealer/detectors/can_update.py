@@ -8,40 +8,12 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions.instructions import Instruction
-from tealer.teal.instructions.instructions import Int, Txn
-from tealer.teal.instructions.transaction_field import ApplicationID
-from tealer.utils.analyses import detect_missing_on_completion
+from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.utils.teal_enums import TealerTransactionType
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
-
-
-def _is_application_creation_check(ins1: Instruction, ins2: Instruction) -> bool:
-    """Check if the instructions form application creation check.
-
-    ApplicationID will be 0 at the time of creation as a result the condition
-    txn ApplicationID == int 0 is generally used to do intialization operations
-    at the time of application creation. Updating or Deleting application isn't
-    possible if the transaction is a application creation check. Using this check
-    allows the UpdateApplication, DeleteApplication detector to not explore(pruning)
-    paths where this check is true.
-
-    Args:
-        ins1: First instruction of the execution sequence that is supposed
-            to form a comparison check for application creation.
-        ins2: Second instruction in the execution sequence, will be executed
-            right after :ins1:.
-
-    Returns:
-        True if the given instructions :ins1:, :ins2: form a application creation
-        check i.e True if :ins1: is txn ApplicationID and :ins2: is
-        int 0.
-    """
-
-    if isinstance(ins1, Txn) and isinstance(ins1.field, ApplicationID):
-        return isinstance(ins2, Int) and ins2.value == 0
-    return False
+    from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
 class CanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
@@ -109,18 +81,13 @@ Check if `txn OnCompletion == int UpdateApplication` and do appropriate actions 
             information.
         """
 
-        paths_without_check: List[List[BasicBlock]] = []
-        detect_missing_on_completion(
-            self.teal.bbs[0],
-            [],
-            paths_without_check,
-            "UpdateApplication",
-            [
-                "DeleteApplication",
-                "NoOp",
-                "OptIn",
-                "CloseOut",
-            ],
+        def checks_field(block_ctx: "BlockTransactionContext") -> bool:
+            # return False if Txn Type can be UpdateApplication.
+            # return True if Txn Type cannot be UpdateApplication.
+            return not TealerTransactionType.ApplUpdateApplication in block_ctx.transaction_types
+
+        paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
+            self.teal.bbs[0], checks_field
         )
 
         description = "Lack of txn OnCompletion == int UpdateApplication check allows to"

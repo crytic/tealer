@@ -8,10 +8,12 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.utils.analyses import detect_missing_on_completion
+from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.utils.teal_enums import TealerTransactionType
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
+    from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
 class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
@@ -78,18 +80,13 @@ Check if `txn OnCompletion == int DeleteApplication` and do appropriate actions 
             information.
         """
 
-        paths_without_check: List[List[BasicBlock]] = []
-        detect_missing_on_completion(
-            self.teal.bbs[0],
-            [],
-            paths_without_check,
-            "DeleteApplication",
-            [
-                "UpdateApplication",
-                "NoOp",
-                "OptIn",
-                "CloseOut",
-            ],
+        def checks_field(block_ctx: "BlockTransactionContext") -> bool:
+            # return False if Txn Type can be DeleteApplication.
+            # return True if Txn Type cannot be DeleteApplication.
+            return not TealerTransactionType.ApplDeleteApplication in block_ctx.transaction_types
+
+        paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
+            self.teal.bbs[0], checks_field
         )
 
         description = "Lack of txn OnCompletion == int DeleteApplication check allows to"
