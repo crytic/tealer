@@ -12,11 +12,13 @@ if not sys.version_info >= (3, 10):
 # Place import statements after the version check
 from tests.pyteal_parsing.normal_application import normal_application_approval_program
 from tests.pyteal_parsing.arc4_application import arc4_application_ap
+from tests.pyteal_parsing.control_flow_constructs import control_flow_ap
 
 
 TARGETS = [
     normal_application_approval_program,
     arc4_application_ap,
+    control_flow_ap,
 ]
 
 
