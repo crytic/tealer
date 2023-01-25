@@ -42,8 +42,12 @@ normal_application_approval_program = compileTeal(
     mode=Mode.Application,
     version=7,
     optimize=OptimizeOptions(scratch_slots=False),
+    assembleConstants=True,
 )
 
 _clear_program = compileTeal(
     clear_program(), mode=Mode.Application, version=7, optimize=OptimizeOptions(scratch_slots=False)
 )
+
+if __name__ == "__main__":
+    print(normal_application_approval_program)
