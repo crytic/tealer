@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Tuple, Type
 
 from tealer.teal.instructions import instructions
 from tealer.teal.instructions import transaction_field
-from tealer.detectors.all_detectors import CanUpdate
+from tealer.detectors.abstract_detector import AbstractDetector
+from tealer.detectors.all_detectors import CanUpdate, CanCloseAccount, CanCloseAsset
 
 from tests.utils import construct_cfg
 
@@ -433,9 +434,25 @@ err
 
 CAN_UPDATE_GROUP_INDEX_INTC_0_VULNERABLE_PATHS: List[List[int]] = []
 
-new_can_update_tests = [
+new_can_update_tests: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     (CAN_UPDATE_GROUP_INDEX_0, CanUpdate, CAN_UPDATE_GROUP_INDEX_0_VULNERABLE_PATHS),
     (CAN_UPDATE_GROUP_INDEX_1, CanUpdate, CAN_UPDATE_GROUP_INDEX_1_VULNERABLE_PATHS),
     (CAN_UPDATE_GROUP_INDEX_2, CanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS),
     (CAN_UPDATE_GROUP_INDEX_INTC_0, CanUpdate, CAN_UPDATE_GROUP_INDEX_INTC_0_VULNERABLE_PATHS),
+    (
+        CAN_UPDATE,
+        CanCloseAccount,
+        [],
+    ),  # Applications are not vulnerable to CanCloseAccount and CanCloseAsset
+    (CAN_UPDATE_LOOP, CanCloseAccount, []),
+    (CAN_UPDATE_GROUP_INDEX_0, CanCloseAccount, []),
+    (CAN_UPDATE_GROUP_INDEX_1, CanCloseAccount, []),
+    (CAN_UPDATE_GROUP_INDEX_2, CanCloseAccount, []),
+    (CAN_UPDATE_GROUP_INDEX_INTC_0, CanCloseAccount, []),
+    (CAN_UPDATE, CanCloseAsset, []),
+    (CAN_UPDATE_LOOP, CanCloseAsset, []),
+    (CAN_UPDATE_GROUP_INDEX_0, CanCloseAsset, []),
+    (CAN_UPDATE_GROUP_INDEX_1, CanCloseAsset, []),
+    (CAN_UPDATE_GROUP_INDEX_2, CanCloseAsset, []),
+    (CAN_UPDATE_GROUP_INDEX_INTC_0, CanCloseAsset, []),
 ]

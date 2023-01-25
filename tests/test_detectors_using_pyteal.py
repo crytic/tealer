@@ -14,9 +14,14 @@ if not sys.version_info >= (3, 10):
 from tests.detectors.router_with_assembled_constants import (  # pylint: disable=wrong-import-position
     router_with_assembled_constants,
 )
+from tests.detectors.pyteal_can_close import (  # pylint: disable=wrong-import-position
+    txn_type_based_tests,
+)
+
 
 TESTS: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     *router_with_assembled_constants,
+    *txn_type_based_tests,
 ]
 
 

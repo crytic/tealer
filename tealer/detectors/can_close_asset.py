@@ -9,6 +9,7 @@ from tealer.detectors.abstract_detector import (
 )
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.utils.teal_enums import TealerTransactionType
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
@@ -69,7 +70,11 @@ Always check that AssetCloseTo transaction field is set to a ZeroAddress or inte
         def checks_field(block_ctx: "BlockTransactionContext") -> bool:
             # return False if AssetCloseTo field can have any address.
             # return True if AssetCloseTo should have some address or zero address
-            return not block_ctx.assetcloseto.any_addr
+            # AssetCloseTo field can only be set for Asset Transafer type transactions.
+            return not (
+                block_ctx.assetcloseto.any_addr
+                and TealerTransactionType.Axfer in block_ctx.transaction_types
+            )
 
         paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
             self.teal.bbs[0], checks_field
