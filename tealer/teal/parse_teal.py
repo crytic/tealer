@@ -54,7 +54,7 @@ from tealer.teal.instructions.acct_params_field import AcctParamsField
 from tealer.teal.teal import Teal
 from tealer.analyses.dataflow import all_constraints
 from tealer.analyses.dataflow.generic import DataflowTransactionContext
-from tealer.analyses.utils.stack_emulator import emulate_stack, compute_equations
+from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, compute_equations
 
 
 def _detect_contract_type(instructions: List[Instruction]) -> ContractType:
@@ -508,7 +508,7 @@ def _apply_transaction_context_analysis(teal: "Teal") -> None:
     for cl in analyses_classes:
         cl(teal).run_analysis()
     # clear cache
-    emulate_stack.cache_clear()  # emulate stack is not used after transaction_context_analysis.
+    construct_stack_ast.cache_clear()  # construct stack ast is not used after transaction_context_analysis.
     compute_equations.cache_clear()  # compute_equations is not used after transaction_context_analysis.
 
 

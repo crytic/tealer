@@ -242,10 +242,10 @@ from tealer.teal.instructions.instructions import (
 from tealer.teal.instructions.parse_transaction_field import TX_FIELD_TXT_TO_OBJECT
 from tealer.utils.analyses import is_int_push_ins
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
-from tealer.analyses.utils.stack_emulator import (
+from tealer.analyses.utils.stack_ast_builder import (
     KnownStackValue,
     UnknownStackValue,
-    emulate_stack,
+    construct_stack_ast,
     compute_equations,
 )
 
@@ -317,7 +317,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
     @staticmethod
     def _get_stack_value(ins: "Instruction") -> KnownStackValue:
-        return emulate_stack(ins.bb)[ins]
+        return construct_stack_ast(ins.bb)[ins]
 
     @abstractmethod
     def _universal_set(self, key: str) -> Any:

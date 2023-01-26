@@ -1,8 +1,8 @@
 from typing import Tuple, List
 import pytest
 
-from tealer.analyses.utils.stack_emulator import (
-    emulate_stack,
+from tealer.analyses.utils.stack_ast_builder import (
+    construct_stack_ast,
     UnknownStackValue,
     KnownStackValue,
     StackValue,
@@ -692,7 +692,7 @@ def test_just_detectors(test: Tuple[str, List[KnownStackValue]]) -> None:
     teal = parse_teal(code.strip())
     test_values: List[KnownStackValue] = []
     for bi in teal.bbs:
-        values = emulate_stack(bi)
+        values = construct_stack_ast(bi)
         for ins in bi.instructions:
             test_values.append(values[ins])
     assert len(expected_stack_values) == len(test_values)
@@ -705,7 +705,7 @@ if __name__ == "__main__":
     teal_obj = parse_teal(T2)
     for bb in teal_obj.bbs:
         print(bb)
-        result = emulate_stack(bb)
+        result = construct_stack_ast(bb)
         for i in bb.instructions:
             print(i, result[i])
         print("----------" * 10)

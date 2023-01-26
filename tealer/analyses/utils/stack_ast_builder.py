@@ -170,8 +170,10 @@ class KnownStackValue:
         property contains the reference to that instruction's object.
     args: A instruction consumes values from the stack. `args` represents the list of stack values
         which are consumed by `self.instruction` to produce the result(s).
-    position: A instruction might produce multiple values. position represents the index in the list
-        of produced values.
+    ins_out_values_index: ins_out_values_index stores the index inside the list of instruction
+    out values. When a instruction pushes multiple out values, every out value will have same
+    `instruction` and `args`. ins_out_values_index allows representing out values uniquely.
+
 
     e.g
 
@@ -179,28 +181,54 @@ class KnownStackValue:
     int 11
     mulw
 
-    values pushed by each instruction are:
-        "int 10" -> KnownStackValue(ins = Int(10), args = [])
-        "int 11" -> KnownStackValue(ins = Int(11), args = [])
-        "mulw" ->
-            KnownStackValue(
-                ins = Mulw(),
-                args = [Int(10), Int(11)],
-                position = 0,
-            ),
-            KnownStackValue(
-                ins = Mulw(),
-                args = [Int(10), Int(11)],
-                position = 1,
-            )
+    Stack:
 
-        Value which is pushed first will have position 0.
+        |               |
+         ---------------
+        |               |
+         ---------------
+
+    `int 10` -> pops 0 values and pushes 1 value
+
+        |               |
+         ---------------
+        |  A = Int(10)  |
+         ---------------
+
+    `int 11` -> pops 0 values and pushes 1 value
+
+        |               |
+         ---------------
+        |  B = Int(11)  |
+         ---------------
+        |  A = Int(10)  |
+         ---------------
+
+    mulw -> pops 2 values and pushes 2 values.
+
+        |               |
+         ---------------
+        |       Y       |
+         ---------------
+        |       X       |
+         ---------------
+
+    A = KnownStackValue(ins = Int(10), args = [], ins_out_values_index = 0)
+    B = KnownStackValue(ins = Int(11), args = [], ins_out_values_index = 0)
+
+    mulw pops `a` and `b` and pushes `X` and `Y`.
+    mulw_out_values = mulw(a, b)
+    X = mulw_out_values[0]
+    Y = mulw_out_values[1]
+
+    X == KnownStackValue(ins = Mulw(), args = [A, B], ins_out_values_index = 0)
+    Y == KnownStackValue(ins = Mulw(), args = [A, B], ins_out_values_index = 1)
     """
 
-    def __init__(self, ins: Instruction, args: List, position: int = 0) -> None:
+    def __init__(self, ins: Instruction, args: List, ins_out_values_index: int = 0) -> None:
         self._ins = ins
         self._args: List[Union[KnownStackValue, UnknownStackValue]] = args
-        self._position = position
+        self._ins_out_values_index = ins_out_values_index
 
     @property
     def instruction(self) -> Instruction:
@@ -218,8 +246,38 @@ class KnownStackValue:
         return self._args
 
     @property
-    def position(self) -> int:
-        return self._position
+    def ins_out_values_index(self) -> int:
+        """index into the list of out values pushed by self.instruction.
+
+        stack:
+                 ---- ----
+                |    |
+                 ---- ----
+        int 10
+                 ---- ----
+                | 10 |
+                 ---- ----
+        int 11
+                 ---- ---- ----
+                | 10 | 11 |
+                 ---- ---- ----
+        mulw
+                 ---- ---- ----
+                |  X |  Y |
+                 ---- ---- ----
+
+        (X, Y) = mulw(10, 11)
+
+        mulw_in_values = Int(10), Int(11)
+        mulw_out_values = [X, Y]
+
+        X.ins_out_values_index == 0
+        Y.ins_out_values_index == 1
+
+        X.instruction == Y.instruction == Mulw()
+        X.args == Y.args = [Int(10), Int(11)]
+        """
+        return self._ins_out_values_index
 
     def __str__(self) -> str:
         # args = ", ".join(str(i) for i in self._args)
@@ -246,10 +304,10 @@ class Stack:
     def __init__(self) -> None:
         self._values: List[StackValue] = []
 
-    def push(self, value: StackValue) -> None:
-        self._values.append(value)
+    def push_n_values(self, values: List[StackValue]) -> None:
+        self._values.extend(values)
 
-    def pop(self, count: int) -> List[StackValue]:
+    def pop_n_values(self, count: int) -> List[StackValue]:
         """Pop elements from the stack.
 
         Args:
@@ -279,8 +337,8 @@ class Stack:
 
 
 @lru_cache(maxsize=None)
-def emulate_stack(bb: BasicBlock) -> Dict[Instruction, KnownStackValue]:
-    r"""Emulates instructions in the basic block and return values produced by each instruction.
+def construct_stack_ast(bb: BasicBlock) -> Dict[Instruction, KnownStackValue]:
+    r"""Emulates instructions in the basic block and return values(AST) produced by each instruction.
 
     Because we do not know the values of the stack before executing this basic block, stack is assumed
     to have infinite number of UnknownStackValue(s).
@@ -337,10 +395,17 @@ def emulate_stack(bb: BasicBlock) -> Dict[Instruction, KnownStackValue]:
     for ins in bb.instructions:
         # TODO: emulate other stack manipulating instructions if necessary:
         #   swap, dup, dup2, dupn n, bury n, dig n, cover n, uncover n,
-        popped_values = stack.pop(ins.stack_pop_size)
+        # - Replace int like instructions with int values. Same for byte like instructions
+        # - Only track necessary instructions values.
+        ins_in_values = stack.pop_n_values(ins.stack_pop_size)  # pops `pop_size` number of values
+        ins_out_values: List[StackValue] = []
         for i in range(ins.stack_push_size):
-            stack.push(KnownStackValue(ins, popped_values, i))
-        ins_stack_value[ins] = KnownStackValue(ins, popped_values)
+            ins_out_values.append(KnownStackValue(ins, ins_in_values, i))
+        stack.push_n_values(ins_out_values)
+
+        # store the instruction reference and its arguments(input values).
+        # we only care about the instruction input values for now.
+        ins_stack_value[ins] = KnownStackValue(ins, ins_in_values)
     return ins_stack_value
 
 
