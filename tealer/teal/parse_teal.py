@@ -620,7 +620,7 @@ def parse_teal(source_code: str) -> Teal:
     for bb in teal.bbs:
         bb.teal = teal
         # Add tealer comment of cost and id
-        bb.tealer_comments.insert(0, f"id = {bb.idx}; cost = {bb.cost}")
+        bb.tealer_comments.insert(0, f"block_id = {bb.idx}; cost = {bb.cost}")
 
     _fill_intc_bytec_info(intcblock_ins, bytecblock_ins, all_bbs[0], teal)
     _apply_transaction_context_analysis(teal)
