@@ -1,7 +1,13 @@
-from typing import List
+from typing import List, Tuple, Type
 
 from tealer.teal.instructions import instructions, transaction_field
-from tealer.detectors.all_detectors import CanCloseAccount
+from tealer.detectors.all_detectors import (
+    CanCloseAccount,
+    CanCloseAsset,
+    MissingFeeCheck,
+    MissingRekeyTo,
+)
+from tealer.detectors.abstract_detector import AbstractDetector
 from tealer.teal import global_field
 
 from tests.utils import construct_cfg
@@ -362,7 +368,91 @@ err
 CAN_CLOSE_ACCOUNT_GROUP_INDEX_3_VULNERABLE_PATHS: List[List[int]] = []  # not vulnerable
 
 
-new_can_close_account_tests = [
+CAN_CLOSE_ACCOUNT_2 = """
+#pragma version 4
+txn Receiver
+addr 6ZIOGDXGSQSL4YINHLKCHYRV64FSN4LTUIQ6A4VWYK36FXFF42VI2UV7SM
+==
+txn Fee
+int 10000
+<
+&&
+txn RekeyTo
+global ZeroAddress
+==
+&&
+txn AssetCloseTo
+global ZeroAddress
+==
+&&
+global GroupSize
+int 1
+==
+&&
+assert
+int 1
+return
+"""
+
+CAN_CLOSE_ACCOUNT_2_VULNERABLE_PATHS: List[List[int]] = [[0]]
+
+CAN_CLOSE_ACCOUNT_RETURN_1 = """
+#pragma version 4
+txn Receiver
+addr 6ZIOGDXGSQSL4YINHLKCHYRV64FSN4LTUIQ6A4VWYK36FXFF42VI2UV7SM
+==
+txn Fee
+int 10000
+<
+&&
+txn RekeyTo
+global ZeroAddress
+==
+&&
+txn AssetCloseTo
+global ZeroAddress
+==
+&&
+global GroupSize
+int 1
+==
+&&
+return                  # return value is the result of the expression
+"""
+
+CAN_CLOSE_ACCOUNT_RETURN_1_VULNERABLE_PATHS: List[List[int]] = [[0]]
+
+CAN_CLOSE_ACCOUNT_RETURN_2 = """
+#pragma version 4
+txn Receiver
+addr 6ZIOGDXGSQSL4YINHLKCHYRV64FSN4LTUIQ6A4VWYK36FXFF42VI2UV7SM
+==
+txn Fee
+int 10000
+<
+&&
+txn RekeyTo
+global ZeroAddress
+==
+&&
+txn AssetCloseTo
+global ZeroAddress
+==
+&&
+global GroupSize
+int 1
+==
+&&
+gtxn 0 CloseRemainderTo
+addr 6ZIOGDXGSQSL4YINHLKCHYRV64FSN4LTUIQ6A4VWYK36FXFF42VI2UV7SM
+==                  // Not vulnerable to CanCloseAccount as well.
+&&
+return
+"""
+
+CAN_CLOSE_ACCOUNT_RETURN_2_VULNERABLE_PATHS: List[List[int]] = []
+
+new_can_close_account_tests: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     (
         CAN_CLOSE_ACCOUNT_GROUP_INDEX_0,
         CanCloseAccount,
@@ -383,4 +473,17 @@ new_can_close_account_tests = [
         CanCloseAccount,
         CAN_CLOSE_ACCOUNT_GROUP_INDEX_3_VULNERABLE_PATHS,
     ),
+    (CAN_CLOSE_ACCOUNT_2, CanCloseAccount, CAN_CLOSE_ACCOUNT_2_VULNERABLE_PATHS),
+    (CAN_CLOSE_ACCOUNT_2, CanCloseAsset, []),
+    (CAN_CLOSE_ACCOUNT_2, MissingRekeyTo, []),
+    (CAN_CLOSE_ACCOUNT_2, MissingFeeCheck, []),
+    (CAN_CLOSE_ACCOUNT, MissingFeeCheck, []),
+    (CAN_CLOSE_ACCOUNT_RETURN_1, CanCloseAccount, CAN_CLOSE_ACCOUNT_RETURN_1_VULNERABLE_PATHS),
+    (CAN_CLOSE_ACCOUNT_RETURN_1, CanCloseAsset, []),
+    (CAN_CLOSE_ACCOUNT_RETURN_1, MissingRekeyTo, []),
+    (CAN_CLOSE_ACCOUNT_RETURN_1, MissingFeeCheck, []),
+    (CAN_CLOSE_ACCOUNT_RETURN_2, CanCloseAccount, []),
+    (CAN_CLOSE_ACCOUNT_RETURN_2, CanCloseAsset, []),
+    (CAN_CLOSE_ACCOUNT_RETURN_2, MissingRekeyTo, []),
+    (CAN_CLOSE_ACCOUNT_RETURN_2, MissingFeeCheck, []),
 ]

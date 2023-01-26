@@ -207,6 +207,9 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
     def __str__(self) -> str:
         return self.__class__.__qualname__.lower()
 
+    def __repr__(self) -> str:
+        return f"<Instruction('{str(self)}')>"
+
 
 class UnsupportedInstruction(Instruction):
     """

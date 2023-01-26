@@ -34,6 +34,7 @@ class BlockTransactionContext:  # pylint: disable=too-few-public-methods, too-ma
         self.closeto: AddrFieldValue = AddrFieldValue()
         self.assetcloseto: AddrFieldValue = AddrFieldValue()
         self.max_fee: int = MAX_UINT64
+        self.max_fee_unknown: bool = False  # True if max possible fee is bounded and unknown
 
     def gtxn_context(self, txn_index: int) -> "BlockTransactionContext":
         """context information collected from gtxn {txn_index} field instructions"""

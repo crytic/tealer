@@ -134,7 +134,7 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
             return asserted_addresses, self._universal_set()
         return self._universal_set(), asserted_addresses
 
-    def _get_asserted(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Set, Set]:
+    def _get_asserted_single(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Set, Set]:
         return self._get_asserted_txn_gtxn(key, ins_stack_value)
 
     @staticmethod

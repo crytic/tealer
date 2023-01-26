@@ -183,7 +183,7 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
             return set(asserted_values), set(U) - set(asserted_values)
         return set(U), set(U)
 
-    def _get_asserted(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Set, Set]:
+    def _get_asserted_single(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Set, Set]:
         if key == self.GROUP_SIZE_KEY:
             return self._get_asserted_groupsizes(ins_stack_value)
         return self._get_asserted_groupindices(ins_stack_value)
