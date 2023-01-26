@@ -21,6 +21,7 @@ from tealer.utils.teal_enums import (
 )
 from tealer.utils.teal_enums import oncompletion_to_tealer_type, transaction_type_to_tealer_type
 from tealer.utils.analyses import is_int_push_ins
+from tealer.analyses.utils.stack_emulator import KnownStackValue, UnknownStackValue
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
@@ -66,10 +67,10 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
             return isinstance(ins, Gtxn) and ins.idx == idx and isinstance(ins.field, field)
         return isinstance(ins, Txn) and isinstance(ins.field, field)
 
-    def _get_asserted_transaction_types(  # pylint: disable=too-many-branches
-        self, key: str, ins_stack: List["Instruction"]
+    def _get_asserted_transaction_types(  # pylint: disable=too-many-branches, too-many-locals
+        self, key: str, ins_stack_value: KnownStackValue
     ) -> Tuple[Set["TealerTransactionType"], Set["TealerTransactionType"]]:
-        """return set of transaction type that make the comparison true and a set that make false.
+        """return set of transaction type that make the comparison true and a set that makes it false.
 
         considered instruction patterns:
         [g]txn [idx] ApplicationID
@@ -95,32 +96,36 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
         bz/bnz
         """
         U = set(self.UNIVERSAL_SETS[self.TRANSACTION_TYPE_KEY])
-        if len(ins_stack) == 0:
-            return set(U), set(U)
 
-        ins1 = ins_stack[-1]
+        ins1 = ins_stack_value.instruction
         if self._is_ins_tx_field(key, ins1, ApplicationID):
             # txn ApplicationID pushes 0 if this Application creation transaction elses pushes nonzero
             return set(APPLICATION_TRANSACTION_TYPES) - set(
                 [TealerTransactionType.ApplCreation]
             ), set([TealerTransactionType.ApplCreation])
 
-        if len(ins_stack) > 1:
-            ins2 = ins_stack[-2]
-            if isinstance(ins1, Not) and self._is_ins_tx_field(key, ins2, ApplicationID):
+        if isinstance(ins1, Not):
+            not_arg = ins_stack_value.args[0]
+            if isinstance(not_arg, UnknownStackValue):
+                return set(U), set(U)
+            ins2 = not_arg.instruction
+            if self._is_ins_tx_field(key, ins2, ApplicationID):
                 # txn ApplicationID
                 # !
                 # return
                 return set([TealerTransactionType.ApplCreation]), set(
                     APPLICATION_TRANSACTION_TYPES
                 ) - set([TealerTransactionType.ApplCreation])
-
-        if len(ins_stack) < 3:
             return set(U), set(U)
 
         if isinstance(ins1, (Eq, Neq)):
-            ins2 = ins_stack[-2]
-            ins3 = ins_stack[-3]
+            arg1 = ins_stack_value.args[0]
+            arg2 = ins_stack_value.args[1]
+            if isinstance(arg1, UnknownStackValue) or isinstance(arg2, UnknownStackValue):
+                # if one of the args is unknown
+                return set(U), set(U)
+            ins2 = arg1.instruction
+            ins3 = arg2.instruction
 
             is_int_ins2, value_2 = is_int_push_ins(ins2)
             is_int_ins3, value_3 = is_int_push_ins(ins3)
@@ -168,8 +173,8 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
 
         return set(U), set(U)
 
-    def _get_asserted(self, key: str, ins_stack: List["Instruction"]) -> Tuple[Set, Set]:
-        return self._get_asserted_transaction_types(key, ins_stack)
+    def _get_asserted_single(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Set, Set]:
+        return self._get_asserted_transaction_types(key, ins_stack_value)
 
     def _store_results(self) -> None:
         transaction_type_context = self._block_contexts[self.TRANSACTION_TYPE_KEY]

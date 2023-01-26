@@ -141,7 +141,9 @@ Unclear/recent(v8) instructions:
     proto, frame_dig, frame_bury,
 """
 
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Type, Tuple
+from functools import lru_cache
+
 
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import (
@@ -223,7 +225,8 @@ class KnownStackValue:
         # args = ", ".join(str(i) for i in self._args)
         # return f"{self._ins.__class__.__name__}(<{args}>)"
         args = "[" + ", ".join(str(i) for i in self.args) + "]"
-        return f"KnownStackValue(ins = {str(self._ins.__class__.__name__)}, args = {args})"
+        # return f"KnownStackValue(ins = {str(self._ins.__class__.__name__)}, args = {args})"
+        return f"KnownStackValue(ins = {repr(self._ins)}, args = {args})"
 
     def __repr__(self) -> str:
         return str(self)
@@ -275,6 +278,7 @@ class Stack:
         return str(self)
 
 
+@lru_cache(maxsize=None)
 def emulate_stack(bb: BasicBlock) -> Dict[Instruction, KnownStackValue]:
     r"""Emulates instructions in the basic block and return values produced by each instruction.
 
@@ -338,3 +342,110 @@ def emulate_stack(bb: BasicBlock) -> Dict[Instruction, KnownStackValue]:
             stack.push(KnownStackValue(ins, popped_values, i))
         ins_stack_value[ins] = KnownStackValue(ins, popped_values)
     return ins_stack_value
+
+
+def _flatten_ast(root: StackValue, node_ins: Type[Instruction]) -> List[StackValue]:
+    r"""Return all the leaf values given the root of the instruction AST.
+
+    node_ins instruction is one of `And`, `Or`.
+    `And` and `Or` consume two values. These two values are the children of the node.
+
+    Inner nodes are values whose `instruction` is a instance of `node_ins`.
+    Leaf values are values whose `instruction` is not `node_ins`.
+
+      &&
+    /    \
+   ==     &&
+        /    \
+       &&     ||
+      /  \   /  \
+     ==  >  !   !=
+    /\   /\
+
+    All the nodes in the tree are represented by `StackValue`. A StackValue can be unknown or known.
+    unknown stack values are considered to be leaf values and are stored.
+    A known stack value contains the instruction and arguments consumed by that instruction. These
+    arguments are also stack values and are treated as children.
+
+    In above example, if `node_ins` is `And` then values with instruction, `==, >, ||`, are all treated
+    as leaf blocks and are NOT traversed further.
+
+    int 1
+    int 2
+    ==
+    addr "..."
+    txn RekeyTo
+    !=
+    &&
+    byte "X"
+    byte "Y"
+    ==
+    &&
+
+    Tree:
+                        And
+                      /     \
+                    And       Eq
+                  /    \    /     \
+                Eq     Neq  Byte   Byte
+              /   \   /    \
+            Int  Int Addr  Txn RekeyTo
+
+    node_ins = And
+
+    ^^Only And instruction values are considered as nodes. remaining values are treated as leaves
+    and are not traversed.
+
+    After traversing, this functions returns the leaf values:
+        [
+            Eq(Int(<>), Int(<>)),
+            Neq(Addr(<>), Txn(<>)),
+            Eq(Byte(<>), Byte(<>))
+        ]
+
+    This function essentially flattens the given tree:
+        And(And(<1>, <2>), And(And(<3>, <4>), And(<5>, <6>)))
+        node_ins = And
+        => returns [<1>, <2>, <3>, <4>, <5>, <6>]
+
+        Or(Or(Or(<1>, <2>), Or(<3>, <4>)), Or(<5>, <6>))
+        node_ins = Or
+        => returns [<1>, <2>, <3>, <4>, <5>, <6>]
+    """
+    if isinstance(root, UnknownStackValue):
+        return [root]
+    if not isinstance(root.instruction, node_ins):
+        # is not node_ins stack value. so a leaf
+        return [root]
+    left, right = root.args[0], root.args[1]
+    return _flatten_ast(left, node_ins) + _flatten_ast(right, node_ins)
+
+
+@lru_cache(maxsize=None)
+def compute_equations(
+    root: KnownStackValue, node_ins: Type[Instruction]
+) -> Tuple[List[KnownStackValue], bool]:
+    """Compute equations from And or Or expression.
+
+    Returns:
+        equations: List of values on which, the result of **root** depends.
+
+            And(And(<1>, <2>), And(And(<3>, <4>), And(<5>, <6>)))
+            node_ins = And
+            => returns [<1>, <2>, <3>, <4>, <5>, <6>]
+
+            Or(Or(Or(<1>, <2>), Or(<3>, <4>)), Or(<5>, <6>))
+            node_ins = Or
+            => returns [<1>, <2>, <3>, <4>, <5>, <6>]
+
+        has_unknown_value: True if the result of **root** depends on a unknown value.
+    """
+    equations = _flatten_ast(root, node_ins)
+    has_unkown_value = False
+    known_equations = []
+    for eq in equations:
+        if isinstance(eq, UnknownStackValue):
+            has_unkown_value = True
+        else:
+            known_equations.append(eq)
+    return known_equations, has_unkown_value
