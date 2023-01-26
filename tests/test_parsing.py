@@ -74,6 +74,7 @@ label1:
 int 1
 label2:
 int 2
+method "add(uint64)uint64"
 """
 
 invalid_instructions = """
@@ -160,6 +161,7 @@ def test_parsing_2() -> None:
         instructions.Int(1),
         instructions.Label("label2"),
         instructions.Int(2),
+        instructions.Method('"add(uint64)uint64"'),
     ]
     t = [
         (instructions.Intcblock, ("_constants",)),
@@ -194,6 +196,7 @@ def test_parsing_2() -> None:
         (instructions.Int, ("value",)),
         (instructions.Label, ("label",)),
         (instructions.Int, ("value",)),
+        (instructions.Method, ("method_signature",)),
     ]
 
     attributes: Tuple[str]
