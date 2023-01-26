@@ -6,7 +6,6 @@ barecalls = BareCallActions(
     no_op=OnCompleteAction(action=Approve(), call_config=CallConfig.CREATE),
     opt_in=OnCompleteAction(action=Approve(), call_config=CallConfig.ALL),
     close_out=OnCompleteAction(action=Approve(), call_config=CallConfig.CALL),
-    clear_state=OnCompleteAction(action=Approve(), call_config=CallConfig.CALL),
     update_application=OnCompleteAction(call_config=CallConfig.NEVER),
     delete_application=OnCompleteAction(call_config=CallConfig.NEVER),
 )
@@ -14,6 +13,7 @@ barecalls = BareCallActions(
 router = Router(
     name="ARC4 application parsing test",
     bare_calls=barecalls,
+    clear_state=Approve(),
 )
 
 
