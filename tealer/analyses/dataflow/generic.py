@@ -412,7 +412,9 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
             final_true_values = self._universal_set(key)
         return final_true_values, final_false_values
 
-    def _block_level_constraints(self, analysis_keys: List[str], block: "BasicBlock") -> None:
+    def _block_level_constraints(  # pylint: disable=too-many-branches
+        self, analysis_keys: List[str], block: "BasicBlock"
+    ) -> None:
         """Calculate and store constraints on keys applied within the block.
 
         By default, no constraints are considered i.e values are assumed to be universal_set
@@ -427,7 +429,6 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                 self._block_contexts[key] = {}
             self._block_contexts[key][block] = self._universal_set(key)
 
-        stack: List["Instruction"] = []
         for ins in block.instructions:
             if isinstance(ins, Assert):
                 assert_ins_stack_value = self._get_stack_value(ins)
@@ -447,16 +448,23 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                 return_ins_arg = return_ins_value.args[0]
                 if isinstance(return_ins_arg, UnknownStackValue):
                     continue
+                # if int 0; return; set possible values to null set.
                 is_int, value = is_int_push_ins(return_ins_arg.instruction)
                 if is_int and value == 0:
                     for key in analysis_keys:
                         self._block_contexts[key][block] = self._null_set(key)
+                    continue
+                # if And(<1>, <2>, ..); return; i.e return value depends on the result of a comparison
+                for key in analysis_keys:
+                    true_values, _ = self._get_asserted(key, return_ins_arg)
+                    present_values = self._block_contexts[key][block]
+                    self._block_contexts[key][block] = self._intersection(
+                        key, present_values, true_values
+                    )
             elif isinstance(ins, Err):
                 # if err, set possible values to NullSet()
                 for key in analysis_keys:
                     self._block_contexts[key][block] = self._null_set(key)
-
-            stack.append(ins)
 
     def _path_level_constraints(  # pylint: disable=too-many-branches
         self, analysis_keys: List[str], block: "BasicBlock"

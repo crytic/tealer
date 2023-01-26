@@ -10,7 +10,7 @@ from tealer.teal.instructions.instructions import (
     LessE,
 )
 from tealer.utils.analyses import is_int_push_ins
-from tealer.utils.algorand_constants import MAX_GROUP_SIZE, MAX_UINT64
+from tealer.utils.algorand_constants import MAX_GROUP_SIZE, MAX_UINT64, MAX_TRANSACTION_COST
 from tealer.analyses.utils.stack_emulator import KnownStackValue, UnknownStackValue
 
 if TYPE_CHECKING:
@@ -18,7 +18,13 @@ if TYPE_CHECKING:
 
 FEE_KEY = "Fee"
 
-SOME_INT = "UnknownBoundedInt"  # Represent a value that is between 0 < x < MAX_UINT64
+# It's not always possible to know the integer value used to compare Fee.
+# All the unknown values are represented using "UnknownBoundedInt".
+# Tealer does not report paths if Fee is less than MAX_TRANSACTION_COST.
+# UnknownBoundedInt is assumed to be a value between 0 and MAX_TRANSACTION_COST
+# Tealer does not report paths if Fee is checked against some unknown value.
+
+SOME_INT = "UnknownBoundedInt"  # Represent a value that is between 0 < x <= MAX_TRANSACTION_COST
 
 
 class FeeField(DataflowTransactionContext):
@@ -35,38 +41,42 @@ class FeeField(DataflowTransactionContext):
 
     def _union(self, key: str, a: Union[int, str], b: Union[int, str]) -> Union[int, str]:
         if isinstance(a, str) and isinstance(b, str):
-            # Both are unknown values between 0 < x < MAX_UINT64
+            # Both are unknown values between 0 < x <= MAX_TRANSACTION_COST
             return a
         if isinstance(a, str):
             # a is a unknown bounded value and b is int
-            # a: 0 < x < MAX_UINT64
-            if b == self._universal_set(key):
-                return b  # a is less than MAX_UINT64
+            # a: 0 < x < MAX_TRANSACTION_COST
+            assert isinstance(b, int)  # for mypy
+            if b > MAX_TRANSACTION_COST:
+                return b  # a is less than MAX_TRANSACTION_COST
             return a
         if isinstance(b, str):
             # b is a unknown bounded value and a is int
-            # b: 0 < x < MAX_UINT64
-            if a == self._universal_set(key):
-                return a  # b is less than MAX_UINT64
+            # b: 0 < x < MAX_TRANSACTION_COST
+            assert isinstance(a, int)
+            if a > MAX_TRANSACTION_COST:
+                return a  # b is less than MAX_TRANSACTION_COST
             return b
         # both are ints
         return max(a, b)
 
     def _intersection(self, key: str, a: Union[int, str], b: Union[int, str]) -> Union[int, str]:
         if isinstance(a, str) and isinstance(b, str):
-            # Both are unknown values between 0 < x < MAX_UINT64
+            # Both are unknown values between 0 < x < MAX_TRANSACTION_COST
             return a
         if isinstance(a, str):
             # a is a unknown bounded value and b is int
-            # a: 0 < x < MAX_UINT64
-            if b == self._universal_set(key):
-                return a  # a is less than MAX_UINT64
+            # a: 0 < x < MAX_TRANSACTION_COST
+            assert isinstance(b, int)
+            if b > MAX_TRANSACTION_COST:
+                return a  # a is less than MAX_TRANSACTION_COST
             return b
         if isinstance(b, str):
             # b is a unknown bounded value and a is int
-            # b: 0 < x < MAX_UINT64
-            if a == self._universal_set(key):
-                return b  # b is less than MAX_UINT64
+            # b: 0 < x < MAX_TRANSACTION_COST
+            assert isinstance(a, int)
+            if a > MAX_TRANSACTION_COST:
+                return b  # b is less than MAX_TRANSACTION_COST
             return a
         # both are ints
         return min(a, b)
