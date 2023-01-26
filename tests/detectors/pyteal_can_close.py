@@ -29,7 +29,7 @@ def echo(input: abi.Uint64, *, output: abi.Uint64) -> Expr:
     return output.set(input.get())
 
 
-pragma(compiler_version="0.20.1")
+# pragma(compiler_version="0.22.0")
 application_approval_program, _, _ = router.compile_program(
     version=7,
     assemble_constants=True,  # use intcblock, bytecblock
