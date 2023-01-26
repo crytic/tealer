@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Tuple, Type
 
 from tealer.teal.instructions import instructions
 from tealer.teal.instructions import transaction_field
-from tealer.detectors.all_detectors import CanUpdate
+from tealer.detectors.abstract_detector import AbstractDetector
+from tealer.detectors.all_detectors import CanUpdate, CanCloseAccount, CanCloseAsset
 
 from tests.utils import construct_cfg
 
@@ -390,8 +391,68 @@ CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS: List[List[int]] = [
     [0, 2, 7, 8, 9],
 ]
 
-new_can_update_tests = [
+CAN_UPDATE_GROUP_INDEX_INTC_0 = """
+#pragma version 6
+intcblock 0 1 0x2 0x9301 0x3 0x4 0x5
+txn GroupIndex
+int 0
+==
+assert
+int 0
+gtxn 0 ApplicationID
+==
+bz not_creation
+int 1
+return
+not_creation:
+    gtxn 0 OnCompletion
+    intc_0
+    ==
+    bnz handle_noop
+    gtxn 0 OnCompletion
+    intc_1
+    ==
+    bnz handle_optin
+    gtxn 0 OnCompletion
+    intc_2
+    ==
+    bnz handle_closeout
+    gtxn 0 OnCompletion
+    intc 5
+    ==
+    bnz handle_updateapp
+    int 1
+    return
+handle_noop:
+handle_optin:
+handle_closeout:
+int 1
+return
+handle_updateapp:
+err
+"""
+
+CAN_UPDATE_GROUP_INDEX_INTC_0_VULNERABLE_PATHS: List[List[int]] = []
+
+new_can_update_tests: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     (CAN_UPDATE_GROUP_INDEX_0, CanUpdate, CAN_UPDATE_GROUP_INDEX_0_VULNERABLE_PATHS),
     (CAN_UPDATE_GROUP_INDEX_1, CanUpdate, CAN_UPDATE_GROUP_INDEX_1_VULNERABLE_PATHS),
     (CAN_UPDATE_GROUP_INDEX_2, CanUpdate, CAN_UPDATE_GROUP_INDEX_2_VULNERABLE_PATHS),
+    (CAN_UPDATE_GROUP_INDEX_INTC_0, CanUpdate, CAN_UPDATE_GROUP_INDEX_INTC_0_VULNERABLE_PATHS),
+    (
+        CAN_UPDATE,
+        CanCloseAccount,
+        [],
+    ),  # Applications are not vulnerable to CanCloseAccount and CanCloseAsset
+    (CAN_UPDATE_LOOP, CanCloseAccount, []),
+    (CAN_UPDATE_GROUP_INDEX_0, CanCloseAccount, []),
+    (CAN_UPDATE_GROUP_INDEX_1, CanCloseAccount, []),
+    (CAN_UPDATE_GROUP_INDEX_2, CanCloseAccount, []),
+    (CAN_UPDATE_GROUP_INDEX_INTC_0, CanCloseAccount, []),
+    (CAN_UPDATE, CanCloseAsset, []),
+    (CAN_UPDATE_LOOP, CanCloseAsset, []),
+    (CAN_UPDATE_GROUP_INDEX_0, CanCloseAsset, []),
+    (CAN_UPDATE_GROUP_INDEX_1, CanCloseAsset, []),
+    (CAN_UPDATE_GROUP_INDEX_2, CanCloseAsset, []),
+    (CAN_UPDATE_GROUP_INDEX_INTC_0, CanCloseAsset, []),
 ]

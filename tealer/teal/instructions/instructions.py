@@ -4058,8 +4058,28 @@ class Intcblock(Instruction):
     def __str__(self) -> str:
         return " ".join(["intcblock"] + list(map(str, self._constants)))
 
+    @property
+    def constants(self) -> List[int]:
+        return self._constants
 
-class Intc(Instruction):
+
+class IntcInstruction(Instruction):
+    """Base class for Intc, Intc_0, Intc_1, Intc_2, Intc_3"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx: int = 0
+
+    @property
+    def index(self) -> int:
+        return self._idx
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
+
+class Intc(IntcInstruction):
     """`intc i` push integer constant loaded from constant storage space.
 
     Immediates:
@@ -4077,12 +4097,8 @@ class Intc(Instruction):
     def __str__(self) -> str:
         return f"intc {self._idx}"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc0(Instruction):
+class Intc0(IntcInstruction):
     """`intc_0` push integer constant 0 from constant storage space.
 
     Pushes:
@@ -4090,15 +4106,15 @@ class Intc0(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 0
+
     def __str__(self) -> str:
         return "intc_0"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc1(Instruction):
+class Intc1(IntcInstruction):
     """`intc_1` push integer constant 1 from constant storage space.
 
     Pushes:
@@ -4106,15 +4122,15 @@ class Intc1(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 1
+
     def __str__(self) -> str:
         return "intc_1"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc2(Instruction):
+class Intc2(IntcInstruction):
     """`intc_2` push integer constant 2 from constant storage space.
 
     Pushes:
@@ -4122,15 +4138,15 @@ class Intc2(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 2
+
     def __str__(self) -> str:
         return "intc_2"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc3(Instruction):
+class Intc3(IntcInstruction):
     """`intc_3` push integer constant 3 from constant storage space.
 
     Pushes:
@@ -4138,15 +4154,31 @@ class Intc3(Instruction):
 
     """
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 3
 
     def __str__(self) -> str:
         return "intc_3"
 
 
-class Bytec(Instruction):
+class BytecInstruction(Instruction):
+    """Base class for Bytec, Bytec_0, Bytec_1, Bytec_2, Bytec_3"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx: int = 0
+
+    @property
+    def index(self) -> int:
+        return self._idx
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
+
+class Bytec(BytecInstruction):
     """`bytec i` push byte constant loaded from constant storage space.
 
     Immediates:
@@ -4161,21 +4193,21 @@ class Bytec(Instruction):
         super().__init__()
         self._idx = idx
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
-
     def __str__(self) -> str:
         return f"bytec {self._idx}"
 
 
-class Bytec0(Instruction):
+class Bytec0(BytecInstruction):
     """`bytec_0` push byte constant 0 from constant storage space.
 
     Pushes:
         push constant 0 from bytecblock to stack.
 
     """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 0
 
     def __str__(self) -> str:
         return "bytec_0"
@@ -4185,7 +4217,7 @@ class Bytec0(Instruction):
         return 1
 
 
-class Bytec1(Instruction):
+class Bytec1(BytecInstruction):
     """`bytec_1` push byte constant 1 from constant storage space.
 
     Pushes:
@@ -4193,15 +4225,15 @@ class Bytec1(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 1
+
     def __str__(self) -> str:
         return "bytec_1"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Bytec2(Instruction):
+class Bytec2(BytecInstruction):
     """`bytec_2` push byte constant 2 from constant storage space.
 
     Pushes:
@@ -4209,15 +4241,15 @@ class Bytec2(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 2
+
     def __str__(self) -> str:
         return "bytec_2"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Bytec3(Instruction):
+class Bytec3(BytecInstruction):
     """`bytec_3` push byte constant 3 from constant storage space.
 
     Pushes:
@@ -4225,12 +4257,12 @@ class Bytec3(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 3
+
     def __str__(self) -> str:
         return "bytec_3"
-
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
 
 class Arg(Instruction):
@@ -4362,6 +4394,10 @@ class Byte(Instruction):
     def stack_push_size(self) -> int:
         return 1
 
+    @property
+    def value(self) -> str:
+        return self._bytes
+
 
 class PushBytes(Instruction):
     """`pushbytes x` instruction pushes immediate value to the top of the stack.
@@ -4393,6 +4429,10 @@ class PushBytes(Instruction):
     @property
     def stack_push_size(self) -> int:
         return 1
+
+    @property
+    def value(self) -> str:
+        return self._bytes
 
 
 class Len(Instruction):
@@ -4427,6 +4467,10 @@ class Bytecblock(Instruction):
     def __init__(self, bytes_list: List[str]):
         super().__init__()
         self._constants = bytes_list
+
+    @property
+    def constants(self) -> List[str]:
+        return self._constants
 
     def __str__(self) -> str:
         return " ".join(["bytecblock"] + self._constants)
