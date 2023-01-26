@@ -418,7 +418,7 @@ def handle_print_cfg(args: argparse.Namespace, teal: "Teal") -> None:
 
     filename = Path(args.dest) / Path(filename)
     print(f"\nCFG exported to file: {filename}")
-    cfg_to_dot(teal.bbs, filename)
+    cfg_to_dot(teal.bbs, filename=filename)
 
 
 def handle_detectors_and_printers(

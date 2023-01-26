@@ -10,7 +10,7 @@ Classes:
 """
 
 from pathlib import Path
-from typing import List, Any, Optional, Type, TYPE_CHECKING
+from typing import List, Any, Optional, Type, TYPE_CHECKING, Tuple
 
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorClassification
 from tealer.printers.abstract_printer import AbstractPrinter
@@ -55,7 +55,7 @@ def _check_common_things(
         raise TealerException(f"You can't register {cls.__name__} twice.")
 
 
-class Teal:
+class Teal:  # pylint: disable=too-many-instance-attributes
     """Class to represent a teal contract.
 
     This class stores CFG, subroutines and other information of the
@@ -87,6 +87,8 @@ class Teal:
         self._version = version
         self._mode = mode
         self._subroutines = subroutines
+        self._int_constants: List[int] = []
+        self._byte_constants: List[str] = []
 
         self._detectors: List[AbstractDetector] = []
         self._printers: List[AbstractPrinter] = []
@@ -142,6 +144,43 @@ class Teal:
     @mode.setter
     def mode(self, m: ContractType) -> None:
         self._mode = m
+
+    def get_int_constant(self, index: int) -> Tuple[bool, int]:
+        """Return int value stored by intcblock instruction
+
+        Returns boolean and an int. Boolean indicates whether there's a value at that index
+        and whether Tealer was able to identify that information.
+
+        Cases:
+            intcblock is only present in the entry block; Tealer is able to identify the confirmed and
+            correct constants. As a result, Tealer can know the values of `intc_*` instructions.
+
+            intcblock instruction occurs multiple times. Tealer cannot determine the exact value a `intc_`
+            instruction refers to. This method returns `False` in this case.
+
+            A `intc_*` instruction refers to a value that is not declared in the intcblock instruction. For example,
+            intcblock only stores 3 values in the constant space and a intc instruction refers to 5th value. Execution
+            will fail at runtime in this case. Return value will be `False` in this case as well.
+
+        Returns:
+            bool: True if Tealer was able to determine the value referred by that instruction or else False
+            int: value referred by intc instruction at that index.
+        """
+        if len(self._int_constants) <= index:
+            return False, 0
+        return True, self._int_constants[index]
+
+    def get_byte_constant(self, index: int) -> Tuple[bool, str]:
+        """Return []byte value stored by bytecblock instruction"""
+        if len(self._byte_constants) <= index:
+            return False, ""
+        return True, self._byte_constants[index]
+
+    def set_int_constants(self, int_constants: List[int]) -> None:
+        self._int_constants = int_constants
+
+    def set_byte_constants(self, byte_constants: List[str]) -> None:
+        self._byte_constants = byte_constants
 
     # from slither: Slither Class in slither/slither.py
     @property

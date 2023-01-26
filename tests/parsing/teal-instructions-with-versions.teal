@@ -156,6 +156,7 @@ gitxna 1 ApplicationArgs 0      // (version: 6, mode: Stateful, pop: 0, push: 1)
 gloadss                         // (version: 6, mode: Stateful, pop: 2, push: 1)
 itxnas ApplicationArgs          // (version: 6, mode: Stateful, pop: 1, push: 1)
 gitxnas 1 ApplicationArgs       // (version: 6, mode: Stateful, pop: 1, push: 1)
+method "add(uint64)uint64"      // (version: 6, mode: Any, pop: 0, push: 1)
 
 // version 7
 replace2 1                      // (version: 7, mode: Any, pop: 2, push: 1)

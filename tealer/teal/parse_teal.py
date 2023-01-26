@@ -27,7 +27,7 @@ contract represented by sequence of the basic blocks.
 
 import inspect
 import sys
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions.instructions import (
@@ -43,10 +43,13 @@ from tealer.teal.instructions.instructions import (
     Pragma,
     Switch,
     Match,
+    Intcblock,
+    Bytecblock,
+    Txn,
 )
 from tealer.teal.instructions.instructions import ContractType
 from tealer.teal.instructions.parse_instruction import parse_line, ParseError
-from tealer.teal.instructions.transaction_field import TransactionField
+from tealer.teal.instructions.transaction_field import TransactionField, ApplicationID
 from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
@@ -151,12 +154,18 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> Non
             bb = None
 
 
-def _first_pass(
+def _add_instruction_comments(ins: Instruction) -> None:
+    if isinstance(ins, Txn) and isinstance(ins.field, ApplicationID):
+        # A example. TODO: remove if unnecessary
+        ins.tealer_comments.append("ApplicationID is 0 in Creation Txn")
+
+
+def _first_pass(  # pylint: disable=too-many-branches
     lines: List[str],
     labels: Dict[str, Label],
     rets: Dict[str, List[Instruction]],
     instructions: List[Instruction],
-) -> None:
+) -> Tuple[List[Intcblock], List[Bytecblock]]:
     """Parse instructions and add sequential instruction links.
 
     This function is the first pass of the teal parser. Source code
@@ -197,17 +206,35 @@ def _first_pass(
     idx = 0
     prev: Optional[Instruction] = None  # Flag: last instruction was an unconditional jump
     call: Optional[Callsub] = None  # Flag: last instruction was a callsub
+    intcblock_ins: List[Intcblock] = []  # List of intcblock instructions present in the contract
+    bytecblock_ins: List[Bytecblock] = []  # List of bytecblock instructions present in the contract
 
+    instruction_comments: List[str] = []
     for line in lines:
         try:
-            ins = parse_line(line.strip())
+            if line.strip().startswith("//"):
+                # is a comment without any instruction
+                instruction_comments.append(line)
+                ins = None
+            else:
+                ins = parse_line(line)
+                if ins and instruction_comments:
+                    ins.comments_before_ins = list(instruction_comments)
+                    instruction_comments = []
         except ParseError as e:
             print(f"Parse error at line {idx}: {e}")
             sys.exit(1)
         idx = idx + 1
         if not ins:
             continue
+
+        if isinstance(ins, Intcblock):
+            intcblock_ins.append(ins)
+        elif isinstance(ins, Bytecblock):
+            bytecblock_ins.append(ins)
+
         ins.line = idx
+        _add_instruction_comments(ins)
 
         # A label? Add it to the global label list
         if isinstance(ins, Label):
@@ -240,6 +267,7 @@ def _first_pass(
 
         # Finally, add the instruction to the instruction list
         instructions.append(ins)
+    return intcblock_ins, bytecblock_ins
 
 
 def _second_pass(  # pylint: disable=too-many-branches
@@ -393,6 +421,9 @@ def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
     if label.bb is None:
         return []
 
+    # add tealer comment "Subroutine: {label}" to the subroutine entry block
+    label.bb.tealer_comments.append(f"Subroutine {label.label}")
+
     subroutines_blocks: List["BasicBlock"] = []
     stack: List["BasicBlock"] = []
 
@@ -512,6 +543,27 @@ def _apply_transaction_context_analysis(teal: "Teal") -> None:
     compute_equations.cache_clear()  # compute_equations is not used after transaction_context_analysis.
 
 
+def _fill_intc_bytec_info(
+    intcblock_ins: List[Intcblock],
+    bytecblock_ins: List[Bytecblock],
+    entry_block: BasicBlock,
+    teal: Teal,
+) -> None:
+    """Find intcblock, bytecblock instructions and fill that information in Teal class
+
+    Tealer determines intc_*/bytec_* instruction values if and only if intcblock, bytecblock
+    instructions are used only once and that too in the entry block itself.
+
+    This is the case for most of the contracts as intcblock/bytecblock instructions are generated
+    internally by the assembler or PyTeal compiler.
+    """
+    if len(intcblock_ins) == 1 and intcblock_ins[0].bb == entry_block:
+        teal.set_int_constants(intcblock_ins[0].constants)
+
+    if len(bytecblock_ins) == 1 and bytecblock_ins[0].bb == entry_block:
+        teal.set_byte_constants(bytecblock_ins[0].constants)
+
+
 def parse_teal(source_code: str) -> Teal:
     """Parse algorand smart contracts written in teal.
 
@@ -542,7 +594,7 @@ def parse_teal(source_code: str) -> Teal:
 
     lines = source_code.splitlines()
 
-    _first_pass(lines, labels, rets, instructions)
+    intcblock_ins, bytecblock_ins = _first_pass(lines, labels, rets, instructions)
     _second_pass(instructions, labels, rets)
 
     # Third pass over the instructions list: Construct the basic blocks and sequential links
@@ -571,7 +623,10 @@ def parse_teal(source_code: str) -> Teal:
     # set teal instance to it's basic blocks
     for bb in teal.bbs:
         bb.teal = teal
+        # Add tealer comment of cost and id
+        bb.tealer_comments.insert(0, f"block_id = {bb.idx}; cost = {bb.cost}")
 
+    _fill_intc_bytec_info(intcblock_ins, bytecblock_ins, all_bbs[0], teal)
     _apply_transaction_context_analysis(teal)
 
     return teal
