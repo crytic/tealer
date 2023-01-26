@@ -63,8 +63,11 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
     def __init__(self) -> None:
         self._prev: List[Instruction] = []
         self._next: List[Instruction] = []
-        self._line = 0
+        self._line_num = 0
+        self._source_code_line: str = ""
         self._comment = ""
+        self._comments_before_ins: List[str] = []
+        self._tealer_comments: List[str] = []
         self._bb: Optional["BasicBlock"] = None
         self._version: int = 1
         self._mode: ContractType = ContractType.ANY
@@ -116,11 +119,28 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
     @property
     def line(self) -> int:
         """Source code line number of this instruction."""
-        return self._line
+        return self._line_num
 
     @line.setter
     def line(self, l: int) -> None:
-        self._line = l
+        self._line_num = l
+
+    @property
+    def source_code(self) -> str:
+        """source code line corresponding to this instruction.
+
+        source code line includes the comment, indentation.
+        ```
+        label:
+            int      4   // Number 4
+        ```
+        Int(4).source_line == "    int      4   // Number 4"
+        """
+        return self._source_code_line
+
+    @source_code.setter
+    def source_code(self, line: str) -> None:
+        self._source_code_line = line
 
     @property
     def comment(self) -> str:
@@ -130,6 +150,41 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
     @comment.setter
     def comment(self, c: str) -> None:
         self._comment = c
+
+    @property
+    def comments_before_ins(self) -> List[str]:
+        """Represents comments directly above the instruction.
+
+        E.g
+            ```
+            // Check if is UpdateApplication
+            // Txn.oncompletion == int UpdateApplication
+            txn OnCompletion        // OnCompletion
+            int UpdateApplication
+            ==
+            ```
+
+            Txn(..).comments_before_ins == [
+                "// Check if is UpdateApplication",
+                "// Txn.oncompletion == int UpdateApplication",
+            ]
+
+            Txn(..).comment == "// OnCompletion"
+        """
+        return self._comments_before_ins
+
+    @comments_before_ins.setter
+    def comments_before_ins(self, comments: List[str]) -> None:
+        self._comments_before_ins = comments
+
+    @property
+    def tealer_comments(self) -> List[str]:
+        """Additional comments added by tealer for each basic block in the output CFG."""
+        return self._tealer_comments
+
+    @tealer_comments.setter
+    def tealer_comments(self, comments: List[str]) -> None:
+        self._tealer_comments = comments
 
     @property
     def bb(self) -> Optional["BasicBlock"]:

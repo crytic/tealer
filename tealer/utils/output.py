@@ -27,12 +27,14 @@ import html
 from pathlib import Path
 from typing import List, TYPE_CHECKING, Dict
 
+from tealer.teal.instructions.instructions import BZ, BNZ, Callsub, Retsub
+
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
     from tealer.teal.instructions.instructions import Instruction
 
 
-def _instruction_to_dot(ins: "Instruction") -> str:
+def _instruction_to_dot(ins: "Instruction", set_port: bool = True) -> str:
     """Return dot representation of Teal instruction.
 
     string representation of the instruction is represented as
@@ -44,18 +46,45 @@ def _instruction_to_dot(ins: "Instruction") -> str:
     Returns:
         string containing the dot representation of the given
         instruction.
+
+    ---------------
+    // tealer comments
+    //
+    // source code comments
+    // ...
+    // instruction
+    ---------------
     """
 
-    ins_str = html.escape(str(ins), quote=True)
-    comment_str = "no comment for this line" if ins.comment == "" else ins.comment
-    comment_str = html.escape(comment_str, quote=True)
-    # the 'href' attribute is set to bogus because graphviz wants it in SVG
-    tooltip = f'TOOLTIP="{comment_str}" HREF="bogus"'
-    cell_i = f'<TD {tooltip} ALIGN="LEFT" PORT="{ins.line}">{ins.line}. {ins_str}</TD>'
+    # ins.source_code stores the indentation and whitespace. strip them
+    ins_str = html.escape(ins.source_code.strip(), quote=True)
+    # make callsub and retsub bold and italic
+    if isinstance(ins, (Callsub, Retsub)):
+        ins_str = f"<B><I>{ins_str}</I></B>"
+    tealer_comments = ""
+    if ins.tealer_comments:
+        tealer_comments = "<BR/>".join(
+            f"// {html.escape(comment.strip(), quote=True)}" for comment in ins.tealer_comments
+        )
+        tealer_comments = f"<B>{tealer_comments}</B><BR/>"  # make them bold
+    source_code_comments = ""
+    if ins.comments_before_ins:
+        source_code_comments = "<BR/>".join(
+            f"{html.escape(comment.strip(), quote=True)}" for comment in ins.comments_before_ins
+        )
+        source_code_comments += "<BR/>"
+    port = ""
+    if set_port:
+        # port is used as a link destination.
+        port = f'PORT="{ins.line}"'
+    cell_i_contents = f"{tealer_comments}{source_code_comments}{ins.line}. {ins_str}"
+    cell_i = f'<TD ALIGN="LEFT" BALIGN="LEFT" {port} COLOR="BLACK">{cell_i_contents}</TD>'
     return f"<TR>{cell_i}</TR>\n"
 
 
-def _bb_to_dot(bb: "BasicBlock") -> str:
+def _bb_to_dot(  # pylint: disable=too-many-locals
+    bb: "BasicBlock", border_color: str = "BLACK", color_edges: bool = True
+) -> str:
     """Return dot representation of basic block.
 
     Basic Blocks are represented in the form of a tabel in dot.
@@ -69,19 +98,70 @@ def _bb_to_dot(bb: "BasicBlock") -> str:
         basic block.
     """
 
-    table_prefix = '<<TABLE ALIGN="LEFT">\n'
+    table_prefix = f'<<TABLE ALIGN="LEFT" COLOR="{border_color}">\n'
     table_suffix = "</TABLE>> labelloc=top shape=plain\n"
+    comments_cell = ""
     table_rows = ""
     graph_edges = ""
-    for ins in bb.instructions:
+
+    if bb.tealer_comments:
+        # Increase the border size to differentiate the comments cell/row.
+        comments_cell_border_size = 2
+        tealer_comments = "<BR/>".join(
+            f"// {html.escape(comment.strip(), quote=True)}" for comment in bb.tealer_comments
+        )
+        tealer_comments = f"<B>{tealer_comments}</B><BR/>"  # make them bold
+        comments_cell = f'<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="{bb.entry_instr.line}" BORDER="{comments_cell_border_size}">{tealer_comments}</TD></TR>\n'
+
+        table_rows += comments_cell
+        # if there's a comments_cell then don't add port(link) to the first instruction cell.
+        table_rows += _instruction_to_dot(bb.entry_instr, set_port=False)
+    else:
+        table_rows += _instruction_to_dot(bb.entry_instr)
+
+    for ins in bb.instructions[1:]:
         table_rows += _instruction_to_dot(ins)
-    for next_bb in bb.next:
+
+    jump_branch_color = ""
+    default_branch_color = ""
+    callsub_edge_color = ""
+    remaining_edges_color = ""
+    if color_edges:
+        jump_branch_color = "#36d899"  # "green"
+        default_branch_color = "#e0182b"  # "red"
+        callsub_edge_color = "#ff8c00"  # "orange"
+        # remaining_edges_color = ""  # "#1155ff"
+
+    if isinstance(bb.exit_instr, (BZ, BNZ)):
+        # color graph edges if exit instruction is BZ or BNZ.
+        if len(bb.next) == 1:
+            # happens when bz/bnz is the last instruction in the contract and there is no default branch
+            default_branch = None
+            jump_branch = bb.next[0]
+        else:
+            default_branch = bb.next[0]
+            jump_branch = bb.next[1]
+
         exit_loc = bb.exit_instr.line
-        entry_loc = next_bb.entry_instr.line
-        graph_edges += f"{bb.idx}:{exit_loc}:s -> {next_bb.idx}:{entry_loc}:n;\n"
+        if default_branch is not None:
+            default_entry_loc = default_branch.entry_instr.line
+            graph_edges += f'{bb.idx}:{exit_loc}:s -> {default_branch.idx}:{default_entry_loc}:n [color="{default_branch_color}"];\n'
+
+        jump_entry_loc = jump_branch.entry_instr.line
+        graph_edges += f'{bb.idx}:{exit_loc}:s -> {jump_branch.idx}:{jump_entry_loc}:n [color="{jump_branch_color}"];\n'
+    elif isinstance(bb.exit_instr, Callsub):
+        # make callsub instruction -> subroutine edge orange.
+        callsub_branch = bb.next[0]
+        exit_loc = bb.exit_instr.line
+        subroutine_loc = callsub_branch.entry_instr.line
+        graph_edges += f'{bb.idx}:{exit_loc}:s -> {callsub_branch.idx}:{subroutine_loc}:n [color="{callsub_edge_color}"];\n'
+    else:
+        for next_bb in bb.next:
+            exit_loc = bb.exit_instr.line
+            entry_loc = next_bb.entry_instr.line
+            graph_edges += f'{bb.idx}:{exit_loc}:s -> {next_bb.idx}:{entry_loc}:n [color="{remaining_edges_color}"];\n'
     table = table_prefix + table_rows + table_suffix
-    bb_xlabel = f'"cost = {bb.cost}; {bb.idx}"'
-    return f"{bb.idx}[label={table} xlabel={bb_xlabel}]" + graph_edges
+    return f"{bb.idx}[label={table}]" + graph_edges
 
 
 def cfg_to_dot(bbs: List["BasicBlock"], filename: Path) -> None:
@@ -99,9 +179,18 @@ def cfg_to_dot(bbs: List["BasicBlock"], filename: Path) -> None:
     """
 
     dot_output = "digraph g{\n ranksep = 1 \n overlap = scale \n"
-
+    teal = bbs[0].teal
+    assert teal is not None
+    subroutine_block_idx = set(
+        bb.idx for subroutine_bbs in teal.subroutines for bb in subroutine_bbs
+    )
+    subroutine_blocks_border_color = "#ff6600"
     for bb in bbs:
-        dot_output += _bb_to_dot(bb)
+        # TODO: have different color for each subroutine. Yellow for subroutine 1, orange for 2,...??
+        if bb.idx in subroutine_block_idx:
+            dot_output += _bb_to_dot(bb, subroutine_blocks_border_color)
+        else:
+            dot_output += _bb_to_dot(bb)
 
     dot_output += "}"
 
@@ -126,18 +215,13 @@ def execution_path_to_dot(cfg: List["BasicBlock"], path: List["BasicBlock"]) -> 
         using red color.
     """
 
-    dot_output = "digraph g{\n"
+    dot_output = "digraph g{\n ranksep = 1 \n overlap = scale \n"
 
     for bb in cfg:
-        label = str(bb)
-        label = html.escape(label, quote=True)
         if bb in path:
-            dot_output += f'{bb.idx}[label="{label}", shape=box, color=red];\n'
+            dot_output += _bb_to_dot(bb, border_color="RED", color_edges=False)
         else:
-            dot_output += f'{bb.idx}[label="{label}", shape=box];\n'
-
-        for next_bb in bb.next:
-            dot_output += f"{bb.idx} -> {next_bb.idx};\n"
+            dot_output += _bb_to_dot(bb, color_edges=False)
 
     dot_output += "}"
 

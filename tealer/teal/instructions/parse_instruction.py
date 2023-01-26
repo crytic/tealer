@@ -498,6 +498,7 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
     if not line.strip():
         return None
 
+    source_code_line = line
     fields = _split_instruction_into_tokens(line)
     comment = ""
     if fields[-1].startswith("//"):
@@ -531,6 +532,7 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
 
     if ins is not None:
         ins.comment = comment
+        ins.source_code = source_code_line
         return ins
 
     line = " ".join(fields)
@@ -540,8 +542,12 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
         if line.startswith(key):
             ins = f(line[len(key) :].strip())
             ins.comment = comment
+            ins.source_code = source_code_line
             return ins
 
     # line is checked to not empty at the start of the function.
     print(f"Not found {line}")
-    return instructions.UnsupportedInstruction(line)
+    ins = instructions.UnsupportedInstruction(line)
+    ins.source_code = source_code_line
+    ins.comment = ins.comment
+    return ins
