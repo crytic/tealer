@@ -1,3 +1,5 @@
+from typing import List
+
 from tealer.teal.instructions import instructions, transaction_field
 from tealer.detectors.all_detectors import MissingFeeCheck
 from tealer.teal import global_field
@@ -237,4 +239,382 @@ MISSING_FEE_CHECK_LOOP_VULNERABLE_PATHS = [
 missing_fee_check_tests = [
     (MISSING_FEE_CHECK, MissingFeeCheck, MISSING_FEE_CHECK_VULNERABLE_PATHS),
     (MISSING_FEE_CHECK_LOOP, MissingFeeCheck, MISSING_FEE_CHECK_LOOP_VULNERABLE_PATHS),
+]
+
+
+CHECKS_IN_ONE_BRANCH = """
+
+
+"""
+
+BASIC_1 = """
+#pragma version 6
+txn Fee
+int 1000
+>=                          // Fee >= 1000
+assert
+txn GroupIndex
+int 0
+==
+bz fail_txn
+
+callsub perform_validations
+
+process_txn:
+    int 1
+    return
+
+fail_txn:
+    int 0
+    return
+
+perform_validations:
+    txn Fee
+    int 10000
+    >=                          // Fee >= 10000; Fee can be any value greater than 10000
+    bz fail_txn
+    
+    retsub
+"""
+
+BASIC_1_VULNERABLE_PATHS: List[List[int]] = [[0, 1, 4, 5, 2]]
+
+BASIC_2 = """
+#pragma version 6
+txn Fee
+int 1000
+>=                          // Fee >= 1000
+assert
+txn GroupIndex
+int 0
+==
+bz fail_txn
+
+callsub perform_validations
+
+process_txn:
+    int 1
+    return
+
+fail_txn:
+    int 0
+    return
+
+perform_validations:
+    txn Fee
+    int 10000
+    <=                          // Fee <= 10000
+    bz fail_txn
+
+    retsub
+"""
+
+BASIC_2_VULNERABLE_PATHS: List[List[int]] = []
+
+
+UNKNOWN_FEE = """
+#pragma version 6
+txn Fee
+global MinTxnFee
+<=
+assert
+txn GroupIndex
+int 0
+==
+bz fail_txn
+
+callsub perform_validations
+
+process_txn:
+    int 1
+    return
+
+fail_txn:
+    int 0
+    return
+
+perform_validations:
+    int 1
+    assert
+    retsub
+"""
+
+UNKNOWN_FEE_VULNERABLE_PATHS: List[List[int]] = []
+
+BASIC_3 = """
+#pragma version 6
+
+callsub perform_validations
+
+process_txn:
+    int 1
+    return
+
+perform_validations:
+    txn GroupIndex
+    int 5
+    ==
+    gtxn 5 Fee
+    global MinTxnFee
+    int 5
+    *
+    ==
+    &&
+    assert
+    retsub
+"""
+
+BASIC_3_VULNERABLE_PATHS: List[List[int]] = []
+
+
+LARGE_FEE = """
+#pragma version 6       // 0
+callsub validate_fee
+
+callsub perform_validations     // 1
+
+process_txn:                    // 2
+    int 1
+    return
+
+fail_txn:                       // 3
+    int 0
+    return
+
+perform_validations:            // 4
+    int 1
+    assert
+    retsub
+
+validate_fee:                   // 5
+    txn Fee
+    int 10000000000             // Fee is much larger than maximum transaction cost
+    >
+    bnz fail_txn
+
+    retsub                      // 6
+"""
+
+
+LARGE_FEE_VULNERABLE_PATHS: List[List[int]] = [
+    [0, 5, 6, 1, 4, 2],
+]
+
+MULTIPLE_GROUP_SIZES_IN_SUBROUTINES = """
+#pragma version 6
+txn Fee
+int 10000
+>=
+bnz fail_txn
+callsub validate_fee
+callsub perform_validations
+
+process_txn:
+    int 1
+    return
+
+fail_txn:
+    int 0
+    return
+
+perform_validations:
+    int 1
+    assert
+    retsub
+
+validate_fee:
+    global GroupSize
+    int 2
+    ==
+    bnz group_size_2
+
+    global GroupSize
+    int 1
+    ==
+    gtxn 0 Fee
+    int 10000
+    <=
+    &&
+    assert
+    retsub
+
+    group_size_2:
+        gtxn 0 Fee
+        int 1000
+        <
+        assert
+        gtxn 1 Fee
+        int 1000
+        <
+        bz fail_txn
+
+    retsub
+"""
+
+MULTIPLE_GROUP_SIZES_VULNERABLE_PATHS: List[List[int]] = []
+
+
+CHECKS_IN_MULTIPLE_SUBROUTINES = """
+#pragma version 6
+global GroupSize
+int 2
+==
+bnz group_size_2
+
+global GroupSize
+int 1
+==
+assert
+callsub validate_fee_group_size_1
+b process_txn
+
+group_size_2:
+    callsub validate_fee_group_size_2
+    b process_txn
+
+process_txn:
+    callsub perform_validations
+    int 1
+    return
+
+fail_txn:
+    int 0
+    return
+
+perform_validations:
+    int 1
+    assert
+    retsub
+
+validate_fee_group_size_1:
+    gtxn 0 Fee
+    int 10000
+    <
+    assert
+    retsub
+
+validate_fee_group_size_2:
+    gtxn 0 Fee
+    int 1000
+    <=
+    assert
+    gtxn 1 Fee
+    int 1000
+    <=
+    bz fail_txn
+    retsub
+"""
+
+CHECKS_IN_MULTIPLE_SUBROUTINES_VULNERABLE_PATHS: List[List[int]] = []
+
+
+CHECKS_IN_MULTIPLE_SUBROUTINES_2 = """
+#pragma version 6
+global GroupSize
+int 2
+==
+bnz group_size_2
+
+global GroupSize
+int 1
+==
+assert
+callsub validate_fee_group_size_1
+b process_txn
+
+group_size_2:
+    callsub validate_fee_group_size_2
+    b process_txn
+
+process_txn:
+    callsub perform_validations
+    int 1
+    return
+
+fail_txn:
+    int 0
+    return
+
+perform_validations:
+    int 1
+    assert
+    retsub
+
+validate_fee_group_size_1:
+    gtxn 0 Fee
+    int 10000
+    <
+    assert
+    retsub
+
+validate_fee_group_size_2:
+    gtxn 0 Fee
+    global MinTxnFee
+    int 3
+    *
+    <=                  // detection of this pattern is possible because of StackValue emulation/analysis
+    assert
+    gtxn 1 Fee
+    int 1000
+    int 4
+    *
+    <=
+    bz fail_txn
+    retsub
+"""
+
+
+CHECKS_IN_MULTIPLE_SUBROUTINES_2_VULNERABLE_PATHS: List[List[int]] = []
+
+
+CHECK_IN_ONE_PATH = """
+#pragma version 6
+txn RekeyTo
+global ZeroAddress
+==
+global GroupSize
+int 1
+==
+&&
+txn Fee
+int 0
+==
+&&
+bnz process_txn
+
+fail:
+    err
+
+process_txn:
+    callsub perform_validations
+    int 1
+    return
+
+perform_validations:
+    int 1
+    assert
+    retsub
+"""
+
+CHECK_IN_ONE_PATH_VULNERABLE_PATHS: List[List[int]] = []
+
+
+new_missing_fee_tests = [
+    (BASIC_1, MissingFeeCheck, BASIC_1_VULNERABLE_PATHS),
+    (BASIC_2, MissingFeeCheck, BASIC_2_VULNERABLE_PATHS),
+    (UNKNOWN_FEE, MissingFeeCheck, UNKNOWN_FEE_VULNERABLE_PATHS),
+    (BASIC_3, MissingFeeCheck, BASIC_3_VULNERABLE_PATHS),
+    (LARGE_FEE, MissingFeeCheck, LARGE_FEE_VULNERABLE_PATHS),
+    (MULTIPLE_GROUP_SIZES_IN_SUBROUTINES, MissingFeeCheck, MULTIPLE_GROUP_SIZES_VULNERABLE_PATHS),
+    (
+        CHECKS_IN_MULTIPLE_SUBROUTINES,
+        MissingFeeCheck,
+        CHECKS_IN_MULTIPLE_SUBROUTINES_VULNERABLE_PATHS,
+    ),
+    (
+        CHECKS_IN_MULTIPLE_SUBROUTINES_2,
+        MissingFeeCheck,
+        CHECKS_IN_MULTIPLE_SUBROUTINES_2_VULNERABLE_PATHS,
+    ),
+    (CHECK_IN_ONE_PATH, MissingFeeCheck, CHECK_IN_ONE_PATH_VULNERABLE_PATHS),
 ]

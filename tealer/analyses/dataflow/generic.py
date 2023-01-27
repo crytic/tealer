@@ -139,7 +139,90 @@ This is because, when traversing the CFG without differentiating subroutine bloc
 
 However, At runtime, execution will reach B3 if and only if it reaches B2, same for B5 and B3. Using this reasoning while
 combining information from predecessors and successors will give more accurate results.
+
+---------------------------------------------------------------------------
+
+`DataflowTransactionContext._get_asserted_single(key, ins_stack_value)` returns a Tuple of true_values and false_values.
+    true_values: Given that the result of `ins_stack_value` is NON-ZERO, what are the possible
+                values for the key.
+    false_values: Given that the result of `ins_stack_value` is ZERO, what are the possible values
+                for the key.
+
+`_get_asserted_single` uses pattern matching to identify comparisons on interested fields. It only works when the
+`ins_stack_value` directly represents the value of the comparison.
+e.g
+    - Eq(txn RekeyTo, global Zeroaddress)
+    - Neq(txn OnCompletion, int UpdateApplication)
+    - ...
+
+But when the result depends on multiple equations it is NOT possible to use the same kind of pattern matching and derive
+possible values.
+e.g
+ins_stack_value =   Or(
+                        And(
+                            Eq(txn RekeyTo, global ZeroAddress),
+                            Eq(txn CloseRemainderTo, global ZeroAddress),
+                        ),
+                        And(
+                            Eq(txn Fee, global MinTxnFee),
+                            Eq(txn AssetCloseTo, global ZeroAddress),
+                        ),
+                    )
+
+
+We can combine information from multiple equations when they are connected using And, Or, !.
+e.g
+    txn RekeyTo
+    global ZeroAddress
+    ==                      // equation <1>
+    txn CloseRemainderTo
+    global ZeroAddress
+    ==                      // <2>
+    &&
+    txn Fee
+    global MinTxnFee
+    <=                      // <3>
+    &&
+
+=> And(
+    And(
+        Eq(txn RekeyTo, global ZeroAddress),
+        Eq(txn CloseRemainderTo, global ZeroAddress),
+    ),
+    LessE(txn Fee, global MinTxnFee),
+)
+
+=> And(And(<1>, <2>), <3>)
+=> ins_stack_value = And(<1>, <2>, <3>)           // flattend
+
+if it is given that ins_stack_value is False, Then atleast ONE of the equations <1>, <2> or <3> is False.
+if it is given that ins_stack_value is True, Then ALL of the equations <1>, <2> and <3> are True.
+
+This applies for any number of equations: And(<1>, <2>, <3>, <4>, ....)
+
+-> if the ins_stack_value is of form And(<1>, <2>, <3>, <4>, ....) and is `True`, Then we can combine possible values
+from multiple equations using set `Intersection`.
+-> if the ins_stack_value is of form And(<1>, <2>, <3>, <4>, ....) and is `False`, Then we can combine possible values
+from multiple equations using set `Union`.
+
+if any of equation in And(<1>, ...) is UnknownStackValue then `false_values` for And(...) is universal_set U.
+    -> The result of And() could be false because the UnknownStackValue is False. None of the known values have
+        to be False.
+    -> true_values are not affected by having an UnknownStackValue. All the known values have to be True irrespective
+        of unknown values for the result to be True.
+
+Similar reasoning can be done for Or(<1>, <2>, <3>, <4>, ....)
+
+if ins_stack_value is True, Then atleast ONE of the equations <1>, <2>, <3>, ... is True.   (Union)
+if ins_stack_value is False, Then ALL of the equations <1>, <2>, <3>, ... are False.        (Intersection)
+
+if any of equation in Or(<1>, ...) is UnknownStackValue then `true_values` for Or(...) is universal_set U.
+    -> The result of Or() could be True because the UnknownStackValue is True. None of the known values have
+        to be True.
+    -> false_values are not affected by having an UnknownStackValue. All the known values have to be False irrespective
+        of unknown values for the result to be False
 """
+
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Set
@@ -152,10 +235,19 @@ from tealer.teal.instructions.instructions import (
     Err,
     Txn,
     Gtxn,
+    And,
+    Or,
+    Not,
 )
 from tealer.teal.instructions.parse_transaction_field import TX_FIELD_TXT_TO_OBJECT
 from tealer.utils.analyses import is_int_push_ins
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
+from tealer.analyses.utils.stack_ast_builder import (
+    KnownStackValue,
+    UnknownStackValue,
+    construct_stack_ast,
+    compute_equations,
+)
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
@@ -223,6 +315,10 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
             )
         return isinstance(ins, Txn) and isinstance(ins.field, TX_FIELD_TXT_TO_OBJECT[key])
 
+    @staticmethod
+    def _get_stack_value(ins: "Instruction") -> KnownStackValue:
+        return construct_stack_ast(ins.bb)[ins]
+
     @abstractmethod
     def _universal_set(self, key: str) -> Any:
         """Return universal set for the field corresponding to given key"""
@@ -240,20 +336,85 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         """return intersection of a and b, where a, b represent values for the given key"""
 
     @abstractmethod
-    def _get_asserted(self, key: str, ins_stack: List["Instruction"]) -> Tuple[Any, Any]:
+    def _get_asserted_single(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Any, Any]:
         """For the given key and ins_stack, return true_values and false_values
 
-        true_values for a key are considered to be values which result in non-zero value on
-        top of the stack.
-        false_values for a key are considered to be values which result in zero value on top
-        of the stack.
+        true_values: Given that the result of `ins_stack_value` is NON-ZERO, what are the possible
+            values for the key.
+        false_values: Given that the result of `ins_stack_value` is ZERO, what are the possible values
+            for the key.
         """
 
     @abstractmethod
     def _store_results(self) -> None:
         """Store the collected information in the context object of each block"""
 
-    def _block_level_constraints(self, analysis_keys: List[str], block: "BasicBlock") -> None:
+    def _get_asserted(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Any, Any]:
+        """For the given key and ins_stack_value, return true_values and false_values
+
+        true_values: Given that the result of `ins_stack_value` is NON-ZERO, what are the possible
+            values for the key.
+        false_values: Given that the result of `ins_stack_value` is ZERO, what are the possible values
+            for the key.
+        """
+        if not isinstance(ins_stack_value.instruction, (And, Or, Not)):
+            # and not isinstance(ins_stack_value.instruction, Or):
+            # single equation
+            t, f = self._get_asserted_single(key, ins_stack_value)
+            return t, f
+        if isinstance(ins_stack_value.instruction, Not):
+            arg = ins_stack_value.args[0]
+            if isinstance(arg, UnknownStackValue):
+                # unknown value
+                return self._universal_set(key), self._universal_set(key)
+            true_values, false_values = self._get_asserted(key, arg)
+            # swap the values
+            final_true_values, final_false_values = false_values, true_values
+            return final_true_values, final_false_values
+        if isinstance(ins_stack_value.instruction, And):
+            # x = And(<1>, <2>, <3>, ...),
+            #   if x is True then <1>, <2>, ... are all True, Intersection
+            #   if x is False then one of <1>, <2>, ... is False, Union
+            individual_equations, has_unknown_value = compute_equations(ins_stack_value, And)
+            final_true_values = self._universal_set(key)
+            final_false_values = self._null_set(key)
+            for equation in individual_equations:
+                # combine values recursively.
+                # And(<Eq()>, <Or()>, <Or()>, ...):
+                #      values Or() cannot be calculated using _get_asserted_single
+                true_values, false_values = self._get_asserted(key, equation)
+                final_true_values = self._intersection(key, final_true_values, true_values)
+                final_false_values = self._union(key, final_false_values, false_values)
+            if has_unknown_value:
+                # has_unknown_value is True if result of And depends on an unknown value.
+                # if And is False, the unknown value could be false and that unknown value
+                # might or might not depend on the key.
+                # note: Having a unknown value does not affect true_values, known values have
+                # to be True irrespective of unknown value for the result to be True
+                final_false_values = self._universal_set(key)
+            return final_true_values, final_false_values
+        # x = Or(<1>, <2>, <3>, ....),
+        #   if x is False then <1>, <2>, ... are all False,     Intersection
+        #   if x is True then one of <1>, <2>, ... is True,     Union
+        individual_equations, has_unknown_value = compute_equations(ins_stack_value, Or)
+        final_false_values = self._universal_set(key)
+        final_true_values = self._null_set(key)
+        for equation in individual_equations:
+            true_values, false_values = self._get_asserted(key, equation)
+            final_false_values = self._intersection(key, final_false_values, false_values)
+            final_true_values = self._union(key, final_true_values, true_values)
+        if has_unknown_value:
+            # has_unknown_value is True if result of Or depends on an unknown value.
+            # if Or is True, the unknown value could be True and that unknown value
+            # might or might not depend on the key
+            # note: Having a unknown value does not affect false_values, known values have
+            # to be False irrespective of unknown value for the result to be False
+            final_true_values = self._universal_set(key)
+        return final_true_values, final_false_values
+
+    def _block_level_constraints(  # pylint: disable=too-many-branches
+        self, analysis_keys: List[str], block: "BasicBlock"
+    ) -> None:
         """Calculate and store constraints on keys applied within the block.
 
         By default, no constraints are considered i.e values are assumed to be universal_set
@@ -268,31 +429,46 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                 self._block_contexts[key] = {}
             self._block_contexts[key][block] = self._universal_set(key)
 
-        stack: List["Instruction"] = []
         for ins in block.instructions:
             if isinstance(ins, Assert):
+                assert_ins_stack_value = self._get_stack_value(ins)
+                assert_ins_arg = assert_ins_stack_value.args[0]
+                if isinstance(assert_ins_arg, UnknownStackValue):
+                    continue
                 for key in analysis_keys:
-                    asserted_values, _ = self._get_asserted(key, stack)
+                    # asserted_values, _ = self._get_asserted(key, stack)
+                    asserted_values, _ = self._get_asserted(key, assert_ins_arg)
                     present_values = self._block_contexts[key][block]
                     self._block_contexts[key][block] = self._intersection(
                         key, present_values, asserted_values
                     )
-
-            # if return 0, set possible values to NullSet()
-            if isinstance(ins, Return):
-                if len(ins.prev) == 1:
-                    is_int, value = is_int_push_ins(ins.prev[0])
-                    if is_int and value == 0:
-                        for key in analysis_keys:
-                            self._block_contexts[key][block] = self._null_set(key)
-
-            if isinstance(ins, Err):
+            elif isinstance(ins, Return):
+                # if return 0, set possible values to NullSet()
+                return_ins_value = self._get_stack_value(ins)
+                return_ins_arg = return_ins_value.args[0]
+                if isinstance(return_ins_arg, UnknownStackValue):
+                    continue
+                # if int 0; return; set possible values to null set.
+                is_int, value = is_int_push_ins(return_ins_arg.instruction)
+                if is_int and value == 0:
+                    for key in analysis_keys:
+                        self._block_contexts[key][block] = self._null_set(key)
+                    continue
+                # if And(<1>, <2>, ..); return; i.e return value depends on the result of a comparison
+                for key in analysis_keys:
+                    true_values, _ = self._get_asserted(key, return_ins_arg)
+                    present_values = self._block_contexts[key][block]
+                    self._block_contexts[key][block] = self._intersection(
+                        key, present_values, true_values
+                    )
+            elif isinstance(ins, Err):
+                # if err, set possible values to NullSet()
                 for key in analysis_keys:
                     self._block_contexts[key][block] = self._null_set(key)
 
-            stack.append(ins)
-
-    def _path_level_constraints(self, analysis_keys: List[str], block: "BasicBlock") -> None:
+    def _path_level_constraints(  # pylint: disable=too-many-branches
+        self, analysis_keys: List[str], block: "BasicBlock"
+    ) -> None:
         """Calculate and store constraints on keys applied along each path.
 
         By default, no constraints are considered i.e values are assumed to be universal_set
@@ -314,11 +490,15 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                 path_context[b][block] = self._universal_set(key)
 
         if isinstance(block.exit_instr, (BZ, BNZ)):
+            exit_ins_stack_value = self._get_stack_value(block.exit_instr)
+            exit_ins_arg = exit_ins_stack_value.args[0]
+            if isinstance(exit_ins_arg, UnknownStackValue):
+                return
             for key in analysis_keys:
                 # true_values: possible values for {key} which result in non-zero value on top of the stack
                 # false_values: possible values for {key} which result in zero value on top of the stack
                 # if the check is not related to the field, true_values and false_values will be universal sets
-                true_values, false_values = self._get_asserted(key, block.instructions[:-1])
+                true_values, false_values = self._get_asserted(key, exit_ins_arg)
 
                 if len(block.next) == 1:
                     # happens when bz/bnz is the last instruction in the contract and there is no default branch
