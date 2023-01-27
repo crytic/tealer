@@ -1,11 +1,18 @@
 from typing import Type, Tuple
+import base64
 
 import pytest
 
 from tealer.teal.instructions import instructions
+from tealer.teal.instructions.instructions import (
+    IntcInstruction,
+    BytecInstruction,
+)
 from tealer.teal.instructions import transaction_field
 from tealer.teal.instructions.parse_instruction import parse_line, ParseError
 from tealer.teal.parse_teal import parse_teal
+from tealer.utils.analyses import is_int_push_ins, is_byte_push_ins
+
 
 TARGETS = [
     "tests/parsing/teal1-instructions.teal",
@@ -74,6 +81,7 @@ label1:
 int 1
 label2:
 int 2
+method "add(uint64)uint64"
 """
 
 invalid_instructions = """
@@ -160,6 +168,7 @@ def test_parsing_2() -> None:
         instructions.Int(1),
         instructions.Label("label2"),
         instructions.Int(2),
+        instructions.Method('"add(uint64)uint64"'),
     ]
     t = [
         (instructions.Intcblock, ("_constants",)),
@@ -194,6 +203,7 @@ def test_parsing_2() -> None:
         (instructions.Int, ("value",)),
         (instructions.Label, ("label",)),
         (instructions.Int, ("value",)),
+        (instructions.Method, ("method_signature",)),
     ]
 
     attributes: Tuple[str]
@@ -314,3 +324,117 @@ def test_cost_values() -> None:
     for ins in teal.instructions:
         print("DSDF", ins, ins.cost)
         assert ins.cost == 0
+
+
+INTCBLOCK_TESTS = [
+    "tests/parsing/intcblock_1.teal",
+    "tests/parsing/intcblock_2.teal",
+    "tests/parsing/intcblock_3.teal",
+]
+
+
+@pytest.mark.parametrize("test", INTCBLOCK_TESTS)  # type: ignore
+def test_intc_bytec(test: str) -> None:
+    with open(test, encoding="utf-8") as f:
+        teal = parse_teal(f.read())
+
+    for ins in teal.instructions:
+        if isinstance(ins, IntcInstruction):
+            is_known, value = is_int_push_ins(ins)
+            assert is_known
+            assert value == int(ins.comment[2:].strip())
+
+        if isinstance(ins, BytecInstruction):
+            is_known, value = is_byte_push_ins(ins)
+            assert is_known
+            expected_value = ins.comment[2:].strip()
+            if expected_value.startswith('"'):
+                expected_value = "0x" + expected_value[1:-1].encode().hex()
+            elif expected_value.startswith("addr"):
+                s = expected_value.strip("addr ").strip()
+                expected_value = (
+                    "0x" + base64.b32decode(s + "=" * (-len(s) % 8))[:-4].hex()
+                )  # 4-byte checksum
+            assert value == expected_value
+
+
+INTCBLOCK_FALSE_TEST_1 = """
+#pragma version 7
+intcblock 0x00 0x01 0x02 0x03 0x04 0x05 0x06
+intcblock 0x07 0x08 0x09 0x10 0x11 0x12 0x13
+intc0
+intc1
+intc2
+intc3
+intc 4
+return
+"""
+
+INTCBLOCK_FALSE_TEST_2 = """
+#pragma version 7
+int 0
+int 1
++
+b next
+next:
+intcblock 0x00 0x01 0x02 0x03 0x04 0x05 0x06
+intc0
+intc1
+intc2
+intc3
+intc 4
+return
+"""
+
+INTCBLOCK_FALSE_TEST_3 = """
+#pragma version 7
+intc0
+intc1
+return
+"""
+
+# Tealer can determine that this is invalid code in this case. But currently does
+# not do that to be uniform for all cases.
+INTCBLOCK_FALSE_TEST_4 = """
+#pragma version 7
+intcblock 0x00 0x01 0x02 0x03
+intc 7  // Invalid index
+"""
+
+# Tealer cannot determing in this case.
+INTCBLOCK_FALSE_TEST_5 = """
+#pragma version 7
+intcblock 0x00 0x01 0x02 0x03
+txn RekeyTo
+global ZeroAddress
+==
+bnz branch
+b sub
+branch:
+    intcblock 0x04 0x05 0x06 0x07 0x08 0x09 0xa
+sub:
+    intc 9 // Invalid index
+"""
+
+INTCBLOCK_FALSE_TESTS = [
+    INTCBLOCK_FALSE_TEST_1,
+    INTCBLOCK_FALSE_TEST_2,
+    INTCBLOCK_FALSE_TEST_3,
+    INTCBLOCK_FALSE_TEST_4,
+    INTCBLOCK_FALSE_TEST_5,
+]
+
+
+@pytest.mark.parametrize("test", INTCBLOCK_FALSE_TESTS)  # type: ignore
+def test_intc_bytec_false(test: str) -> None:
+    teal = parse_teal(test)
+    for ins in teal.instructions:
+        if isinstance(ins, IntcInstruction):
+            is_known, _ = is_int_push_ins(ins)
+            assert not is_known
+
+    teal = parse_teal(test.replace("intc", "bytec"))
+    for ins in teal.instructions:
+        if isinstance(ins, BytecInstruction):
+            is_known, _ = is_byte_push_ins(ins)
+            assert not is_known

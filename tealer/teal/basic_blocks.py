@@ -42,6 +42,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes
         self._transaction_context = BlockTransactionContext()
         self._callsub_block: Optional[BasicBlock] = None
         self._sub_return_point: Optional[BasicBlock] = None
+        self._tealer_comments: List[str] = []
 
     def add_instruction(self, instruction: Instruction) -> None:
         """Append instruction to this basic block.
@@ -157,6 +158,15 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes
     @property
     def transaction_context(self) -> "BlockTransactionContext":
         return self._transaction_context
+
+    @property
+    def tealer_comments(self) -> List[str]:
+        """Additional comments added by tealer for each basic block in the output CFG."""
+        return self._tealer_comments
+
+    @tealer_comments.setter
+    def tealer_comments(self, comments: List[str]) -> None:
+        self._tealer_comments = comments
 
     def __str__(self) -> str:
         ret = ""

@@ -63,8 +63,11 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
     def __init__(self) -> None:
         self._prev: List[Instruction] = []
         self._next: List[Instruction] = []
-        self._line = 0
+        self._line_num = 0
+        self._source_code_line: str = ""
         self._comment = ""
+        self._comments_before_ins: List[str] = []
+        self._tealer_comments: List[str] = []
         self._bb: Optional["BasicBlock"] = None
         self._version: int = 1
         self._mode: ContractType = ContractType.ANY
@@ -116,11 +119,28 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
     @property
     def line(self) -> int:
         """Source code line number of this instruction."""
-        return self._line
+        return self._line_num
 
     @line.setter
     def line(self, l: int) -> None:
-        self._line = l
+        self._line_num = l
+
+    @property
+    def source_code(self) -> str:
+        """source code line corresponding to this instruction.
+
+        source code line includes the comment, indentation.
+        ```
+        label:
+            int      4   // Number 4
+        ```
+        Int(4).source_line == "    int      4   // Number 4"
+        """
+        return self._source_code_line
+
+    @source_code.setter
+    def source_code(self, line: str) -> None:
+        self._source_code_line = line
 
     @property
     def comment(self) -> str:
@@ -130,6 +150,41 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
     @comment.setter
     def comment(self, c: str) -> None:
         self._comment = c
+
+    @property
+    def comments_before_ins(self) -> List[str]:
+        """Represents comments directly above the instruction.
+
+        E.g
+            ```
+            // Check if is UpdateApplication
+            // Txn.oncompletion == int UpdateApplication
+            txn OnCompletion        // OnCompletion
+            int UpdateApplication
+            ==
+            ```
+
+            Txn(..).comments_before_ins == [
+                "// Check if is UpdateApplication",
+                "// Txn.oncompletion == int UpdateApplication",
+            ]
+
+            Txn(..).comment == "// OnCompletion"
+        """
+        return self._comments_before_ins
+
+    @comments_before_ins.setter
+    def comments_before_ins(self, comments: List[str]) -> None:
+        self._comments_before_ins = comments
+
+    @property
+    def tealer_comments(self) -> List[str]:
+        """Additional comments added by tealer for each basic block in the output CFG."""
+        return self._tealer_comments
+
+    @tealer_comments.setter
+    def tealer_comments(self, comments: List[str]) -> None:
+        self._tealer_comments = comments
 
     @property
     def bb(self) -> Optional["BasicBlock"]:
@@ -4006,8 +4061,28 @@ class Intcblock(Instruction):
     def __str__(self) -> str:
         return " ".join(["intcblock"] + list(map(str, self._constants)))
 
+    @property
+    def constants(self) -> List[int]:
+        return self._constants
 
-class Intc(Instruction):
+
+class IntcInstruction(Instruction):
+    """Base class for Intc, Intc_0, Intc_1, Intc_2, Intc_3"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx: int = 0
+
+    @property
+    def index(self) -> int:
+        return self._idx
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
+
+class Intc(IntcInstruction):
     """`intc i` push integer constant loaded from constant storage space.
 
     Immediates:
@@ -4025,12 +4100,8 @@ class Intc(Instruction):
     def __str__(self) -> str:
         return f"intc {self._idx}"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc0(Instruction):
+class Intc0(IntcInstruction):
     """`intc_0` push integer constant 0 from constant storage space.
 
     Pushes:
@@ -4038,15 +4109,15 @@ class Intc0(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 0
+
     def __str__(self) -> str:
         return "intc_0"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc1(Instruction):
+class Intc1(IntcInstruction):
     """`intc_1` push integer constant 1 from constant storage space.
 
     Pushes:
@@ -4054,15 +4125,15 @@ class Intc1(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 1
+
     def __str__(self) -> str:
         return "intc_1"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc2(Instruction):
+class Intc2(IntcInstruction):
     """`intc_2` push integer constant 2 from constant storage space.
 
     Pushes:
@@ -4070,15 +4141,15 @@ class Intc2(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 2
+
     def __str__(self) -> str:
         return "intc_2"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc3(Instruction):
+class Intc3(IntcInstruction):
     """`intc_3` push integer constant 3 from constant storage space.
 
     Pushes:
@@ -4086,15 +4157,31 @@ class Intc3(Instruction):
 
     """
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 3
 
     def __str__(self) -> str:
         return "intc_3"
 
 
-class Bytec(Instruction):
+class BytecInstruction(Instruction):
+    """Base class for Bytec, Bytec_0, Bytec_1, Bytec_2, Bytec_3"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx: int = 0
+
+    @property
+    def index(self) -> int:
+        return self._idx
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
+
+class Bytec(BytecInstruction):
     """`bytec i` push byte constant loaded from constant storage space.
 
     Immediates:
@@ -4109,21 +4196,21 @@ class Bytec(Instruction):
         super().__init__()
         self._idx = idx
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
-
     def __str__(self) -> str:
         return f"bytec {self._idx}"
 
 
-class Bytec0(Instruction):
+class Bytec0(BytecInstruction):
     """`bytec_0` push byte constant 0 from constant storage space.
 
     Pushes:
         push constant 0 from bytecblock to stack.
 
     """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 0
 
     def __str__(self) -> str:
         return "bytec_0"
@@ -4133,7 +4220,7 @@ class Bytec0(Instruction):
         return 1
 
 
-class Bytec1(Instruction):
+class Bytec1(BytecInstruction):
     """`bytec_1` push byte constant 1 from constant storage space.
 
     Pushes:
@@ -4141,15 +4228,15 @@ class Bytec1(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 1
+
     def __str__(self) -> str:
         return "bytec_1"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Bytec2(Instruction):
+class Bytec2(BytecInstruction):
     """`bytec_2` push byte constant 2 from constant storage space.
 
     Pushes:
@@ -4157,15 +4244,15 @@ class Bytec2(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 2
+
     def __str__(self) -> str:
         return "bytec_2"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Bytec3(Instruction):
+class Bytec3(BytecInstruction):
     """`bytec_3` push byte constant 3 from constant storage space.
 
     Pushes:
@@ -4173,12 +4260,12 @@ class Bytec3(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 3
+
     def __str__(self) -> str:
         return "bytec_3"
-
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
 
 class Arg(Instruction):
@@ -4310,6 +4397,10 @@ class Byte(Instruction):
     def stack_push_size(self) -> int:
         return 1
 
+    @property
+    def value(self) -> str:
+        return self._bytes
+
 
 class PushBytes(Instruction):
     """`pushbytes x` instruction pushes immediate value to the top of the stack.
@@ -4341,6 +4432,10 @@ class PushBytes(Instruction):
     @property
     def stack_push_size(self) -> int:
         return 1
+
+    @property
+    def value(self) -> str:
+        return self._bytes
 
 
 class Len(Instruction):
@@ -4375,6 +4470,10 @@ class Bytecblock(Instruction):
     def __init__(self, bytes_list: List[str]):
         super().__init__()
         self._constants = bytes_list
+
+    @property
+    def constants(self) -> List[str]:
+        return self._constants
 
     def __str__(self) -> str:
         return " ".join(["bytecblock"] + self._constants)
@@ -4773,6 +4872,26 @@ class Gitxnas(Instruction):
 
     def __str__(self) -> str:
         return f"Gitxnas {self._idx} {self._field}"
+
+
+class Method(Instruction):
+    """method {s}, pushes 4-byte method selector computed from the method signature `s`"""
+
+    def __init__(self, method_signature: str) -> None:
+        super().__init__()
+        self.method_signature = method_signature[1:][:-1]  # remove double qoutes
+        self._version: int = 6
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 0
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
+    def __str__(self) -> str:
+        return f"method {self.method_signature}"
 
 
 class Replace2(Instruction):

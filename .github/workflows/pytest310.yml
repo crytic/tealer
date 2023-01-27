@@ -32,7 +32,7 @@ jobs:
         python setup.py install
         pip install pytest
         pip install pytest-cov
-        pip install pyteal
+        pip install pyteal==0.22.0
 
     - name: Run Parsing tests in 3.10
       run: |
@@ -54,6 +54,7 @@ jobs:
     - name: Run detectors tests in 3.10
       run: |
         pytest tests/test_detectors.py
+        pytest tests/test_detectors_using_pyteal.py
     
     - name: Run dataflow analysis tests in 3.10
       run: |

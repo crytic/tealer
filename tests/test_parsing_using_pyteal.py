@@ -8,13 +8,17 @@ from tealer.teal.parse_teal import parse_teal
 if not sys.version_info >= (3, 10):
     pytest.skip(reason="PyTeal based tests require python >= 3.10", allow_module_level=True)
 
+# pylint: disable=wrong-import-position
 # Place import statements after the version check
-from tests.pyteal_parsing.normal_application import (  # pylint: disable=wrong-import-position
-    normal_application_approval_program,
-)
+from tests.pyteal_parsing.normal_application import normal_application_approval_program
+from tests.pyteal_parsing.arc4_application import arc4_application_ap
+from tests.pyteal_parsing.control_flow_constructs import control_flow_ap
+
 
 TARGETS = [
     normal_application_approval_program,
+    arc4_application_ap,
+    control_flow_ap,
 ]
 
 

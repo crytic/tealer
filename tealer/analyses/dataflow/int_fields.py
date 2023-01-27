@@ -17,7 +17,7 @@ from tealer.teal.instructions.transaction_field import (
 )
 from tealer.utils.analyses import is_int_push_ins
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
-from tealer.analyses.utils.stack_emulator import KnownStackValue, UnknownStackValue
+from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStackValue
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction

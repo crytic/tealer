@@ -21,7 +21,7 @@ from tealer.utils.teal_enums import (
 )
 from tealer.utils.teal_enums import oncompletion_to_tealer_type, transaction_type_to_tealer_type
 from tealer.utils.analyses import is_int_push_ins
-from tealer.analyses.utils.stack_emulator import KnownStackValue, UnknownStackValue
+from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStackValue
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction

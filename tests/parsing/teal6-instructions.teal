@@ -58,6 +58,8 @@ gitxnas 2 Accounts
 gitxnas 3 Assets
 
 
+method "increment(uint64,pay)uint64"
+
 itxn_begin
 byte "app_arg_1"
 itxn_field ApplicationArgs  // ArrayType argument

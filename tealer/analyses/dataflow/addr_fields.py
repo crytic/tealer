@@ -9,7 +9,7 @@ from tealer.teal.instructions.instructions import (
 )
 from tealer.teal.global_field import ZeroAddress, CreatorAddress
 from tealer.utils.algorand_constants import ZERO_ADDRESS
-from tealer.analyses.utils.stack_emulator import KnownStackValue, UnknownStackValue
+from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStackValue
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
