@@ -16,6 +16,10 @@ if TYPE_CHECKING:
     from tealer.teal.context.block_transaction_context import AddrFieldValue
 
 
+# TODO: Change representation of address values to something similar to FeeValue
+# - Store possible addresses and not possible address. Neq(Txn Sender, addr x). store Sender cannot be x
+# - ...
+
 # Add str of transaction field to find constraints on that field
 # use field string as in TX_FIELD_TXT_TO_OBJECT
 REKEY_TO_KEY = "RekeyTo"

@@ -28,6 +28,12 @@ if TYPE_CHECKING:
     from tealer.teal.instructions.transaction_field import TransactionField
 
 
+# TODO: change the value representation for TxnTyp to something similar to FeeValue.
+# Same underlying type(TealerTransactionType) for three different things:
+#   - CallConfig: (Creation(AppId == 0) or Call(AppId != 0) or Always)
+#   - TypeEnum: (pay or keyreg or axfer or afrz or appl)
+#   - OnCompletion: (NoOp, OptIn, CloseOut, ClearState, UpdateApplication or DeleteApplication)
+
 transaction_type_key = "TransactionType"
 
 base_keys = [transaction_type_key]
@@ -136,10 +142,12 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
 
             true_values, false_values = None, None
             if self._is_ins_tx_field(key, ins2, ApplicationID):
+                # TODO: ApplicationCreation transaction can be NoOp or OptIn
                 true_values, false_values = set([TealerTransactionType.ApplCreation]), set(
                     APPLICATION_TRANSACTION_TYPES
                 ) - set([TealerTransactionType.ApplCreation])
             elif self._is_ins_tx_field(key, ins3, ApplicationID):
+                # TODO: ApplicationCreation transaction can be NoOp or OptIn
                 true_values, false_values = set([TealerTransactionType.ApplCreation]), set(
                     APPLICATION_TRANSACTION_TYPES
                 ) - set([TealerTransactionType.ApplCreation])
