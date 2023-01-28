@@ -2,8 +2,8 @@
 
 Exported detectors are:
 
-* ``canDelete``: CanDelete detects paths missing DeleteApplication check.
-* ``canUpdate``: CanUpdate detects paths missing UpdateApplication check.
+* ``isDeletable``: IsDeletable detects paths missing DeleteApplication check.
+* ``isUpdatable``: IsUpdatable detects paths missing UpdateApplication check.
 * ``groupSize``: MissingGroupSize detects paths missing GroupSize check.
 * ``rekeyTo``: MissingRekeyTo detects paths missing RekeyTo check.
 * ``canCloseAccount``: CanCloseAccount detects paths missing CloseRemainderTo check.
@@ -14,8 +14,8 @@ Exported detectors are:
 """
 
 # pylint: disable=unused-import
-from tealer.detectors.can_delete import CanDelete
-from tealer.detectors.can_update import CanUpdate
+from tealer.detectors.is_deletable import IsDeletable
+from tealer.detectors.is_updatable import IsUpdatable
 from tealer.detectors.groupsize import MissingGroupSize
 from tealer.detectors.rekeyto import MissingRekeyTo
 from tealer.detectors.can_close_account import CanCloseAccount

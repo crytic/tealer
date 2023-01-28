@@ -16,8 +16,6 @@ if TYPE_CHECKING:
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
-# TODO: change original CanUpdate, CanDelete to isUpdatable and isDeletable.    (?)
-# And use CanUpdate for AnyoneCanUpdate, CanDelete for AnyoneCanDelete.
 class AnyoneCanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
     """Detector to find execution paths missing validations on sender field AND allows to update the application.
 
