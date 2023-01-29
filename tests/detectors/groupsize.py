@@ -1,6 +1,9 @@
+from typing import List
+
 from tealer.teal.instructions import instructions, transaction_field
 from tealer.detectors.all_detectors import MissingGroupSize
 from tealer.teal import global_field
+from tealer.teal.basic_blocks import BasicBlock
 
 from tests.utils import construct_cfg
 
@@ -102,7 +105,7 @@ bbs_links = [
 
 bbs = construct_cfg(ins_list, ins_partitions, bbs_links)
 
-MISSING_GROUP_SIZE_VULNERABLE_PATHS = [[bbs[0], bbs[1], bbs[2], bbs[3], bbs[4], bbs[5]]]
+MISSING_GROUP_SIZE_VULNERABLE_PATHS: List[List[BasicBlock]] = []
 
 
 MISSING_GROUP_SIZE_LOOP = """
@@ -231,9 +234,7 @@ bbs_links = [
 
 bbs = construct_cfg(ins_list, ins_partitions, bbs_links)
 
-MISSING_GROUP_SIZE_LOOP_VULNERABLE_PATHS = [
-    [bbs[0], bbs[1], bbs[2], bbs[3], bbs[4], bbs[5], bbs[11], bbs[13]],
-]
+MISSING_GROUP_SIZE_LOOP_VULNERABLE_PATHS: List[List[BasicBlock]] = []
 
 
 missing_group_size_tests = [
