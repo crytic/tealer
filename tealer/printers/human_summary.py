@@ -15,7 +15,7 @@ Summary includes :
 from typing import List, Tuple, Optional, TYPE_CHECKING
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.teal.instructions.instructions import Label, contract_type_to_txt
+from tealer.teal.instructions.instructions import contract_type_to_txt
 from tealer.utils.code_complexity import compute_cyclomatic_complexity
 
 if TYPE_CHECKING:
@@ -133,13 +133,9 @@ class PrinterHumanSummary(AbstractPrinter):
         txt += f"Number of basic blocks: {len(teal.bbs)}\n"
         txt += f"Number of instructions: {len(teal.instructions)}\n"
 
-        txt += f"Number of subroutines: {len(teal.subroutines)}\n"
+        txt += f"Number of subroutines: {len(teal.subroutines_list)}\n"
         txt += "Subroutines:\n"
-        for sub in teal.subroutines:
-            if isinstance(sub[0].entry_instr, Label):
-                sub_name = sub[0].entry_instr.label
-            else:
-                sub_name = str(sub[0].entry_instr)
+        for sub_name in teal.subroutines:
             txt += f"\t{sub_name}\n"
         txt += "\n"
 

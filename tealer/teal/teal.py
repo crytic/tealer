@@ -10,12 +10,13 @@ Classes:
 """
 
 from pathlib import Path
-from typing import List, Any, Optional, Type, TYPE_CHECKING, Tuple
+from typing import List, Any, Optional, Type, TYPE_CHECKING, Tuple, Dict
 
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorClassification
 from tealer.printers.abstract_printer import AbstractPrinter
 
 from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.subroutine import Subroutine
 from tealer.teal.instructions.instructions import Instruction, ContractType
 from tealer.exceptions import TealerException
 
@@ -55,7 +56,8 @@ def _check_common_things(
         raise TealerException(f"You can't register {cls.__name__} twice.")
 
 
-class Teal:  # pylint: disable=too-many-instance-attributes
+# disable pylint errors for now. errors should be resolved after completing refactoring.
+class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-methods
     """Class to represent a teal contract.
 
     This class stores CFG, subroutines and other information of the
@@ -80,12 +82,15 @@ class Teal:  # pylint: disable=too-many-instance-attributes
         bbs: List[BasicBlock],
         version: int,
         mode: ContractType,
-        subroutines: List[List["BasicBlock"]],
+        main: Subroutine,
+        # subroutines: List[List["BasicBlock"]],
+        subroutines: Dict[str, Subroutine],
     ):
         self._instructions = instructions
         self._bbs = bbs
         self._version = version
         self._mode = mode
+        self._main = main
         self._subroutines = subroutines
         self._int_constants: List[int] = []
         self._byte_constants: List[str] = []
@@ -102,17 +107,6 @@ class Teal:  # pylint: disable=too-many-instance-attributes
     def bbs(self) -> List[BasicBlock]:
         """CFG of the contract"""
         return self._bbs
-
-    @property
-    def subroutines(self) -> List[List["BasicBlock"]]:
-        """Returns list of subroutines.
-
-        Each subroutine is represented by the list of basic blocks that constitute
-        that particular subroutine. Subroutines are supported from Teal version 4 onwards.
-        For Teal version 3 or less this property will return empty List.
-        """
-
-        return self._subroutines
 
     @property
     def version(self) -> int:
@@ -144,6 +138,25 @@ class Teal:  # pylint: disable=too-many-instance-attributes
     @mode.setter
     def mode(self, m: ContractType) -> None:
         self._mode = m
+
+    @property
+    def main(self) -> "Subroutine":
+        "Returns subroutine representing the contract entry-point"
+        return self._main
+
+    @property
+    def subroutines(self) -> Dict[str, "Subroutine"]:
+        """Returns dict of subroutine names and corresponding subroutine obj."""
+        return self._subroutines
+
+    @property
+    def subroutines_list(self) -> List["Subroutine"]:
+        """Returns list of all contract's subroutines"""
+        return list(self._subroutines.values())
+
+    def subroutine(self, name: str) -> Optional["Subroutine"]:
+        """Return subroutine with id/name `name`, return none if subroutine does not exist."""
+        return self._subroutines.get(name, None)
 
     def get_int_constant(self, index: int) -> Tuple[bool, int]:
         """Return int value stored by intcblock instruction

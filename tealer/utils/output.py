@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import List, TYPE_CHECKING, Dict, Callable, Optional
 from dataclasses import dataclass
 
-from tealer.teal.instructions.instructions import BZ, BNZ, Callsub, Retsub, Label
+from tealer.teal.instructions.instructions import BZ, BNZ, Callsub, Retsub
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -214,15 +214,12 @@ def cfg_to_dot(  # pylint: disable=too-many-locals
 
     teal = bbs[0].teal
     assert teal is not None
-    subroutine_block_idx = set(
-        bb.idx for subroutine_bbs in teal.subroutines for bb in subroutine_bbs
-    )
+    subroutine_block_idx = set(bb.idx for bb in teal.bbs if bb in teal.main.blocks)
     # responsible for "box" around each subroutine.
     subroutine_clusters: List[str] = []
-    for i, subroutine_bbs in enumerate(teal.subroutines):
-        assert isinstance(subroutine_bbs[0].entry_instr, Label)
+    for i, (subroutine_name, subroutine) in enumerate(teal.subroutines.items()):
+        subroutine_bbs = subroutine.blocks
         cluster_name = i
-        subroutine_name = str(subroutine_bbs[0].entry_instr.label)
         cluster_nodes = " ".join(str(bb.idx) for bb in subroutine_bbs)
         # TODO: Add number of args and return values to label in the future.
         subgraph_dot = f"""

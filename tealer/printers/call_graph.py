@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.teal.instructions.instructions import Callsub, Label
+from tealer.teal.instructions.instructions import Callsub
 
 
 class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-methods
@@ -24,10 +24,9 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
     def _construct_call_graph(self) -> Dict[str, List[str]]:
         """construct call graph for the contract.
 
-        entry point is treated as a separate function `__entry__`.
+        entry point is treated as a separate subroutine/function `__entry__`.
         For each subroutine, label(subroutine name) represents the node and each callsub
-        instruction in the subroutine corresponds to directed edge from subroutine the
-        callsub instruction is part of to subroutine corresponding to the callsub label.
+        instruction in the subroutine corresponds to directed edge to the target subroutine.
 
         Returns:
             Dict[str, List[str]]: dictionary representing the graph. each `key` is a node and
@@ -35,18 +34,11 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
             node for a directed edge from `key` node.
         """
 
-        graph = {}
-        for sub in self.teal.subroutines:
-            # graph node
-            if isinstance(sub[0].entry_instr, Label):
-                sub_name = sub[0].entry_instr.label
-            else:
-                # should be unreachable
-                sub_name = str(sub[0].entry_instr)
-
+        graph: Dict[str, List[str]] = {}
+        for sub_name, sub in self.teal.subroutines.items():
             # graph edges
             edges = []
-            for bb in sub:
+            for bb in sub.blocks:
                 for ins in bb.instructions:
                     if isinstance(ins, Callsub):
                         edges.append(ins.label)
@@ -54,15 +46,14 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
             graph[sub_name] = edges
 
         # treat entry point of the contract as a separate function
-        subroutine_blocks = [bb for sub in self.teal.subroutines for bb in sub]
-        entry_function_blocks = [bb for bb in self.teal.bbs if bb not in subroutine_blocks]
-
+        entry_function_blocks = self.teal.main.blocks
         # use __entry__ as function name for entry point
-        graph["__entry__"] = []
+        entry_function_name = "__entry__"
+        graph[entry_function_name] = []
         for bb in entry_function_blocks:
             for ins in bb.instructions:
                 if isinstance(ins, Callsub):
-                    graph["__entry__"].append(ins.label)
+                    graph[entry_function_name].append(ins.label)
 
         return graph
 

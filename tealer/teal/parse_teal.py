@@ -30,6 +30,7 @@ import sys
 from typing import Optional, Dict, List, Tuple
 
 from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.subroutine import Subroutine
 from tealer.teal.instructions.instructions import (
     Instruction,
     Label,
@@ -407,7 +408,7 @@ def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
     return bbs
 
 
-def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
+def _identify_subroutine_blocks(entry_block: "BasicBlock") -> List["BasicBlock"]:
     """find all the basic blocks part of a subroutine given it's label instruction.
 
     Args:
@@ -415,19 +416,14 @@ def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
         bbs (List["BasicBlock"]): CFG of the contract.
 
     Returns:
+        "BasicBlock": Entry block of the subroutine.
         List["BasicBlock"]: list of all basic blocks part of a subroutine.
     """
-
-    if label.bb is None:
-        return []
-
-    # add tealer comment "Subroutine: {label}" to the subroutine entry block
-    label.bb.tealer_comments.append(f"Subroutine {label.label}")
 
     subroutines_blocks: List["BasicBlock"] = []
     stack: List["BasicBlock"] = []
 
-    stack.append(label.bb)
+    stack.append(entry_block)
     while len(stack) > 0:
         bb = stack.pop()
         subroutines_blocks.append(bb)
@@ -475,7 +471,6 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
     stateless_ins: List[Instruction] = []
     error = False
 
-    print("\nchecking instruction, field versions with contract version\n")
     for ins in ins_list:
         if program_version < ins.version:
             print(
@@ -564,7 +559,7 @@ def _fill_intc_bytec_info(
         teal.set_byte_constants(bytecblock_ins[0].constants)
 
 
-def parse_teal(source_code: str) -> Teal:
+def parse_teal(source_code: str) -> Teal:  # pylint: disable=too-many-locals
     """Parse algorand smart contracts written in teal.
 
     Parsing teal cotracts consists of four passes:
@@ -612,19 +607,35 @@ def parse_teal(source_code: str) -> Teal:
 
     _verify_version(instructions, version)
 
-    subroutines = []
+    subroutines: Dict[str, "Subroutine"] = {}
     if version >= 4:
         for subroutine_label in rets:
             label_ins = labels[subroutine_label]
-            subroutines.append(_identify_subroutine_blocks(label_ins))
+            if label_ins.bb is None:
+                # TODO: Move the `is None` check to `Instruction.bb` property.
+                continue
+            subroutine_entry_block = label_ins.bb
+            # add tealer comment "Subroutine: {label}" to the subroutine entry block
+            subroutine_entry_block.tealer_comments.append(f"Subroutine {subroutine_label}")
 
-    teal = Teal(instructions, all_bbs, version, mode, subroutines)
+            subroutine_blocks = _identify_subroutine_blocks(subroutine_entry_block)
+            subroutines[subroutine_label] = Subroutine(
+                subroutine_label, subroutine_entry_block, subroutine_blocks
+            )
+
+    main_entry_point_blocks = _identify_subroutine_blocks(all_bbs[0])
+    main_program_name = ""
+    main_program = Subroutine(main_program_name, all_bbs[0], main_entry_point_blocks)
+    teal = Teal(instructions, all_bbs, version, mode, main_program, subroutines)
 
     # set teal instance to it's basic blocks
     for bb in teal.bbs:
         bb.teal = teal
         # Add tealer comment of cost and id
         bb.tealer_comments.insert(0, f"block_id = {bb.idx}; cost = {bb.cost}")
+
+    for subroutine in [main_program] + teal.subroutines_list:
+        subroutine.contract = teal
 
     _fill_intc_bytec_info(intcblock_ins, bytecblock_ins, all_bbs[0], teal)
     _apply_transaction_context_analysis(teal)

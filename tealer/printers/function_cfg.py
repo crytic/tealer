@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Optional, List, TYPE_CHECKING
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.teal.instructions.instructions import Callsub, Label
+from tealer.teal.instructions.instructions import Callsub
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -90,13 +90,8 @@ class PrinterFunctionCFG(AbstractPrinter):  # pylint: disable=too-few-public-met
             return
 
         print()
-        for sub in self.teal.subroutines:
-            if isinstance(sub[0].entry_instr, Label):
-                sub_name = sub[0].entry_instr.label
-            else:
-                sub_name = str(sub[0].entry_instr)
-
-            dot_output = self._subroutine_to_dot(sub)
+        for sub_name, sub in self.teal.subroutines.items():
+            dot_output = self._subroutine_to_dot(sub.blocks)
 
             filename = Path(f"function_{sub_name}_cfg.dot")
             if dest is not None:
