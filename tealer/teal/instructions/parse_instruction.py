@@ -548,7 +548,7 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
             return ins
 
     # line is checked to not empty at the start of the function.
-    print(f"Not found {line}")
+    print(f'Not found instruction: "{line}"')
     ins = instructions.UnsupportedInstruction(line)
     ins.source_code = source_code_line
     ins.comment = ins.comment
