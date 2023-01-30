@@ -1,3 +1,5 @@
+# pylint: skip-file
+# mypy: ignore-errors
 from typing import List
 from pyteal import *  # pylint: disable=wildcard-import, unused-wildcard-import
 
