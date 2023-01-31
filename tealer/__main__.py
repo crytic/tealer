@@ -64,6 +64,7 @@ To choose printers to run from the available list:
 
 import argparse
 import inspect
+import os
 import sys
 import json
 from pathlib import Path
@@ -77,7 +78,7 @@ from tealer.printers import all_printers
 from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.teal.parse_teal import parse_teal
 from tealer.utils.command_line import output_detectors, output_printers
-from tealer.utils.output import cfg_to_dot
+from tealer.utils.output import full_cfg_to_dot
 from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
@@ -202,8 +203,8 @@ def parse_args(
     parser.add_argument(
         "--print-cfg",
         nargs="?",
-        help="export cfg in dot format to given file, default cfg.dot",
-        const="cfg.dot",
+        help="export cfg in dot format to given file, default full_cfg.dot",
+        const="",
     )
 
     group_detector = parser.add_argument_group("Detectors")
@@ -412,13 +413,21 @@ def handle_print_cfg(args: argparse.Namespace, teal: "Teal") -> None:
         teal: Teal object representing the contract being analyzed.
     """
 
-    filename = args.print_cfg
+    filename = f"{teal.contract_name}_full_cfg.dot"
+    if args.print_cfg:
+        filename = args.print_cfg
+
     if not filename.endswith(".dot"):
         filename += ".dot"
 
-    filename = Path(args.dest) / Path(filename)
-    print(f"\nCFG exported to file: {filename}")
-    cfg_to_dot(teal.bbs, filename=filename)
+    file_path = Path(args.dest) / Path(filename)
+    print(f"\nCFG exported to file: {file_path}")
+    full_cfg_to_dot(teal.bbs, filename=file_path)
+    # Don't generate CFG of subroutines by default (?). suggest to use subroutine-cfg printer
+    # all_subroutines_to_dot(teal, Path(args.dest))
+    print(
+        "\nNote: Use `subroutine-cfg` printer to generate CFG of subroutines and shortened version of contract CFG"
+    )
 
 
 def handle_detectors_and_printers(
@@ -513,7 +522,11 @@ def main() -> None:
     try:
         with open(args.program, encoding="utf-8") as f:
             print(f"Analyzing {args.program}")
-            teal = parse_teal(f.read())
+            # TODO: Have a separate source class.
+            contract_name = str(os.path.split(args.program)[1])
+            if contract_name.endswith(".teal"):
+                contract_name = contract_name[: -len(".teal")]
+            teal = parse_teal(f.read(), contract_name)
 
         if args.print_cfg is not None:
             handle_print_cfg(args, teal)

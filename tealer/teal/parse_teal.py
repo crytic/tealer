@@ -559,7 +559,9 @@ def _fill_intc_bytec_info(
         teal.set_byte_constants(bytecblock_ins[0].constants)
 
 
-def parse_teal(source_code: str) -> Teal:  # pylint: disable=too-many-locals
+def parse_teal(  # pylint: disable=too-many-locals
+    source_code: str, contract_name: str = ""
+) -> Teal:
     """Parse algorand smart contracts written in teal.
 
     Parsing teal cotracts consists of four passes:
@@ -637,6 +639,7 @@ def parse_teal(source_code: str) -> Teal:  # pylint: disable=too-many-locals
     for subroutine in [main_program] + teal.subroutines_list:
         subroutine.contract = teal
 
+    teal.contract_name = contract_name
     _fill_intc_bytec_info(intcblock_ins, bytecblock_ins, all_bbs[0], teal)
     _apply_transaction_context_analysis(teal)
 

@@ -95,6 +95,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         self._int_constants: List[int] = []
         self._byte_constants: List[str] = []
 
+        self._contract_name: str = ""
         self._detectors: List[AbstractDetector] = []
         self._printers: List[AbstractPrinter] = []
 
@@ -153,6 +154,14 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     def subroutines_list(self) -> List["Subroutine"]:
         """Returns list of all contract's subroutines"""
         return list(self._subroutines.values())
+
+    @property
+    def contract_name(self) -> str:
+        return self._contract_name
+
+    @contract_name.setter
+    def contract_name(self, name: str) -> None:
+        self._contract_name = name
 
     def subroutine(self, name: str) -> Optional["Subroutine"]:
         """Return subroutine with id/name `name`, return none if subroutine does not exist."""
