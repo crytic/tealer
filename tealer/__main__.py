@@ -67,6 +67,7 @@ import inspect
 import os
 import sys
 import json
+import logging
 from pathlib import Path
 from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional
 
@@ -290,6 +291,7 @@ def parse_args(
         default=".",
     )
 
+    parser.add_argument("--debug", help=argparse.SUPPRESS, action="store_true", default=False)
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -512,6 +514,15 @@ def main() -> None:
 
     detector_classes, printer_classes = get_detectors_and_printers()
     args = parse_args(detector_classes, printer_classes)
+
+    default_log = logging.INFO if not args.debug else logging.DEBUG
+    for (logger_name, logger_level) in [
+        ("Detectors", default_log),
+        ("TransactionCtxAnalysis", default_log),
+        ("Parsing", default_log),
+    ]:
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logger_level)
 
     detector_classes = choose_detectors(args, detector_classes)
     printer_classes = choose_printers(args, printer_classes)

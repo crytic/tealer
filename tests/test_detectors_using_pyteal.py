@@ -18,10 +18,19 @@ from tests.detectors.pyteal_can_close import (  # pylint: disable=wrong-import-p
     txn_type_based_tests,
 )
 
+from tests.detectors.pyteal_subroutine_recursion import (  # pylint: disable=wrong-import-position
+    subroutine_recursion_patterns_tests,
+)
+
+from tests.detectors.multiple_calls_to_subroutine import (  # pylint: disable=wrong-import-position
+    multiple_calls_to_subroutine_tests,
+)
 
 TESTS: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     *router_with_assembled_constants,
     *txn_type_based_tests,
+    *subroutine_recursion_patterns_tests,
+    *multiple_calls_to_subroutine_tests,
 ]
 
 
@@ -31,22 +40,23 @@ def test_detectors_using_pyteal(test: Tuple[str, Type[AbstractDetector], List[Li
     teal = parse_teal(code.strip())
     teal.register_detector(detector)
     result = teal.run_detectors()[0]
-    for bi in teal.bbs:
-        print(
-            bi,
-            bi.idx,
-            bi.transaction_context.transaction_types,
-            bi.transaction_context.group_indices,
-        )
-        print(
-            bi.transaction_context.gtxn_context(0).transaction_types,
-            bi.transaction_context.group_indices,
-        )
-        print(
-            bi.transaction_context.gtxn_context(1).transaction_types,
-            bi.transaction_context.group_indices,
-        )
-
+    # for bi in teal.bbs:
+    #     print(
+    #         bi,
+    #         bi.idx,
+    #         bi.transaction_context.transaction_types,
+    #         bi.transaction_context.group_indices,
+    #     )
+    #     print(
+    #         bi.transaction_context.gtxn_context(0).transaction_types,
+    #         bi.transaction_context.group_indices,
+    #     )
+    #     print(
+    #         bi.transaction_context.gtxn_context(1).transaction_types,
+    #         bi.transaction_context.group_indices,
+    #     )
+    print("result paths =", result.paths)
+    print("expected paths =", expected_paths)
     assert len(result.paths) == len(expected_paths)
     for path, expected_path in zip(result.paths, expected_paths):
         assert len(path) == len(expected_path)

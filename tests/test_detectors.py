@@ -12,6 +12,7 @@ from tests.detectors.can_close_asset import can_close_asset_tests, new_can_close
 from tests.detectors.can_delete import can_delete_tests, new_can_delete_tests
 from tests.detectors.can_update import can_update_tests, new_can_update_tests
 from tests.detectors.rekeyto import missing_rekeyto_tests, new_missing_rekeyto_tests
+from tests.detectors.subroutine_patterns import subroutine_patterns_tests
 
 from tests.utils import cmp_cfg
 
@@ -45,6 +46,7 @@ ALL_NEW_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     *new_can_update_tests,
     *new_can_delete_tests,
     *new_missing_fee_tests,
+    *subroutine_patterns_tests,
 ]
 
 
@@ -69,9 +71,11 @@ def test_just_detectors(test: Tuple[str, Type[AbstractDetector], List[List[int]]
             bi.transaction_context.gtxn_context(1).transaction_types,
             bi.transaction_context.group_indices,
         )
-
+    print(f"count: result = {len(result.paths)}, expected = {len(expected_paths)}")
     assert len(result.paths) == len(expected_paths)
     for path, expected_path in zip(result.paths, expected_paths):
+        print(f"path length: result = {len(path)}, expected = {len(expected_path)}")
+        print(f"path ids: result = {path}, expected = {expected_path}")
         assert len(path) == len(expected_path)
         for bi, expected_idx in zip(path, expected_path):
             assert bi.idx == expected_idx

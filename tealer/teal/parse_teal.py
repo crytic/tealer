@@ -27,6 +27,7 @@ contract represented by sequence of the basic blocks.
 
 import inspect
 import sys
+import logging
 from typing import Optional, Dict, List, Tuple
 
 from tealer.teal.basic_blocks import BasicBlock
@@ -59,6 +60,10 @@ from tealer.teal.teal import Teal
 from tealer.analyses.dataflow import all_constraints
 from tealer.analyses.dataflow.generic import DataflowTransactionContext
 from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, compute_equations
+
+
+logger_parsing = logging.getLogger("Parsing")
+logging.basicConfig()
 
 
 def _detect_contract_type(instructions: List[Instruction]) -> ContractType:
@@ -292,7 +297,7 @@ def _second_pass(  # pylint: disable=too-many-branches
         rets: Dict map from teal label string of a subroutine to list of it's
             return point instructions.
     """
-
+    logger_parsing.debug("Second Pass")
     # Second pass over the instructions list: Add instruction links for jumps
     for ins in instructions:
 
@@ -312,7 +317,7 @@ def _second_pass(  # pylint: disable=too-many-branches
     for subroutine in rets:
         label = labels[subroutine]
         retsubs[subroutine] = []
-
+        logger_parsing.debug(f"    Label = {label}")
         # use dfs to find all retsub instructions starting from subroutine label instruction
         stack: List[Instruction] = []
         visited: List[Instruction] = []
@@ -320,21 +325,26 @@ def _second_pass(  # pylint: disable=too-many-branches
         stack.append(label)
         while len(stack) > 0:
             ins = stack.pop()
+            logger_parsing.debug(f"     Ins = {ins}")
             visited.append(ins)
 
             if isinstance(ins, Retsub):
                 retsubs[subroutine].append(ins)
                 continue
 
-            for next_ins in ins.next:
-                # don't follow callsub path, which initself is another subroutine
-                if isinstance(next_ins, Callsub):
-                    if next_ins.return_point is None:
-                        continue
-                    next_ins = next_ins.return_point
-
+            if isinstance(ins, Callsub):
+                # don't follow callsub path, which in itself is another subroutine
+                if ins.return_point is None:
+                    continue
+                next_ins = ins.return_point
                 if next_ins not in visited:
                     stack.append(next_ins)
+            else:
+                for next_ins in ins.next:
+                    logger_parsing.debug(f"     next_ins = {next_ins}")
+
+                    if next_ins not in visited:
+                        stack.append(next_ins)
 
     # link retsub to return points
     for subroutine in rets:
@@ -592,8 +602,11 @@ def parse_teal(  # pylint: disable=too-many-locals
     lines = source_code.splitlines()
 
     intcblock_ins, bytecblock_ins = _first_pass(lines, labels, rets, instructions)
+    logger_parsing.debug(f"rets = {rets}")
     _second_pass(instructions, labels, rets)
-
+    logger_parsing.debug("instruction and nexts")
+    for ins in instructions:
+        logger_parsing.debug(f"     {ins}, next: {ins.next}")
     # Third pass over the instructions list: Construct the basic blocks and sequential links
     all_bbs: List[BasicBlock] = []
     create_bb(instructions, all_bbs)

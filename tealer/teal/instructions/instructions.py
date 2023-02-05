@@ -263,7 +263,7 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         return self.__class__.__qualname__.lower()
 
     def __repr__(self) -> str:
-        return f"<Instruction('{str(self)}')>"
+        return f"<Instruction({self.line}, '{str(self)}')>"
 
 
 class UnsupportedInstruction(Instruction):
@@ -1748,7 +1748,10 @@ class Callsub(InstructionWithLabel):
         of that instruction. This is helpful in construction of contract CFG and
         subroutine CFGs.
         """
-
+        # TODO: raise Error if return_point is None
+        # if self._return_point is None:
+        # return point is accessed before assignment
+        # raise TealerException(f"Callsub return point is accessed before assignment: {str(self)}")
         return self._return_point
 
     @return_point.setter
