@@ -34,8 +34,25 @@ MULTIPLE_RETURN_POINTS_VULNERABLE_PATHS_3: List[List[int]] = [
     [0, 3, 1, 3, 2],
 ]
 
+# Tealer does not identify a subroutine when `callsub` instruction is the last instruction.
+# Bug is fixed now
+CALLSUB_AT_END = """
+#pragma version 7
+b main
+sub:
+    int 1
+    return
+main:
+    callsub sub
+"""
+
+CALLSUB_AT_END_VULNERABLE_PATHS: List[List[int]] = [
+    [0, 2, 1],
+]
+
 subroutine_patterns_tests = [
     # (MULTIPLE_RETURN_POINTS, CanUpdate, MULTIPLE_RETURN_POINTS_VULNERABLE_PATHS_1),
     # (MULTIPLE_RETURN_POINTS, CanUpdate, MULTIPLE_RETURN_POINTS_VULNERABLE_PATHS_2),
     (MULTIPLE_RETURN_POINTS, CanUpdate, MULTIPLE_RETURN_POINTS_VULNERABLE_PATHS_3),
+    (CALLSUB_AT_END, CanUpdate, CALLSUB_AT_END_VULNERABLE_PATHS),
 ]
