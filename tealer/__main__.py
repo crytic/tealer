@@ -64,6 +64,7 @@ To choose printers to run from the available list:
 
 import argparse
 import inspect
+import re
 import sys
 import json
 from pathlib import Path
@@ -78,6 +79,11 @@ from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.teal.parse_teal import parse_teal
 from tealer.utils.command_line import output_detectors, output_printers
 from tealer.utils.output import cfg_to_dot
+from tealer.utils.algoexplorer import (
+    get_application_using_app_id,
+    logic_sig_from_contract_account,
+    logic_sig_from_txn_id,
+)
 from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
@@ -204,6 +210,13 @@ def parse_args(
         nargs="?",
         help="export cfg in dot format to given file, default cfg.dot",
         const="cfg.dot",
+    )
+
+    parser.add_argument(
+        "--network",
+        help='Algorand network to fetch the contract from, ("mainnet" or "testnet"). defaults to "mainnet".',
+        action="store",
+        default="mainnet",
     )
 
     group_detector = parser.add_argument_group("Detectors")
@@ -501,6 +514,31 @@ def handle_output(
                 f.write(json.dumps(json_output, indent=2))
 
 
+def fetch_contract(args: argparse.Namespace) -> str:
+    program: str = args.program
+    network: str = args.network
+    b32_regex = "[A-Z2-7]+"
+    if program.isdigit():
+        # is a number so a app id
+        print(f'Fetching application using id "{program}"')
+        return get_application_using_app_id(network, int(program))
+    if len(program) == 52 and re.fullmatch(b32_regex, program) is not None:
+        # is a txn id: base32 encoded. length after encoding == 52
+        print(f'Fetching logic-sig contract that signed the transaction "{program}"')
+        return logic_sig_from_txn_id(network, program)
+    if len(program) == 58 and re.fullmatch(b32_regex, program) is not None:
+        # is a address. base32 encoded. length after encoding == 58
+        print(f'Fetching logic-sig of contract account "{program}"')
+        return logic_sig_from_contract_account(network, program)
+    # file path
+    print(f'Reading contract from file: "{program}"')
+    try:
+        with open(program, encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError as e:
+        raise TealerException from e
+
+
 def main() -> None:
     """Entry point of the tealer tool.
 
@@ -519,9 +557,8 @@ def main() -> None:
     _results_printers: List = []
     error = None
     try:
-        with open(args.program, encoding="utf-8") as f:
-            print(f"Analyzing {args.program}")
-            teal = parse_teal(f.read())
+        contract_source = fetch_contract(args)
+        teal = parse_teal(contract_source)
 
         if args.print_cfg is not None:
             handle_print_cfg(args, teal)
