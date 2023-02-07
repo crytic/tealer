@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
-class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
+class IsDeletable(AbstractDetector):  # pylint: disable=too-few-public-methods
     """Detector to find execution paths missing DeleteApplication check.
 
     Stateful smart contracts(application) can be deleted in algorand. If the
@@ -30,7 +30,7 @@ class CanDelete(AbstractDetector):  # pylint: disable=too-few-public-methods
     transaction is not DeleteApplication are excluded.
     """
 
-    NAME = "canDelete"
+    NAME = "isDeletable"
     DESCRIPTION = "Detect paths that can delete the application"
     TYPE = DetectorType.STATEFULL
 
@@ -91,6 +91,6 @@ Check if `txn OnCompletion == int DeleteApplication` and do appropriate actions 
 
         description = "Lack of txn OnCompletion == int DeleteApplication check allows to"
         description += " delete the application."
-        filename = "can_delete"
+        filename = "is_deletable"
 
         return self.generate_result(paths_without_check, description, filename)
