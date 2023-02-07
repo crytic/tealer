@@ -257,6 +257,14 @@ def parse_args(
         default=False,
     )
 
+    group_detector.add_argument(
+        "--filter-paths",
+        help="Excludes execution paths matching the regex from detector's output.",
+        action="store",
+        dest="filter_paths",
+        default=None,
+    )
+
     group_printer.add_argument(
         "--list-printers",
         help="List available printers",
@@ -526,6 +534,9 @@ def main() -> None:
     except TealerException as e:
         error = str(e)
 
+    if args.filter_paths is not None:
+        for detector_result in results_detectors:
+            detector_result.filter_paths(args.filter_paths)
     handle_output(args, results_detectors, _results_printers, error)
 
 
