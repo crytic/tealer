@@ -270,6 +270,8 @@ def _first_pass(  # pylint: disable=too-many-branches
         call = None
         if isinstance(ins, Callsub):
             call = ins
+            if call.label not in rets.keys():
+                rets[call.label] = []
 
         # Finally, add the instruction to the instruction list
         instructions.append(ins)

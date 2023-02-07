@@ -642,7 +642,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         for next_b in block.next:
             livein_information = self._union(key, livein_information, liveout[next_b])
 
-        if block.sub_return_point is not None:
+        if block.sub_return_point is not None and len(block.sub_return_point.prev) != 0:
             # this block is the `callsub block` and `block.sub_return_point` is the block that will be executed after subroutine.
             livein_information = self._intersection(
                 key, livein_information, liveout[block.sub_return_point]
