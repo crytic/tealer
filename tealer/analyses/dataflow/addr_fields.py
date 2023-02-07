@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Set, Tuple
+from typing import TYPE_CHECKING, List, Set, Tuple, Callable
 
 from tealer.analyses.dataflow.generic import DataflowTransactionContext
 from tealer.teal.instructions.instructions import (
@@ -7,13 +7,16 @@ from tealer.teal.instructions.instructions import (
     Addr,
     Global,
 )
-from tealer.teal.global_field import ZeroAddress
+from tealer.teal.global_field import ZeroAddress, CreatorAddress
 from tealer.utils.algorand_constants import ZERO_ADDRESS
 from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStackValue
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
-    from tealer.teal.context.block_transaction_context import AddrFieldValue
+    from tealer.teal.context.block_transaction_context import (
+        AddrFieldValue,
+        BlockTransactionContext,
+    )
 
 
 # Add str of transaction field to find constraints on that field
@@ -21,11 +24,13 @@ if TYPE_CHECKING:
 REKEY_TO_KEY = "RekeyTo"
 CLOSE_REMAINDER_TO_KEY = "CloseRemainderTo"
 ASSET_CLOSE_TO_KEY = "AssetCloseTo"
+SENDER_KEY = "Sender"
 
 TX_FIELDS = [
     REKEY_TO_KEY,
     CLOSE_REMAINDER_TO_KEY,
     ASSET_CLOSE_TO_KEY,
+    SENDER_KEY,
 ]
 
 # used to represent universal address set
@@ -34,6 +39,9 @@ ANY_ADDRESS = "ANY_ADDRESS"
 NO_ADDRESS = "NO_ADDRESS"
 # used to represent single unknown address.
 SOME_ADDRESS = "SOME_ADDRESS"
+# used to represent application's creator address returned by `global CreatorAddress`
+# distinguishing creator address will be helpful for the fuzzer (?)
+CREATOR_ADDRESS = "CREATOR_ADDRESS"
 
 
 class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-methods
@@ -87,6 +95,8 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
             if ins.addr == ZERO_ADDRESS:
                 return self._null_set()
             return set([ins.addr])
+        if isinstance(ins, Global) and isinstance(ins.field, CreatorAddress):
+            return set([CREATOR_ADDRESS])
         # return SOME_ADDRESS here
         # we don't know the address this particular instruction will return.
         # But it will only return a single address even though we don't know what it is.
@@ -144,34 +154,24 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         ctx_addr_value.possible_addr = list(addr_values - set([ANY_ADDRESS, NO_ADDRESS]))
 
     def _store_results(self) -> None:
-        rekeyto_key = "RekeyTo"
-        for b in self._teal.bbs:
-            self._set_addr_values(
-                b.transaction_context.rekeyto, self._block_contexts[rekeyto_key][b]
-            )
-
-            for idx in range(16):
-                addr_values = self._block_contexts[self.gtx_key(idx, rekeyto_key)][b]
-                self._set_addr_values(b.transaction_context.gtxn_context(idx).rekeyto, addr_values)
-
-        closeto_key = "CloseRemainderTo"
-        for b in self._teal.bbs:
-            self._set_addr_values(
-                b.transaction_context.closeto, self._block_contexts[closeto_key][b]
-            )
-
-            for idx in range(16):
-                addr_values = self._block_contexts[self.gtx_key(idx, closeto_key)][b]
-                self._set_addr_values(b.transaction_context.gtxn_context(idx).closeto, addr_values)
-
-        assetcloseto_key = "AssetCloseTo"
-        for b in self._teal.bbs:
-            self._set_addr_values(
-                b.transaction_context.assetcloseto, self._block_contexts[assetcloseto_key][b]
-            )
-
-            for idx in range(16):
-                addr_values = self._block_contexts[self.gtx_key(idx, assetcloseto_key)][b]
+        key_and_addr_obj: List[
+            Tuple[str, Callable[["BlockTransactionContext"], "AddrFieldValue"]]
+        ] = [
+            (REKEY_TO_KEY, lambda ctx: ctx.rekeyto),
+            (CLOSE_REMAINDER_TO_KEY, lambda ctx: ctx.closeto),
+            (ASSET_CLOSE_TO_KEY, lambda ctx: ctx.assetcloseto),
+            (SENDER_KEY, lambda ctx: ctx.sender),
+        ]
+        for key, addr_field_obj in key_and_addr_obj:
+            if key not in self.BASE_KEYS:
+                continue
+            for b in self._teal.bbs:
                 self._set_addr_values(
-                    b.transaction_context.gtxn_context(idx).assetcloseto, addr_values
+                    addr_field_obj(b.transaction_context), self._block_contexts[key][b]
                 )
+                for idx in range(16):
+                    addr_values = self._block_contexts[self.gtx_key(idx, key)][b]
+                    self._set_addr_values(
+                        addr_field_obj(b.transaction_context.gtxn_context(idx)),
+                        addr_values,
+                    )
