@@ -63,10 +63,13 @@ class IncorrectDetectorInitialization(Exception):
     """
 
 
+# DetectorType is used to specify "Applicability of a detector."
 class DetectorType(ComparableEnum):
-    STATELESS = 0
-    STATEFULL = 1
-    STATEFULLGROUP = 2
+    # Order by stateful, stateless and stateful, stateless
+    STATEFULL = 0
+    STATELESS_AND_STATEFULL = 1
+    STATELESS = 2
+    STATEFULLGROUP = 3
 
     UNDEFINED = 255
 
@@ -74,6 +77,7 @@ class DetectorType(ComparableEnum):
 DETECTOR_TYPE_TXT = {
     DetectorType.STATELESS: "Stateless",
     DetectorType.STATEFULL: "Stateful",
+    DetectorType.STATELESS_AND_STATEFULL: "Stateless, Stateful",
     DetectorType.STATEFULLGROUP: "StatefulGroup",
 }
 
@@ -147,6 +151,7 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
     IMPACT: DetectorClassification = DetectorClassification.UNIMPLEMENTED
     CONFIDENCE: DetectorClassification = DetectorClassification.UNIMPLEMENTED
 
+    WIKI_URL = ""
     WIKI_TITLE = ""
     WIKI_DESCRIPTION = ""
     WIKI_EXPLOIT_SCENARIO = ""
@@ -188,6 +193,11 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
         if not self.WIKI_RECOMMENDATION:
             raise IncorrectDetectorInitialization(
                 f"WIKI_RECOMMENDATION is not initialized {self.__class__.__name__}"
+            )
+
+        if not self.WIKI_URL:
+            raise IncorrectDetectorInitialization(
+                f"WIKI_URL is not initialized {self.__class__.__name__}"
             )
 
         if self.IMPACT not in [

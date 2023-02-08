@@ -28,30 +28,52 @@ class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-meth
     transaction("return 1") and doesn't check the CloseRemainderTo field.
     """
 
-    NAME = "groupSize"
-    DESCRIPTION = "Detect paths with a missing GroupSize check"
-    TYPE = DetectorType.STATEFULLGROUP
+    NAME = "group-size-check"
+    DESCRIPTION = "Usage of absolute indexes without validating GroupSize"
+    TYPE = DetectorType.STATELESS_AND_STATEFULL
 
-    IMPACT = DetectorClassification.MEDIUM
+    IMPACT = DetectorClassification.HIGH
     CONFIDENCE = DetectorClassification.HIGH
 
-    WIKI_TITLE = "Missing GroupSize check"
-    WIKI_DESCRIPTION = "Detect paths with a missing GroupSize check"
+    WIKI_URL = (
+        "https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-groupsize-validation"
+    )
+    WIKI_TITLE = "Missing GroupSize Validation"
+    WIKI_DESCRIPTION = (
+        "Contract's execution depends on multiple transactions in the group"
+        " and it uses absolute index to access information of other transactions in the group."
+        " Attacker can exploit the contract by abusing the lack of validations on `GroupSize`."
+        " More at [building-secure-contracts/not-so-smart-contracts/algorand/group_size_check]"
+        "(https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/algorand/group_size_check)"
+    )
     WIKI_EXPLOIT_SCENARIO = """
-Consider the system consisting of two contracts, designed in such a way that first contract should be called by the
-first transaction of the group and second one by the second transaction. first contract handles all the verification,
-second contract approves the transfer of certain amount of assets if first contract approves its transaction.
-ofcourse, second contract verifies that first transaction in the group is call to the first contract.
+```py
+def mint_wrapped_algo() -> Expr:
+    validations = Assert(
+        And(
+            Gtxn[0].receiver() == Global.current_application_address(),
+            Gtxn[0].type_enum() == TxnType.Payment,
+        )
+    )
+    transfer_op = transfer_wrapped_algo(Txn.sender(), Gtxn[0].amount())
+    return Seq([validations, transfer_op, Approve()])
+```
 
-Possible exploit scenario is if second contract **only** verifies that first transaction is a call to first contract and
-doesn't check the group size to the expected value of `2`. The attacker could add an additional transaction(s) which are
-copy of second transaction i.e transfer of assets. As all the transactions to second contract only verify the first transaction,
-the attacker may possibly transfer all the assets by appending transactions which are each a copy of second transaction.
+Eve sends the following group transaction:
+```
+0. Payment of 1 million ALGOs to application address
+1. Call mint_wrapped_algo
+2. Call mint_wrapped_algo 
+...
+15. Call mint_wrapped_algo
+```
 
-Attacker can get upto 14 times(max atomic group size 16) more than the intended amount.
+Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
+ Eve exchanges the Wrapped-algo to ALGO and steals 14 million ALGOs.
 """
     WIKI_RECOMMENDATION = """
-Always verify that group size(number of transactions in atomic group) is equal to what logic is expecting.
+- Avoid using absolute indexes. Validate GroupSize if used.
+- Favor using ARC-4 ABI and relative indexes for group transactions.
 """
 
     def __init__(self, teal: Teal):

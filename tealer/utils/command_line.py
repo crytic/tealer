@@ -25,6 +25,16 @@ from tealer.detectors.abstract_detector import (
 from tealer.printers.abstract_printer import AbstractPrinter
 
 
+def _sort_detector_classes(
+    detector_classes: List[Type[AbstractDetector]],
+) -> List[Type[AbstractDetector]]:
+    # Sort by type, impact, confidence, name and description
+    return sorted(
+        detector_classes,
+        key=lambda element: (element.TYPE, element.IMPACT, element.CONFIDENCE, element.NAME),
+    )
+
+
 def output_detectors(detector_classes: List[Type[AbstractDetector]]) -> None:
     """Print information of given detectors in the form of a table.
 
@@ -41,6 +51,8 @@ def output_detectors(detector_classes: List[Type[AbstractDetector]]) -> None:
             will be displayed by this function.
     """
 
+    detector_classes = _sort_detector_classes(detector_classes)
+
     detectors_list = []
     for detector in detector_classes:
         name = detector.NAME
@@ -53,11 +65,6 @@ def output_detectors(detector_classes: List[Type[AbstractDetector]]) -> None:
         )
     table = PrettyTable(["Num", "Check", "What it Detects", "Type", "Impact", "Confidence"])
 
-    # Sort by type, impact, confidence, name, and description
-    detectors_list = sorted(
-        detectors_list,
-        key=lambda element: (element[2], element[3], element[4], element[0], element[1]),
-    )
     idx = 1
     for (name, description, detector_type, impact, confidence) in detectors_list:
         table.add_row(
@@ -100,3 +107,94 @@ def output_printers(printer_classes: List[Type[AbstractPrinter]]) -> None:
         table.add_row([idx, name, printer_help])
 
     print(table)
+
+
+# pylint: disable=too-many-locals
+def output_to_markdown(
+    detector_classes: List[Type[AbstractDetector]],
+    printer_classes: List[Type[AbstractPrinter]],
+    filter_wiki: str,
+) -> None:
+    """Print information of detectors and printers in form of markdown table.
+
+    Useful to automatically generate formatted description for available detectors and printers.
+    Used to fill README.
+
+    Args:
+        detector_classes: List of available detectors.
+        printer_classes: List of available printers.
+        filter_wiki: Used to filter listed detectors based on NAME. A detector is listed if
+            and only if filter_wiki is in its NAME.
+    """
+
+    def extract_help(cls: Type[AbstractDetector]) -> str:
+        if cls.WIKI_URL == "":
+            return cls.DESCRIPTION
+        return f"[{cls.DESCRIPTION}]({cls.WIKI_URL})"
+
+    detector_classes = _sort_detector_classes(detector_classes)
+
+    detectors_list = []
+    print(f"filter_wiki = {filter_wiki}")
+    for detector in detector_classes:
+        if not filter_wiki in detector.NAME:
+            continue
+        name = detector.NAME
+        description = extract_help(detector)
+        detector_type = DETECTOR_TYPE_TXT[detector.TYPE]
+        detector_impact = detector.IMPACT
+        detector_confidence = detector.CONFIDENCE
+        detectors_list.append(
+            (name, description, detector_type, detector_impact, detector_confidence)
+        )
+
+    idx = 1
+    for (name, description, detector_type, impact, confidence) in detectors_list:
+        print(
+            f"{idx} | `{name}` | {description} | {detector_type} | {classification_txt[impact]} | {classification_txt[confidence]}"
+        )
+        idx = idx + 1
+
+    print()
+    printers_list = []
+    for printer in printer_classes:
+        argument = printer.NAME
+        help_info = printer.HELP
+        printers_list.append((argument, help_info))
+
+    printers_list = sorted(printers_list, key=lambda element: (element[0]))
+    idx = 1
+    for (argument, help_info) in printers_list:
+        print(f"{idx} | `{argument}` | {help_info}")
+        idx = idx + 1
+
+
+def output_wiki(detector_classes: List[Type[AbstractDetector]], filter_wiki: str) -> None:
+    """Generate dectector documentation for github wiki."""
+    detectors_list = _sort_detector_classes(detector_classes)
+
+    for detector in detectors_list:
+        if not filter_wiki in detector.NAME:
+            continue
+        check = detector.NAME
+        applicable_to = DETECTOR_TYPE_TXT[detector.TYPE]
+        impact = classification_txt[detector.IMPACT]
+        confidence = classification_txt[detector.CONFIDENCE]
+        title = detector.WIKI_TITLE
+        description = detector.WIKI_DESCRIPTION
+        exploit_scenario = detector.WIKI_EXPLOIT_SCENARIO
+        recommendation = detector.WIKI_RECOMMENDATION
+
+        print(f"\n## {title}")
+        print("### Configuration")
+        print(f"* Check: `{check}`")
+        print(f"* Applicable to: `{applicable_to}`")
+        print(f"* Severity: `{impact}`")
+        print(f"* Confidence: `{confidence}`")
+        print("\n### Description")
+        print(description)
+        if exploit_scenario:
+            print("\n### Exploit Scenario:")
+            print(exploit_scenario)
+        print("\n### Recommendation")
+        print(recommendation)

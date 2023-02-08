@@ -68,7 +68,7 @@ import re
 import sys
 import json
 from pathlib import Path
-from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional
+from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional, Union, Sequence
 
 from pkg_resources import iter_entry_points, require  # type: ignore
 
@@ -77,7 +77,12 @@ from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.printers import all_printers
 from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.teal.parse_teal import parse_teal
-from tealer.utils.command_line import output_detectors, output_printers
+from tealer.utils.command_line import (
+    output_detectors,
+    output_printers,
+    output_to_markdown,
+    output_wiki,
+)
 from tealer.utils.output import cfg_to_dot
 from tealer.utils.algoexplorer import (
     get_application_using_app_id,
@@ -310,6 +315,12 @@ def parse_args(
         default=".",
     )
 
+    parser.add_argument("--markdown", help=argparse.SUPPRESS, action=OutputMarkdown, default=False)
+
+    parser.add_argument(
+        "--wiki-detectors", help=argparse.SUPPRESS, action=OutputWiki, default=False
+    )
+
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -350,6 +361,34 @@ class ListPrinters(argparse.Action):  # pylint: disable=too-few-public-methods
     ) -> None:  # pylint: disable=signature-differs
         _, printers = get_detectors_and_printers()
         output_printers(printers)
+        parser.exit()
+
+
+class OutputMarkdown(argparse.Action):  # pylint: disable=too-few-public-methods
+    def __call__(
+        self,
+        parser: Any,
+        args: Any,
+        values: Optional[Union[str, Sequence[Any]]],
+        option_string: Any = None,
+    ) -> None:
+        detectors, printers = get_detectors_and_printers()
+        assert isinstance(values, str)
+        output_to_markdown(detectors, printers, values)
+        parser.exit()
+
+
+class OutputWiki(argparse.Action):  # pylint: disable=too-few-public-methods
+    def __call__(
+        self,
+        parser: Any,
+        args: Any,
+        values: Optional[Union[str, Sequence[Any]]],
+        option_string: Any = None,
+    ) -> None:
+        detectors, _ = get_detectors_and_printers()
+        assert isinstance(values, str)
+        output_wiki(detectors, values)
         parser.exit()
 
 
