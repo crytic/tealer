@@ -3,7 +3,7 @@ from typing import List, Tuple, Type
 from tealer.teal.instructions import instructions
 from tealer.teal.instructions import transaction_field
 from tealer.detectors.abstract_detector import AbstractDetector
-from tealer.detectors.all_detectors import CanDelete, CanCloseAccount, CanCloseAsset
+from tealer.detectors.all_detectors import IsDeletable, CanCloseAccount, CanCloseAsset
 
 from tests.utils import construct_cfg
 
@@ -256,8 +256,8 @@ CAN_DELETE_LOOP_VULNERABLE_PATHS = [
 
 
 can_delete_tests = [
-    (CAN_DELETE, CanDelete, CAN_DELETE_VULNERABLE_PATHS),
-    (CAN_DELETE_LOOP, CanDelete, CAN_DELETE_LOOP_VULNERABLE_PATHS),
+    (CAN_DELETE, IsDeletable, CAN_DELETE_VULNERABLE_PATHS),
+    (CAN_DELETE_LOOP, IsDeletable, CAN_DELETE_LOOP_VULNERABLE_PATHS),
 ]
 
 
@@ -392,9 +392,9 @@ CAN_DELETE_GROUP_INDEX_2_VULNERABLE_PATHS: List[List[int]] = [
 ]
 
 new_can_delete_tests: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
-    (CAN_DELETE_GROUP_INDEX_0, CanDelete, CAN_DELETE_GROUP_INDEX_0_VULNERABLE_PATHS),
-    (CAN_DELETE_GROUP_INDEX_1, CanDelete, CAN_DELETE_GROUP_INDEX_1_VULNERABLE_PATHS),
-    (CAN_DELETE_GROUP_INDEX_2, CanDelete, CAN_DELETE_GROUP_INDEX_2_VULNERABLE_PATHS),
+    (CAN_DELETE_GROUP_INDEX_0, IsDeletable, CAN_DELETE_GROUP_INDEX_0_VULNERABLE_PATHS),
+    (CAN_DELETE_GROUP_INDEX_1, IsDeletable, CAN_DELETE_GROUP_INDEX_1_VULNERABLE_PATHS),
+    (CAN_DELETE_GROUP_INDEX_2, IsDeletable, CAN_DELETE_GROUP_INDEX_2_VULNERABLE_PATHS),
     (CAN_DELETE, CanCloseAccount, []),
     (CAN_DELETE_LOOP, CanCloseAccount, []),
     (CAN_DELETE_GROUP_INDEX_0, CanCloseAccount, []),

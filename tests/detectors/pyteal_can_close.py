@@ -3,9 +3,8 @@
 from pyteal import *  # pylint: disable=wildcard-import, unused-wildcard-import
 
 from pyteal import *
-from typing import Literal
 
-from tealer.detectors.all_detectors import CanUpdate, CanDelete, CanCloseAsset, CanCloseAccount
+from tealer.detectors.all_detectors import CanCloseAsset, CanCloseAccount
 
 router = Router(
     name="Example",

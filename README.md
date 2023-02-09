@@ -12,13 +12,15 @@ Tealer is a static analyzer for [Teal](https://developer.algorand.org/docs/featu
 
  Num |      Check      |                       What it Detects                        |      Type     | Impact | Confidence
 --- | --- | --- | --- | --- | ---
-  1  |    canDelete    |         Detect paths that can delete the application         |    Stateful   |  High  |    High
-  2  |    canUpdate    |         Detect paths that can update the application         |    Stateful   |  High  |    High
-  3  |     rekeyTo     |          Detect paths with a missing RekeyTo check           | StatefulGroup |  High  |    High
-  4  |    groupSize    |         Detect paths with a missing GroupSize check          | StatefulGroup | Medium |    High
-  5  | canCloseAccount |      Detect paths that can close out the sender account      |   Stateless   |  High  |    High
-  6  |  canCloseAsset  | Detect paths that can close the asset holdings of the sender |   Stateless   |  High  |    High
-  7  |     feeCheck    |            Detect paths with a missing Fee check             |   Stateless   |  High  |    High
+  1  |    isDeletable    |         Detect paths that can delete the application         |    Stateful   |  High  |    High
+  2  |    isUpdatable    |         Detect paths that can update the application         |    Stateful   |  High  |    High
+  3  |     CanUpdate    | Detect paths that can delete the application AND does not validate the transaction sender. |   Stateful   |  High  |    High
+  4  |     CanDelete    | Detect paths that can update the application AND does not validate the transaction sender. |   Stateful   |  High  |    High
+  5  |     rekeyTo     |          Detect paths with a missing RekeyTo check           | StatefulGroup |  High  |    High
+  6  |    groupSize    |         Detect paths with a missing GroupSize check          | StatefulGroup | Medium |    High
+  7  | canCloseAccount |      Detect paths that can close out the sender account      |   Stateless   |  High  |    High
+  8  |  canCloseAsset  | Detect paths that can close the asset holdings of the sender |   Stateless   |  High  |    High
+  9  |     feeCheck    |            Detect paths with a missing Fee check             |   Stateless   |  High  |    High
 
 All the detectors are run by default
 

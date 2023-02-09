@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
-class CanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
+class IsUpdatable(AbstractDetector):  # pylint: disable=too-few-public-methods
     """Detector to find execution paths missing UpdateApplication check.
 
     Stateful smart contracts(application) can be updated with the new code
@@ -31,7 +31,7 @@ class CanUpdate(AbstractDetector):  # pylint: disable=too-few-public-methods
     transaction is not UpdateApplication are excluded.
     """
 
-    NAME = "canUpdate"
+    NAME = "isUpdatable"
     DESCRIPTION = "Detect paths that can update the application"
     TYPE = DetectorType.STATEFULL
 
@@ -93,5 +93,5 @@ Check if `txn OnCompletion == int UpdateApplication` and do appropriate actions 
         description = "Lack of txn OnCompletion == int UpdateApplication check allows to"
         description += " update the application's approval and clear programs."
 
-        filename = "can_update"
+        filename = "is_updatable"
         return self.generate_result(paths_without_check, description, filename)
