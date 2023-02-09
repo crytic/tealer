@@ -1,0 +1,42 @@
+#pragma version 7
+txna ApplicationArgs 0
+method "create()void"
+==
+bnz main_l4
+txna ApplicationArgs 0
+method "opt_in()void"
+==
+bnz main_l3
+err
+main_l3:
+txn OnCompletion
+int OptIn
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+callsub optin_1
+int 1
+return
+main_l4:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+==
+&&
+assert
+callsub create_0
+int 1
+return
+
+// create
+create_0:
+retsub
+
+// opt_in
+optin_1:
+retsub

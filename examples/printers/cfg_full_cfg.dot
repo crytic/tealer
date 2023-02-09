@@ -1,0 +1,100 @@
+digraph g{
+ ranksep = 1 
+ overlap = scale 
+
+            subgraph cluster_0 {
+                label = "Subroutine optin_1";
+                graph[style=dashed];
+                8;
+            }
+        
+
+            subgraph cluster_1 {
+                label = "Subroutine create_0";
+                graph[style=dashed];
+                7;
+            }
+        
+0[label=<<TABLE ALIGN="LEFT" COLOR="#000066">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="1" BORDER="2"><B>// block_id = 0; cost = 5</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">1. #pragma version 7</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">2. txna ApplicationArgs 0</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK"><B>// method-selector: 0x4c5c61ba</B><BR/>3. method &quot;create()void&quot;</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">4. ==</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">5. bnz main_l4</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 0:s -> 1:6:n [color="#e0182b"];
+0:s -> 5:23:n [color="#36d899"];
+
+1[label=<<TABLE ALIGN="LEFT" COLOR="#000066">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="6" BORDER="2"><B>// block_id = 1; cost = 4</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">6. txna ApplicationArgs 0</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK"><B>// method-selector: 0x30c6d58a</B><BR/>7. method &quot;opt_in()void&quot;</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">8. ==</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">9. bnz main_l3</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 1:s -> 2:10:n [color="#e0182b"];
+1:s -> 3:11:n [color="#36d899"];
+
+2[label=<<TABLE ALIGN="LEFT" COLOR="#000066">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="10" BORDER="2"><B>// block_id = 2; cost = 1</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">10. err</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 
+3[label=<<TABLE ALIGN="LEFT" COLOR="#000066">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="11" BORDER="2"><B>// block_id = 3; cost = 10</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">11. main_l3:</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">12. txn OnCompletion</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">13. int OptIn</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">14. ==</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK"><B>// ApplicationID is 0 in Creation Txn</B><BR/>15. txn ApplicationID</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">16. int 0</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">17. !=</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">18. &amp;&amp;</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">19. assert</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">20. <B><I>callsub optin_1</I></B></TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 3:s -> 8:41:n [color="#ff8c00"];
+
+4[label=<<TABLE ALIGN="LEFT" COLOR="#000066">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="21" BORDER="2"><B>// block_id = 4; cost = 2</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">21. int 1</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">22. return</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 
+5[label=<<TABLE ALIGN="LEFT" COLOR="#000066">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="23" BORDER="2"><B>// block_id = 5; cost = 10</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">23. main_l4:</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">24. txn OnCompletion</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">25. int NoOp</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">26. ==</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK"><B>// ApplicationID is 0 in Creation Txn</B><BR/>27. txn ApplicationID</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">28. int 0</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">29. ==</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">30. &amp;&amp;</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">31. assert</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">32. <B><I>callsub create_0</I></B></TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 5:s -> 7:37:n [color="#ff8c00"];
+
+6[label=<<TABLE ALIGN="LEFT" COLOR="#000066">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="33" BORDER="2"><B>// block_id = 6; cost = 2</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">33. int 1</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">34. return</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 
+7[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="37" BORDER="2"><B>// block_id = 7; cost = 2<BR/>// Subroutine create_0</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">// create<BR/>37. create_0:</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">38. <B><I>retsub</I></B></TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 7:s -> 6:33:n [color="BLACK"];
+
+8[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="41" BORDER="2"><B>// block_id = 8; cost = 2<BR/>// Subroutine optin_1</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">// opt_in<BR/>41. optin_1:</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">42. <B><I>retsub</I></B></TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 8:s -> 4:21:n [color="BLACK"];
+
+}

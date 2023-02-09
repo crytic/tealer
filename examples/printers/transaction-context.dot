@@ -1,0 +1,55 @@
+digraph g{
+ ranksep = 1 
+ overlap = scale 
+
+0[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="1" BORDER="2"><B>// block_id = 0; cost = 5<BR/>// GroupIndex: 1 2<BR/>// GroupSize: 3 6..10</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">1. #pragma version 7</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">2. global GroupSize</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">3. int 4</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">4. &lt;=</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">5. bnz main_l2</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 0:s -> 1:6:n [color="#e0182b"];
+0:s -> 2:19:n [color="#36d899"];
+
+1[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="6" BORDER="2"><B>// block_id = 1; cost = 13<BR/>// GroupIndex: 2<BR/>// GroupSize: 6..10</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">6. global GroupSize</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">7. int 5</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">8. &gt;</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">9. global GroupSize</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">10. int 11</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">11. &lt;</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">12. &amp;&amp;</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">13. txn GroupIndex</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">14. int 2</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">15. ==</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">16. &amp;&amp;</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">17. assert</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">18. b main_l3</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 1:s -> 3:28:n [color="BLACK"];
+
+2[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="19" BORDER="2"><B>// block_id = 2; cost = 9<BR/>// GroupIndex: 1<BR/>// GroupSize: 3</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">19. main_l2:</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">20. global GroupSize</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">21. int 3</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">22. ==</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">23. assert</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">24. txn GroupIndex</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">25. int 1</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">26. ==</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">27. assert</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 2:s -> 3:28:n [color="BLACK"];
+
+3[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="28" BORDER="2"><B>// block_id = 3; cost = 3<BR/>// GroupIndex: 1 2<BR/>// GroupSize: 3 6..10</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">28. main_l3:</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">29. int 1</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">30. return</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 
+}
