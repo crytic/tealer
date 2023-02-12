@@ -8,7 +8,10 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations,
+    detector_terminal_description,
+)
 
 
 if TYPE_CHECKING:
@@ -105,10 +108,8 @@ Validate `RekeyTo` field in the LogicSig.
             paths_without_check_unique.append(path)
             added_paths.append(short)
 
-        description = "Lack of txn RekeyTo check allows rekeying the account to"
-        description += " attacker controlled address and control the account directly."
-        description += "\nExecution paths with missing rekeyTo check of the current transaction and"
-        description += "missing rekeyTo check of other transactions in the group."
+        description = detector_terminal_description(self)
+
         filename = "missing_rekeyto_check"
 
         return self.generate_result(paths_without_check_unique, description, filename)

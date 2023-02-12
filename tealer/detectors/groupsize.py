@@ -11,6 +11,7 @@ from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.global_field import GroupSize
 from tealer.teal.instructions.instructions import Return, Int, Global
 from tealer.teal.teal import Teal
+from tealer.detectors.utils import detector_terminal_description
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
@@ -140,7 +141,7 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
         paths_without_check: List[List[BasicBlock]] = []
         self._check_groupsize(self.teal.bbs[0], [], paths_without_check)
 
-        description = "Lack of groupSize check found"
+        description = detector_terminal_description(self)
         filename = "missing_group_size"
 
         return self.generate_result(paths_without_check, description, filename)

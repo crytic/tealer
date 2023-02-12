@@ -8,7 +8,10 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations,
+    detector_terminal_description,
+)
 from tealer.utils.teal_enums import TealerTransactionType
 
 if TYPE_CHECKING:
@@ -75,8 +78,7 @@ Do not approve `UpdateApplication` type application calls.
             self.teal.bbs[0], checks_field
         )
 
-        description = "Lack of txn OnCompletion == int UpdateApplication check allows to"
-        description += " update the application's approval and clear programs."
+        description = detector_terminal_description(self)
 
         filename = "is_updatable"
         return self.generate_result(paths_without_check, description, filename)

@@ -382,15 +382,14 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
                 Default False.
         """
 
-        print(f"\ncheck: {self.check}, impact: {self.impact}, confidence: {self.confidence}")
         print(self.description)
         if len(self.paths) == 0:
-            print("\tdetector didn't find any vulnerable paths.")
+            print("\tDetector didn't find any vulnerable paths.")
             return
         # cfg_to_dot config
         config = CFGDotConfig()
         config.color_edges = False
-        print("\tfollowing are the vulnerable paths found")
+        print("\tFollowing are the vulnerable paths found:")
         if not all_paths_in_one:
 
             for idx, path in enumerate(self._paths, start=1):
@@ -407,6 +406,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
                     else "RED"
                 )
                 cfg_to_dot(self.cfg, config, filename)
+            print("-" * 100)
         else:
             bbs_to_highlight = []
 

@@ -91,6 +91,9 @@ class DetectorClassification(ComparableEnum):
 
     UNIMPLEMENTED = 999
 
+    def __str__(self) -> str:
+        return self.name.title()
+
 
 classification_txt = {
     DetectorClassification.OPTIMIZATION: "Optimization",

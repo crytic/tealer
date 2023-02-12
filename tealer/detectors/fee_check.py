@@ -14,7 +14,10 @@ from tealer.teal.instructions.instructions import (
     Txn,
 )
 from tealer.teal.instructions.transaction_field import Fee
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations,
+    detector_terminal_description,
+)
 from tealer.utils.algorand_constants import MAX_TRANSACTION_COST
 
 if TYPE_CHECKING:
@@ -117,8 +120,8 @@ Validate `Fee` field in the LogicSig.
             self.teal.bbs[0], checks_field
         )
 
-        description = "Lack of fee check allows draining the funds of sender account,"
-        description += "contract account or signer of delegate contract."
+        description = detector_terminal_description(self)
+
         filename = "missing_fee_check"
 
         return self.generate_result(paths_without_check, description, filename)

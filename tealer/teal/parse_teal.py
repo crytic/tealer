@@ -475,7 +475,6 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
     stateless_ins: List[Instruction] = []
     error = False
 
-    print("\nchecking instruction, field versions with contract version\n")
     for ins in ins_list:
         if program_version < ins.version:
             print(
