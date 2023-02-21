@@ -20,6 +20,7 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
 
     NAME = "call-graph"
     HELP = "Export the call graph of contract to a dot file"
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Printer-documentation#call-graph"
 
     def _construct_call_graph(self) -> Dict[str, List[str]]:
         """construct call graph for the contract.

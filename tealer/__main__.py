@@ -63,7 +63,6 @@ To choose printers to run from the available list:
 """
 
 import argparse
-import inspect
 
 import re
 import os
@@ -71,23 +70,26 @@ import sys
 import json
 import logging
 from pathlib import Path
-from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional
+from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional, Union, Sequence
 
-from pkg_resources import iter_entry_points, require  # type: ignore
+from pkg_resources import require  # type: ignore
 
-from tealer.detectors import all_detectors
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
-from tealer.printers import all_printers
+from tealer.exceptions import TealerException
 from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.teal.parse_teal import parse_teal
-from tealer.utils.command_line import output_detectors, output_printers
-from tealer.utils.output import full_cfg_to_dot
 from tealer.utils.algoexplorer import (
     get_application_using_app_id,
     logic_sig_from_contract_account,
     logic_sig_from_txn_id,
 )
-from tealer.exceptions import TealerException
+from tealer.utils.command_line import (
+    get_detectors_and_printers,
+    output_detectors,
+    output_printers,
+    output_to_markdown,
+    output_wiki,
+)
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
@@ -209,13 +211,6 @@ def parse_args(
     )
 
     parser.add_argument(
-        "--print-cfg",
-        nargs="?",
-        help="export cfg in dot format to given file, default full_cfg.dot",
-        const="",
-    )
-
-    parser.add_argument(
         "--network",
         help='Algorand network to fetch the contract from, ("mainnet" or "testnet"). defaults to "mainnet".',
         action="store",
@@ -314,6 +309,12 @@ def parse_args(
     )
 
     parser.add_argument("--debug", help=argparse.SUPPRESS, action="store_true", default=False)
+    parser.add_argument("--markdown", help=argparse.SUPPRESS, action=OutputMarkdown, default=False)
+
+    parser.add_argument(
+        "--wiki-detectors", help=argparse.SUPPRESS, action=OutputWiki, default=False
+    )
+
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -357,101 +358,32 @@ class ListPrinters(argparse.Action):  # pylint: disable=too-few-public-methods
         parser.exit()
 
 
-def collect_plugins() -> Tuple[List[Type[AbstractDetector]], List[Type[AbstractPrinter]]]:
-    """collect detectors and printers installed in form of plugins.
-
-    plugins are collected using the entry point group `teal_analyzer.plugin`.
-    The entry point of each plugin has to return tuple containing list of detectors and
-    list of printers defined in the plugin when called.
-
-    Returns:
-        (Tuple[List[Type[AbstractDetector]], List[Type[AbstractPrinter]]]): detectors and
-        printers added in the form of plugins.
-
-    """
-    detector_classes: List[Type[AbstractDetector]] = []
-    printer_classes: List[Type[AbstractPrinter]] = []
-    for entry_point in iter_entry_points(group="teal_analyzer.plugin", name=None):
-        make_plugin = entry_point.load()
-
-        plugin_detectors, plugin_printers = make_plugin()
-        detector = None
-        if not all(issubclass(detector, AbstractDetector) for detector in plugin_detectors):
-            raise TealerException(
-                f"Error when loading plugin {entry_point}, {detector} is not a detector"
-            )
-        printer = None
-        if not all(issubclass(printer, AbstractPrinter) for printer in plugin_printers):
-            raise TealerException(
-                f"Error when loading plugin {entry_point}, {printer} is not a printer"
-            )
-
-        detector_classes += plugin_detectors
-        printer_classes += plugin_printers
-
-    return detector_classes, printer_classes
+class OutputMarkdown(argparse.Action):  # pylint: disable=too-few-public-methods
+    def __call__(
+        self,
+        parser: Any,
+        args: Any,
+        values: Optional[Union[str, Sequence[Any]]],
+        option_string: Any = None,
+    ) -> None:
+        detectors, printers = get_detectors_and_printers()
+        assert isinstance(values, str)
+        output_to_markdown(detectors, printers, values)
+        parser.exit()
 
 
-# from slither: slither/__main__.py
-def get_detectors_and_printers() -> Tuple[
-    List[Type[AbstractDetector]], List[Type[AbstractPrinter]]
-]:
-    """Get list of detectors and printers available to tealer.
-
-    Detectors, Printers are considered available to tealer either if they
-    are defined in the tealer itself or if they are defined in one of the
-    tealer plugins installed in the system.
-
-    Returns:
-        list of detectors, list of printers defined in tealer and plugins
-        combined.
-    """
-
-    detector_classes = [getattr(all_detectors, name) for name in dir(all_detectors)]
-    detector_classes = [
-        d for d in detector_classes if inspect.isclass(d) and issubclass(d, AbstractDetector)
-    ]
-
-    printer_classes = [getattr(all_printers, name) for name in dir(all_printers)]
-    printer_classes = [
-        d for d in printer_classes if inspect.isclass(d) and issubclass(d, AbstractPrinter)
-    ]
-
-    plugins_detectors, plugins_printers = collect_plugins()
-
-    detector_classes += plugins_detectors
-    printer_classes += plugins_printers
-
-    return detector_classes, printer_classes
-
-
-def handle_print_cfg(args: argparse.Namespace, teal: "Teal") -> None:
-    """Util function to handle print cfg command line argument.
-
-    This function is invoked when command line argument ``--print-cfg``
-    is used by the user to export the CFG of the contract in dot format.
-
-    Args:
-        args: Namespace object representing the command line arguments selected
-            by the user.
-        teal: Teal object representing the contract being analyzed.
-    """
-
-    filename = f"{teal.contract_name}_full_cfg.dot"
-    if args.print_cfg:
-        filename = args.print_cfg
-
-    if not filename.endswith(".dot"):
-        filename += ".dot"
-
-    file_path = Path(args.dest) / Path(filename)
-    print(f"\nCFG exported to file: {file_path}")
-    full_cfg_to_dot(teal.bbs, filename=file_path)
-    # Don't generate CFG of subroutines by default (?). suggest to use subroutine-cfg printer
-    # all_subroutines_to_dot(teal, Path(args.dest))
-    print(
-        "\nNote: Use `subroutine-cfg` printer to generate CFG of subroutines and shortened version of contract CFG"
-    )
+class OutputWiki(argparse.Action):  # pylint: disable=too-few-public-methods
+    def __call__(
+        self,
+        parser: Any,
+        args: Any,
+        values: Optional[Union[str, Sequence[Any]]],
+        option_string: Any = None,
+    ) -> None:
+        detectors, _ = get_detectors_and_printers()
+        assert isinstance(values, str)
+        output_wiki(detectors, values)
+        parser.exit()
 
 
 def handle_detectors_and_printers(
@@ -596,10 +528,6 @@ def main() -> None:
     try:
         contract_source = fetch_contract(args)
         teal = parse_teal(contract_source)
-
-        if args.print_cfg is not None:
-            handle_print_cfg(args, teal)
-            return
 
         results_detectors, _results_printers = handle_detectors_and_printers(
             args, teal, detector_classes, printer_classes

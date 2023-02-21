@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional, TYPE_CHECKING
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.utils.output import CFGDotConfig, cfg_to_dot
+from tealer.utils.output import CFGDotConfig, full_cfg_to_dot
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -20,6 +20,7 @@ class PrinterTransactionContext(AbstractPrinter):  # pylint: disable=too-few-pub
     NAME = "transaction-context"
     # TODO: Add TxnType, Sender, RekeyTo, CloseRemainderTo, AssetCloseTo field values
     HELP = "Output possible values of GroupIndices, GroupSize"
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Printer-documentation#transaction-context"
 
     @staticmethod
     def _repr_num_list(values: List[int]) -> str:
@@ -70,5 +71,5 @@ class PrinterTransactionContext(AbstractPrinter):  # pylint: disable=too-few-pub
 
         config = CFGDotConfig()
         config.bb_additional_comments = get_info
-        cfg_to_dot(self.teal.bbs, config, filename)
+        full_cfg_to_dot(self.teal.bbs, config, filename)
         print(f"\nExported CFG with transaction context information to {filename}")

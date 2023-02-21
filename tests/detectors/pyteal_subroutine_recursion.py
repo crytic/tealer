@@ -1,7 +1,7 @@
 # pylint: skip-file
 # mypy: ignore-errors
 from pyteal import *  # pylint: disable=wildcard-import, unused-wildcard-import
-from tealer.detectors.all_detectors import CanUpdate
+from tealer.detectors.all_detectors import IsUpdatable
 
 # Basic recursion
 @Subroutine(TealType.uint64)  # type: ignore[misc]
@@ -211,12 +211,12 @@ all_patterns_paths = [
 
 
 subroutine_recursion_patterns_tests = [
-    (basic_recursion_teal, CanUpdate, basic_recursion_paths),
-    (multiple_recursion_teal, CanUpdate, multiple_recursion_paths),
-    (loop_in_subroutine_teal, CanUpdate, loop_in_subroutine_paths),
-    (loop_and_recursion_teal, CanUpdate, loop_and_recursion_paths),
-    (multiple_calls_to_same_sub_teal, CanUpdate, multiple_calls_to_same_sub_paths),
-    (all_patterns_teal, CanUpdate, all_patterns_paths),
+    (basic_recursion_teal, IsUpdatable, basic_recursion_paths),
+    (multiple_recursion_teal, IsUpdatable, multiple_recursion_paths),
+    (loop_in_subroutine_teal, IsUpdatable, loop_in_subroutine_paths),
+    (loop_and_recursion_teal, IsUpdatable, loop_and_recursion_paths),
+    (multiple_calls_to_same_sub_teal, IsUpdatable, multiple_calls_to_same_sub_paths),
+    (all_patterns_teal, IsUpdatable, all_patterns_paths),
 ]
 
 if __name__ == "__main__":

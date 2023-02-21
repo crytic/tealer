@@ -8,7 +8,10 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations,
+    detector_terminal_description,
+)
 from tealer.utils.teal_enums import TealerTransactionType
 
 if TYPE_CHECKING:
@@ -29,33 +32,48 @@ class CanCloseAsset(AbstractDetector):  # pylint: disable=too-few-public-methods
     transaction("return 1") and doesn't check the AssetCloseTo field.
     """
 
-    NAME = "canCloseAsset"
-    DESCRIPTION = "Detect paths that can close the asset holdings of the sender"
+    NAME = "can-close-asset"
+    DESCRIPTION = "Missing AssetCloseTo Field Validation"
     TYPE = DetectorType.STATELESS
 
     IMPACT = DetectorClassification.HIGH
     CONFIDENCE = DetectorClassification.HIGH
 
-    WIKI_TITLE = "Can Close Asset"
-    WIKI_DESCRIPTION = "Detect paths that can close the asset holdings of the sender"
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-assetcloseto-field-validation"
+    WIKI_TITLE = "Missing AssetCloseTo Field Validation"
+    WIKI_DESCRIPTION = (
+        "LogicSig does not validate `AssetCloseTo` field."
+        " Attacker can submit a transaction with `AssetCloseTo` field set to their address and steal account's assets."
+        " More at [building-secure-contracts/not-so-smart-contracts/algorand/closing_asset]"
+        "(https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/algorand/closing_asset)"
+    )
     WIKI_EXPLOIT_SCENARIO = """
-```
-#pragma version 2
-txn Receiver
-addr BAZ7SJR2DVKCO6EHLLPXT7FRSYHNCZ35UTQD6K2FI4VALM2SSFIWTBZCTA
-==
-txn AssetAmount
-int 10
-==
-&&
-...
+```py
+def withdraw(...) -> Expr:
+    return Seq(
+        [
+            Assert(
+                And(
+                    Txn.type_enum() == TxnType.AssetTransfer,
+                    Txn.first_valid() % period == Int(0),
+                    Txn.last_valid() == Txn.first_valid() + duration,
+                    Txn.asset_receiver() == receiver,
+                    Txn.asset_amount() == amount,
+                    Txn.first_valid() < timeout,
+                )
+            ),
+            Approve(),
+        ]
+    )
 ```
 
-receiver sets the AssetCloseTo transaction field of a Asset Transfer Transaction with above contract account as Sender which will result in removal of asset holding from the contract's account and sending the asset's to AssetCloseTo address.
+Alice signs the logic-sig to allow recurring payments to Bob in USDC.\
+ Eve uses the logic-sig and submits a valid transaction with `AssetCloseTo` field set to her address.\
+ Eve steals Alice's USDC balance.
 """
 
     WIKI_RECOMMENDATION = """
-Always check that AssetCloseTo transaction field is set to a ZeroAddress or intended address if needed.
+Validate `AssetCloseTo` field in the LogicSig.
 """
 
     def detect(self) -> "SupportedOutput":
@@ -80,8 +98,8 @@ Always check that AssetCloseTo transaction field is set to a ZeroAddress or inte
             self.teal.bbs[0], checks_field
         )
 
-        description = "Lack of AssetCloseTo check allows to close the asset holdings"
-        description += " of the account."
+        description = detector_terminal_description(self)
+
         filename = "can_close_asset"
 
         return self.generate_result(paths_without_check, description, filename)

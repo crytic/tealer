@@ -14,7 +14,10 @@ from tealer.teal.instructions.instructions import (
     Txn,
 )
 from tealer.teal.instructions.transaction_field import Fee
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations,
+    detector_terminal_description,
+)
 from tealer.utils.algorand_constants import MAX_TRANSACTION_COST
 
 if TYPE_CHECKING:
@@ -53,35 +56,50 @@ class MissingFeeCheck(AbstractDetector):  # pylint: disable=too-few-public-metho
     transaction("return 1") and doesn't check the Fee field.
     """
 
-    NAME = "feeCheck"
-    DESCRIPTION = "Detect paths with a missing Fee check"
+    NAME = "missing-fee-check"
+    DESCRIPTION = "Missing Fee Field Validation"
     TYPE = DetectorType.STATELESS
 
     IMPACT = DetectorClassification.HIGH
     CONFIDENCE = DetectorClassification.HIGH
 
-    WIKI_TITLE = "Missing Fee check"
-    WIKI_DESCRIPTION = "Detect paths with a missing Fee check"
+    WIKI_URL = (
+        "https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-fee-field-validation"
+    )
+    WIKI_TITLE = "Missing Fee Field Validation"
+    WIKI_DESCRIPTION = (
+        "LogicSig does not validate `Fee` field."
+        " Attacker can submit a transaction with `Fee` field set to large value and drain the account balance."
+        " More at [building-secure-contracts/not-so-smart-contracts/algorand/unchecked_transaction_fee]"
+        "(https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/algorand/unchecked_transaction_fee)"
+    )
     WIKI_EXPLOIT_SCENARIO = """
-```
-#pragma version 2
-txn Receiver
-addr BAZ7SJR2DVKCO6EHLLPXT7FRSYHNCZ35UTQD6K2FI4VALM2SSFIWTBZCTA
-==
-txn Amount
-int 1000000
-==
-&&
-...
+```py
+def withdraw(...) -> Expr:
+    return Seq(
+        [
+            Assert(
+                And(
+                    Txn.type_enum() == TxnType.Payment,
+                    Txn.first_valid() % period == Int(0),
+                    Txn.last_valid() == Txn.first_valid() + duration,
+                    Txn.receiver() == receiver,
+                    Txn.amount() == amount,
+                    Txn.first_valid() < timeout,
+                )
+            ),
+            Approve(),
+        ]
+    )
 ```
 
-Above stateless contract could be used to allow witdraw certain amount by a predefined receiver. if the contract doesn't check the transaction fee, the receiver who turns out be malicious could set it to a high value and drain the
-balance of the account that signed the contract as the fee will be deducted from that account.
-
+Alice signs the logic-sig to allow recurring payments to Bob.\
+ Eve uses the logic-sig and submits a valid transaction with `Fee` set to 1 million ALGOs.\
+ Alice loses 1 million ALGOs.
 """
 
     WIKI_RECOMMENDATION = """
-Always check that transaction fee which can be accessed using `txn Fee` in Teal is less than certain limit and fail if that's not the case.
+Validate `Fee` field in the LogicSig.
 """
 
     def detect(self) -> "SupportedOutput":
@@ -102,8 +120,8 @@ Always check that transaction fee which can be accessed using `txn Fee` in Teal 
             self.teal.bbs[0], checks_field
         )
 
-        description = "Lack of fee check allows draining the funds of sender account,"
-        description += "contract account or signer of delegate contract."
+        description = detector_terminal_description(self)
+
         filename = "missing_fee_check"
 
         return self.generate_result(paths_without_check, description, filename)

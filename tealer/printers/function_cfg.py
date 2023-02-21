@@ -30,7 +30,8 @@ class PrinterFunctionCFG(AbstractPrinter):  # pylint: disable=too-few-public-met
     """
 
     NAME = "subroutine-cfg"
-    HELP = "Export cfgs of each subroutine defined in the contract."
+    HELP = "Export the CFG of each subroutine"
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Printer-documentation#subroutine-cfg"
 
     def print(self, dest: Optional[Path] = None) -> None:
         """Export CFG of each subroutine defined in the contract.

@@ -2,7 +2,7 @@
 # mypy: ignore-errors
 from pyteal import *  # pylint: disable=wildcard-import, unused-wildcard-import
 
-from tealer.detectors.all_detectors import CanUpdate
+from tealer.detectors.all_detectors import IsUpdatable
 
 router = Router(
     name="Test",
@@ -178,12 +178,12 @@ method_returns_using_approve_2_program_paths = [
 ]
 
 multiple_calls_to_subroutine_tests = [
-    (working_approval_program, CanUpdate, working_approval_program_paths),
-    (false_negative_program, CanUpdate, false_negative_program_paths),
-    (method_returns_using_approve_program, CanUpdate, method_returns_using_approve_program_paths),
+    (working_approval_program, IsUpdatable, working_approval_program_paths),
+    (false_negative_program, IsUpdatable, false_negative_program_paths),
+    (method_returns_using_approve_program, IsUpdatable, method_returns_using_approve_program_paths),
     (
         method_returns_using_approve_2_program,
-        CanUpdate,
+        IsUpdatable,
         method_returns_using_approve_2_program_paths,
     ),
 ]
