@@ -5,7 +5,7 @@ and display different types of output formats used by tealer detectors
 and printers.
 
 Functions:
-    cfg_to_dot(bbs: List[BasicBlock], config: Optional[CFGDotConfig]=None, filename: Optional[Path]=None) -> None:
+    full_cfg_to_dot(bbs: List[BasicBlock], config: Optional[CFGDotConfig]=None, filename: Optional[Path]=None) -> None:
         Exports dot representation of CFG represented by :bbs: in
         dot format to given filename.
 

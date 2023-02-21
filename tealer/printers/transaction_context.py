@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional, TYPE_CHECKING
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.utils.output import CFGDotConfig, cfg_to_dot
+from tealer.utils.output import CFGDotConfig, full_cfg_to_dot, all_subroutines_to_dot
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -60,8 +60,11 @@ class PrinterTransactionContext(AbstractPrinter):  # pylint: disable=too-few-pub
         """
 
         filename = Path("transaction-context.dot")
-        if dest is not None:
-            filename = dest / filename
+        if dest is None:
+            # TODO: Change default directory to `tealer-export`
+            dest = Path(".")
+
+        filename = dest / filename
 
         def get_info(bb: "BasicBlock") -> List[str]:
             group_indices_str = self._repr_num_list(bb.transaction_context.group_indices)
@@ -70,5 +73,10 @@ class PrinterTransactionContext(AbstractPrinter):  # pylint: disable=too-few-pub
 
         config = CFGDotConfig()
         config.bb_additional_comments = get_info
-        cfg_to_dot(self.teal.bbs, config, filename)
+        # generate a Full CFG with all group-size, group-index comments
+        full_cfg_to_dot(self.teal.bbs, config, filename)
+        # Also generate shortened CFGs with group-size and group-index comments.
+        all_subroutines_to_dot(
+            self.teal, dest, config, "txn_ctx"
+        )  # set prefix differentiate from other printers
         print(f"\nExported CFG with transaction context information to {filename}")
