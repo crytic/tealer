@@ -8,25 +8,26 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.global_field import GroupSize
-from tealer.teal.instructions.instructions import Return, Int, Global
+from tealer.teal.instructions.instructions import (
+    Gtxn,
+    Gtxna,
+    Gtxnas,
+    Gtxns,
+    Gtxnsa,
+    Gtxnsas,
+)
 from tealer.teal.teal import Teal
+from tealer.utils.algorand_constants import MAX_GROUP_SIZE
+from tealer.utils.analyses import is_int_push_ins
+from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, UnknownStackValue
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
+    from tealer.teal.instructions.instructions import Instruction
 
 
 class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-methods
-    """Detector to find execution paths missing GroupSize check.
-
-    Algorand supports atomic transactions. Atomic transactions are a
-    group of transactions with the property that either all execute
-    successfully or None of them. It is necessary to check the group size
-    of the transaction based on the application.
-
-    This detector tries to find execution paths that approve the algorand
-    transaction("return 1") and doesn't check the CloseRemainderTo field.
-    """
+    """Detector to find execution paths using absoulte index without checking group size."""
 
     NAME = "group-size-check"
     DESCRIPTION = "Usage of absolute indexes without validating GroupSize"
@@ -80,12 +81,45 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
         super().__init__(teal)
         self.results_number = 0
 
+    @staticmethod
+    def _accessed_using_absolute_index(bb: BasicBlock) -> bool:
+        """Return True if a instruction in bb access a field using absolute index
+
+        a. gtxn t f, gtxna t f i, gtxnas t f,
+        b. gtxns f, gtxnsa f i, gtxnsas f
+
+        Instructions in (a) take transaction index as a immediate argument.
+        Return True if bb contains any one of those instructions.
+
+        Instructions in (b) take transaction index from the stack.
+        `gtxns f` and `gtxnsa f i` take only one argument and it is the transaction index.
+        `gtxnsas f` takes two arguments and transaction index is the first argument.
+        Return True if the transaction index is pushed by an int instruction.
+        """
+        stack_gtxns_ins: List["Instruction"] = []
+        for ins in bb.instructions:
+            if isinstance(ins, (Gtxn, Gtxna, Gtxnas)):
+                return True
+            if isinstance(ins, (Gtxns, Gtxnsa, Gtxnsas)):
+                stack_gtxns_ins.append(ins)
+        if not stack_gtxns_ins:
+            return False
+        ast_values = construct_stack_ast(bb)
+        for ins in stack_gtxns_ins:
+            index_value = ast_values[ins].args[0]
+            if isinstance(index_value, UnknownStackValue):
+                continue
+            is_int, _ = is_int_push_ins(index_value.instruction)
+            if is_int:
+                return True
+        return False
+
     def _check_groupsize(
         self,
         bb: BasicBlock,
         current_path: List[BasicBlock],
-        # use_gtnx: bool,
         paths_without_check: List[List[BasicBlock]],
+        used_abs_index: bool,
     ) -> None:
         """Find execution paths with missing GroupSize check.
 
@@ -103,30 +137,29 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
                 Execution paths with missing GroupSize check. This is a
                 "in place" argument. Vulnerable paths found by this function are
                 appended to this list.
+            used_abs_index: Should be True if absolute index in `current_path`.
         """
 
         # check for loops
         if bb in current_path:
             return
 
+        if MAX_GROUP_SIZE not in bb.transaction_context.group_sizes:
+            # GroupSize is checked
+            return
+
+        if not used_abs_index:
+            used_abs_index = self._accessed_using_absolute_index(bb)
+
         current_path = current_path + [bb]
-        for ins in bb.instructions:
-
-            if isinstance(ins, Global):
-                if isinstance(ins.field, GroupSize):
-                    return
-
-            if isinstance(ins, Return):
-                if len(ins.prev) == 1:
-                    prev = ins.prev[0]
-                    if isinstance(prev, Int):
-                        if prev.value == 0:
-                            return
-
+        if not bb.next:
+            # leaf block
+            if used_abs_index:
+                # accessed a field using absolute index in this path.
                 paths_without_check.append(current_path)
-
+            return
         for next_bb in bb.next:
-            self._check_groupsize(next_bb, current_path, paths_without_check)
+            self._check_groupsize(next_bb, current_path, paths_without_check, used_abs_index)
 
     def detect(self) -> "SupportedOutput":
         """Detect execution paths with missing GroupSize check.
@@ -138,9 +171,13 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
         """
 
         paths_without_check: List[List[BasicBlock]] = []
-        self._check_groupsize(self.teal.bbs[0], [], paths_without_check)
+        self._check_groupsize(self.teal.bbs[0], [], paths_without_check, False)
 
-        description = "Lack of groupSize check found"
+        description = (
+            "Uses absolute indices to validate group transaction without checking the group size"
+        )
         filename = "missing_group_size"
 
-        return self.generate_result(paths_without_check, description, filename)
+        results = self.generate_result(paths_without_check, description, filename)
+        construct_stack_ast.cache_clear()
+        return results

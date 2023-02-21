@@ -64,6 +64,8 @@ To choose printers to run from the available list:
 
 import argparse
 import inspect
+
+import os
 import re
 import sys
 import json
@@ -123,7 +125,7 @@ def choose_detectors(
     detectors_to_run = []
     detectors = {d.NAME: d for d in all_detector_classes}
 
-    if args.detectors_to_run == "all":
+    if args.detectors_to_run is None:
         detectors_to_run = all_detector_classes
     else:
         for detector in args.detectors_to_run.split(","):
@@ -243,7 +245,7 @@ def parse_args(
         f"available detectors: {available_detectors}",
         action="store",
         dest="detectors_to_run",
-        default="all",
+        default=None,
     )
 
     group_detector.add_argument(
@@ -591,6 +593,22 @@ def main() -> None:
 
     detector_classes = choose_detectors(args, detector_classes)
     printer_classes = choose_printers(args, printer_classes)
+
+    # if a printer is ran using --print ... don't run all detectors.
+    # e.g tealer .. --print x,y
+    # => printers are selected and none of the detectors are selected explicitly.
+    # In above don't run any of the detectors.
+    # if detectors are selected explicitly, run those detectors only.
+    # e.g tealer .. --detect a,b --print x,y
+    # => run a,b detectors and printers x, y
+    if args.printers_to_run is not None and args.detectors_to_run is None:
+        # --print is used and --detect is not used.
+        detector_classes = []
+
+    if args.dest != ".":
+        # if output destination directory is not current directory.
+        # create dest directory if is not present
+        os.makedirs(args.dest, exist_ok=True)
 
     results_detectors: List["SupportedOutput"] = []
     _results_printers: List = []
