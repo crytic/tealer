@@ -64,11 +64,10 @@ To choose printers to run from the available list:
 
 import argparse
 import inspect
-
+import json
 import os
 import re
 import sys
-import json
 from pathlib import Path
 from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional, Union, Sequence
 
@@ -76,22 +75,21 @@ from pkg_resources import iter_entry_points, require  # type: ignore
 
 from tealer.detectors import all_detectors
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
+from tealer.exceptions import TealerException
 from tealer.printers import all_printers
 from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.teal.parse_teal import parse_teal
+from tealer.utils.algoexplorer import (
+    get_application_using_app_id,
+    logic_sig_from_contract_account,
+    logic_sig_from_txn_id,
+)
 from tealer.utils.command_line import (
     output_detectors,
     output_printers,
     output_to_markdown,
     output_wiki,
 )
-from tealer.utils.output import cfg_to_dot
-from tealer.utils.algoexplorer import (
-    get_application_using_app_id,
-    logic_sig_from_contract_account,
-    logic_sig_from_txn_id,
-)
-from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
@@ -210,13 +208,6 @@ def parse_args(
         help="displays the current version",
         version=require("tealer")[0].version,
         action="version",
-    )
-
-    parser.add_argument(
-        "--print-cfg",
-        nargs="?",
-        help="export cfg in dot format to given file, default cfg.dot",
-        const="cfg.dot",
     )
 
     parser.add_argument(
@@ -462,27 +453,6 @@ def get_detectors_and_printers() -> Tuple[
     return detector_classes, printer_classes
 
 
-def handle_print_cfg(args: argparse.Namespace, teal: "Teal") -> None:
-    """Util function to handle print cfg command line argument.
-
-    This function is invoked when command line argument ``--print-cfg``
-    is used by the user to export the CFG of the contract in dot format.
-
-    Args:
-        args: Namespace object representing the command line arguments selected
-            by the user.
-        teal: Teal object representing the contract being analyzed.
-    """
-
-    filename = args.print_cfg
-    if not filename.endswith(".dot"):
-        filename += ".dot"
-
-    filename = Path(args.dest) / Path(filename)
-    print(f"\nCFG exported to file: {filename}")
-    cfg_to_dot(teal.bbs, filename=filename)
-
-
 def handle_detectors_and_printers(
     args: argparse.Namespace,
     teal: "Teal",
@@ -616,10 +586,6 @@ def main() -> None:
     try:
         contract_source = fetch_contract(args)
         teal = parse_teal(contract_source)
-
-        if args.print_cfg is not None:
-            handle_print_cfg(args, teal)
-            return
 
         results_detectors, _results_printers = handle_detectors_and_printers(
             args, teal, detector_classes, printer_classes
