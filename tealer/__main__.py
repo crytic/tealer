@@ -64,11 +64,13 @@ To choose printers to run from the available list:
 
 import argparse
 import inspect
+
+import os
 import re
 import sys
 import json
 from pathlib import Path
-from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional
+from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional, Union, Sequence
 
 from pkg_resources import iter_entry_points, require  # type: ignore
 
@@ -77,7 +79,13 @@ from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.printers import all_printers
 from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.teal.parse_teal import parse_teal
-from tealer.utils.command_line import output_detectors, output_printers
+from tealer.utils.command_line import (
+    output_detectors,
+    output_printers,
+    output_to_markdown,
+    output_wiki,
+)
+from tealer.utils.output import cfg_to_dot
 from tealer.utils.algoexplorer import (
     get_application_using_app_id,
     logic_sig_from_contract_account,
@@ -117,7 +125,7 @@ def choose_detectors(
     detectors_to_run = []
     detectors = {d.NAME: d for d in all_detector_classes}
 
-    if args.detectors_to_run == "all":
+    if args.detectors_to_run is None:
         detectors_to_run = all_detector_classes
     else:
         for detector in args.detectors_to_run.split(","):
@@ -230,7 +238,7 @@ def parse_args(
         f"available detectors: {available_detectors}",
         action="store",
         dest="detectors_to_run",
-        default="all",
+        default=None,
     )
 
     group_detector.add_argument(
@@ -302,6 +310,12 @@ def parse_args(
         default=".",
     )
 
+    parser.add_argument("--markdown", help=argparse.SUPPRESS, action=OutputMarkdown, default=False)
+
+    parser.add_argument(
+        "--wiki-detectors", help=argparse.SUPPRESS, action=OutputWiki, default=False
+    )
+
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -342,6 +356,34 @@ class ListPrinters(argparse.Action):  # pylint: disable=too-few-public-methods
     ) -> None:  # pylint: disable=signature-differs
         _, printers = get_detectors_and_printers()
         output_printers(printers)
+        parser.exit()
+
+
+class OutputMarkdown(argparse.Action):  # pylint: disable=too-few-public-methods
+    def __call__(
+        self,
+        parser: Any,
+        args: Any,
+        values: Optional[Union[str, Sequence[Any]]],
+        option_string: Any = None,
+    ) -> None:
+        detectors, printers = get_detectors_and_printers()
+        assert isinstance(values, str)
+        output_to_markdown(detectors, printers, values)
+        parser.exit()
+
+
+class OutputWiki(argparse.Action):  # pylint: disable=too-few-public-methods
+    def __call__(
+        self,
+        parser: Any,
+        args: Any,
+        values: Optional[Union[str, Sequence[Any]]],
+        option_string: Any = None,
+    ) -> None:
+        detectors, _ = get_detectors_and_printers()
+        assert isinstance(values, str)
+        output_wiki(detectors, values)
         parser.exit()
 
 
@@ -523,6 +565,22 @@ def main() -> None:
 
     detector_classes = choose_detectors(args, detector_classes)
     printer_classes = choose_printers(args, printer_classes)
+
+    # if a printer is ran using --print ... don't run all detectors.
+    # e.g tealer .. --print x,y
+    # => printers are selected and none of the detectors are selected explicitly.
+    # In above don't run any of the detectors.
+    # if detectors are selected explicitly, run those detectors only.
+    # e.g tealer .. --detect a,b --print x,y
+    # => run a,b detectors and printers x, y
+    if args.printers_to_run is not None and args.detectors_to_run is None:
+        # --print is used and --detect is not used.
+        detector_classes = []
+
+    if args.dest != ".":
+        # if output destination directory is not current directory.
+        # create dest directory if is not present
+        os.makedirs(args.dest, exist_ok=True)
 
     results_detectors: List["SupportedOutput"] = []
     _results_printers: List = []

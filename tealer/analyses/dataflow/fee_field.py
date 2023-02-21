@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 FEE_KEY = "Fee"
 
 
+# TODO: Change is_unknown to unknown/known/unbounded enum.
 @dataclass
 class FeeValue:
     is_unknown: bool = False  # max(unknown_value) == MAX_TRANSACTION_COST
