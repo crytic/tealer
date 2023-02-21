@@ -20,6 +20,7 @@ Types:
 """
 
 import html
+import re
 from pathlib import Path
 from typing import List, TYPE_CHECKING, Dict, Callable, Optional
 from dataclasses import dataclass
@@ -424,6 +425,22 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
     def help(self, h: str) -> None:
         self._help = h
 
+    @staticmethod
+    def _short_notation(path_bbs: List["BasicBlock"]) -> str:
+        """Return short notation representation of path"""
+        return " -> ".join(map(str, [bb.idx for bb in path_bbs]))
+
+    def filter_paths(self, filter_regex: str) -> None:
+        if filter_regex == "":
+            return
+        filtered_paths: List[List["BasicBlock"]] = []
+        for path in self._paths:
+            if re.search(filter_regex, self._short_notation(path)) is None:
+                # short notation does not contain string matching the regex
+                filtered_paths.append(path)
+        self._paths = filtered_paths
+        return
+
     def write_to_files(self, dest: Path, all_paths_in_one: bool = False) -> None:
         """Export execution paths to dot files.
 
@@ -453,7 +470,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
 
             for idx, path in enumerate(self._paths, start=1):
 
-                short = " -> ".join(map(str, [bb.idx for bb in path]))
+                short = self._short_notation(path)
                 print(f"\n\t\t path: {short}")
 
                 filename = dest / Path(f"{self._filename}_{idx}.dot")
@@ -469,7 +486,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
             bbs_to_highlight = []
 
             for path in self._paths:
-                short = " -> ".join(map(str, [bb.idx for bb in path]))
+                short = self._short_notation(path)
                 print(f"\t\t path: {short}")
                 for bb in path:
                     if bb not in bbs_to_highlight:

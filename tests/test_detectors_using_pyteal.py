@@ -17,6 +17,9 @@ from tests.detectors.router_with_assembled_constants import (  # pylint: disable
 from tests.detectors.pyteal_can_close import (  # pylint: disable=wrong-import-position
     txn_type_based_tests,
 )
+from tests.detectors.pyteal_group_size import (  # pylint: disable=wrong-import-position
+    group_size_tests_pyteal,
+)
 
 from tests.detectors.pyteal_subroutine_recursion import (  # pylint: disable=wrong-import-position
     subroutine_recursion_patterns_tests,
@@ -29,6 +32,7 @@ from tests.detectors.multiple_calls_to_subroutine import (  # pylint: disable=wr
 TESTS: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     *router_with_assembled_constants,
     *txn_type_based_tests,
+    *group_size_tests_pyteal,
     *subroutine_recursion_patterns_tests,
     *multiple_calls_to_subroutine_tests,
 ]

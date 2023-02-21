@@ -3,9 +3,8 @@
 from pyteal import *  # pylint: disable=wildcard-import, unused-wildcard-import
 
 from pyteal import *
-from typing import Literal
 
-from tealer.detectors.all_detectors import CanUpdate, CanDelete
+from tealer.detectors.all_detectors import IsUpdatable, IsDeletable
 
 router = Router(
     name="Example",
@@ -96,6 +95,6 @@ approval_program, clear_state_program, contract = router.compile_program(
 )
 
 router_with_assembled_constants = [
-    (approval_program, CanUpdate, []),
-    (approval_program, CanDelete, []),
+    (approval_program, IsUpdatable, []),
+    (approval_program, IsDeletable, []),
 ]
