@@ -63,7 +63,6 @@ To choose printers to run from the available list:
 """
 
 import argparse
-import inspect
 import os
 import re
 import sys
