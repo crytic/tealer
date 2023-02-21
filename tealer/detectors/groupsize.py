@@ -17,9 +17,11 @@ from tealer.teal.instructions.instructions import (
     Gtxnsas,
 )
 from tealer.teal.teal import Teal
+
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 from tealer.utils.analyses import is_int_push_ins
 from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, UnknownStackValue
+from tealer.detectors.utils import detector_terminal_description
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
@@ -173,9 +175,7 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
         paths_without_check: List[List[BasicBlock]] = []
         self._check_groupsize(self.teal.bbs[0], [], paths_without_check, False)
 
-        description = (
-            "Uses absolute indices to validate group transaction without checking the group size"
-        )
+        description = detector_terminal_description(self)
         filename = "missing_group_size"
 
         results = self.generate_result(paths_without_check, description, filename)

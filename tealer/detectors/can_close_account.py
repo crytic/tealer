@@ -8,7 +8,10 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations,
+    detector_terminal_description,
+)
 from tealer.utils.teal_enums import TealerTransactionType
 
 if TYPE_CHECKING:
@@ -95,8 +98,7 @@ Validate `CloseRemainderTo` field in the LogicSig.
             self.teal.bbs[0], checks_field
         )
 
-        description = "Lack of CloseRemainderTo check allows to close the account and"
-        description += " transfer all the funds to attacker controlled address."
+        description = detector_terminal_description(self)
 
         filename = "can_close_account"
 

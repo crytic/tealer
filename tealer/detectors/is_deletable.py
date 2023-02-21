@@ -8,7 +8,10 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations,
+    detector_terminal_description,
+)
 from tealer.utils.teal_enums import TealerTransactionType
 
 if TYPE_CHECKING:
@@ -74,8 +77,8 @@ Do not approve `DeleteApplication` type application calls.
             self.teal.bbs[0], checks_field
         )
 
-        description = "Lack of txn OnCompletion == int DeleteApplication check allows to"
-        description += " delete the application."
+        description = detector_terminal_description(self)
+
         filename = "is_deletable"
 
         return self.generate_result(paths_without_check, description, filename)
