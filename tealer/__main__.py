@@ -64,11 +64,10 @@ To choose printers to run from the available list:
 
 import argparse
 import inspect
-
+import json
 import os
 import re
 import sys
-import json
 from pathlib import Path
 from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional, Union, Sequence
 
@@ -76,22 +75,21 @@ from pkg_resources import iter_entry_points, require  # type: ignore
 
 from tealer.detectors import all_detectors
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
+from tealer.exceptions import TealerException
 from tealer.printers import all_printers
 from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.teal.parse_teal import parse_teal
+from tealer.utils.algoexplorer import (
+    get_application_using_app_id,
+    logic_sig_from_contract_account,
+    logic_sig_from_txn_id,
+)
 from tealer.utils.command_line import (
     output_detectors,
     output_printers,
     output_to_markdown,
     output_wiki,
 )
-from tealer.utils.output import cfg_to_dot
-from tealer.utils.algoexplorer import (
-    get_application_using_app_id,
-    logic_sig_from_contract_account,
-    logic_sig_from_txn_id,
-)
-from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
