@@ -27,9 +27,11 @@ contract represented by sequence of the basic blocks.
 
 import inspect
 import sys
+import logging
 from typing import Optional, Dict, List, Tuple
 
 from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.subroutine import Subroutine
 from tealer.teal.instructions.instructions import (
     Instruction,
     Label,
@@ -60,6 +62,10 @@ from tealer.analyses.dataflow import all_constraints
 from tealer.analyses.dataflow.generic import DataflowTransactionContext
 from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, compute_equations
 from tealer.utils.arc4_abi import get_method_selector
+
+
+logger_parsing = logging.getLogger("Parsing")
+logging.basicConfig()
 
 
 def _detect_contract_type(instructions: List[Instruction]) -> ContractType:
@@ -270,6 +276,8 @@ def _first_pass(  # pylint: disable=too-many-branches
         call = None
         if isinstance(ins, Callsub):
             call = ins
+            if call.label not in rets.keys():
+                rets[call.label] = []
 
         # Finally, add the instruction to the instruction list
         instructions.append(ins)
@@ -297,7 +305,7 @@ def _second_pass(  # pylint: disable=too-many-branches
         rets: Dict map from teal label string of a subroutine to list of it's
             return point instructions.
     """
-
+    logger_parsing.debug("Second Pass")
     # Second pass over the instructions list: Add instruction links for jumps
     for ins in instructions:
 
@@ -317,7 +325,7 @@ def _second_pass(  # pylint: disable=too-many-branches
     for subroutine in rets:
         label = labels[subroutine]
         retsubs[subroutine] = []
-
+        logger_parsing.debug(f"    Label = {label}")
         # use dfs to find all retsub instructions starting from subroutine label instruction
         stack: List[Instruction] = []
         visited: List[Instruction] = []
@@ -325,21 +333,26 @@ def _second_pass(  # pylint: disable=too-many-branches
         stack.append(label)
         while len(stack) > 0:
             ins = stack.pop()
+            logger_parsing.debug(f"     Ins = {ins}")
             visited.append(ins)
 
             if isinstance(ins, Retsub):
                 retsubs[subroutine].append(ins)
                 continue
 
-            for next_ins in ins.next:
-                # don't follow callsub path, which initself is another subroutine
-                if isinstance(next_ins, Callsub):
-                    if next_ins.return_point is None:
-                        continue
-                    next_ins = next_ins.return_point
-
+            if isinstance(ins, Callsub):
+                # don't follow callsub path, which in itself is another subroutine
+                if ins.return_point is None:
+                    continue
+                next_ins = ins.return_point
                 if next_ins not in visited:
                     stack.append(next_ins)
+            else:
+                for next_ins in ins.next:
+                    logger_parsing.debug(f"     next_ins = {next_ins}")
+
+                    if next_ins not in visited:
+                        stack.append(next_ins)
 
     # link retsub to return points
     for subroutine in rets:
@@ -413,7 +426,7 @@ def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
     return bbs
 
 
-def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
+def _identify_subroutine_blocks(entry_block: "BasicBlock") -> List["BasicBlock"]:
     """find all the basic blocks part of a subroutine given it's label instruction.
 
     Args:
@@ -421,19 +434,14 @@ def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
         bbs (List["BasicBlock"]): CFG of the contract.
 
     Returns:
+        "BasicBlock": Entry block of the subroutine.
         List["BasicBlock"]: list of all basic blocks part of a subroutine.
     """
-
-    if label.bb is None:
-        return []
-
-    # add tealer comment "Subroutine: {label}" to the subroutine entry block
-    label.bb.tealer_comments.append(f"Subroutine {label.label}")
 
     subroutines_blocks: List["BasicBlock"] = []
     stack: List["BasicBlock"] = []
 
-    stack.append(label.bb)
+    stack.append(entry_block)
     while len(stack) > 0:
         bb = stack.pop()
         subroutines_blocks.append(bb)
@@ -569,7 +577,9 @@ def _fill_intc_bytec_info(
         teal.set_byte_constants(bytecblock_ins[0].constants)
 
 
-def parse_teal(source_code: str) -> Teal:
+def parse_teal(  # pylint: disable=too-many-locals
+    source_code: str, contract_name: str = ""
+) -> Teal:
     """Parse algorand smart contracts written in teal.
 
     Parsing teal cotracts consists of four passes:
@@ -600,8 +610,11 @@ def parse_teal(source_code: str) -> Teal:
     lines = source_code.splitlines()
 
     intcblock_ins, bytecblock_ins = _first_pass(lines, labels, rets, instructions)
+    logger_parsing.debug(f"rets = {rets}")
     _second_pass(instructions, labels, rets)
-
+    logger_parsing.debug("instruction and nexts")
+    for ins in instructions:
+        logger_parsing.debug(f"     {ins}, next: {ins.next}")
     # Third pass over the instructions list: Construct the basic blocks and sequential links
     all_bbs: List[BasicBlock] = []
     create_bb(instructions, all_bbs)
@@ -617,13 +630,26 @@ def parse_teal(source_code: str) -> Teal:
 
     _verify_version(instructions, version)
 
-    subroutines = []
+    subroutines: Dict[str, "Subroutine"] = {}
     if version >= 4:
         for subroutine_label in rets:
             label_ins = labels[subroutine_label]
-            subroutines.append(_identify_subroutine_blocks(label_ins))
+            if label_ins.bb is None:
+                # TODO: Move the `is None` check to `Instruction.bb` property.
+                continue
+            subroutine_entry_block = label_ins.bb
+            # add tealer comment "Subroutine: {label}" to the subroutine entry block
+            subroutine_entry_block.tealer_comments.append(f"Subroutine {subroutine_label}")
 
-    teal = Teal(instructions, all_bbs, version, mode, subroutines)
+            subroutine_blocks = _identify_subroutine_blocks(subroutine_entry_block)
+            subroutines[subroutine_label] = Subroutine(
+                subroutine_label, subroutine_entry_block, subroutine_blocks
+            )
+
+    main_entry_point_blocks = _identify_subroutine_blocks(all_bbs[0])
+    main_program_name = ""
+    main_program = Subroutine(main_program_name, all_bbs[0], main_entry_point_blocks)
+    teal = Teal(instructions, all_bbs, version, mode, main_program, subroutines)
 
     # set teal instance to it's basic blocks
     for bb in teal.bbs:
@@ -631,6 +657,10 @@ def parse_teal(source_code: str) -> Teal:
         # Add tealer comment of cost and id
         bb.tealer_comments.insert(0, f"block_id = {bb.idx}; cost = {bb.cost}")
 
+    for subroutine in [main_program] + teal.subroutines_list:
+        subroutine.contract = teal
+
+    teal.contract_name = contract_name
     _fill_intc_bytec_info(intcblock_ins, bytecblock_ins, all_bbs[0], teal)
     _apply_transaction_context_analysis(teal)
 

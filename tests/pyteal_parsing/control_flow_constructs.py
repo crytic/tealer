@@ -134,3 +134,6 @@ control_flow_ap = compileTeal(
     version=7,
     optimize=OptimizeOptions(scratch_slots=True),
 )
+
+if __name__ == "__main__":
+    print(control_flow_ap)

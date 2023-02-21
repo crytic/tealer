@@ -1,0 +1,99 @@
+#pragma version 7
+txna ApplicationArgs 0
+method "create()void"
+==
+bnz main_l8
+txna ApplicationArgs 0
+method "update_application()void"
+==
+bnz main_l7
+txna ApplicationArgs 0
+method "delete_application()void"
+==
+bnz main_l6
+txna ApplicationArgs 0
+method "hello()void"
+==
+bnz main_l5
+err
+main_l5:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+callsub hello_5
+int 1
+return
+main_l6:
+txn OnCompletion
+int DeleteApplication
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+callsub deleteapplication_3
+int 1
+return
+main_l7:
+txn OnCompletion
+int UpdateApplication
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+callsub updateapplication_2
+int 1
+return
+main_l8:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+==
+&&
+assert
+callsub create_1
+int 1
+return
+
+// is_creator
+iscreator_0:
+txn Sender
+global CreatorAddress
+==
+assert
+retsub
+
+// create
+create_1:
+retsub
+
+// update_application
+updateapplication_2:
+callsub iscreator_0
+retsub
+
+// delete_application
+deleteapplication_3:
+callsub iscreator_0
+retsub
+
+// greet
+greet_4:
+byte "Hello"
+log
+retsub
+
+// hello
+hello_5:
+callsub greet_4
+retsub

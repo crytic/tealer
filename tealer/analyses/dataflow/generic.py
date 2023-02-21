@@ -225,6 +225,7 @@ if any of equation in Or(<1>, ...) is UnknownStackValue then `true_values` for O
 
 
 from abc import ABC, abstractmethod
+import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Set
 
 from tealer.teal.instructions.instructions import (
@@ -257,6 +258,12 @@ if TYPE_CHECKING:
 
 class IncorrectDataflowTransactionContextInitialization(Exception):
     pass
+
+
+logger_txn_ctx = logging.getLogger("TransactionCtxAnalysis")
+logging.basicConfig(level=logging.DEBUG)
+
+debug_keys = ["TransactionType"]
 
 
 class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
@@ -635,7 +642,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         for next_b in block.next:
             livein_information = self._union(key, livein_information, liveout[next_b])
 
-        if block.sub_return_point is not None:
+        if block.sub_return_point is not None and len(block.sub_return_point.prev) != 0:
             # this block is the `callsub block` and `block.sub_return_point` is the block that will be executed after subroutine.
             livein_information = self._intersection(
                 key, livein_information, liveout[block.sub_return_point]
@@ -717,6 +724,13 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         for block in self._teal.bbs:
             self._block_level_constraints(all_keys, block)  # initialise information for all keys
             self._path_level_constraints(all_keys, block)
+            for debug_key in debug_keys:
+                if debug_key in self.BASE_KEYS:
+                    logger_txn_ctx.debug(f"Debug key: {debug_key}")
+                    logger_txn_ctx.debug(f"block: B{block.idx}:\n {block}")
+                    logger_txn_ctx.debug(f"block_ctx: {self._block_contexts[debug_key][block]}")
+                    logger_txn_ctx.debug("\n\n")
+                    logger_txn_ctx.debug(f"path_context: {self._path_contexts[debug_key]}")
 
         postorder = self._postorder(self._entry_block)
 
@@ -727,8 +741,22 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         worklist = postorder[::-1]  # Reverse postorder
         self.forward_analyis(analysis_keys, worklist)
 
+        logger_txn_ctx.debug("After Forward:")
+        for debug_key in debug_keys:
+            for block in self._teal.bbs:
+                if debug_key in self.BASE_KEYS:
+                    logger_txn_ctx.debug(f"block_id: B{block.idx}")
+                    logger_txn_ctx.debug(f"block_ctx: {self._block_contexts[debug_key][block]}")
+
         worklist = [b for b in postorder if len(b.next) != 0]  # postorder, exclude leaf blocks
         self.backward_analysis(analysis_keys, worklist)
+
+        logger_txn_ctx.debug("After Backward:")
+        for debug_key in debug_keys:
+            for block in self._teal.bbs:
+                if debug_key in self.BASE_KEYS:
+                    logger_txn_ctx.debug(f"block_id: B{block.idx}")
+                    logger_txn_ctx.debug(f"block_ctx: {self._block_contexts[debug_key][block]}")
 
         # update gtxn constraints using possible group indices and txn constraints.
         for block in self._teal.bbs:

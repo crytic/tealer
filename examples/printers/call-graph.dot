@@ -1,0 +1,17 @@
+digraph g{
+methodc_5[label=methodc_5];
+methodb_4[label=methodb_4];
+methoda_3[label=methoda_3];
+recursivesubroutine_1[label=recursivesubroutine_1];
+mysubroutine_0[label=mysubroutine_0];
+mainsubroutine_2[label=mainsubroutine_2];
+__entry__[label=__entry__];
+methodb_4 -> mainsubroutine_2;
+methoda_3 -> mysubroutine_0;
+recursivesubroutine_1 -> recursivesubroutine_1;
+mainsubroutine_2 -> mysubroutine_0;
+mainsubroutine_2 -> recursivesubroutine_1;
+__entry__ -> methoda_3;
+__entry__ -> methodb_4;
+__entry__ -> methodc_5;
+}
