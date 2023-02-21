@@ -39,6 +39,7 @@ def is_int_push_ins(ins: Instruction) -> Tuple[bool, Optional[Union[int, str]]]:
         is_known, value = teal.get_int_constant(ins.index)
         if is_known:
             return True, value
+        return True, None
     return False, None
 
 
@@ -54,6 +55,7 @@ def is_byte_push_ins(ins: Instruction) -> Tuple[bool, Optional[str]]:
         is_known, value = teal.get_byte_constant(ins.index)
         if is_known:
             return True, value
+        return True, None
     return False, None
 
 
