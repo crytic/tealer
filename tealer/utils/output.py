@@ -460,6 +460,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         print(self.description)
         if len(self.paths) == 0:
             print("\tDetector didn't find any vulnerable paths.")
+            print("-" * 100)
             return
         # cfg_to_dot config
         config = CFGDotConfig()

@@ -1,0 +1,38 @@
+#pragma version 7
+txna ApplicationArgs 0
+method "method_foo_bar()void"
+==
+bnz main_l2
+err
+main_l2:
+txn OnCompletion
+int NoOp
+==
+assert
+callsub methodfoobar_1
+int 1
+return
+
+// foo_bar
+foobar_0:
+store 0
+load 0
+int 2
+%
+int 0
+==
+bnz foobar_0_l2
+byte "Bar"
+log
+b foobar_0_l3
+foobar_0_l2:
+byte "Foo"
+log
+foobar_0_l3:
+retsub
+
+// method_foo_bar
+methodfoobar_1:
+int 0
+callsub foobar_0
+retsub
