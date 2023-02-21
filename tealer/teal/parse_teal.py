@@ -47,6 +47,7 @@ from tealer.teal.instructions.instructions import (
     Intcblock,
     Bytecblock,
     Txn,
+    Method,
 )
 from tealer.teal.instructions.instructions import ContractType
 from tealer.teal.instructions.parse_instruction import parse_line, ParseError
@@ -59,6 +60,7 @@ from tealer.teal.teal import Teal
 from tealer.analyses.dataflow import all_constraints
 from tealer.analyses.dataflow.generic import DataflowTransactionContext
 from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, compute_equations
+from tealer.utils.arc4_abi import get_method_selector
 
 
 def _detect_contract_type(instructions: List[Instruction]) -> ContractType:
@@ -157,8 +159,12 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> Non
 
 def _add_instruction_comments(ins: Instruction) -> None:
     if isinstance(ins, Txn) and isinstance(ins.field, ApplicationID):
-        # A example. TODO: remove if unnecessary
         ins.tealer_comments.append("ApplicationID is 0 in Creation Txn")
+    elif isinstance(ins, Method):
+        method_signature = ins.method_signature
+        method_signature.strip('"')  # quotes are not removed while parsing
+        method_selector = get_method_selector(method_signature)
+        ins.tealer_comments.append(f"method-selector: {method_selector}")
 
 
 def _first_pass(  # pylint: disable=too-many-branches
