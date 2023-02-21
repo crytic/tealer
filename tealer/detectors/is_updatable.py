@@ -8,7 +8,10 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations,
+    detector_terminal_description,
+)
 from tealer.utils.teal_enums import TealerTransactionType
 
 if TYPE_CHECKING:
@@ -31,45 +34,30 @@ class IsUpdatable(AbstractDetector):  # pylint: disable=too-few-public-methods
     transaction is not UpdateApplication are excluded.
     """
 
-    NAME = "isUpdatable"
-    DESCRIPTION = "Detect paths that can update the application"
+    NAME = "is-updatable"
+    DESCRIPTION = "Upgradable Applications"
     TYPE = DetectorType.STATEFULL
 
     IMPACT = DetectorClassification.HIGH
     CONFIDENCE = DetectorClassification.HIGH
 
-    WIKI_TITLE = "Can Update Application"
-    WIKI_DESCRIPTION = "Detect paths that can update the application"
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Detector-Documentation#upgradable-application"
+    WIKI_TITLE = "Upgradable Application"
+    WIKI_DESCRIPTION = (
+        "Application can be updated by sending an `UpdateApplication` type application call."
+    )
     WIKI_EXPLOIT_SCENARIO = """
-```
-#pragma version 5
-...
-int NoOp
-txn OnCompletion
-==
-bnz handle_noop
-return 1 // return sucess for all other transaction types
-handle_noop:
-    ...
+```py
+@router.method(update_application=CallConfig.CALL)
+def update_application() -> Expr:
+    return Assert(Txn.sender() == Global.creator_address())
 ```
 
-Algorand supports multiple types of application transactions. All types of application transactions execute the application
-and fail if the execution fails. Additional to application execution, each application transaction type will result in different
-operations before or after the application execution. This operations will be reverted if the approval program execution fails.
-
-One of the application transaction type is UpdateApplication which
-```
-After executing the ApprovalProgram, replace the ApprovalProgram and ClearStateProgram associated with this application ID with the programs specified in this transaction.
-```
-
-Ability to execute UpdateApplication transaction will give complete control of application code, which controls all the assets held by the application.
-
-Attacker sends a UpdateApplication transaction with the new approval program which transfers all the application assets to attacker's address using inner transaction.
+Creator updates the application and steals all of its assets.
 """
 
     WIKI_RECOMMENDATION = """
-Teal stores type of application transaction in `OnCompletion` transaction field, which can be accessed using `txn OnCompletion`.
-Check if `txn OnCompletion == int UpdateApplication` and do appropriate actions based on the need.
+Do not approve `UpdateApplication` type application calls.
 """
 
     def detect(self) -> "SupportedOutput":
@@ -90,8 +78,7 @@ Check if `txn OnCompletion == int UpdateApplication` and do appropriate actions 
             self.teal.bbs[0], checks_field
         )
 
-        description = "Lack of txn OnCompletion == int UpdateApplication check allows to"
-        description += " update the application's approval and clear programs."
+        description = detector_terminal_description(self)
 
         filename = "is_updatable"
         return self.generate_result(paths_without_check, description, filename)

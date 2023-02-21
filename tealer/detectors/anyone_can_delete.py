@@ -8,8 +8,12 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations,
+    detector_terminal_description,
+)
 from tealer.utils.teal_enums import TealerTransactionType
+
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
@@ -28,46 +32,33 @@ class AnyoneCanDelete(AbstractDetector):  # pylint: disable=too-few-public-metho
         - Transaction sender can be any address.
     """
 
-    NAME = "anyoneCanDelete"
-    DESCRIPTION = (
-        "Detect paths missing validations on sender field AND allows to delete the application."
-    )
+    NAME = "unprotected-deletable"
+    DESCRIPTION = "Unprotected Deletable Applications"
     TYPE = DetectorType.STATEFULL
 
     IMPACT = DetectorClassification.HIGH
     CONFIDENCE = DetectorClassification.HIGH
 
-    WIKI_TITLE = "Anyone Can Delete Application"
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Detector-Documentation#unprotected-deletable-application"
+    WIKI_TITLE = "Unprotected Deletable Application"
     WIKI_DESCRIPTION = (
-        "Detect paths missing validations on sender field AND allows to delete the application."
+        "Application can be deleted by anyone. "
+        "More at [building-secure-contracts/not-so-smart-contracts/algorand/access_controls]"
+        "(https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/algorand/access_controls)."
     )
-    WIKI_EXPLOIT_SCENARIO = """
+    WIKI_EXPLOIT_SCENARIO = """\
 ```py
-@router.method(no_op=CallConfig.CALL, delete_application=CallConfig.CALL)
-def remove_user():
-    return Seq([
-        App.localDel(Txn.sender(), "balance"),
-        Return(Int(1))
-    ])
+@router.method(delete_application=CallConfig.CALL)
+def delete_application() -> Expr:
+    return Approve()
 ```
 
-Algorand supports multiple types of application transactions. All types of application transactions execute the application
-and fail if the execution fails. Based on the application type, AVM performs additional operations on the application.
-
-Additional operations for DeleteApplication type transaction is 
-```
-After executing the ApprovalProgram, delete the application parameters from the account data of the application's creator.
-```
-
-There should be proper access controls protecting the execution paths/methods approving DeleteApplication type transactions.
-
-Exploitation:
-    Attacker submits a DeleteApplication type transaction to "remove_user" method. Application parameters are deleted from the creator's
-    account and application assets became inaccesible.
+Eve calls `delete_application` method and deletes the application making its assets permanently inaccesible.
 """
 
     WIKI_RECOMMENDATION = """
-Place proper access controls for privileged methods. One approach is to validate transaction sender is equal to a privileged address(admin) in the system.
+- Avoid deletable applications.
+- Add access controls to the vulnerable method.
 """
 
     def detect(self) -> "SupportedOutput":
@@ -91,9 +82,7 @@ Place proper access controls for privileged methods. One approach is to validate
             self.teal.bbs[0], checks_field
         )
 
-        description = (
-            "Lack of access controls on methods approving a DeleteApplication transaction."
-        )
+        description = detector_terminal_description(self)
         filename = "anyone_can_delete"
 
         return self.generate_result(paths_without_check, description, filename)

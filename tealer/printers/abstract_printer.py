@@ -52,6 +52,7 @@ class AbstractPrinter(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public-
 
     NAME = ""
     HELP = ""
+    WIKI_URL = ""
 
     def __init__(self, teal: "Teal"):
         self.teal = teal
@@ -64,6 +65,11 @@ class AbstractPrinter(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public-
         if not self.HELP:
             raise IncorrectPrinterInitialization(
                 f"HELP is not initialized {self.__class__.__name__}"
+            )
+
+        if not self.WIKI_URL:
+            raise IncorrectPrinterInitialization(
+                f"WIKI_URL is not initialized for {self.__class__.__name__}"
             )
 
     @abc.abstractmethod

@@ -20,6 +20,7 @@ class PrinterTransactionContext(AbstractPrinter):  # pylint: disable=too-few-pub
     NAME = "transaction-context"
     # TODO: Add TxnType, Sender, RekeyTo, CloseRemainderTo, AssetCloseTo field values
     HELP = "Output possible values of GroupIndices, GroupSize"
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Printer-documentation#transaction-context"
 
     @staticmethod
     def _repr_num_list(values: List[int]) -> str:

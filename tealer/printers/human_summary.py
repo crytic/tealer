@@ -26,7 +26,8 @@ class PrinterHumanSummary(AbstractPrinter):
     """Printer to print summary of the contract"""
 
     NAME = "human-summary"
-    HELP = "Print a human-readable summary of the contracts"
+    HELP = "Print a human-readable summary of the contract"
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Printer-documentation#human-summary"
 
     def _is_complex_code(self) -> str:
         """Check whether contract code is complex or not.

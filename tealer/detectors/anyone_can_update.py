@@ -8,7 +8,10 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations,
+    detector_terminal_description,
+)
 from tealer.utils.teal_enums import TealerTransactionType
 
 if TYPE_CHECKING:
@@ -28,46 +31,33 @@ class AnyoneCanUpdate(AbstractDetector):  # pylint: disable=too-few-public-metho
         - Transaction sender can be any address.
     """
 
-    NAME = "anyoneCanUpdate"
-    DESCRIPTION = (
-        "Detect paths missing validations on sender field AND allows to update the application."
-    )
+    NAME = "unprotected-updatable"
+    DESCRIPTION = "Unprotected Upgradable Applications"
     TYPE = DetectorType.STATEFULL
 
     IMPACT = DetectorClassification.HIGH
     CONFIDENCE = DetectorClassification.HIGH
 
-    WIKI_TITLE = "Anyone Can Update Application"
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Detector-Documentation#unprotected-updatable-application"
+    WIKI_TITLE = "Unprotected Upgradable Application"
     WIKI_DESCRIPTION = (
-        "Detect paths missing validations on sender field AND allows to update the application."
+        "Application can be updated by anyone. "
+        "More at [building-secure-contracts/not-so-smart-contracts/algorand/access_controls]"
+        "(https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/algorand/access_controls)."
     )
     WIKI_EXPLOIT_SCENARIO = """
 ```py
-@router.method(no_op=CallConfig.CALL, update_application=CallConfig.CALL)
-def update_balance():
-    return Seq([
-        App.localPut(Txn.sender(), "key", Int(1000)),
-        Return(Int(1))
-    ])
+@router.method(update_application=CallConfig.CALL)
+def update_application() -> Expr:
+    return Approve()
 ```
 
-Algorand supports multiple types of application transactions. All types of application transactions execute the application
-and fail if the execution fails. Based on the application type, AVM performs additional operations on the application.
-
-Additional operations for UpdateApplication type transaction is 
-```
-After executing the ApprovalProgram, replace the ApprovalProgram and ClearStateProgram associated with this application ID with the programs specified in this transaction.
-```
-
-Ability to execute UpdateApplication transaction will give complete control of application code, which controls all the assets held by the application. There should be proper
-access controls protecting the execution paths/methods approving UpdateApplication type transactions.
-
-Exploitation:
-    Attacker sends a UpdateApplication transaction with the new approval program which transfers all of the application's assets to attacker's address.
+Eve updates the application by calling `update_application` method and steals all of its assets.
 """
 
     WIKI_RECOMMENDATION = """
-Place proper access controls for privileged methods. One approach is to validate the transaction sender: Assert it is equal to a privileged address(admin) in the system.
+- Avoid upgradable applications.
+- Add access controls to the vulnerable method.
 """
 
     def detect(self) -> "SupportedOutput":
@@ -91,9 +81,7 @@ Place proper access controls for privileged methods. One approach is to validate
             self.teal.bbs[0], checks_field
         )
 
-        description = (
-            "Lack of access controls on methods approving a UpdateApplication transaction."
-        )
+        description = detector_terminal_description(self)
 
         filename = "anyone_can_update"
         return self.generate_result(paths_without_check, description, filename)
