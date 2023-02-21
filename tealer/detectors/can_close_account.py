@@ -29,37 +29,48 @@ class CanCloseAccount(AbstractDetector):  # pylint: disable=too-few-public-metho
     transaction("return 1") and doesn't check the CloseRemainderTo field.
     """
 
-    NAME = "canCloseAccount"
-    DESCRIPTION = "Detect paths that can close out the sender account"
+    NAME = "can-close-account"
+    DESCRIPTION = "Missing CloseRemainderTo field Validation"
     TYPE = DetectorType.STATELESS
 
     IMPACT = DetectorClassification.HIGH
     CONFIDENCE = DetectorClassification.HIGH
 
-    WIKI_TITLE = "Can Close Account"
-    WIKI_DESCRIPTION = "Detect paths that can close out the sender account"
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-closeremainderto-field-validation"
+    WIKI_TITLE = "Missing CloseRemainderTo Field Validation"
+    WIKI_DESCRIPTION = (
+        "LogicSig does not validate `CloseRemainderTo` field."
+        " Attacker can submit a transaction with `CloseRemainderTo` field set to their address and steal all of account's ALGOs."
+        " More at [building-secure-contracts/not-so-smart-contracts/algorand/closing_account]"
+        "(https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/algorand/closing_account)"
+    )
     WIKI_EXPLOIT_SCENARIO = """
-```
-#pragma version 2
-txn Receiver
-addr BAZ7SJR2DVKCO6EHLLPXT7FRSYHNCZ35UTQD6K2FI4VALM2SSFIWTBZCTA
-==
-txn Receiver
-addr GDN6PPITDEXNCQ2BS2DUKVDPJZM7K6LKO6QBWP2US555NUE4Q5TY7HAVSQ
-==
-||
-txn Amount
-int 1000000
-==
-&&
-...
+```py
+def withdraw(...) -> Expr:
+    return Seq(
+        [
+            Assert(
+                And(
+                    Txn.type_enum() == TxnType.Payment,
+                    Txn.first_valid() % period == Int(0),
+                    Txn.last_valid() == Txn.first_valid() + duration,
+                    Txn.receiver() == receiver,
+                    Txn.amount() == amount,
+                    Txn.first_valid() < timeout,
+                )
+            ),
+            Approve(),
+        ]
+    )
 ```
 
-if one of the receiver turns out to be malicious, they could set the CloseRemainderTo field to their address, which when the transaction is successful will result in transfer of all remaining funds of sender to the CloseRemainderTo address.
+Alice signs the logic-sig to allow recurring payments to Bob.\
+ Eve uses the logic-sig and submits a valid transaction with `CloseRemainderTo` field set to her address.\
+ Eve steals Alice's ALGO balance.
 """
 
     WIKI_RECOMMENDATION = """
-Always check that CloseRemainderTo transaction field is set to a ZeroAddress or intended address if needed. 
+Validate `CloseRemainderTo` field in the LogicSig.
 """
 
     def detect(self) -> "SupportedOutput":

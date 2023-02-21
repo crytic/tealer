@@ -29,15 +29,24 @@ if TYPE_CHECKING:
 class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-methods
     """Detector to find execution paths using absoulte index without checking group size."""
 
-    NAME = "groupSize"
-    DESCRIPTION = "Detect paths using absolute indexes to validate group transaction without checking the group size"
-    TYPE = DetectorType.STATEFULLGROUP
+    NAME = "group-size-check"
+    DESCRIPTION = "Usage of absolute indexes without validating GroupSize"
+    TYPE = DetectorType.STATELESS_AND_STATEFULL
 
-    IMPACT = DetectorClassification.MEDIUM
+    IMPACT = DetectorClassification.HIGH
     CONFIDENCE = DetectorClassification.HIGH
 
-    WIKI_TITLE = "Missing GroupSize check"
-    WIKI_DESCRIPTION = "Detect paths using absolute indexes to validate group transaction without checking the group size"
+    WIKI_URL = (
+        "https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-groupsize-validation"
+    )
+    WIKI_TITLE = "Missing GroupSize Validation"
+    WIKI_DESCRIPTION = (
+        "Contract's execution depends on multiple transactions in the group"
+        " and it uses absolute index to access information of other transactions in the group."
+        " Attacker can exploit the contract by abusing the lack of validations on `GroupSize`."
+        " More at [building-secure-contracts/not-so-smart-contracts/algorand/group_size_check]"
+        "(https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/algorand/group_size_check)"
+    )
     WIKI_EXPLOIT_SCENARIO = """
 ```py
 def mint_wrapped_algo() -> Expr:
@@ -51,20 +60,21 @@ def mint_wrapped_algo() -> Expr:
     return Seq([validations, transfer_op, Approve()])
 ```
 
-Attacker sends following group transaction:
-    0. Payment of 1 million Algos to application address
-    1. Call mint_wrapped_algo
-    2. Call mint_wrapped_algo 
-    ...
-    15. Call mint_wrapped_algo
+Eve sends the following group transaction:
+```
+0. Payment of 1 million ALGOs to application address
+1. Call mint_wrapped_algo
+2. Call mint_wrapped_algo 
+...
+15. Call mint_wrapped_algo
+```
 
-Attacker receives 15 million wrapped-algos instead of 1 million wrapped-algos. Attacker exchanges the\
-wrapped-algo to Algo and steals 14 million Algos.
-
-More at [building-secure-contracts/not-so-smart-contracts/algorand/group_size_check](https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/algorand/group_size_check)
+Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
+ Eve exchanges the Wrapped-algo to ALGO and steals 14 million ALGOs.
 """
     WIKI_RECOMMENDATION = """
-Use ARC-4 ABI and relative indexes to verify the group transaction.
+- Avoid using absolute indexes. Validate GroupSize if used.
+- Favor using ARC-4 ABI and relative indexes for group transactions.
 """
 
     def __init__(self, teal: Teal):
