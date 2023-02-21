@@ -430,11 +430,11 @@ def test_intc_bytec_false(test: str) -> None:
     teal = parse_teal(test)
     for ins in teal.instructions:
         if isinstance(ins, IntcInstruction):
-            is_known, _ = is_int_push_ins(ins)
-            assert not is_known
+            is_int, value = is_int_push_ins(ins)
+            assert is_int and value is None
 
     teal = parse_teal(test.replace("intc", "bytec"))
     for ins in teal.instructions:
         if isinstance(ins, BytecInstruction):
-            is_known, _ = is_byte_push_ins(ins)
-            assert not is_known
+            is_bytes, value = is_byte_push_ins(ins)
+            assert is_bytes and value is None
