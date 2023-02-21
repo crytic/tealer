@@ -1,48 +1,61 @@
+"""Defines classes to represent app_params_get fields.
+
+``app_params_get`` instruction is used to access parameter fields
+of an application in the contract.
+
+Each field that can be accessed using app_params_get is represented
+by a class in tealer. All the classes representing the fields must
+inherit from AppParamsField class.
+
+"""
+
 # pylint: disable=too-few-public-methods
 class AppParamsField:
-    pass
+    """Base class to represent App fields."""
+
+    def __init__(self) -> None:
+        self._version: int = 5
+
+    @property
+    def version(self) -> int:
+        """Teal version this field is introduced in and supported from."""
+        return self._version
+
+    def __str__(self) -> str:
+        return self.__class__.__qualname__
 
 
 class AppApprovalProgram(AppParamsField):
-    def __str__(self) -> str:
-        return "AppApprovalProgram"
+    """Bytecode of approval program of the App."""
 
 
 class AppClearStateProgram(AppParamsField):
-    def __str__(self) -> str:
-        return "AppClearStateProgram"
+    """Bytecode of clear state program of the App."""
 
 
 class AppGlobalNumUint(AppParamsField):
-    def __str__(self) -> str:
-        return "AppGlobalNumUint"
+    """Number of uint64 values allowed in Global State."""
 
 
 class AppGlobalNumByteSlice(AppParamsField):
-    def __str__(self) -> str:
-        return "AppGlobalNumByteSlice"
+    """Number of byte array values allowed in Global State."""
 
 
 class AppLocalNumUint(AppParamsField):
-    def __str__(self) -> str:
-        return "AppLocalNumUint"
+    """Number of uint64 values allowed in Local State."""
 
 
 class AppLocalNumByteSlice(AppParamsField):
-    def __str__(self) -> str:
-        return "AppLocalNumByteSlice"
+    """Number of byte array values allowed in Local State."""
 
 
 class AppExtraProgramPages(AppParamsField):
-    def __str__(self) -> str:
-        return "AppExtraProgramPages"
+    """Number of extra program pages of code space."""
 
 
 class AppCreator(AppParamsField):
-    def __str__(self) -> str:
-        return "AppCreator"
+    """Address of Creator(deployer) of the application."""
 
 
 class AppAddress(AppParamsField):
-    def __str__(self) -> str:
-        return "AppAddress"
+    """Address for which this application has authority."""

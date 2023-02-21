@@ -1,0 +1,83 @@
+#pragma version 7
+// new ecdsa curve: ecdsa_verify v, v can be Secp256r1 from Teal v7
+
+ecdsa_verify Secp256r1
+
+// new transaction field: FirstValidTime, NumApprovalProgramPages, NumClearStateProgramPages
+
+txn FirstValidTime
+gtxn 0 FirstValidTime
+
+txn NumApprovalProgramPages
+gtxn 0 NumApprovalProgramPages 
+
+txn NumClearStateProgramPages
+gtxn 0 NumClearStateProgramPages
+
+// new array transaction fields: ApprovalProgramPages, ClearStateProgramPages
+
+txna ApprovalProgramPages 0
+txna ClearStateProgramPages 0
+
+gtxna 1 ApprovalProgramPages 0
+gtxna 2 ClearStateProgramPages 1
+
+gtxnsa ApprovalProgramPages 0
+gtxnsa ClearStateProgramPages 1
+
+gtxnsas ApprovalProgramPages
+gtxnsas ClearStateProgramPages
+
+
+// new ins: replace2 s
+
+byte "abcd"
+byte "ef"
+replace2 2
+
+// new ins: replace3
+
+byte "abcd"
+int 2
+byte "ef"
+replace3
+
+// new ins: replace
+
+byte "abcd"
+byte "ef"
+replace 2
+
+byte "abcd"
+int 2
+byte "ef"
+replace
+
+
+// new ins: base64_decode e
+
+byte "AAAA"
+base64_decode StdEncoding
+
+// new ins: json_ref r
+json_ref JSONUint64
+
+// new ins: ed25519verify_bare
+byte "A"
+byte "B"
+byte "C"
+ed25519verify_bare
+
+// new_ins: sha3_256
+byte "A"
+sha3_256
+
+// new_ins: vrf_verify s
+byte "A"
+byte "B"
+byte "C"
+vrf_verify VrfAlgorand
+
+// new_ins: block f
+int 100
+block BlkTimestamp

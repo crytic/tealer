@@ -1,0 +1,1166 @@
+// https://algoexplorer.io/application/689168853
+#pragma version 6
+intcblock 1 0 6 4 2 3 8 10 5
+bytecblock 0x6d616e61676572 0x6475624944 0x6e6578744944 0x64756252617465 0x617070726f76616c48617368 0x636c65617248617368 0x6d696e745072696365 0x636f6e74726163744944 0x617070726f76655368697043616c6c 0x636c61696d 0x696e6974 0x6d696e74 0x7075726368617365447562 0x72657665616c
+txn ApplicationID
+// intc_1 // 0
+int 0
+==
+bnz label1
+txn OnCompletion
+// intc 4 // 2
+int 2
+==
+bnz label2
+txn OnCompletion
+// intc 8 // 5
+int 5
+==
+bnz label3
+txn OnCompletion
+// intc_1 // 0
+int 0
+==
+bnz label4
+txn OnCompletion
+// intc_0 // 1
+int 1
+==
+bnz label5
+txn OnCompletion
+// intc_3 // 4
+int 4
+==
+bnz label6
+err
+label6:
+txn Sender
+global CreatorAddress
+==
+assert
+global GroupSize
+// intc_0 // 1
+int 1
+==
+assert
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+// intc_0 // 1
+int 1
+return
+label5:
+txn GroupIndex
+// intc_1 // 0
+int 0
+!=
+assert
+txn GroupIndex
+// intc_0 // 1
+int 1
+-
+store 11
+load 11
+gtxns TypeEnum
+// intc_2 // 6
+int 6
+==
+assert
+load 11
+gtxns ApplicationID
+// intc_1 // 0
+int 0
+==
+assert
+load 11
+gtxns ApprovalProgram
+sha256
+bytec 4 // "approvalHash"
+app_global_get
+==
+assert
+load 11
+gtxns ClearStateProgram
+sha256
+bytec 5 // "clearHash"
+app_global_get
+==
+assert
+load 11
+gtxns GlobalNumByteSlice
+// intc 4 // 2
+int 2
+==
+assert
+load 11
+gtxns GlobalNumUint
+// intc_0 // 1
+int 1
+==
+assert
+load 11
+gtxns LocalNumByteSlice
+// intc_1 // 0
+int 0
+==
+assert
+load 11
+gtxns LocalNumUint
+// intc_1 // 0
+int 0
+==
+assert
+load 11
+gtxns ExtraProgramPages
+// intc_1 // 0
+int 0
+==
+assert
+load 11
+gtxnsa ApplicationArgs 0
+bytec_0 // "manager"
+app_global_get
+==
+assert
+load 11
+gtxnsa ApplicationArgs 1
+global CurrentApplicationAddress
+==
+assert
+load 11
+gtxnsa ApplicationArgs 2
+btoi
+global CurrentApplicationID
+==
+assert
+txn Sender
+bytec 7 // "contractID"
+load 11
+gaids
+app_local_put
+// intc_0 // 1
+int 1
+return
+label4:
+txna ApplicationArgs 0
+bytec 8 // "approveShipCall"
+==
+bnz label7
+txna ApplicationArgs 0
+bytec 9 // "claim"
+==
+bnz label8
+txna ApplicationArgs 0
+bytec 10 // "init"
+==
+bnz label9
+txna ApplicationArgs 0
+bytec 11 // "mint"
+==
+bnz label10
+txna ApplicationArgs 0
+bytec 12 // "purchaseDub"
+==
+bnz label11
+txna ApplicationArgs 0
+bytec 13 // "reveal"
+==
+bnz label12
+txna ApplicationArgs 0
+pushbytes 0x73656e644162616e646f6e656450697261746573 // "sendAbandonedPirates"
+==
+bnz label13
+txna ApplicationArgs 0
+pushbytes 0x757064617465476c6f62616c73 // "updateGlobals"
+==
+bnz label14
+txna ApplicationArgs 0
+pushbytes 0x7769746864726177416c676f // "withdrawAlgo"
+==
+bnz label15
+txna ApplicationArgs 0
+pushbytes 0x7769746864726177447562 // "withdrawDub"
+==
+bnz label16
+err
+label16:
+txn Sender
+global CreatorAddress
+==
+assert
+// intc_0 // 1
+int 1
+store 10
+label18:
+load 10
+txn NumAppArgs
+<
+bnz label17
+// intc_0 // 1
+int 1
+return
+label17:
+load 10
+txnas ApplicationArgs
+btoi
+assert
+itxn_begin
+// intc_3 // 4
+int 4
+itxn_field TypeEnum
+// intc_1 // 0
+int 0
+itxn_field Fee
+bytec_1 // "dubID"
+app_global_get
+itxn_field XferAsset
+load 10
+txnas ApplicationArgs
+btoi
+itxn_field AssetAmount
+load 10
+txnas Accounts
+itxn_field AssetReceiver
+itxn_submit
+load 10
+// intc_0 // 1
+int 1
++
+store 10
+b label18
+label15:
+txn Sender
+global CreatorAddress
+==
+assert
+global GroupSize
+// intc_0 // 1
+int 1
+==
+assert
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+txn NumAppArgs
+// intc 5 // 3
+int 3
+==
+assert
+itxn_begin
+// intc_0 // 1
+int 1
+itxn_field TypeEnum
+// intc_1 // 0
+int 0
+itxn_field Fee
+txna ApplicationArgs 1
+btoi
+itxn_field Amount
+txna ApplicationArgs 2
+itxn_field Receiver
+txn Note
+itxn_field Note
+itxn_submit
+// intc_0 // 1
+int 1
+return
+label14:
+txn Sender
+global CreatorAddress
+==
+assert
+global GroupSize
+// intc_0 // 1
+int 1
+==
+assert
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+txn NumAppArgs
+// intc 6 // 8
+int 8
+==
+assert
+bytec_1 // "dubID"
+txna ApplicationArgs 1
+btoi
+app_global_put
+bytec_2 // "nextID"
+txna ApplicationArgs 2
+btoi
+app_global_put
+bytec_3 // "dubRate"
+txna ApplicationArgs 3
+btoi
+app_global_put
+bytec_0 // "manager"
+txna ApplicationArgs 4
+app_global_put
+bytec 6 // "mintPrice"
+txna ApplicationArgs 5
+btoi
+app_global_put
+bytec 4 // "approvalHash"
+txna ApplicationArgs 6
+app_global_put
+bytec 5 // "clearHash"
+txna ApplicationArgs 7
+app_global_put
+// intc_0 // 1
+int 1
+return
+label13:
+txn Sender
+global CreatorAddress
+==
+assert
+// intc_1 // 0
+int 0
+store 7
+label20:
+load 7
+txn NumAssets
+<
+bnz label19
+// intc_0 // 1
+int 1
+return
+label19:
+load 7
+txnas Assets
+asset_params_get AssetReserve
+store 9
+store 8
+load 8
+global CurrentApplicationAddress
+==
+assert
+itxn_begin
+// intc_3 // 4
+int 4
+itxn_field TypeEnum
+// intc_1 // 0
+int 0
+itxn_field Fee
+load 7
+txnas Assets
+itxn_field XferAsset
+// intc_0 // 1
+int 1
+itxn_field AssetAmount
+load 7
+// intc_0 // 1
+int 1
++
+txnas Accounts
+itxn_field AssetReceiver
+itxn_submit
+load 7
+// intc_0 // 1
+int 1
++
+store 7
+b label20
+label12:
+global GroupSize
+// intc 5 // 3
+int 3
+==
+assert
+gtxn 2 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 0 Sender
+gtxn 1 Sender
+==
+assert
+gtxn 0 TypeEnum
+// intc_3 // 4
+int 4
+==
+assert
+gtxn 0 AssetCloseTo
+global ZeroAddress
+==
+assert
+gtxn 0 XferAsset
+gtxna 1 Assets 0
+==
+assert
+gtxn 0 AssetAmount
+// intc_1 // 0
+int 0
+==
+assert
+gtxn 0 AssetReceiver
+gtxn 0 Sender
+==
+assert
+gtxn 1 TypeEnum
+// intc_2 // 6
+int 6
+==
+assert
+gtxn 1 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 1 OnCompletion
+// intc_1 // 0
+int 0
+==
+assert
+gtxna 1 ApplicationArgs 0
+bytec 13 // "reveal"
+==
+assert
+gtxna 1 Assets 0
+asset_params_get AssetReserve
+store 6
+store 5
+load 5
+gtxn 1 Sender
+==
+assert
+itxn_begin
+// intc_3 // 4
+int 4
+itxn_field TypeEnum
+// intc_1 // 0
+int 0
+itxn_field Fee
+gtxna 1 Assets 0
+itxn_field XferAsset
+// intc_0 // 1
+int 1
+itxn_field AssetAmount
+gtxn 1 Sender
+itxn_field AssetReceiver
+itxn_submit
+gtxn 2 Sender
+bytec_0 // "manager"
+app_global_get
+==
+assert
+gtxn 2 Fee
+// intc_1 // 0
+int 0
+==
+assert
+gtxn 2 TypeEnum
+// intc 5 // 3
+int 3
+==
+assert
+gtxn 2 ConfigAsset
+gtxna 1 Assets 0
+==
+assert
+gtxn 2 ConfigAssetManager
+bytec_0 // "manager"
+app_global_get
+==
+assert
+gtxn 2 ConfigAssetReserve
+global CurrentApplicationAddress
+==
+assert
+// intc_0 // 1
+int 1
+return
+label11:
+global GroupSize
+// intc 4 // 2
+int 2
+==
+assert
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 0 Sender
+gtxn 1 Sender
+==
+assert
+gtxn 0 TypeEnum
+// intc_0 // 1
+int 1
+==
+assert
+gtxn 0 CloseRemainderTo
+global ZeroAddress
+==
+assert
+gtxn 0 Amount
+// intc_0 // 1
+int 1
+>=
+assert
+gtxn 0 Receiver
+global CreatorAddress
+==
+assert
+gtxn 1 TypeEnum
+// intc_2 // 6
+int 6
+==
+assert
+gtxn 1 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 1 OnCompletion
+// intc_1 // 0
+int 0
+==
+assert
+gtxna 1 ApplicationArgs 0
+bytec 12 // "purchaseDub"
+==
+assert
+gtxn 0 Amount
+bytec_3 // "dubRate"
+app_global_get
+*
+assert
+itxn_begin
+// intc_3 // 4
+int 4
+itxn_field TypeEnum
+// intc_1 // 0
+int 0
+itxn_field Fee
+bytec_1 // "dubID"
+app_global_get
+itxn_field XferAsset
+gtxn 0 Amount
+bytec_3 // "dubRate"
+app_global_get
+*
+itxn_field AssetAmount
+gtxn 0 Sender
+itxn_field AssetReceiver
+itxn_submit
+// intc_0 // 1
+int 1
+return
+label10:
+global GroupSize
+// intc 5 // 3
+int 3
+==
+assert
+gtxn 2 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 0 Sender
+gtxn 1 Sender
+==
+assert
+gtxn 1 Sender
+gtxn 2 Sender
+==
+assert
+gtxn 0 TypeEnum
+// intc_3 // 4
+int 4
+==
+assert
+gtxn 0 AssetCloseTo
+global ZeroAddress
+==
+assert
+gtxn 0 XferAsset
+bytec_1 // "dubID"
+app_global_get
+==
+assert
+gtxn 0 AssetAmount
+bytec 6 // "mintPrice"
+app_global_get
+==
+assert
+gtxn 0 AssetReceiver
+global CurrentApplicationAddress
+==
+assert
+gtxn 1 TypeEnum
+// intc_0 // 1
+int 1
+==
+assert
+gtxn 1 CloseRemainderTo
+global ZeroAddress
+==
+assert
+gtxn 1 Amount
+global MinBalance
+==
+assert
+gtxn 1 Receiver
+global CurrentApplicationAddress
+==
+assert
+gtxn 2 TypeEnum
+// intc_2 // 6
+int 6
+==
+assert
+gtxn 2 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 2 OnCompletion
+// intc_1 // 0
+int 0
+==
+assert
+gtxna 2 ApplicationArgs 0
+bytec 11 // "mint"
+==
+assert
+bytec_2 // "nextID"
+app_global_get
+store 4
+// intc_0 // 1
+int 1
+store 1
+label35:
+load 4
+load 1
+/
+// intc 7 // 10
+int 10
+>=
+bnz label21
+pushbytes 0x // ""
+store 2
+label33:
+load 1
+// intc_1 // 0
+int 0
+!=
+bnz label22
+load 2
+store 0
+itxn_begin
+// intc 5 // 3
+int 3
+itxn_field TypeEnum
+// intc_1 // 0
+int 0
+itxn_field Fee
+// intc_0 // 1
+int 1
+itxn_field ConfigAssetTotal
+// intc_1 // 0
+int 0
+itxn_field ConfigAssetDecimals
+// intc_1 // 0
+int 0
+itxn_field ConfigAssetDefaultFrozen
+pushbytes 0x504952415445 // "PIRATE"
+itxn_field ConfigAssetUnitName
+pushbytes 0x416c676f53656173205069726174652023 // "AlgoSeas Pirate #"
+load 0
+concat
+itxn_field ConfigAssetName
+pushbytes 0x68747470733a2f2f63646e2e616c676f736561732e696f2f706972617465732f // addr NB2HI4DTHIXS6Y3ENYXGC3DHN5ZWKYLTFZUW6L3QNFZGC5DFOMXZELKKHM
+load 0
+concat
+pushbytes 0x2e706e67 // ".png"
+concat
+itxn_field ConfigAssetURL
+bytec_0 // "manager"
+app_global_get
+itxn_field ConfigAssetManager
+gtxn 2 Sender
+itxn_field ConfigAssetReserve
+itxn_submit
+bytec_2 // "nextID"
+bytec_2 // "nextID"
+app_global_get
+// intc_0 // 1
+int 1
++
+app_global_put
+// intc_0 // 1
+int 1
+return
+label22:
+load 4
+load 1
+/
+store 3
+load 2
+load 3
+// intc_1 // 0
+int 0
+==
+bnz label23
+load 3
+// intc_0 // 1
+int 1
+==
+bnz label24
+load 3
+// intc 4 // 2
+int 2
+==
+bnz label25
+load 3
+// intc 5 // 3
+int 3
+==
+bnz label26
+load 3
+// intc_3 // 4
+int 4
+==
+bnz label27
+load 3
+// intc 8 // 5
+int 5
+==
+bnz label28
+load 3
+// intc_2 // 6
+int 6
+==
+bnz label29
+load 3
+pushint 7
+==
+bnz label30
+load 3
+// intc 6 // 8
+int 8
+==
+bnz label31
+load 3
+pushint 9
+==
+bnz label32
+err
+label32:
+pushbytes 0x39 // "9"
+label34:
+concat
+store 2
+load 4
+load 3
+load 1
+*
+-
+store 4
+load 1
+// intc 7 // 10
+int 10
+/
+store 1
+b label33
+label31:
+pushbytes 0x38 // "8"
+b label34
+label30:
+pushbytes 0x37 // "7"
+b label34
+label29:
+pushbytes 0x36 // "6"
+b label34
+label28:
+pushbytes 0x35 // "5"
+b label34
+label27:
+pushbytes 0x34 // "4"
+b label34
+label26:
+pushbytes 0x33 // "3"
+b label34
+label25:
+pushbytes 0x32 // "2"
+b label34
+label24:
+pushbytes 0x31 // "1"
+b label34
+label23:
+pushbytes 0x30 // "0"
+b label34
+label21:
+load 1
+// intc 7 // 10
+int 10
+*
+store 1
+b label35
+label9:
+txn Sender
+global CreatorAddress
+==
+assert
+global GroupSize
+// intc 4 // 2
+int 2
+==
+assert
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 0 Sender
+gtxn 1 Sender
+==
+assert
+bytec_1 // "dubID"
+app_global_get
+// intc_1 // 0
+int 0
+==
+assert
+gtxn 0 TypeEnum
+// intc_0 // 1
+int 1
+==
+assert
+gtxn 0 CloseRemainderTo
+global ZeroAddress
+==
+assert
+gtxn 0 Amount
+// intc 4 // 2
+int 2
+global MinBalance
+*
+==
+assert
+gtxn 0 Receiver
+global CurrentApplicationAddress
+==
+assert
+gtxn 1 TypeEnum
+// intc_2 // 6
+int 6
+==
+assert
+gtxn 1 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 1 OnCompletion
+// intc_1 // 0
+int 0
+==
+assert
+gtxna 1 ApplicationArgs 0
+bytec 10 // "init"
+==
+assert
+itxn_begin
+// intc 5 // 3
+int 3
+itxn_field TypeEnum
+// intc_1 // 0
+int 0
+itxn_field Fee
+pushint 18446744073709551615
+itxn_field ConfigAssetTotal
+// intc_2 // 6
+int 6
+itxn_field ConfigAssetDecimals
+// intc_1 // 0
+int 0
+itxn_field ConfigAssetDefaultFrozen
+pushbytes 0x445542 // "DUB"
+itxn_field ConfigAssetUnitName
+pushbytes 0x446f75626c6f6f6e // "Doubloon"
+itxn_field ConfigAssetName
+pushbytes 0x68747470733a2f2f616c676f736561732e696f // "https://algoseas.io"
+itxn_field ConfigAssetURL
+global CreatorAddress
+itxn_field ConfigAssetManager
+global CurrentApplicationAddress
+itxn_field ConfigAssetReserve
+bytec_0 // "manager"
+app_global_get
+itxn_field ConfigAssetFreeze
+itxn_submit
+bytec_1 // "dubID"
+itxn CreatedAssetID
+app_global_put
+// intc_0 // 1
+int 1
+return
+label8:
+global GroupSize
+// intc 4 // 2
+int 2
+==
+assert
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 0 NumAppArgs
+// intc 4 // 2
+int 2
+==
+assert
+gtxn 0 Sender
+bytec_0 // "manager"
+app_global_get
+==
+assert
+gtxn 0 Fee
+// intc_1 // 0
+int 0
+==
+assert
+gtxn 0 TypeEnum
+// intc_2 // 6
+int 6
+==
+assert
+gtxn 0 ApplicationID
+global CurrentApplicationID
+==
+assert
+gtxn 0 OnCompletion
+// intc_1 // 0
+int 0
+==
+assert
+gtxna 0 ApplicationArgs 0
+bytec 9 // "claim"
+==
+assert
+gtxna 0 Assets 0
+bytec_1 // "dubID"
+app_global_get
+==
+assert
+gtxna 0 Accounts 1
+gtxn 1 Sender
+==
+assert
+gtxna 0 ApplicationArgs 1
+btoi
+assert
+itxn_begin
+// intc_3 // 4
+int 4
+itxn_field TypeEnum
+// intc_1 // 0
+int 0
+itxn_field Fee
+bytec_1 // "dubID"
+app_global_get
+itxn_field XferAsset
+gtxna 0 ApplicationArgs 1
+btoi
+itxn_field AssetAmount
+gtxn 1 Sender
+itxn_field AssetReceiver
+itxn_submit
+gtxn 1 TypeEnum
+// intc_0 // 1
+int 1
+==
+assert
+gtxn 1 CloseRemainderTo
+global ZeroAddress
+==
+assert
+gtxn 1 Amount
+// intc_1 // 0
+int 0
+==
+assert
+gtxn 1 Receiver
+global CurrentApplicationAddress
+==
+assert
+// intc_0 // 1
+int 1
+return
+label7:
+txn RekeyTo
+global ZeroAddress
+==
+assert
+txn Sender
+bytec_0 // "manager"
+app_global_get
+==
+assert
+txn Fee
+// intc_1 // 0
+int 0
+==
+assert
+txn TypeEnum
+// intc_2 // 6
+int 6
+==
+assert
+txn ApplicationID
+global CurrentApplicationID
+==
+assert
+txn OnCompletion
+// intc_1 // 0
+int 0
+==
+assert
+txna ApplicationArgs 0
+bytec 8 // "approveShipCall"
+==
+assert
+txn GroupIndex
+// intc_0 // 1
+int 1
++
+gtxns TypeEnum
+// intc_2 // 6
+int 6
+==
+assert
+txn GroupIndex
+// intc_0 // 1
+int 1
++
+gtxns ApplicationID
+txn GroupIndex
+// intc_0 // 1
+int 1
++
+gtxns Sender
+bytec 7 // "contractID"
+app_local_get
+==
+assert
+txn GroupIndex
+// intc_0 // 1
+int 1
++
+gtxns OnCompletion
+// intc_1 // 0
+int 0
+==
+assert
+txn GroupIndex
+// intc_0 // 1
+int 1
++
+gtxnsa ApplicationArgs 0
+pushbytes 0x61646450697261746573 // "addPirates"
+==
+txn GroupIndex
+// intc_0 // 1
+int 1
++
+gtxnsa ApplicationArgs 0
+pushbytes 0x72656d6f766550697261746573 // "removePirates"
+==
+||
+assert
+// intc_0 // 1
+int 1
+return
+label3:
+txn Sender
+global CreatorAddress
+==
+assert
+global GroupSize
+// intc_0 // 1
+int 1
+==
+assert
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+// intc_0 // 1
+int 1
+return
+label2:
+// intc_0 // 1
+int 1
+return
+label1:
+global GroupSize
+// intc_0 // 1
+int 1
+==
+assert
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+txn NumAppArgs
+// intc 6 // 8
+int 8
+==
+assert
+bytec_1 // "dubID"
+txna ApplicationArgs 1
+btoi
+app_global_put
+bytec_2 // "nextID"
+txna ApplicationArgs 2
+btoi
+app_global_put
+bytec_3 // "dubRate"
+txna ApplicationArgs 3
+btoi
+app_global_put
+bytec_0 // "manager"
+txna ApplicationArgs 4
+app_global_put
+bytec 6 // "mintPrice"
+txna ApplicationArgs 5
+btoi
+app_global_put
+bytec 4 // "approvalHash"
+txna ApplicationArgs 6
+app_global_put
+bytec 5 // "clearHash"
+txna ApplicationArgs 7
+app_global_put
+// intc_0 // 1
+int 1
+return
