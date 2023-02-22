@@ -76,6 +76,7 @@ from pkg_resources import require  # type: ignore
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.exceptions import TealerException
 from tealer.printers.abstract_printer import AbstractPrinter
+from tealer.teal.instructions.instructions import ContractType
 from tealer.teal.parse_teal import parse_teal
 from tealer.utils.algoexplorer import (
     get_application_using_app_id,
@@ -97,12 +98,14 @@ if TYPE_CHECKING:
 
 # from slither: slither/__main__.py
 def choose_detectors(
-    args: argparse.Namespace, all_detector_classes: List[Type[AbstractDetector]]
+    args: argparse.Namespace, all_detector_classes: List[Type[AbstractDetector]], teal: "Teal"
 ) -> List[Type[AbstractDetector]]:
     """Select detectors from available list based on command line arguments.
 
     Detectors are selected using the values of command line arguments
     ``--detect``, ``--exclude``, ``--exclude-stateless``, ``--exclude-stateful``.
+    If the default detectors are run, exclude the stateless detector for stateful app, and stateful detectors
+    for stateless code. The detectors can still be executed if they are added manually through --detect
 
     Args:
         args: Namespace object representing the command line arguments selected
@@ -124,6 +127,17 @@ def choose_detectors(
 
     if args.detectors_to_run is None:
         detectors_to_run = all_detector_classes
+        # IF there is no detectors provided:
+        # - Stateful: run everything expect the stateless detectors
+        # - Stateless: run only stateless and stateless & stateful
+        if teal.mode == ContractType.STATEFULL:
+            detectors_to_run = [d for d in detectors_to_run if d.TYPE != DetectorType.STATELESS]
+        if teal.mode == ContractType.STATELESS:
+            detectors_to_run = [
+                d
+                for d in detectors_to_run
+                if d.TYPE in [DetectorType.STATELESS, DetectorType.STATELESS_AND_STATEFULL]
+            ]
     else:
         for detector in args.detectors_to_run.split(","):
             if detector in detectors:
@@ -502,20 +516,6 @@ def main() -> None:
         logger = logging.getLogger(logger_name)
         logger.setLevel(logger_level)
 
-    detector_classes = choose_detectors(args, detector_classes)
-    printer_classes = choose_printers(args, printer_classes)
-
-    # if a printer is ran using --print ... don't run all detectors.
-    # e.g tealer .. --print x,y
-    # => printers are selected and none of the detectors are selected explicitly.
-    # In above don't run any of the detectors.
-    # if detectors are selected explicitly, run those detectors only.
-    # e.g tealer .. --detect a,b --print x,y
-    # => run a,b detectors and printers x, y
-    if args.printers_to_run is not None and args.detectors_to_run is None:
-        # --print is used and --detect is not used.
-        detector_classes = []
-
     if args.dest != ".":
         # if output destination directory is not current directory.
         # create dest directory if is not present
@@ -527,6 +527,20 @@ def main() -> None:
     try:
         contract_source = fetch_contract(args)
         teal = parse_teal(contract_source)
+
+        detector_classes = choose_detectors(args, detector_classes, teal)
+        printer_classes = choose_printers(args, printer_classes)
+
+        # if a printer is ran using --print ... don't run all detectors.
+        # e.g tealer .. --print x,y
+        # => printers are selected and none of the detectors are selected explicitly.
+        # In above don't run any of the detectors.
+        # if detectors are selected explicitly, run those detectors only.
+        # e.g tealer .. --detect a,b --print x,y
+        # => run a,b detectors and printers x, y
+        if args.printers_to_run is not None and args.detectors_to_run is None:
+            # --print is used and --detect is not used.
+            detector_classes = []
 
         results_detectors, _results_printers = handle_detectors_and_printers(
             args, teal, detector_classes, printer_classes
