@@ -1,91 +1,115 @@
-from collections import defaultdict
-from copy import copy
-from pathlib import Path
-from typing import Dict, Set, List
+"""Detector for finding execution paths missing RekeyTo check."""
 
-from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
+from typing import List, TYPE_CHECKING
+
+from tealer.detectors.abstract_detector import (
+    AbstractDetector,
+    DetectorClassification,
+    DetectorType,
+)
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions.instructions import Gtxn, Return, Int
-from tealer.teal.instructions.transaction_field import RekeyTo
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations,
+    detector_terminal_description,
+)
 
 
-class Result:
-    def __init__(self, filename: Path, bbs: List[BasicBlock], path_initial: List[BasicBlock]):
-        self.filename = filename
-        self.bbs = bbs
-        self.paths = [path_initial]
-
-    def add_path(self, path: List[BasicBlock]) -> None:
-        self.paths.append(path)
-
-    @property
-    def all_bbs_in_paths(self) -> List[BasicBlock]:
-        return [p for sublist in self.paths for p in sublist]
+if TYPE_CHECKING:
+    from tealer.utils.output import SupportedOutput
+    from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
 class MissingRekeyTo(AbstractDetector):
+    """Detector to find execution paths missing RekeyTo check.
 
-    NAME = "rekeyTo"
-    DESCRIPTION = "Detect paths with a missing RekeyTo check"
-    TYPE = DetectorType.STATEFULLGROUP
+    TEAL, from version 2 onwards supports rekeying of accounts.
+    An account can be rekeyed to a different address. Once rekeyed,
+    rekeyed address has entire authority over the account. Contract
+    Accounts can also be rekeyed. If RekeyTo field of the transaction
+    is set to malicious actor's address, then they can control the account
+    funds, assets directly bypassing the contract's restrictions.
 
-    def check_rekey_to(  # pylint: disable=too-many-arguments
-        self,
-        bb: BasicBlock,
-        group_tx: Dict[int, Set[BasicBlock]],
-        idx_fitlered: Set[int],
-        current_path: List[BasicBlock],
-        all_results: Dict[str, Result],
-    ) -> None:
-        # check for loops
-        if bb in current_path:
-            return
+    This detector tries to find execution paths that approve the algorand
+    transaction("return 1") and doesn't check the RekeyTo transaction field.
+    Additional to checking rekeying of it's own contract, detector also finds
+    execution paths that doesn't check RekeyTo field of other transactions
+    in the atomic group.
+    """
 
-        current_path = current_path + [bb]
+    NAME = "rekey-to"
+    DESCRIPTION = "Rekeyable Logic Signatures"
+    TYPE = DetectorType.STATELESS
 
-        group_tx = copy(group_tx)
-        for ins in bb.instructions:
-            if isinstance(ins, Gtxn):
-                if ins.idx not in idx_fitlered:
-                    assert ins.bb
-                    group_tx[ins.idx].add(ins.bb)
+    IMPACT = DetectorClassification.HIGH
+    CONFIDENCE = DetectorClassification.HIGH
 
-                if isinstance(ins.field, RekeyTo):
-                    del group_tx[ins.idx]
-                    idx_fitlered = set(idx_fitlered)
-                    idx_fitlered.add(ins.idx)
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Detector-Documentation#rekeyable-logicsig"
+    WIKI_TITLE = "Rekeyable LogicSig"
+    WIKI_DESCRIPTION = (
+        "Logic signature does not validate `RekeyTo` field."
+        " Attacker can submit a transaction with `RekeyTo` field set to their address and take control over the account."
+        " More at [building-secure-contracts/not-so-smart-contracts/algorand/rekeying]"
+        "(https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/algorand/rekeying)"
+    )
+    WIKI_EXPLOIT_SCENARIO = """
+```py
+def withdraw(...) -> Expr:
+    return Seq(
+        [
+            Assert(
+                And(
+                    Txn.type_enum() == TxnType.Payment,
+                    Txn.first_valid() % period == Int(0),
+                    Txn.last_valid() == Txn.first_valid() + duration,
+                    Txn.receiver() == receiver,
+                    Txn.amount() == amount,
+                    Txn.first_valid() < timeout,
+                )
+            ),
+            Approve(),
+        ]
+    )
+```
 
-            if isinstance(ins, Return) and group_tx:
-                if len(ins.prev) == 1:
-                    prev = ins.prev[0]
-                    if isinstance(prev, Int) and prev.value == 0:
-                        return
+Alice signs the logic-sig to allow recurring payments to Bob.\
+ Eve uses the logic-sig and submits a valid transaction with `RekeyTo` field set to her address.\
+ Eve takes over Alice's account.
+"""
 
-                for idx, bbs in group_tx.items():
-                    bbs_list = sorted(bbs, key=lambda x: x.instructions[0].line)
-                    filename = Path(f"rekeyto_tx_{idx}.dot")
+    WIKI_RECOMMENDATION = """
+Validate `RekeyTo` field in the LogicSig.
+"""
 
-                    if idx not in all_results:
-                        all_results[str(idx)] = Result(filename, bbs_list + [bb], current_path)
-                    else:
-                        all_results[str(idx)].add_path(current_path)
+    def detect(self) -> "SupportedOutput":
+        """Detect execution paths with missing CloseRemainderTo check.
 
-        for next_bb in bb.next:
-            self.check_rekey_to(next_bb, group_tx, idx_fitlered, current_path, all_results)
+        Returns:
+            ExecutionPaths instance containing the list of vulnerable execution
+            paths along with name, check, impact, confidence and other detector
+            information.
+        """
 
-    def detect(self) -> List[str]:
+        paths_without_check: List[List[BasicBlock]] = []
 
-        all_results: Dict[str, Result] = dict()
-        self.check_rekey_to(self.teal.bbs[0], defaultdict(set), set(), [], all_results)
+        def checks_field(block_ctx: "BlockTransactionContext") -> bool:
+            # return False if RekeyTo field can have any address.
+            # return True if RekeyTo should have some address or zero address
+            return not block_ctx.rekeyto.any_addr
 
-        all_results_txt: List[str] = []
-        for idx, res in all_results.items():
-            description = f"Potential lack of RekeyTo check on transaction {idx}\n"
-            description += f"\tFix the paths in {res.filename}\n"
-            description += (
-                "\tOr ensure it is used with stateless contracts that check for ReKeyTo\n"
-            )
-            all_results_txt.append(description)
-            self.teal.bbs_to_dot(res.filename, res.all_bbs_in_paths)
+        paths_without_check += detect_missing_tx_field_validations(self.teal.bbs[0], checks_field)
 
-        return all_results_txt
+        # paths might repeat as cfg traversed twice, once for each check
+        paths_without_check_unique = []
+        added_paths = []
+        for path in paths_without_check:
+            short = " -> ".join(map(str, [bb.idx for bb in path]))
+            if short in added_paths:
+                continue
+            paths_without_check_unique.append(path)
+            added_paths.append(short)
+
+        description = detector_terminal_description(self)
+
+        filename = "missing_rekeyto_check"
+
+        return self.generate_result(paths_without_check_unique, description, filename)

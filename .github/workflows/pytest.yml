@@ -1,0 +1,62 @@
+name: CI
+
+defaults:
+  run:
+    # To load bashrc
+    shell: bash -ieo pipefail {0}
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+  schedule:
+    # run CI every day even if no PRs/merges occur
+    - cron:  '0 12 * * *'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+        # Used by ci_test.sh
+    - name: Install dependencies
+      run: |
+        python setup.py install
+        pip install pytest
+        pip install pytest-cov
+
+    - name: Run Parsing tests
+      run: |
+        pytest tests/test_parsing.py tests/test_versions.py --cov=tealer/teal/instructions --cov-branch  --cov-fail-under=96
+
+    - name: Run string tests
+      run: |
+        pytest tests/test_string_representation.py
+
+    - name: Run version tests
+      run: |
+        pytest tests/test_versions.py
+        pytest tests/test_mode_detector.py
+
+    - name: Run cfg recovery tests
+      run: |
+        pytest tests/test_cfg.py
+
+    - name: Run detectors tests
+      run: |
+        pytest tests/test_detectors.py
+    
+    - name: Run dataflow analysis tests
+      run: |
+        pytest tests/transaction_context/test_group_sizes.py
+        pytest tests/transaction_context/test_group_indices.py
+        pytest tests/transaction_context/test_transaction_types.py
+        pytest tests/transaction_context/test_addr_fields.py

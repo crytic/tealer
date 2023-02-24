@@ -11,7 +11,6 @@ on:
       - main
       - dev
   pull_request:
-    branches: [main, dev]
   schedule:
     # run CI every day even if no PRs/merges occur
     - cron:  '0 12 * * *'
@@ -22,10 +21,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.6
-      uses: actions/setup-python@v1
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
       with:
-        python-version: 3.6
+        python-version: 3.8
 
         # Used by ci_test.sh
     - name: Install dependencies

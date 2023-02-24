@@ -1,0 +1,40 @@
+digraph g{
+ ranksep = 1 
+ overlap = scale 
+4[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="17" BORDER="2"><B>// block_id = 4; cost = 8<BR/>// Subroutine foobar_0</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">// foo_bar<BR/>17. foobar_0:</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">18. store 0</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">19. load 0</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">20. int 2</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">21. %</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">22. int 0</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">23. ==</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">24. bnz foobar_0_l2</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 4:s -> 5:25:n [color="#e0182b"];
+4:s -> 6:28:n [color="#36d899"];
+
+6[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="28" BORDER="2"><B>// block_id = 6; cost = 3</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">28. foobar_0_l2:</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">29. byte &quot;Foo&quot;</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">30. log</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 6:s -> 7:31:n [color="BLACK"];
+
+7[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="31" BORDER="2"><B>// block_id = 7; cost = 2</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">31. foobar_0_l3:</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">32. <B><I>retsub</I></B></TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 
+5[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="25" BORDER="2"><B>// block_id = 5; cost = 3</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">25. byte &quot;Bar&quot;</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">26. log</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">27. b foobar_0_l3</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 5:s -> 7:31:n [color="BLACK"];
+
+}

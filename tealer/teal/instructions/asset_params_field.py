@@ -1,63 +1,93 @@
+"""Defines classes to represent asset_params_get fields.
+
+``asset_params_get`` instruction is used to access parameter fields
+of an asset.
+
+Each field that can be accessed using asset_params_get is represented
+by a class in tealer. All the classes representing the fields must inherit
+from AssetParamsField class.
+
+"""
+
 # pylint: disable=too-few-public-methods
 class AssetParamsField:
-    pass
+    """Base class to represent asset_params_get field."""
+
+    def __init__(self) -> None:
+        self._version: int = 2
+
+    @property
+    def version(self) -> int:
+        """Teal version this field is introduced in and supported from."""
+        return self._version
+
+    def __str__(self) -> str:
+        return self.__class__.__qualname__
 
 
 class AssetTotal(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetTotal"
+    """Total number of units of this asset."""
 
 
 class AssetDecimals(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetDecimals"
+    """Number of digits to display after the decimal place."""
 
 
 class AssetDefaultFrozen(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetDefaultFrozen"
+    """Whether the asset is frozen by default or not."""
 
 
 class AssetUnitName(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetUnitName"
+    """Unit name of the asset."""
 
 
 class AssetName(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetName"
+    """The asset name."""
 
 
 class AssetURL(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetURL"
+    """Url associated with the asset."""
 
 
 class AssetMetadataHash(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetMetadataHash"
+    """32 byte commitment to some unspecified asset metadata."""
 
 
 class AssetManager(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetManager"
+    """Manager address of the asset.
+
+    Manager account is the only account that can authorize transactions
+    to re-configure or destroy an asset.
+    """
 
 
 class AssetReserve(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetReserve"
+    """Reserve address of the asset.
+
+    Non-minted assets will reside in Reserve address instead of creator
+    address if specified.
+    """
 
 
 class AssetFreeze(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetFreeze"
+    """Freeze address of the asset.
+
+    The freeze account is allowed to freeze or unfreeze the asset holdings
+    for a specific account.
+    """
 
 
 class AssetClawback(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetClawback"
+    """Clawback address of the asset.
+
+    The clawback address represents an account that is allowed to transfer
+    assets from and to any asset holder.
+    """
 
 
 class AssetCreator(AssetParamsField):
-    def __str__(self) -> str:
-        return "AssetCreator"
+    """Creator address of this asset."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._version: int = 5
