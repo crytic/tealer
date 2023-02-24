@@ -538,6 +538,8 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
 
 
 def _apply_transaction_context_analysis(teal: "Teal") -> None:
+    logger = logging.getLogger("Tealer")
+    logger.debug("[+] Running Transaction context analysis")
     group_indices_cls = all_constraints.GroupIndices
     analyses_classes = [getattr(all_constraints, name) for name in dir(all_constraints)]
     analyses_classes = [
@@ -548,8 +550,10 @@ def _apply_transaction_context_analysis(teal: "Teal") -> None:
         and c != group_indices_cls
     ]
     # Run group indices analysis first as other analysis use them.
+    logger.debug(f'[+] Running txn field analysis "{group_indices_cls.__name__}"')
     group_indices_cls(teal).run_analysis()
     for cl in analyses_classes:
+        logger.debug(f'[+] Running txn field analysis: "{cl.__name__}"')
         cl(teal).run_analysis()
     # clear cache
     construct_stack_ast.cache_clear()  # construct stack ast is not used after transaction_context_analysis.

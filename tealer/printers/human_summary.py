@@ -151,11 +151,8 @@ class PrinterHumanSummary(AbstractPrinter):
         txt += "Subroutines:\n"
         for sub_name in teal.subroutines:
             txt += f"\t{sub_name}\n"
-        txt += "\n"
-
-        txt_detector_results = self.get_detectors_result()
-        txt += txt_detector_results
-
+            block_ids = ", ".join(repr(bi) for bi in teal.subroutines[sub_name].blocks)
+            txt += f'\t\t"{block_ids}"\n'
         txt += f"is_complex: {self._is_complex_code()}\n"
-
         print(txt)
+        print(self.get_detectors_result())
