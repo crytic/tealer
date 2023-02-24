@@ -8,10 +8,8 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.detectors.utils import (
-    detect_missing_tx_field_validations,
-    detector_terminal_description,
-)
+from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.utils.output import ExecutionPaths
 
 
 if TYPE_CHECKING:
@@ -19,7 +17,7 @@ if TYPE_CHECKING:
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
-class MissingRekeyTo(AbstractDetector):
+class MissingRekeyTo(AbstractDetector):  # pylint: disable=too-few-public-methods
     """Detector to find execution paths missing RekeyTo check.
 
     TEAL, from version 2 onwards supports rekeying of accounts.
@@ -89,27 +87,13 @@ Validate `RekeyTo` field in the LogicSig.
             information.
         """
 
-        paths_without_check: List[List[BasicBlock]] = []
-
         def checks_field(block_ctx: "BlockTransactionContext") -> bool:
             # return False if RekeyTo field can have any address.
             # return True if RekeyTo should have some address or zero address
             return not block_ctx.rekeyto.any_addr
 
-        paths_without_check += detect_missing_tx_field_validations(self.teal.bbs[0], checks_field)
+        paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
+            self.teal.bbs[0], checks_field
+        )
 
-        # paths might repeat as cfg traversed twice, once for each check
-        paths_without_check_unique = []
-        added_paths = []
-        for path in paths_without_check:
-            short = " -> ".join(map(str, [bb.idx for bb in path]))
-            if short in added_paths:
-                continue
-            paths_without_check_unique.append(path)
-            added_paths.append(short)
-
-        description = detector_terminal_description(self)
-
-        filename = "missing_rekeyto_check"
-
-        return self.generate_result(paths_without_check_unique, description, filename)
+        return ExecutionPaths(self.teal, self, paths_without_check)

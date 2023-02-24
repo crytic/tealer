@@ -451,8 +451,14 @@ def handle_output(
             print(f"Error: {error}")
             sys.exit(-1)
 
+        detectors_with_0_results: List["AbstractDetector"] = []
         for output in detector_results:
-            output.write_to_files(args.dest, args.all_paths_in_one)
+            if output.paths:
+                output.write_to_files(args.dest, args.all_paths_in_one)
+            else:
+                detectors_with_0_results.append(output.detector)
+        detectors_with_0_results_str = ", ".join(d.NAME for d in detectors_with_0_results)
+        print(f"\n 0 results found for {detectors_with_0_results_str}.")
     else:
         json_results = [output.to_json() for output in detector_results]
 

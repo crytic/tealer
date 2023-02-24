@@ -235,12 +235,3 @@ def detect_missing_tx_field_validations(
     paths_without_check: List[List["BasicBlock"]] = []
     search_paths(entry_block, [], paths_without_check, [(None, teal.main)], [[]])
     return paths_without_check
-
-
-def detector_terminal_description(detector: "AbstractDetector") -> str:
-    """Return description for the detector that is printed to terminal before listing vulnerable paths."""
-    return (
-        f'\nCheck: "{detector.NAME}", Impact: {detector.IMPACT}, Confidence: {detector.CONFIDENCE}\n'
-        f"Description: {detector.DESCRIPTION}\n\n"
-        f"Wiki: {detector.WIKI_URL}\n"
-    )
