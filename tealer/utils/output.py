@@ -21,6 +21,7 @@ Types:
 
 import html
 import re
+import os
 from pathlib import Path
 from typing import List, TYPE_CHECKING, Dict, Callable, Optional
 from dataclasses import dataclass
@@ -33,6 +34,9 @@ if TYPE_CHECKING:
     from tealer.teal.teal import Teal
     from tealer.teal.instructions.instructions import Instruction
     from tealer.detectors.abstract_detector import AbstractDetector
+
+
+ROOT_OUTPUT_DIRECTORY = Path("tealer-export")
 
 
 @dataclass
@@ -261,14 +265,14 @@ def all_subroutines_to_dot(
     """
     if filename_prefix:  # not empty string
         filename_prefix = f"{filename_prefix}_"
-    main_entry_sub_filename = f"{teal.contract_name}_{filename_prefix}contract_shortened_cfg.dot"
+    main_entry_sub_filename = f"{filename_prefix}contract_shortened_cfg.dot"
 
     with open(dest / Path(main_entry_sub_filename), "w", encoding="utf-8") as f:
         f.write(subroutine_to_dot(teal.main, config))
         print(f"Exported contract's shortened cfg to: {dest / Path(main_entry_sub_filename)}")
 
     for sub_name, subroutine in teal.subroutines.items():
-        filename = f"{teal.contract_name}_{filename_prefix}subroutine_{sub_name}_cfg.dot"
+        filename = f"{filename_prefix}subroutine_{sub_name}_cfg.dot"
         with open(dest / Path(filename), "w", encoding="utf-8") as f:
             f.write(subroutine_to_dot(subroutine, config))
             print(f'Exported cfg of "{sub_name}" subroutine to: {dest / Path(filename)}')
@@ -353,6 +357,10 @@ def detector_terminal_description(detector: "AbstractDetector") -> str:
     )
 
 
+def detector_ouptut_dir(destination: Path, detector: "AbstractDetector") -> Path:
+    return destination / Path(detector.NAME)
+
+
 class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
     """Detector output class to represent vulnerable execution paths."""
 
@@ -410,8 +418,8 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         """Recommendations to fix the reported issues."""
         return self._detector.WIKI_RECOMMENDATION.strip()
 
-    def filename(self, path_index: int) -> str:
-        return f"{self._detector.NAME}-{path_index}.dot"
+    def filename(self, path_index: int) -> Path:
+        return Path(f"{self._detector.NAME}-{path_index}.dot")
 
     @staticmethod
     def _short_notation(path_bbs: List["BasicBlock"]) -> str:
@@ -454,6 +462,11 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         config = CFGDotConfig()
         config.color_edges = False
         print("\tFollowing are the vulnerable paths found:")
+
+        dest = detector_ouptut_dir(dest, self._detector)
+        # create output directory if not present
+        os.makedirs(dest, exist_ok=True)
+
         if not all_paths_in_one:
 
             for idx, path in enumerate(self._paths, start=1):
@@ -461,7 +474,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
                 short = self._short_notation(path)
                 print(f"\n\t\t path: {short}")
 
-                filename = dest / Path(f"{self._detector.NAME}-{idx}.dot")
+                filename = dest / self.filename(idx)
                 print(f"\t\t check file: {filename}")
 
                 config.bb_border_color = (

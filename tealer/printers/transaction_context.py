@@ -1,10 +1,16 @@
 """Printer to output information about transaction fields in the CFG."""
 
+import os
 from pathlib import Path
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.utils.output import CFGDotConfig, full_cfg_to_dot, all_subroutines_to_dot
+from tealer.utils.output import (
+    CFGDotConfig,
+    full_cfg_to_dot,
+    all_subroutines_to_dot,
+    ROOT_OUTPUT_DIRECTORY,
+)
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -53,17 +59,12 @@ class PrinterTransactionContext(AbstractPrinter):  # pylint: disable=too-few-pub
                 str_seqs.append(" ".join(str(i) for i in seq))
         return " ".join(str_seqs)
 
-    def print(self, dest: Optional["Path"] = None) -> None:
-        """
-        Args:
-            dest (Optional[Path]): destination directory to save output files in. files will be saved in
-            the current directory if it is None.
-        """
-
+    def print(self) -> None:
         filename = Path("transaction-context.dot")
-        if dest is None:
-            # TODO: Change default directory to `tealer-export`
-            dest = Path(".")
+
+        # outputs multiple files: set the dir to {ROOT_DIRECTORY}/{CONTRACT_NAME}/{"print-"PRINTER_NAME}
+        dest = ROOT_OUTPUT_DIRECTORY / Path(self.teal.contract_name) / Path(f"print-{self.NAME}")
+        os.makedirs(dest, exist_ok=True)
 
         filename = dest / filename
 

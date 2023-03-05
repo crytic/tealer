@@ -90,6 +90,7 @@ from tealer.utils.command_line import (
     output_to_markdown,
     output_wiki,
 )
+from tealer.utils.output import ROOT_OUTPUT_DIRECTORY
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
@@ -314,13 +315,6 @@ def parse_args(
         default=None,
     )
 
-    group_misc.add_argument(
-        "--dest",
-        help="destination to save the output files, defaults to current directory",
-        action="store",
-        default=".",
-    )
-
     parser.add_argument("--debug", help=argparse.SUPPRESS, action="store_true", default=False)
     parser.add_argument("--markdown", help=argparse.SUPPRESS, action=OutputMarkdown, default=False)
 
@@ -400,7 +394,6 @@ class OutputWiki(argparse.Action):  # pylint: disable=too-few-public-methods
 
 
 def handle_detectors_and_printers(
-    args: argparse.Namespace,
     teal: "Teal",
     detectors: List[Type[AbstractDetector]],
     printers: List[Type[AbstractPrinter]],
@@ -424,13 +417,14 @@ def handle_detectors_and_printers(
     for printer_cls in printers:
         teal.register_printer(printer_cls)
 
-    return teal.run_detectors(), teal.run_printers(Path(args.dest))
+    return teal.run_detectors(), teal.run_printers()
 
 
 def handle_output(
     args: argparse.Namespace,
     detector_results: List["SupportedOutput"],
     _printer_results: List,
+    teal: "Teal",
     error: Optional[str],
 ) -> None:
     """Util function to output tealer results.
@@ -445,6 +439,8 @@ def handle_output(
         _printer_results: results of running the selected printers.
     """
 
+    output_directory = ROOT_OUTPUT_DIRECTORY / Path(teal.contract_name)
+    os.makedirs(output_directory, exist_ok=True)
     if args.json is None:
 
         if error is not None:
@@ -454,11 +450,12 @@ def handle_output(
         detectors_with_0_results: List["AbstractDetector"] = []
         for output in detector_results:
             if output.paths:
-                output.write_to_files(args.dest, args.all_paths_in_one)
+                output.write_to_files(output_directory, args.all_paths_in_one)
             else:
                 detectors_with_0_results.append(output.detector)
-        detectors_with_0_results_str = ", ".join(d.NAME for d in detectors_with_0_results)
-        print(f"\n 0 results found for {detectors_with_0_results_str}.")
+        if detectors_with_0_results:
+            detectors_with_0_results_str = ", ".join(d.NAME for d in detectors_with_0_results)
+            print(f"\n 0 results found for {detectors_with_0_results_str}.")
     else:
         json_results = [output.to_json() for output in detector_results]
 
@@ -471,33 +468,35 @@ def handle_output(
         if args.json == "-":
             print(json.dumps(json_output, indent=2))
         else:
-            filename = Path(args.dest) / Path(args.json)
+            filename = output_directory / Path(args.json)
             print(f"json output is written to {filename}")
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(json.dumps(json_output, indent=2))
 
 
-def fetch_contract(args: argparse.Namespace) -> str:
+def fetch_contract(args: argparse.Namespace) -> Tuple[str, str]:
     program: str = args.program
     network: str = args.network
     b32_regex = "[A-Z2-7]+"
     if program.isdigit():
         # is a number so a app id
         print(f'Fetching application using id "{program}"')
-        return get_application_using_app_id(network, int(program))
+        return get_application_using_app_id(network, int(program)), f"app-{program}"
     if len(program) == 52 and re.fullmatch(b32_regex, program) is not None:
         # is a txn id: base32 encoded. length after encoding == 52
         print(f'Fetching logic-sig contract that signed the transaction "{program}"')
-        return logic_sig_from_txn_id(network, program)
+        return logic_sig_from_txn_id(network, program), f"txn-{program[:8].lower()}"
     if len(program) == 58 and re.fullmatch(b32_regex, program) is not None:
         # is a address. base32 encoded. length after encoding == 58
         print(f'Fetching logic-sig of contract account "{program}"')
-        return logic_sig_from_contract_account(network, program)
+        return logic_sig_from_contract_account(network, program), f"lsig-acc-{program[:8].lower()}"
     # file path
     print(f'Reading contract from file: "{program}"')
     try:
+        contract_name = program[: -len(".teal")] if program.endswith(".teal") else program
+        contract_name = contract_name.lower()
         with open(program, encoding="utf-8") as f:
-            return f.read()
+            return f.read(), contract_name
     except FileNotFoundError as e:
         raise TealerException from e
 
@@ -523,18 +522,13 @@ def main() -> None:
         logger = logging.getLogger(logger_name)
         logger.setLevel(logger_level)
 
-    if args.dest != ".":
-        # if output destination directory is not current directory.
-        # create dest directory if is not present
-        os.makedirs(args.dest, exist_ok=True)
-
     results_detectors: List["SupportedOutput"] = []
     _results_printers: List = []
     error = None
     try:
-        contract_source = fetch_contract(args)
+        contract_source, contract_name = fetch_contract(args)
         logger.debug("[+] Parsing the contract")
-        teal = parse_teal(contract_source)
+        teal = parse_teal(contract_source, contract_name)
         logger.debug("[+] Completed Parsing")
 
         detector_classes = choose_detectors(args, detector_classes, teal)
@@ -552,7 +546,7 @@ def main() -> None:
             detector_classes = []
 
         results_detectors, _results_printers = handle_detectors_and_printers(
-            args, teal, detector_classes, printer_classes
+            teal, detector_classes, printer_classes
         )
 
     except TealerException as e:
@@ -561,7 +555,7 @@ def main() -> None:
     if args.filter_paths is not None:
         for detector_result in results_detectors:
             detector_result.filter_paths(args.filter_paths)
-    handle_output(args, results_detectors, _results_printers, error)
+    handle_output(args, results_detectors, _results_printers, teal, error)
 
 
 if __name__ == "__main__":

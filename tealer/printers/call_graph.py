@@ -1,11 +1,13 @@
 """Printer for exporting call-graph of the contract."""
 
 import html
+import os
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.teal.instructions.instructions import Callsub
+from tealer.utils.output import ROOT_OUTPUT_DIRECTORY
 
 
 class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-methods
@@ -58,7 +60,7 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
 
         return graph
 
-    def print(self, dest: Optional["Path"] = None) -> None:
+    def print(self) -> None:
         """Export call graph of the contract in dot format.
 
         Each node in the call graph corresponds to a subroutine and edge representing call from
@@ -66,12 +68,7 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
         function and represented with label `__entry__`. Call graph will be saved as `call-graph.dot`
         in the destination directory if given or else in the current directory.
         Subroutines are supported from teal version 4. so, for contracts written in lesser version, this
-        function only prints the error message stating the same.
-
-        Args:
-            dest (Optional[Path]): destination directory to save output files in. files will be saved in
-            the current directory if it is None.
-        """
+        function only prints the error message stating the same."""
 
         if self.teal.version < 4:
             print("subroutines are not supported in teal version 3 or less")
@@ -91,9 +88,12 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
         dot_output += graph_edges
         dot_output += "}\n"
 
+        # outputs a single file: set the dir to {ROOT_DIRECTORY}/{CONTRACT_NAME}
+        dest = ROOT_OUTPUT_DIRECTORY / Path(self.teal.contract_name)
+        os.makedirs(dest, exist_ok=True)
+
         filename = Path("call-graph.dot")
-        if dest is not None:
-            filename = dest / filename
+        filename = dest / filename
 
         print(f"\nExported call graph to {filename}")
         with open(filename, "w", encoding="utf-8") as f:
