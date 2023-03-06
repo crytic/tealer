@@ -107,10 +107,14 @@ approval_program, clear_state_program, contract = router.compile_program(
 )
 
 IS_UPDATABLE_VULNERABLE_PATHS = [
-    [0, 1, 2, 3, 4, 5, 7, 74],  # update_3(),
+    [0, 1, 2, 3, 4, 5, 7],  # update_3(),
     [0, 1, 2, 3, 4, 9, 63, 64, 65, 67],  # update_2()
     [0, 1, 2, 3, 4, 9, 63, 73],  # update_2()
-    [0, 1, 2, 13],  # update()
+    # below three paths are not reduced to [0, 1, 2, 13] because
+    # [0, 1, 2, 13, 45, 46, 47, 48] is a child path and is not vulnerable
+    [0, 1, 2, 13, 45, 46, 47, 49],  # update()
+    [0, 1, 2, 13, 45, 46, 51],  # update()
+    [0, 1, 2, 13, 45, 53],  # update()
 ]
 
 IS_DELETABLE_VULNERABLE_PATHS = [[0, 1, 2, 3, 11, 56, 57]]  # delete()
