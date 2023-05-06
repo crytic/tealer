@@ -348,6 +348,31 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
     return None
 
 
+def _subroutine_to_dot_NEW(subroutine: "Subroutine", ind: int) -> str:
+    dot_output = f"subgraph cluster_X{ind} {{\n label={html.escape(subroutine.name, quote=True)}\n"
+
+    for bb in subroutine.blocks:
+        dot_output += _bb_to_dot(bb, CFGDotConfig())
+    dot_output += "}"
+
+    return dot_output
+
+
+def full_cfg_to_dot_NEW(teal: "Teal") -> str:
+    """Export CFG to dot"""
+    subroutines = list(teal._subroutines_NEW.values()) + [teal._main_NEW]
+    dot_output = "digraph g{\n ranksep = 1 \n overlap = scale \n"
+    for i, subroutine in enumerate(subroutines):
+        dot_output += _subroutine_to_dot_NEW(subroutine, i)
+        for callsub in subroutine.caller_blocks:
+            edge = f"{callsub.idx}:s -> {subroutine.entry.idx}:n;\n"
+            dot_output += edge
+
+    dot_output += "}"
+
+    return dot_output
+
+
 def detector_terminal_description(detector: "AbstractDetector") -> str:
     """Return description for the detector that is printed to terminal before listing vulnerable paths."""
     return (

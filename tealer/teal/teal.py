@@ -85,6 +85,11 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         main: Subroutine,
         # subroutines: List[List["BasicBlock"]],
         subroutines: Dict[str, Subroutine],
+        # NEW CFG objects
+        instructions_NEW: List[Instruction],
+        bbs_NEW: List[BasicBlock],
+        main_NEW: Subroutine,
+        subroutines_NEW: Dict[str, Subroutine],
     ):
         self._instructions = instructions
         self._bbs = bbs
@@ -94,6 +99,11 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         self._subroutines = subroutines
         self._int_constants: List[int] = []
         self._byte_constants: List[str] = []
+
+        self._instructions_NEW = instructions_NEW
+        self._bbs_NEW = bbs_NEW
+        self._main_NEW = main_NEW
+        self._subroutines_NEW = subroutines_NEW
 
         self._contract_name: str = ""
         self._detectors: List[AbstractDetector] = []

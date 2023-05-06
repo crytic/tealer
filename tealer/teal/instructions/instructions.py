@@ -36,6 +36,7 @@ from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
+    from tealer.teal.subroutine import Subroutine
 
 
 class ContractType(ComparableEnum):
@@ -187,8 +188,10 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         self._tealer_comments = comments
 
     @property
-    def bb(self) -> Optional["BasicBlock"]:
+    def bb(self) -> "BasicBlock":
         """Instance of BasicBlock this instruction is part of."""
+        if self._bb is None:
+            raise TealerException(f"Instruction.bb is not initialized: {str(self)}")
         return self._bb
 
     @bb.setter
@@ -1738,6 +1741,7 @@ class Callsub(InstructionWithLabel):
         super().__init__(label)
         self._return_point: Optional[Instruction] = None
         self._version: int = 4
+        self._called_subroutine: Optional["Subroutine"] = None
 
     @property
     def return_point(self) -> Optional[Instruction]:
@@ -1759,6 +1763,19 @@ class Callsub(InstructionWithLabel):
         if self._return_point is not None:
             raise ValueError("Return point already set")
         self._return_point = ins
+
+    @property
+    def called_subroutine(self) -> "Subroutine":
+        """Return the subroutine object called by this instruction"""
+        if self._called_subroutine is None:
+            raise TealerException(
+                f"callsub.called_subroutine is accessed before assignment: {str(self)}"
+            )
+        return self._called_subroutine
+
+    @called_subroutine.setter
+    def called_subroutine(self, subroutine: "Subroutine") -> None:
+        self._called_subroutine = subroutine
 
     def __str__(self) -> str:
         return f"callsub {self._label}"
