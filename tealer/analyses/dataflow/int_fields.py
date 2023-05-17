@@ -21,6 +21,7 @@ from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStac
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
+    from tealer.teal.basic_blocks import BasicBlock
 
 # TODO: Change GroupSize, GroupIndex values representation to something similar of FeeValue.
 group_size_key = "GroupSize"
@@ -193,15 +194,20 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
         # use group_sizes to update group_indices
         group_sizes_context = self._block_contexts[self.GROUP_SIZE_KEY]
         group_indices_context = self._block_contexts[self.GROUP_INDEX_KEY]
-        for bi in self._teal.bbs:
+        for bi in self._teal._bbs_NEW:
             group_indices_context[bi] = group_indices_context[bi] & set(
                 range(0, max(group_sizes_context[bi], default=0))
             )
 
+        # we performed analysis using new CFG basic blocks.
+        # store the results in the old CFG basic blocks to reuse the old tests.
+        old_blocks: List["BasicBlock"] = sorted(self._teal.bbs, key=lambda bb: bb.idx)
+        new_blocks: List["BasicBlock"] = sorted(self._teal._bbs_NEW, key=lambda bb: bb.idx)
+
         group_size_block_context = self._block_contexts[self.GROUP_SIZE_KEY]
-        for block in self._teal.bbs:
-            block.transaction_context.group_sizes = list(group_size_block_context[block])
+        for block_old, block_new in zip(old_blocks, new_blocks):
+            block_old.transaction_context.group_sizes = list(group_size_block_context[block_new])
 
         group_index_block_context = self._block_contexts[self.GROUP_INDEX_KEY]
-        for block in self._teal.bbs:
-            block.transaction_context.group_indices = list(group_index_block_context[block])
+        for block_old, block_new in zip(old_blocks, new_blocks):
+            block_old.transaction_context.group_indices = list(group_index_block_context[block_new])

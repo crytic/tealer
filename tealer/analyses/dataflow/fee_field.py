@@ -16,7 +16,7 @@ from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStac
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
-
+    from tealer.teal.basic_blocks import BasicBlock
 
 # It's not always possible to know the integer value used to compare Fee.
 # All the unknown values are represented using FeeValue(is_unknown=True).
@@ -188,17 +188,22 @@ class FeeField(DataflowTransactionContext):
         return res
 
     def _store_results(self) -> None:
-        for b in self._teal.bbs:
-            max_fee = self._block_contexts[FEE_KEY][b]
+        # we performed analysis using new CFG basic blocks.
+        # store the results in the old CFG basic blocks to reuse the old tests.
+        old_blocks: List["BasicBlock"] = sorted(self._teal.bbs, key=lambda bb: bb.idx)
+        new_blocks: List["BasicBlock"] = sorted(self._teal._bbs_NEW, key=lambda bb: bb.idx)
+
+        for block_old, block_new in zip(old_blocks, new_blocks):
+            max_fee = self._block_contexts[FEE_KEY][block_new]
             assert isinstance(max_fee, FeeValue)
             if max_fee.is_unknown:
-                b.transaction_context.max_fee_unknown = True
+                block_old.transaction_context.max_fee_unknown = True
             else:
-                b.transaction_context.max_fee = max_fee.value
+                block_old.transaction_context.max_fee = max_fee.value
             for idx in range(MAX_GROUP_SIZE):
-                max_fee = self._block_contexts[self.gtx_key(idx, FEE_KEY)][b]
+                max_fee = self._block_contexts[self.gtx_key(idx, FEE_KEY)][block_new]
                 assert isinstance(max_fee, FeeValue)
                 if max_fee.is_unknown:
-                    b.transaction_context.gtxn_context(idx).max_fee_unknown = True
+                    block_old.transaction_context.gtxn_context(idx).max_fee_unknown = True
                 else:
-                    b.transaction_context.gtxn_context(idx).max_fee = max_fee.value
+                    block_old.transaction_context.gtxn_context(idx).max_fee = max_fee.value
