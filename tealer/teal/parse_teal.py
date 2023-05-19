@@ -698,7 +698,7 @@ def _identify_subroutine_blocks_NEW(entry_block: "BasicBlock") -> List["BasicBlo
         subroutines_blocks.append(bb)
 
         for next_bb in bb.next:
-            if next_bb not in subroutines_blocks:
+            if next_bb not in subroutines_blocks and next_bb not in stack:
                 stack.append(next_bb)
 
     return subroutines_blocks

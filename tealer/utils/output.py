@@ -5,7 +5,7 @@ and display different types of output formats used by tealer detectors
 and printers.
 
 Functions:
-    full_cfg_to_dot(bbs: List[BasicBlock], config: Optional[CFGDotConfig]=None, filename: Optional[Path]=None) -> None:
+    full_cfg_to_dot(teal: "Teal", config: Optional[CFGDotConfig]=None, filename: Optional[Path]=None) -> None:
         Exports dot representation of CFG represented by :bbs: in
         dot format to given filename.
 
@@ -171,7 +171,7 @@ def _bb_to_dot(bb: "BasicBlock", config: CFGDotConfig) -> str:
         table_rows.append(_instruction_to_dot(ins, config))
 
     graph_edges: List[str] = []
-    if config.color_edges and isinstance(bb.exit_instr, (BZ, BNZ, Callsub)):
+    if config.color_edges and isinstance(bb.exit_instr, (BZ, BNZ)):
         if isinstance(bb.exit_instr, (BZ, BNZ)):
             # color graph edges if exit instruction is BZ or BNZ.
             if len(bb.next) == 1:
@@ -185,10 +185,6 @@ def _bb_to_dot(bb: "BasicBlock", config: CFGDotConfig) -> str:
             if default_branch is not None:
                 graph_edges.append(graph_edge_str(bb, default_branch, config.default_branch_color))
             graph_edges.append(graph_edge_str(bb, jump_branch, config.jump_branch_color))
-        elif isinstance(bb.exit_instr, Callsub):
-            # make callsub instruction -> subroutine edge orange.
-            callsub_branch = bb.next[0]
-            graph_edges.append(graph_edge_str(bb, callsub_branch, config.callsub_edge_color))
     else:
         for next_bb in bb.next:
             graph_edges.append(graph_edge_str(bb, next_bb, config.remaining_edges_color))
@@ -205,42 +201,41 @@ def _bb_to_dot(bb: "BasicBlock", config: CFGDotConfig) -> str:
 def subroutine_to_dot(subroutine: "Subroutine", config: Optional[CFGDotConfig] = None) -> str:
     if config is None:
         config = CFGDotConfig()
-    # ignore edges from callsub and retsub.
+    # ignore edges from callsub to the return point block because we place an empty node to represent
+    # the called subroutine in between the callsub block and the return point.
     # replacing the ignore_edge function directly should be ok (?) for now
-    config.ignore_edge = lambda bi, _: isinstance(bi.exit_instr, (Callsub, Retsub))
+    config.ignore_edge = lambda bi, _: isinstance(bi.exit_instr, (Callsub))
 
-    def empty_subroutine_box(
-        callsub_block: "BasicBlock",
-        return_point_block: "BasicBlock",
-        called_subroutine: "Subroutine",
-    ) -> str:
+    def empty_subroutine_box(callsub_block: "BasicBlock") -> str:
         # Include a empty box between callsub and it's return point. Empty box represents
         # the subroutine called by `callsub`.
+        called_subroutine = callsub_block.called_subroutine_NEW
+        return_point_block = callsub_block.sub_return_point_NEW
+        if return_point_block is None:
+            # happens when callsub is the last instruction in the CFG and subroutine always exits the program.
+            return_point_block_idx = "none"
+        else:
+            return_point_block_idx = str(return_point_block.idx)
         content = (
             f'"Subroutine {called_subroutine.name}"'  # TODO: add other information in the future
         )
-        node_name = f"x{callsub_block.idx}_{return_point_block.idx}"
+        node_name = f"x{callsub_block.idx}_{return_point_block_idx}"
         edge1 = f"{callsub_block.idx}:s -> {node_name}:n;\n"  # callsub to empty box
-        # empty box to return point block
-        edge2 = (
-            f"{node_name}:s -> {return_point_block.idx}:{return_point_block.entry_instr.line}:n;\n"
-        )
+        edge2 = ""
+        if return_point_block is not None:
+            # edge from empty box to return point block
+            edge2 = f"{node_name}:s -> {return_point_block.idx}:{return_point_block.entry_instr.line}:n;\n"
+
         return f"{node_name}[label={content},style=dashed,shape=box,fontname=bold] {edge1}{edge2}"
 
     nodes_dot: List[str] = []
     for bi in subroutine.blocks:
         nodes_dot.append(_bb_to_dot(bi, config))
-        if isinstance(bi.exit_instr, Callsub):
+        if bi.is_callsub_block_NEW:
             # add empty box to represent the graph of called subroutine
             # add edge from callsub to that box and box to callsub return point.
             # ignoring recursion here. adds empty box even if callsub calls the same subroutine.
-            return_point_ins = bi.exit_instr.return_point
-            assert return_point_ins is not None
-            return_point_bb = return_point_ins.bb
-            assert return_point_bb is not None
-            called_subroutine = subroutine.contract.subroutine(bi.exit_instr.label)
-            assert called_subroutine is not None
-            nodes_dot.append(empty_subroutine_box(bi, return_point_bb, called_subroutine))
+            nodes_dot.append(empty_subroutine_box(bi))
 
     nodes_str = "\n".join(nodes_dot)
 
@@ -268,10 +263,10 @@ def all_subroutines_to_dot(
     main_entry_sub_filename = f"{filename_prefix}contract_shortened_cfg.dot"
 
     with open(dest / Path(main_entry_sub_filename), "w", encoding="utf-8") as f:
-        f.write(subroutine_to_dot(teal.main, config))
+        f.write(subroutine_to_dot(teal._main_NEW, config))
         print(f"Exported contract's shortened cfg to: {dest / Path(main_entry_sub_filename)}")
 
-    for sub_name, subroutine in teal.subroutines.items():
+    for sub_name, subroutine in teal._subroutines_NEW.items():
         filename = f"{filename_prefix}subroutine_{sub_name}_cfg.dot"
         with open(dest / Path(filename), "w", encoding="utf-8") as f:
             f.write(subroutine_to_dot(subroutine, config))
@@ -279,7 +274,7 @@ def all_subroutines_to_dot(
 
 
 def full_cfg_to_dot(  # pylint: disable=too-many-locals
-    bbs: List["BasicBlock"], config: Optional[CFGDotConfig] = None, filename: Optional[Path] = None
+    teal: "Teal", config: Optional[CFGDotConfig] = None, filename: Optional[Path] = None
 ) -> Optional[str]:
     """Export control flow graph to a dot file.
 
@@ -296,12 +291,11 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
 
     """
 
-    teal = bbs[0].teal
-    assert teal is not None
-    subroutine_block_idx = set(bb.idx for bb in teal.bbs if bb in teal.main.blocks)
+    bbs = teal._bbs_NEW
+    subroutine_block_idx = set(bb.idx for bb in teal._bbs_NEW if bb in teal._main_NEW.blocks)
     # responsible for "box" around each subroutine.
     subroutine_clusters: List[str] = []
-    for i, (subroutine_name, subroutine) in enumerate(teal.subroutines.items()):
+    for i, (subroutine_name, subroutine) in enumerate(teal._subroutines_NEW.items()):
         subroutine_bbs = subroutine.blocks
         cluster_name = i
         cluster_nodes = " ".join(str(bb.idx) for bb in subroutine_bbs)
@@ -326,9 +320,29 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
             else subroutine_blocks_border_color
         )
 
+    # ignore callsub block to return point edges. Add edges from callsub blocks to subroutine entry and retsubs to return points
+    config.ignore_edge = lambda bi, _: isinstance(bi.exit_instr, (Callsub))
+
+    # format: `{source_node}:s -> {dest_node}{dest_port}:n [color=""];`
+    def graph_edge_str(src_bb: "BasicBlock", dest_bb: "BasicBlock", edge_color: str) -> str:
+        return f'{src_bb.idx}:s -> {dest_bb.idx}:{dest_bb.entry_instr.line}:n [color="{edge_color}"];\n'
+
     bb_nodes_dot: List[str] = []
     for bb in bbs:
         bb_nodes_dot.append(_bb_to_dot(bb, config))
+        if bb.is_callsub_block_NEW:
+            # add edge from callsub block to subroutine entry
+            bb_nodes_dot.append(
+                graph_edge_str(bb, bb.called_subroutine_NEW.entry, config.callsub_edge_color)
+            )
+            # add edge from retsub blocks to return point
+            return_point_block = bb.sub_return_point_NEW
+            if return_point_block is None:
+                continue
+            for src_bb in bb.called_subroutine_NEW.retsub_blocks:
+                bb_nodes_dot.append(
+                    graph_edge_str(src_bb, return_point_block, config.remaining_edges_color)
+                )
 
     subroutine_clusters_str = "\n".join(subroutine_clusters)
     bb_nodes_str = "\n".join(bb_nodes_dot)
@@ -346,31 +360,6 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
     with open(filename, "w", encoding="utf-8") as f:
         f.write(dot_output)
     return None
-
-
-def _subroutine_to_dot_NEW(subroutine: "Subroutine", ind: int) -> str:
-    dot_output = f"subgraph cluster_X{ind} {{\n label={html.escape(subroutine.name, quote=True)}\n"
-
-    for bb in subroutine.blocks:
-        dot_output += _bb_to_dot(bb, CFGDotConfig())
-    dot_output += "}"
-
-    return dot_output
-
-
-def full_cfg_to_dot_NEW(teal: "Teal") -> str:
-    """Export CFG to dot"""
-    subroutines = list(teal._subroutines_NEW.values()) + [teal._main_NEW]
-    dot_output = "digraph g{\n ranksep = 1 \n overlap = scale \n"
-    for i, subroutine in enumerate(subroutines):
-        dot_output += _subroutine_to_dot_NEW(subroutine, i)
-        for callsub in subroutine.caller_blocks:
-            edge = f"{callsub.idx}:s -> {subroutine.entry.idx}:n;\n"
-            dot_output += edge
-
-    dot_output += "}"
-
-    return dot_output
 
 
 def detector_terminal_description(detector: "AbstractDetector") -> str:
@@ -412,7 +401,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
     @property
     def cfg(self) -> List["BasicBlock"]:
         """Control Flow of the teal contract."""
-        return self._teal.bbs
+        return self._teal._bbs_NEW
 
     @property
     def detector(self) -> "AbstractDetector":
@@ -507,7 +496,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
                     if bb not in path  # pylint: disable=cell-var-from-loop
                     else "RED"
                 )
-                full_cfg_to_dot(self.cfg, config, filename)
+                full_cfg_to_dot(self._teal, config, filename)
             print("-" * 100)
         else:
             bbs_to_highlight = []
@@ -523,7 +512,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
             print(f"\t\t check file: {filename}")
 
             config.bb_border_color = lambda bb: "BLACK" if bb not in bbs_to_highlight else "RED"
-            full_cfg_to_dot(self.cfg, config, filename)
+            full_cfg_to_dot(self._teal, config, filename)
 
     def to_json(self) -> Dict:
         """Return json representation of detector result.
