@@ -93,7 +93,7 @@ Validate `CloseRemainderTo` field in the LogicSig.
             )
 
         paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
-            self.teal.bbs[0], checks_field
+            self.teal, checks_field
         )
 
         return ExecutionPaths(self.teal, self, paths_without_check)

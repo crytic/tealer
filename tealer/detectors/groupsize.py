@@ -144,7 +144,7 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
             return False
 
         paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
-            self.teal.bbs[0], checks_group_size, satisfies_report_condition
+            self.teal, checks_group_size, satisfies_report_condition
         )
         construct_stack_ast.cache_clear()
 
