@@ -235,13 +235,4 @@ def detect_missing_tx_field_validations(
     paths_without_check: List[List["BasicBlock"]] = []
     search_paths(entry_block, [], paths_without_check, [(None, teal._main_NEW)], [[]])
 
-    # convert the path from new blocks to old blocks
-    converted_paths = []
-    d = {bb.idx: bb for bb in teal.bbs}
-    for path in paths_without_check:
-        s = []
-        for bb in path:
-            s.append(d[bb.idx])
-        converted_paths.append(s)
-
-    return converted_paths
+    return paths_without_check
