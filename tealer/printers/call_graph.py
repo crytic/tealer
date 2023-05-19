@@ -3,10 +3,9 @@
 import html
 import os
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, Set
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.teal.instructions.instructions import Callsub
 from tealer.utils.output import ROOT_OUTPUT_DIRECTORY
 
 
@@ -24,40 +23,26 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
     HELP = "Export the call graph of contract to a dot file"
     WIKI_URL = "https://github.com/crytic/tealer/wiki/Printer-documentation#call-graph"
 
-    def _construct_call_graph(self) -> Dict[str, List[str]]:
+    def _construct_call_graph(self) -> Dict[str, Set[str]]:
         """construct call graph for the contract.
 
-        entry point is treated as a separate subroutine/function `__entry__`.
+        entry point is treated as a separate subroutine/function `__main__`.
         For each subroutine, label(subroutine name) represents the node and each callsub
         instruction in the subroutine corresponds to directed edge to the target subroutine.
 
         Returns:
-            Dict[str, List[str]]: dictionary representing the graph. each `key` is a node and
-            `value` is a list representing the edges. Each str in value list corresponds to end
-            node for a directed edge from `key` node.
+            Dict[str, Set[str]]: dictionary representing the graph. The graph has edges from each
+            subroutine in d[key] to key. The source node of the edge are values and destination node is the key.
+            if d["S1"] = ["S2", "S3"] then graph has edges "S3 -> S1", "S2 -> S1".
         """
 
-        graph: Dict[str, List[str]] = {}
-        for sub_name, sub in self.teal.subroutines.items():
-            # graph edges
-            edges = []
-            for bb in sub.blocks:
-                for ins in bb.instructions:
-                    if isinstance(ins, Callsub):
-                        edges.append(ins.label)
+        graph: Dict[str, Set[str]] = {}
+        for _, subroutine in self.teal._subroutines_NEW.items():
+            graph[subroutine.name] = set(
+                map(lambda bi: bi.subroutine_NEW.name, subroutine.caller_blocks)
+            )
 
-            graph[sub_name] = edges
-
-        # treat entry point of the contract as a separate function
-        entry_function_blocks = self.teal.main.blocks
-        # use __entry__ as function name for entry point
-        entry_function_name = "__entry__"
-        graph[entry_function_name] = []
-        for bb in entry_function_blocks:
-            for ins in bb.instructions:
-                if isinstance(ins, Callsub):
-                    graph[entry_function_name].append(ins.label)
-
+        # no need to handle __main__ subroutine cause it is program entry point and there won't be caller blocks.
         return graph
 
     def print(self) -> None:
@@ -79,12 +64,12 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
 
         # construct dot representation of the graph
         graph_edges = ""
-        for sub_name, targets in graph.items():
-            sub_name = html.escape(sub_name, quote=True)
-            dot_output += f"{sub_name}[label={sub_name}];\n"
-            for target_sub in targets:
-                target_sub = html.escape(target_sub, quote=True)
-                graph_edges += f"{sub_name} -> {target_sub};\n"
+        for destination_sub, source_subs in graph.items():
+            destination_sub = html.escape(destination_sub, quote=True)
+            dot_output += f"{destination_sub}[label={destination_sub}];\n"
+            for source_sub in source_subs:
+                source_sub = html.escape(source_sub, quote=True)
+                graph_edges += f"{source_sub} -> {destination_sub};\n"
         dot_output += graph_edges
         dot_output += "}\n"
 
