@@ -87,6 +87,6 @@ Add a check in the contract code verifying that `RekeyTo` property of any transa
     def detect(self) -> "SupportedOutput":
 
         paths_without_check: List[List["BasicBlock"]] = []
-        self._check_rekey_to(self.teal._bbs_NEW[0], [], paths_without_check)
+        self._check_rekey_to(self.teal.bbs[0], [], paths_without_check)
 
         return ExecutionPaths(self.teal, self, paths_without_check)

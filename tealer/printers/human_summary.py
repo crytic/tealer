@@ -39,7 +39,7 @@ class PrinterHumanSummary(AbstractPrinter):
         """
 
         is_complex = False
-        if compute_cyclomatic_complexity(self.teal._bbs_NEW) > 7:
+        if compute_cyclomatic_complexity(self.teal.bbs) > 7:
             is_complex = True
 
         result = "Yes" if is_complex else "No"
@@ -139,14 +139,14 @@ class PrinterHumanSummary(AbstractPrinter):
         txt = "\n"
         txt += f"Program version: {teal.version}\n"
         txt += f"Mode: {contract_type_to_txt[teal.mode]}\n"
-        txt += f"Number of basic blocks: {len(teal._bbs_NEW)}\n"
-        txt += f"Number of instructions: {len(teal._instructions_NEW)}\n"
+        txt += f"Number of basic blocks: {len(teal.bbs)}\n"
+        txt += f"Number of instructions: {len(teal.instructions)}\n"
 
-        txt += f"Number of subroutines: {len(teal._subroutines_NEW.items())}\n"
+        txt += f"Number of subroutines: {len(teal.subroutines.items())}\n"
         txt += "Subroutines:\n"
-        for sub_name in teal._subroutines_NEW:
+        for sub_name in teal.subroutines:
             txt += f"\t{sub_name}\n"
-            block_ids = ", ".join(repr(bi) for bi in teal._subroutines_NEW[sub_name].blocks)
+            block_ids = ", ".join(repr(bi) for bi in teal.subroutines[sub_name].blocks)
             txt += f'\t\t"{block_ids}"\n'
         txt += f"is_complex: {self._is_complex_code()}\n"
         print(txt)

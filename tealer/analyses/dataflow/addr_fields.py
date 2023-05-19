@@ -170,7 +170,7 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         for key, addr_field_obj in key_and_addr_obj:
             if key not in self.BASE_KEYS:
                 continue
-            for block in self._teal._bbs_NEW:
+            for block in self._teal.bbs:
                 self._set_addr_values(
                     addr_field_obj(block.transaction_context),
                     self._block_contexts[key][block],

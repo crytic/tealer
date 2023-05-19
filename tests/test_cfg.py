@@ -298,10 +298,10 @@ def test_cfg_construction(test: Tuple[str, List[BasicBlock]]) -> None:
     teal = parse_teal(code.strip())
     for bb in cfg:
         print(bb)
-    for bb in teal._bbs_NEW:
+    for bb in teal.bbs:
         print(bb)
     print("*" * 20)
-    assert cmp_cfg(teal._bbs_NEW, cfg)
+    assert cmp_cfg(teal.bbs, cfg)
 
 
 @pytest.mark.parametrize("test", ALL_TESTS_NEW)  # type: ignore
@@ -312,12 +312,12 @@ def test_cfg_construction_new(
     teal = parse_teal(code.strip())
     for bb in expected_cfg:
         print(bb)
-    for bb in teal._bbs_NEW:
+    for bb in teal.bbs:
         print(bb)
     print("*" * 20)
-    assert cmp_cfg(teal._bbs_NEW, expected_cfg)
-    test_main = teal._main_NEW
-    test_subroutines = teal._subroutines_NEW
+    assert cmp_cfg(teal.bbs, expected_cfg)
+    test_main = teal.main
+    test_subroutines = teal.subroutines
 
     assert cmp_cfg([test_main.entry], [expected_main.entry])
     assert cmp_cfg(test_main.blocks, expected_main.blocks)

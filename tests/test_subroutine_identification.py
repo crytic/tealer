@@ -107,12 +107,12 @@ ALL_TESTS = [
 def test_subroutine_identification(test: Tuple[str, Subroutine, Dict[str, Subroutine]]) -> None:
     code, expected_main, expected_subroutines = test
     teal = parse_teal(code.strip())
-    test_main = teal._main_NEW
+    test_main = teal.main
 
     assert cmp_cfg([test_main.entry], [expected_main.entry])
     assert cmp_cfg(test_main.blocks, expected_main.blocks)
 
-    subroutines = teal._subroutines_NEW
+    subroutines = teal.subroutines
     assert len(subroutines.keys()) == len(expected_subroutines.keys())
     assert sorted(subroutines.keys()) == sorted(expected_subroutines.keys())
     for ex_name in expected_subroutines:

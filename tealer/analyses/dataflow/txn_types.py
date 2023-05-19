@@ -187,7 +187,7 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
     def _store_results(self) -> None:
         transaction_type_context = self._block_contexts[self.TRANSACTION_TYPE_KEY]
 
-        for block in self._teal._bbs_NEW:
+        for block in self._teal.bbs:
             block.transaction_context.transaction_types = list(transaction_type_context[block])
 
             for idx in range(16):

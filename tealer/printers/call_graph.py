@@ -37,9 +37,9 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
         """
 
         graph: Dict[str, Set[str]] = {}
-        for _, subroutine in self.teal._subroutines_NEW.items():
+        for _, subroutine in self.teal.subroutines.items():
             graph[subroutine.name] = set(
-                map(lambda bi: bi.subroutine_NEW.name, subroutine.caller_blocks)
+                map(lambda bi: bi.subroutine.name, subroutine.caller_blocks)
             )
 
         # no need to handle __main__ subroutine cause it is program entry point and there won't be caller blocks.

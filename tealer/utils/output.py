@@ -209,8 +209,8 @@ def subroutine_to_dot(subroutine: "Subroutine", config: Optional[CFGDotConfig] =
     def empty_subroutine_box(callsub_block: "BasicBlock") -> str:
         # Include a empty box between callsub and it's return point. Empty box represents
         # the subroutine called by `callsub`.
-        called_subroutine = callsub_block.called_subroutine_NEW
-        return_point_block = callsub_block.sub_return_point_NEW
+        called_subroutine = callsub_block.called_subroutine
+        return_point_block = callsub_block.sub_return_point
         if return_point_block is None:
             # happens when callsub is the last instruction in the CFG and subroutine always exits the program.
             return_point_block_idx = "none"
@@ -231,7 +231,7 @@ def subroutine_to_dot(subroutine: "Subroutine", config: Optional[CFGDotConfig] =
     nodes_dot: List[str] = []
     for bi in subroutine.blocks:
         nodes_dot.append(_bb_to_dot(bi, config))
-        if bi.is_callsub_block_NEW:
+        if bi.is_callsub_block:
             # add empty box to represent the graph of called subroutine
             # add edge from callsub to that box and box to callsub return point.
             # ignoring recursion here. adds empty box even if callsub calls the same subroutine.
@@ -263,10 +263,10 @@ def all_subroutines_to_dot(
     main_entry_sub_filename = f"{filename_prefix}contract_shortened_cfg.dot"
 
     with open(dest / Path(main_entry_sub_filename), "w", encoding="utf-8") as f:
-        f.write(subroutine_to_dot(teal._main_NEW, config))
+        f.write(subroutine_to_dot(teal.main, config))
         print(f"Exported contract's shortened cfg to: {dest / Path(main_entry_sub_filename)}")
 
-    for sub_name, subroutine in teal._subroutines_NEW.items():
+    for sub_name, subroutine in teal.subroutines.items():
         filename = f"{filename_prefix}subroutine_{sub_name}_cfg.dot"
         with open(dest / Path(filename), "w", encoding="utf-8") as f:
             f.write(subroutine_to_dot(subroutine, config))
@@ -291,11 +291,11 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
 
     """
 
-    bbs = teal._bbs_NEW
-    subroutine_block_idx = set(bb.idx for bb in teal._bbs_NEW if bb in teal._main_NEW.blocks)
+    bbs = teal.bbs
+    subroutine_block_idx = set(bb.idx for bb in teal.bbs if bb in teal.main.blocks)
     # responsible for "box" around each subroutine.
     subroutine_clusters: List[str] = []
-    for i, (subroutine_name, subroutine) in enumerate(teal._subroutines_NEW.items()):
+    for i, (subroutine_name, subroutine) in enumerate(teal.subroutines.items()):
         subroutine_bbs = subroutine.blocks
         cluster_name = i
         cluster_nodes = " ".join(str(bb.idx) for bb in subroutine_bbs)
@@ -308,6 +308,10 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
             }}
         """
         subroutine_clusters.append(subgraph_dot)
+
+    # format: `{source_node}:s -> {dest_node}{dest_port}:n [color=""];`
+    def graph_edge_str(src_bb: "BasicBlock", dest_bb: "BasicBlock", edge_color: str) -> str:
+        return f'{src_bb.idx}:s -> {dest_bb.idx}:{dest_bb.entry_instr.line}:n [color="{edge_color}"];\n'
 
     # default config
     if not config:
@@ -323,23 +327,19 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
     # ignore callsub block to return point edges. Add edges from callsub blocks to subroutine entry and retsubs to return points
     config.ignore_edge = lambda bi, _: isinstance(bi.exit_instr, (Callsub))
 
-    # format: `{source_node}:s -> {dest_node}{dest_port}:n [color=""];`
-    def graph_edge_str(src_bb: "BasicBlock", dest_bb: "BasicBlock", edge_color: str) -> str:
-        return f'{src_bb.idx}:s -> {dest_bb.idx}:{dest_bb.entry_instr.line}:n [color="{edge_color}"];\n'
-
     bb_nodes_dot: List[str] = []
     for bb in bbs:
         bb_nodes_dot.append(_bb_to_dot(bb, config))
-        if bb.is_callsub_block_NEW:
+        if bb.is_callsub_block:
             # add edge from callsub block to subroutine entry
             bb_nodes_dot.append(
-                graph_edge_str(bb, bb.called_subroutine_NEW.entry, config.callsub_edge_color)
+                graph_edge_str(bb, bb.called_subroutine.entry, config.callsub_edge_color)
             )
             # add edge from retsub blocks to return point
-            return_point_block = bb.sub_return_point_NEW
+            return_point_block = bb.sub_return_point
             if return_point_block is None:
                 continue
-            for src_bb in bb.called_subroutine_NEW.retsub_blocks:
+            for src_bb in bb.called_subroutine.retsub_blocks:
                 bb_nodes_dot.append(
                     graph_edge_str(src_bb, return_point_block, config.remaining_edges_color)
                 )
@@ -401,7 +401,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
     @property
     def cfg(self) -> List["BasicBlock"]:
         """Control Flow of the teal contract."""
-        return self._teal._bbs_NEW
+        return self._teal.bbs
 
     @property
     def detector(self) -> "AbstractDetector":

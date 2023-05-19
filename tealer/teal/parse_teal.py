@@ -98,7 +98,7 @@ def _detect_contract_type(instructions: List[Instruction]) -> ContractType:
     return ContractType.ANY
 
 
-def create_bb_NEW(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> None:
+def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> None:
     """Construct basic blocks and add basic block default edges.
 
     Third pass of the teal parser. Instructions are
@@ -175,7 +175,7 @@ def _add_instruction_comments(ins: Instruction) -> None:
         ins.tealer_comments.append(f"method-selector: {method_selector}")
 
 
-def _first_pass_NEW(  # pylint: disable=too-many-branches
+def _first_pass(  # pylint: disable=too-many-branches
     lines: List[str],
     labels: Dict[str, Label],
     subroutines: Dict[str, List[Callsub]],
@@ -263,7 +263,7 @@ def _first_pass_NEW(  # pylint: disable=too-many-branches
     return intcblock_ins, bytecblock_ins
 
 
-def _second_pass_NEW(  # pylint: disable=too-many-branches
+def _second_pass(  # pylint: disable=too-many-branches
     instructions: List[Instruction],
     labels: Dict[str, Label],
 ) -> None:
@@ -294,7 +294,7 @@ def _second_pass_NEW(  # pylint: disable=too-many-branches
                 labels[ins_label].add_prev(ins)
 
 
-def _fourth_pass_NEW(basic_blocks: List[BasicBlock]) -> None:  # pylint: disable=too-many-branches
+def _fourth_pass(basic_blocks: List[BasicBlock]) -> None:  # pylint: disable=too-many-branches
     """Add jump edges between basic blocks.
 
     Fourth pass of the teal parser. Jump edges
@@ -333,7 +333,7 @@ def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
     return bbs
 
 
-def _identify_subroutine_blocks_NEW(entry_block: "BasicBlock") -> List["BasicBlock"]:
+def _identify_subroutine_blocks(entry_block: "BasicBlock") -> List["BasicBlock"]:
     """find all the basic blocks part of a subroutine using DFS.
 
     Args:
@@ -501,20 +501,18 @@ def parse_teal(  # pylint: disable=too-many-locals
 
     lines = source_code.splitlines()
 
-    intcblock_ins, bytecblock_ins = _first_pass_NEW(
-        lines, labels, subroutine_callsubs, instructions
-    )
+    intcblock_ins, bytecblock_ins = _first_pass(lines, labels, subroutine_callsubs, instructions)
     logger_parsing.debug(f"subroutine_callsubs = {subroutine_callsubs}")
-    _second_pass_NEW(instructions, labels)
+    _second_pass(instructions, labels)
     logger_parsing.debug("instruction and nexts")
     for ins in instructions:
         logger_parsing.debug(f"     {ins}, next: {ins.next}")
 
     # Third pass over the instructions list: Construct the basic blocks and sequential links
     all_bbs: List[BasicBlock] = []
-    create_bb_NEW(instructions, all_bbs)
+    create_bb(instructions, all_bbs)
 
-    _fourth_pass_NEW(all_bbs)
+    _fourth_pass(all_bbs)
 
     all_bbs = _add_basic_blocks_idx(all_bbs)
     mode = _detect_contract_type(instructions)
@@ -532,7 +530,7 @@ def parse_teal(  # pylint: disable=too-many-locals
         # add tealer comment "Subroutine: {label}" to the subroutine entry block
         subroutine_entry_block.tealer_comments.append(f"Subroutine {subroutine_name}")
         # list all blocks of the subroutine using DFS
-        subroutine_blocks = _identify_subroutine_blocks_NEW(subroutine_entry_block)
+        subroutine_blocks = _identify_subroutine_blocks(subroutine_entry_block)
         subroutine_obj = Subroutine(subroutine_name, subroutine_entry_block, subroutine_blocks)
         # set callsub blocks calling the subroutine
         callsub_blocks = [ins.bb for ins in subroutine_callsubs[subroutine_name]]
@@ -543,27 +541,27 @@ def parse_teal(  # pylint: disable=too-many-locals
 
         # set subroutine to each basic block
         for bi in subroutine_blocks:
-            bi.subroutine_NEW = subroutine_obj
+            bi.subroutine = subroutine_obj
         subroutines[subroutine_name] = subroutine_obj
 
-    main_entry_point_blocks = _identify_subroutine_blocks_NEW(all_bbs[0])
+    main_entry_point_blocks = _identify_subroutine_blocks(all_bbs[0])
     main_program_name = "__main__"
     main_program = Subroutine(main_program_name, all_bbs[0], main_entry_point_blocks)
     for bi in main_entry_point_blocks:
-        bi.subroutine_NEW = main_program
+        bi.subroutine = main_program
 
     # TODO: Handle unreachable basic blocks.
     # Note: PyTeal generated contracts have unreachable code.
-    # unreachable blocks are not part of any subroutine and their subroutine_NEW field would not have been set.
+    # unreachable blocks are not part of any subroutine and their subroutine field would not have been set.
     # set main_program as the default subroutine for now.
     for bi in all_bbs:
-        if bi._subroutine is None:
-            bi.subroutine_NEW = main_program
+        if bi._subroutine is None:  # pylint: disable=protected-access
+            bi.subroutine = main_program
 
     teal = Teal(version, mode, instructions, all_bbs, main_program, subroutines)
 
     # set teal instance for it's basic blocks
-    for bb in teal._bbs_NEW:
+    for bb in teal.bbs:
         bb.teal = teal
         bb.tealer_comments.insert(0, f"block_id = {bb.idx}; cost = {bb.cost}")
 
@@ -571,7 +569,7 @@ def parse_teal(  # pylint: disable=too-many-locals
         subroutine.contract = teal
 
     teal.contract_name = contract_name
-    _fill_intc_bytec_info(intcblock_ins, bytecblock_ins, teal._main_NEW.entry, teal)
+    _fill_intc_bytec_info(intcblock_ins, bytecblock_ins, teal.main.entry, teal)
     _apply_transaction_context_analysis(teal)
 
     return teal

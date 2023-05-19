@@ -109,7 +109,7 @@ def test_parsing(target: str) -> None:
     with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     # print instruction to trigger __str__ on each ins
-    for i in teal._instructions_NEW:
+    for i in teal.instructions:
         assert not isinstance(i, instructions.UnsupportedInstruction), f'ins "{i}" is not supported'
         print(i, i.cost)
 
@@ -134,7 +134,7 @@ def _cmp_instructions(
 
 def test_parsing_2() -> None:
     teal = parse_teal(TEST_CODE)
-    ins1 = teal._instructions_NEW
+    ins1 = teal.instructions
     ins2 = [
         instructions.Intcblock([15, 15, 15]),
         instructions.Intcblock([]),
@@ -249,8 +249,8 @@ def test_instruction_properties() -> None:
     int 2
     """
     teal = parse_teal(CURRENT_TEST_CODE)
-    ins1 = teal._instructions_NEW[0]
-    ins2 = teal._instructions_NEW[1]
+    ins1 = teal.instructions[0]
+    ins2 = teal.instructions[1]
     assert ins1.prev == []
     assert ins1.next == [ins2]
     assert ins2.prev == [ins1]
@@ -313,7 +313,7 @@ def test_cost_values() -> None:
     ed25519verify_bare
     """
     teal = parse_teal(CURRENT_TEST_CODE)
-    for ins in teal._instructions_NEW:
+    for ins in teal.instructions:
         print("DSDF", ins, ins.cost)
         assert ins.cost == 0
 
@@ -330,7 +330,7 @@ def test_intc_bytec(test: str) -> None:
     with open(test, encoding="utf-8") as f:
         teal = parse_teal(f.read())
 
-    for ins in teal._instructions_NEW:
+    for ins in teal.instructions:
         if isinstance(ins, IntcInstruction):
             is_known, value = is_int_push_ins(ins)
             assert is_known
@@ -420,13 +420,13 @@ INTCBLOCK_FALSE_TESTS = [
 @pytest.mark.parametrize("test", INTCBLOCK_FALSE_TESTS)  # type: ignore
 def test_intc_bytec_false(test: str) -> None:
     teal = parse_teal(test)
-    for ins in teal._instructions_NEW:
+    for ins in teal.instructions:
         if isinstance(ins, IntcInstruction):
             is_int, value = is_int_push_ins(ins)
             assert is_int and value is None
 
     teal = parse_teal(test.replace("intc", "bytec"))
-    for ins in teal._instructions_NEW:
+    for ins in teal.instructions:
         if isinstance(ins, BytecInstruction):
             is_bytes, value = is_byte_push_ins(ins)
             assert is_bytes and value is None

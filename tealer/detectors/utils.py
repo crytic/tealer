@@ -196,8 +196,8 @@ def detect_missing_tx_field_validations(
             current_subroutine_executed[-1] + [bb]
         ]
 
-        if bb.is_callsub_block_NEW:
-            called_subroutine = bb.called_subroutine_NEW
+        if bb.is_callsub_block:
+            called_subroutine = bb.called_subroutine
             # check for recursion
             already_called_subroutines = [frame[1] for frame in current_call_stack]
             if called_subroutine in already_called_subroutines:
@@ -206,13 +206,13 @@ def detect_missing_tx_field_validations(
             current_call_stack = current_call_stack + [(bb, called_subroutine)]
             current_subroutine_executed = current_subroutine_executed + [[]]
 
-        if bb.is_retsub_block_NEW:
+        if bb.is_retsub_block:
             # if this block is retsub then it returns execution to the return
             # point of callsub block. return point is the next instruction after the callsub
             # instruction.
             (callsub_block, _) = current_call_stack[-1]
             assert callsub_block is not None
-            return_point = callsub_block.sub_return_point_NEW
+            return_point = callsub_block.sub_return_point
             if return_point is not None:
                 search_paths(
                     return_point,
@@ -231,8 +231,8 @@ def detect_missing_tx_field_validations(
                     current_subroutine_executed,
                 )
 
-    entry_block = teal._main_NEW.entry
+    entry_block = teal.main.entry
     paths_without_check: List[List["BasicBlock"]] = []
-    search_paths(entry_block, [], paths_without_check, [(None, teal._main_NEW)], [[]])
+    search_paths(entry_block, [], paths_without_check, [(None, teal.main)], [[]])
 
     return paths_without_check

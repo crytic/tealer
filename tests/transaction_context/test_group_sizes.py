@@ -287,9 +287,9 @@ def test_group_sizes(test: Tuple[str, List[BasicBlock]]) -> None:
     for bb_tested in cfg_tested:
         print(bb_tested)
     print("*" * 20)
-    assert cmp_cfg(teal._bbs_NEW, cfg_tested)
+    assert cmp_cfg(teal.bbs, cfg_tested)
 
-    bbs = order_basic_blocks(teal._bbs_NEW)
+    bbs = order_basic_blocks(teal.bbs)
     cfg_tested = order_basic_blocks(cfg_tested)
     for b1, b2 in zip(bbs, cfg_tested):
         print(b1.transaction_context.group_sizes, b2.transaction_context.group_sizes)
@@ -321,7 +321,7 @@ def test_group_indices(test: Tuple[str, List[List[int]]]) -> None:
     code, group_indices_list = test
     teal = parse_teal(code.strip())
 
-    bbs = order_basic_blocks(teal._bbs_NEW)
+    bbs = order_basic_blocks(teal.bbs)
     for bb_tested, group_indices in zip(bbs, group_indices_list):
         print(bb_tested.transaction_context.group_indices, group_indices)
         assert bb_tested.transaction_context.group_indices == group_indices

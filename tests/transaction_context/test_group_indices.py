@@ -183,6 +183,6 @@ def test_group_indices(test: Tuple[str, List[List[int]]]) -> None:
     code, group_indices = test
     teal = parse_teal(code.strip())
 
-    bbs = order_basic_blocks(teal._bbs_NEW)
+    bbs = order_basic_blocks(teal.bbs)
     for b, indices in zip(bbs, group_indices):
         assert b.transaction_context.group_indices == indices

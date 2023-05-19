@@ -136,23 +136,23 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
         self._teal = teal_instance
 
     @property
-    def subroutine_NEW(self) -> "Subroutine":
+    def subroutine(self) -> "Subroutine":
         """Subroutine instrance of the subroutine this basic block belongs to."""
         if self._subroutine is None:
             raise TealerException(f"subroutine of B{self._idx} is not initialized")
         return self._subroutine
 
-    @subroutine_NEW.setter
-    def subroutine_NEW(self, subroutine_instance: "Subroutine") -> None:
+    @subroutine.setter
+    def subroutine(self, subroutine_instance: "Subroutine") -> None:
         self._subroutine = subroutine_instance
 
     @property
-    def is_callsub_block_NEW(self) -> bool:
+    def is_callsub_block(self) -> bool:
         """Return True if the block calls a subroutine"""
         return isinstance(self.exit_instr, Callsub)
 
     @property
-    def called_subroutine_NEW(self) -> "Subroutine":
+    def called_subroutine(self) -> "Subroutine":
         """Return the subroutine called by this subroutine.
 
         Raises:
@@ -163,7 +163,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
         return self.exit_instr.called_subroutine
 
     @property
-    def sub_return_point_NEW(self) -> Optional["BasicBlock"]:
+    def sub_return_point(self) -> Optional["BasicBlock"]:
         """Return the return point block of this block.
 
         Returns:
@@ -175,32 +175,32 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
         Raises:
             TealerException: if this block is not a callsub_block.
         """
-        if not self.is_callsub_block_NEW:
+        if not self.is_callsub_block:
             raise TealerException("sub_return_point block of a non callsub block is accessed")
         return self.next[0] if self.next else None
 
     @property
-    def is_sub_return_point_NEW(self) -> bool:
+    def is_sub_return_point(self) -> bool:
         """Return True if this block is executed after the subroutine i.e next block of callsub_block"""
         for bi in self.prev:
-            if bi.is_callsub_block_NEW:
+            if bi.is_callsub_block:
                 return True
         return False
 
     @property
-    def callsub_block_NEW(self) -> "BasicBlock":
+    def callsub_block(self) -> "BasicBlock":
         """Return the callsub_block which calls the subroutine. This block is executed after the subroutine.
 
         Raises:
             TealerException: if this block is not a sub_return_point block.
         """
         for bi in self.prev:
-            if bi.is_callsub_block_NEW:
+            if bi.is_callsub_block:
                 return bi
         raise TealerException("callsub_block of a non sub_return_point block is accessed")
 
     @property
-    def is_retsub_block_NEW(self) -> bool:
+    def is_retsub_block(self) -> bool:
         return isinstance(self.exit_instr, Retsub)
 
     @property

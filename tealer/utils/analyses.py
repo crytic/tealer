@@ -368,10 +368,10 @@ def next_blocks_global(block: "BasicBlock") -> List["BasicBlock"]:
     global CFG is the single CFG representing the entire contract with callsub blocks connected
     to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
     """
-    if block.is_retsub_block_NEW:
-        return block.subroutine_NEW.return_point_blocks
-    if block.is_callsub_block_NEW:
-        return [block.called_subroutine_NEW.entry]
+    if block.is_retsub_block:
+        return block.subroutine.return_point_blocks
+    if block.is_callsub_block:
+        return [block.called_subroutine.entry]
     return block.next
 
 
@@ -382,15 +382,15 @@ def prev_blocks_global(block: "BasicBlock") -> List["BasicBlock"]:
     to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
     """
     assert block.teal is not None
-    if block == block.subroutine_NEW.entry:
+    if block == block.subroutine.entry:
         # if the block is the entry of the subroutine, return all blocks calling the subroutine
-        if block.subroutine_NEW != block.teal._main_NEW:
-            return block.subroutine_NEW.caller_blocks
+        if block.subroutine != block.teal.main:
+            return block.subroutine.caller_blocks
         # the block is the main entry block of the contract
         return []
-    if block.is_sub_return_point_NEW:
+    if block.is_sub_return_point:
         # if the block is the return point of the subroutine, return all retsub blocks of the subroutine
-        return block.callsub_block_NEW.called_subroutine_NEW.retsub_blocks
+        return block.callsub_block.called_subroutine.retsub_blocks
     # if its a normal block return previous blocks in the CFG.
     return block.prev
 
@@ -405,4 +405,4 @@ def leaf_block_global(block: "BasicBlock") -> bool:
     # Callsub block will have a next block, which is executed after executing the subroutine. However, when
     # Callsub block is the last block in the source code and the subroutine exits the program using return instruction,
     # Then callsub block will not have a next block but it is not considered a leaf block in global CFG.
-    return len(block.next) == 0 and not block.is_retsub_block_NEW and not block.is_callsub_block_NEW
+    return len(block.next) == 0 and not block.is_retsub_block and not block.is_callsub_block

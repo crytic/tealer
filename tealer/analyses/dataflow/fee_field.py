@@ -188,7 +188,7 @@ class FeeField(DataflowTransactionContext):
         return res
 
     def _store_results(self) -> None:
-        for block in self._teal._bbs_NEW:
+        for block in self._teal.bbs:
             max_fee = self._block_contexts[FEE_KEY][block]
             assert isinstance(max_fee, FeeValue)
             if max_fee.is_unknown:
