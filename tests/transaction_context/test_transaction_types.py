@@ -322,7 +322,7 @@ def test_tx_types(test: Tuple[str, List[List[int]], int]) -> None:
     code, tx_types_list, idx = test
     teal = parse_teal(code.strip())
 
-    bbs = order_basic_blocks(teal.bbs)
+    bbs = order_basic_blocks(teal._bbs_NEW)
     for b, tx_types in zip(bbs, tx_types_list):
         if idx == -1:
             ctx = b.transaction_context
@@ -504,7 +504,7 @@ def test_tx_types_gtxn(
     code, ex_txn_types_list, ex_gtxn_types_list = test
 
     teal = parse_teal(code.strip())
-    bbs = order_basic_blocks(teal.bbs)
+    bbs = order_basic_blocks(teal._bbs_NEW)
     print("number of blocks:", len(bbs))
     for block_num, b in enumerate(bbs):
         print(block_num, b)

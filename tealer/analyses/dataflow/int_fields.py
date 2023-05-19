@@ -199,15 +199,10 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
                 range(0, max(group_sizes_context[bi], default=0))
             )
 
-        # we performed analysis using new CFG basic blocks.
-        # store the results in the old CFG basic blocks to reuse the old tests.
-        old_blocks: List["BasicBlock"] = sorted(self._teal.bbs, key=lambda bb: bb.idx)
-        new_blocks: List["BasicBlock"] = sorted(self._teal._bbs_NEW, key=lambda bb: bb.idx)
-
         group_size_block_context = self._block_contexts[self.GROUP_SIZE_KEY]
-        for block_old, block_new in zip(old_blocks, new_blocks):
-            block_old.transaction_context.group_sizes = list(group_size_block_context[block_new])
+        for block in self._teal._bbs_NEW:
+            block.transaction_context.group_sizes = list(group_size_block_context[block])
 
         group_index_block_context = self._block_contexts[self.GROUP_INDEX_KEY]
-        for block_old, block_new in zip(old_blocks, new_blocks):
-            block_old.transaction_context.group_indices = list(group_index_block_context[block_new])
+        for block in self._teal._bbs_NEW:
+            block.transaction_context.group_indices = list(group_index_block_context[block])

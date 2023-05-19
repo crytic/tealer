@@ -691,7 +691,7 @@ def test_just_detectors(test: Tuple[str, List[KnownStackValue]]) -> None:
     code, expected_stack_values = test
     teal = parse_teal(code.strip())
     test_values: List[KnownStackValue] = []
-    for bi in teal.bbs:
+    for bi in teal._bbs_NEW:
         values = construct_stack_ast(bi)
         for ins in bi.instructions:
             test_values.append(values[ins])
@@ -703,7 +703,7 @@ def test_just_detectors(test: Tuple[str, List[KnownStackValue]]) -> None:
 
 if __name__ == "__main__":
     teal_obj = parse_teal(T2)
-    for bb in teal_obj.bbs:
+    for bb in teal_obj._bbs_NEW:
         print(bb)
         result = construct_stack_ast(bb)
         for i in bb.instructions:

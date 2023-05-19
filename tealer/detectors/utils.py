@@ -40,12 +40,6 @@ def validated_in_block(
     """
     # if field is checked using `txn {field}`, return true
 
-    # access transaction context using the block of the old CFG.
-    assert block.teal
-    for bb in block.teal.bbs:
-        if bb.idx == block.idx:
-            block = bb
-            break
     if checks_field(block.transaction_context):
         return True
     # for each possible {index} the transaction can have, check if field is checked using `gtxn {index} {field}`

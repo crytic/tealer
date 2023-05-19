@@ -226,7 +226,7 @@ if any of equation in Or(<1>, ...) is UnknownStackValue then `true_values` for O
 
 from abc import ABC, abstractmethod
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Set, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Set
 
 from tealer.teal.instructions.instructions import (
     Assert,
@@ -553,17 +553,10 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
         This requires that group_indices analysis is done before any other analysis.
         """
-        # block is new CFG block. transaction contexts are stored in old CFG blocks
-        # find the corresponding block in the old CFG and access transaction_context from it.
-        old_block: Optional["BasicBlock"] = None
-        for bi in self._teal.bbs:
-            if bi.idx == block.idx:
-                old_block = bi
-        assert old_block is not None
         for key in keys_with_gtxn:
             for ind in range(MAX_GROUP_SIZE):
                 gtx_key = self.gtx_key(ind, key)
-                if ind in old_block.transaction_context.group_indices:
+                if ind in block.transaction_context.group_indices:
                     # txn can have index {ind}
                     # gtxn {ind} {field} can have a value if and only if {txn} {field} can also have that value
                     self._block_contexts[gtx_key][block] = self._intersection(

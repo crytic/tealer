@@ -186,18 +186,10 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
 
     def _store_results(self) -> None:
         transaction_type_context = self._block_contexts[self.TRANSACTION_TYPE_KEY]
-        # we performed analysis using new CFG basic blocks.
-        # store the results in the old CFG basic blocks to reuse the old tests.
-        old_blocks: List["BasicBlock"] = sorted(self._teal.bbs, key=lambda bb: bb.idx)
-        new_blocks: List["BasicBlock"] = sorted(self._teal._bbs_NEW, key=lambda bb: bb.idx)
 
-        for block_old, block_new in zip(old_blocks, new_blocks):
-            block_old.transaction_context.transaction_types = list(
-                transaction_type_context[block_new]
-            )
+        for block in self._teal._bbs_NEW:
+            block.transaction_context.transaction_types = list(transaction_type_context[block])
 
             for idx in range(16):
-                values = self._block_contexts[self.gtx_key(idx, self.TRANSACTION_TYPE_KEY)][
-                    block_new
-                ]
-                block_old.transaction_context.gtxn_context(idx).transaction_types = list(values)
+                values = self._block_contexts[self.gtx_key(idx, self.TRANSACTION_TYPE_KEY)][block]
+                block.transaction_context.gtxn_context(idx).transaction_types = list(values)

@@ -107,7 +107,7 @@ def test_addr_fields(  # pylint: disable=too-many-locals
     ex_closeto_any, ex_closeto_none, ex_closeto = values[1]
     ex_assetcloseto_any, ex_assetcloseto_none, ex_assetcloseto = values[2]
 
-    bbs = order_basic_blocks(teal.bbs)
+    bbs = order_basic_blocks(teal._bbs_NEW)
     for b in bbs:
         if idx == -1:
             ctx = b.transaction_context

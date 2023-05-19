@@ -159,11 +159,6 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         ctx_addr_value.possible_addr = list(addr_values - set([ANY_ADDRESS, NO_ADDRESS]))
 
     def _store_results(self) -> None:
-        # we performed analysis using new CFG basic blocks.
-        # store the results in the old CFG basic blocks to reuse the old tests.
-        old_blocks: List["BasicBlock"] = sorted(self._teal.bbs, key=lambda bb: bb.idx)
-        new_blocks: List["BasicBlock"] = sorted(self._teal._bbs_NEW, key=lambda bb: bb.idx)
-
         key_and_addr_obj: List[
             Tuple[str, Callable[["BlockTransactionContext"], "AddrFieldValue"]]
         ] = [
@@ -175,14 +170,14 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         for key, addr_field_obj in key_and_addr_obj:
             if key not in self.BASE_KEYS:
                 continue
-            for block_old, block_new in zip(old_blocks, new_blocks):
+            for block in self._teal._bbs_NEW:
                 self._set_addr_values(
-                    addr_field_obj(block_old.transaction_context),
-                    self._block_contexts[key][block_new],
+                    addr_field_obj(block.transaction_context),
+                    self._block_contexts[key][block],
                 )
                 for idx in range(16):
-                    addr_values = self._block_contexts[self.gtx_key(idx, key)][block_new]
+                    addr_values = self._block_contexts[self.gtx_key(idx, key)][block]
                     self._set_addr_values(
-                        addr_field_obj(block_old.transaction_context.gtxn_context(idx)),
+                        addr_field_obj(block.transaction_context.gtxn_context(idx)),
                         addr_values,
                     )

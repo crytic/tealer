@@ -407,7 +407,7 @@ def test_tx_types_gtxn(
 
     teal = parse_teal(code.strip())
 
-    bbs = order_basic_blocks(teal.bbs)
+    bbs = order_basic_blocks(teal._bbs_NEW)
     for i, b in enumerate(bbs):
         print("X:", i, repr(b), b.transaction_context.max_fee)
         if isinstance(max_fees_list[i], bool):
