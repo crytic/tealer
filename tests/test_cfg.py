@@ -48,7 +48,7 @@ ins_list = [
 ]
 
 ins_partitions = [(0, 2), (2, 6), (6, 8), (8, 11), (11, 14), (14, 15)]
-bbs_links = [(0, 4), (4, 1), (1, 2), (1, 3), (2, 5), (3, 5)]
+bbs_links = [(0, 4), (4, 5), (1, 2), (1, 3)]
 
 bbs_edges_new = [(0, 4), (4, 5), (1, 2), (1, 3)]
 
@@ -96,7 +96,7 @@ ins_list = [
 ]
 
 ins_partitions = [(0, 2), (2, 5), (5, 8), (8, 11), (11, 12)]
-bbs_links = [(0, 3), (3, 2), (2, 1), (1, 4)]
+bbs_links = [(0, 3), (3, 4), (2, 1)]
 
 bbs_edges_new = [(0, 3), (3, 4), (2, 1)]
 
@@ -298,10 +298,10 @@ def test_cfg_construction(test: Tuple[str, List[BasicBlock]]) -> None:
     teal = parse_teal(code.strip())
     for bb in cfg:
         print(bb)
-    for bb in teal.bbs:
+    for bb in teal._bbs_NEW:
         print(bb)
     print("*" * 20)
-    assert cmp_cfg(teal.bbs, cfg)
+    assert cmp_cfg(teal._bbs_NEW, cfg)
 
 
 @pytest.mark.parametrize("test", ALL_TESTS_NEW)  # type: ignore

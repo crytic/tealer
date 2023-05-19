@@ -7,16 +7,12 @@ from tealer.teal.instructions import instructions
 from tealer.teal.instructions.instructions import (
     IntcInstruction,
     BytecInstruction,
-    Callsub,
-    Retsub,
 )
 from tealer.teal.instructions import transaction_field
 from tealer.teal.instructions.parse_instruction import parse_line, ParseError
 from tealer.teal.parse_teal import parse_teal
 from tealer.utils.analyses import is_int_push_ins, is_byte_push_ins
 from tealer.exceptions import TealerException
-
-from tests.utils import order_basic_blocks, cmp_instructions, cmp_basic_blocks
 
 TARGETS = [
     "tests/parsing/teal1-instructions.teal",
@@ -113,64 +109,9 @@ def test_parsing(target: str) -> None:
     with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     # print instruction to trigger __str__ on each ins
-    for i in teal.instructions:
-        assert not isinstance(i, instructions.UnsupportedInstruction), f'ins "{i}" is not supported'
-        print(i, i.cost)
-
-
-# test parsing by comparing old CFG and new CFG.
-@pytest.mark.parametrize("target", TARGETS)  # type: ignore
-def test_parsing_with_reference(target: str) -> None:  # pylint: disable=too-many-locals
-    with open(target, encoding="utf-8") as f:
-        teal = parse_teal(f.read())
-
     for i in teal._instructions_NEW:
         assert not isinstance(i, instructions.UnsupportedInstruction), f'ins "{i}" is not supported'
         print(i, i.cost)
-
-    # instructions should be same
-    assert len(teal._instructions_NEW) == len(teal.instructions)
-    for ins_new, ins_old in zip(teal._instructions_NEW, teal.instructions):
-        assert cmp_instructions(ins_new, ins_old)
-
-    # divison of contract into basic blocks should also be same
-    assert len(teal._bbs_NEW) == len(teal.bbs)
-    bbs_new = order_basic_blocks(teal._bbs_NEW)
-    bbs_old = order_basic_blocks(teal.bbs)
-    for bb_new, bb_old in zip(bbs_new, bbs_old):
-        assert bb_new.idx == bb_old.idx
-        assert cmp_basic_blocks(bb_new, bb_old)
-
-    # next blocks of blocks ending with callsub should be different
-    # next blocks of blocks ending with retsub should be different
-    # Other blocks should have same next blocks
-    for bb_new, bb_old in zip(bbs_new, bbs_old):
-        if isinstance(bb_new.exit_instr, Retsub):
-            # retsub is exit instruction
-            assert len(bb_new.next) == 0
-            continue
-        if isinstance(bb_new.exit_instr, Callsub):
-            # callsub has one next block unless it is the last instruction
-            assert len(bb_new.next) == 0 or len(bb_new.next) == 1
-            if len(bb_new.next) == 0:
-                continue
-            # return points should be equal
-            return_point_block_new = bb_new.next[0]
-            assert isinstance(bb_old.exit_instr, Callsub)
-            assert bb_old.exit_instr.return_point
-            return_point_block_old = bb_old.exit_instr.return_point.bb
-
-            assert return_point_block_new.idx == return_point_block_old.idx
-            assert cmp_basic_blocks(return_point_block_new, return_point_block_old)
-            continue
-
-        next_new = order_basic_blocks(list(set(bb_new.next)))
-        next_old = order_basic_blocks(list(set(bb_old.next)))
-
-        assert len(next_new) == len(next_old)
-        for bi, bj in zip(next_new, next_old):
-            assert bi.idx == bj.idx
-            assert cmp_basic_blocks(bi, bj)
 
 
 def _cmp_instructions(
@@ -193,7 +134,7 @@ def _cmp_instructions(
 
 def test_parsing_2() -> None:
     teal = parse_teal(TEST_CODE)
-    ins1 = teal.instructions
+    ins1 = teal._instructions_NEW
     ins2 = [
         instructions.Intcblock([15, 15, 15]),
         instructions.Intcblock([]),
@@ -308,21 +249,13 @@ def test_instruction_properties() -> None:
     int 2
     """
     teal = parse_teal(CURRENT_TEST_CODE)
-    ins1 = teal.instructions[0]
-    ins2 = teal.instructions[1]
+    ins1 = teal._instructions_NEW[0]
+    ins2 = teal._instructions_NEW[1]
     assert ins1.prev == []
     assert ins1.next == [ins2]
     assert ins2.prev == [ins1]
     assert ins2.next == []
     assert ins1.comment == "// comment"
-
-    # cannot set return point of callsub instruction multiple times
-    ins = parse_line("callsub main")
-    assert isinstance(ins, instructions.Callsub) and ins.return_point is None
-
-    ins.return_point = parse_line("int 1")
-    with pytest.raises(Exception):
-        ins.return_point = parse_line("int 1")  # cannot set multiple times
 
     # accessing replace instruction start_position fails if it is None i.e if there's no immediate argument.
     # it should be checked that whether given replace instruction is semantically equivalent to replace2 or replace3.
@@ -380,7 +313,7 @@ def test_cost_values() -> None:
     ed25519verify_bare
     """
     teal = parse_teal(CURRENT_TEST_CODE)
-    for ins in teal.instructions:
+    for ins in teal._instructions_NEW:
         print("DSDF", ins, ins.cost)
         assert ins.cost == 0
 
@@ -397,7 +330,7 @@ def test_intc_bytec(test: str) -> None:
     with open(test, encoding="utf-8") as f:
         teal = parse_teal(f.read())
 
-    for ins in teal.instructions:
+    for ins in teal._instructions_NEW:
         if isinstance(ins, IntcInstruction):
             is_known, value = is_int_push_ins(ins)
             assert is_known
@@ -487,13 +420,13 @@ INTCBLOCK_FALSE_TESTS = [
 @pytest.mark.parametrize("test", INTCBLOCK_FALSE_TESTS)  # type: ignore
 def test_intc_bytec_false(test: str) -> None:
     teal = parse_teal(test)
-    for ins in teal.instructions:
+    for ins in teal._instructions_NEW:
         if isinstance(ins, IntcInstruction):
             is_int, value = is_int_push_ins(ins)
             assert is_int and value is None
 
     teal = parse_teal(test.replace("intc", "bytec"))
-    for ins in teal.instructions:
+    for ins in teal._instructions_NEW:
         if isinstance(ins, BytecInstruction):
             is_bytes, value = is_byte_push_ins(ins)
             assert is_bytes and value is None

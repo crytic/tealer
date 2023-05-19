@@ -25,7 +25,7 @@ field_info_pattern = re.compile(r"\(version: ([0-9]+)\)")
 def test_instruction_version(target: str) -> None:
     with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
-    for ins in teal.instructions:
+    for ins in teal._instructions_NEW:
         match_obj = instruction_info_pattern.search(ins.comment)
         if match_obj is None:
             continue
@@ -45,7 +45,7 @@ def test_instruction_version(target: str) -> None:
 def test_field_version(target: str) -> None:
     with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
-    for ins in teal.instructions:
+    for ins in teal._instructions_NEW:
         field = getattr(ins, "field", None)
         if field is None:
             continue

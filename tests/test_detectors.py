@@ -56,7 +56,7 @@ def test_just_detectors(test: Tuple[str, Type[AbstractDetector], List[List[int]]
     teal = parse_teal(code.strip())
     teal.register_detector(detector)
     result = teal.run_detectors()[0]
-    for bi in teal.bbs:
+    for bi in teal._bbs_NEW:
         print(
             bi,
             bi.idx,

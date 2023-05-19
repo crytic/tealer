@@ -26,6 +26,6 @@ TARGETS = [
 def test_parsing_using_pyteal(target: str) -> None:
     teal = parse_teal(target)
     # print instruction to trigger __str__ on each ins
-    for i in teal.instructions:
+    for i in teal._instructions_NEW:
         assert not isinstance(i, instructions.UnsupportedInstruction), f'ins "{i}" is not supported'
         print(i, i.cost)

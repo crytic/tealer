@@ -72,7 +72,6 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         self._bb: Optional["BasicBlock"] = None
         self._version: int = 1
         self._mode: ContractType = ContractType.ANY
-        self._callsub_ins: Optional["Instruction"] = None
 
     def add_prev(self, prev_ins: "Instruction") -> None:
         """Add instruction that may execute just before this instruction.
@@ -1739,30 +1738,8 @@ class Callsub(InstructionWithLabel):
 
     def __init__(self, label: str):
         super().__init__(label)
-        self._return_point: Optional[Instruction] = None
         self._version: int = 4
         self._called_subroutine: Optional["Subroutine"] = None
-
-    @property
-    def return_point(self) -> Optional[Instruction]:
-        """Return point of this call instruction.
-
-        Execution returns to the next instruction of the call instruction
-        after executing the called subroutine. This property returns instance
-        of that instruction. This is helpful in construction of contract CFG and
-        subroutine CFGs.
-        """
-        # TODO: raise Error if return_point is None
-        # if self._return_point is None:
-        # return point is accessed before assignment
-        # raise TealerException(f"Callsub return point is accessed before assignment: {str(self)}")
-        return self._return_point
-
-    @return_point.setter
-    def return_point(self, ins: Instruction) -> None:
-        if self._return_point is not None:
-            raise ValueError("Return point already set")
-        self._return_point = ins
 
     @property
     def called_subroutine(self) -> "Subroutine":

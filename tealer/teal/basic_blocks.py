@@ -122,28 +122,6 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
         self._idx = i
 
     @property
-    def callsub_block(self) -> Optional["BasicBlock"]:
-        """If this block is the return point of a subroutine, `callsub_block` is the block
-        that called the subroutine.
-        """
-        return self._callsub_block
-
-    @callsub_block.setter
-    def callsub_block(self, b: "BasicBlock") -> None:
-        self._callsub_block = b
-
-    @property
-    def sub_return_point(self) -> Optional["BasicBlock"]:
-        """If a subroutine is executed after this block i.e exit instruction is callsub.
-        then, sub_return_point will be basic block that will be executed after the subroutine.
-        """
-        return self._sub_return_point
-
-    @sub_return_point.setter
-    def sub_return_point(self, b: "BasicBlock") -> None:
-        self._sub_return_point = b
-
-    @property
     def cost(self) -> int:
         """cost of executing all instructions in this basic block"""
         return sum(ins.cost for ins in self.instructions)

@@ -10,7 +10,7 @@ Classes:
 """
 
 import logging
-from typing import List, Any, Optional, Type, TYPE_CHECKING, Tuple, Dict
+from typing import List, Any, Type, TYPE_CHECKING, Tuple, Dict
 
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorClassification
 from tealer.printers.abstract_printer import AbstractPrinter
@@ -78,25 +78,16 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        instructions: List[Instruction],
-        bbs: List[BasicBlock],
         version: int,
         mode: ContractType,
-        main: Subroutine,
-        # subroutines: List[List["BasicBlock"]],
-        subroutines: Dict[str, Subroutine],
         # NEW CFG objects
         instructions_NEW: List[Instruction],
         bbs_NEW: List[BasicBlock],
         main_NEW: Subroutine,
         subroutines_NEW: Dict[str, Subroutine],
     ):
-        self._instructions = instructions
-        self._bbs = bbs
         self._version = version
         self._mode = mode
-        self._main = main
-        self._subroutines = subroutines
         self._int_constants: List[int] = []
         self._byte_constants: List[str] = []
 
@@ -108,16 +99,6 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         self._contract_name: str = ""
         self._detectors: List[AbstractDetector] = []
         self._printers: List[AbstractPrinter] = []
-
-    @property
-    def instructions(self) -> List[Instruction]:
-        """List of instructions of the contract"""
-        return self._instructions
-
-    @property
-    def bbs(self) -> List[BasicBlock]:
-        """CFG of the contract"""
-        return self._bbs
 
     @property
     def version(self) -> int:
@@ -151,31 +132,12 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         self._mode = m
 
     @property
-    def main(self) -> "Subroutine":
-        "Returns subroutine representing the contract entry-point"
-        return self._main
-
-    @property
-    def subroutines(self) -> Dict[str, "Subroutine"]:
-        """Returns dict of subroutine names and corresponding subroutine obj."""
-        return self._subroutines
-
-    @property
-    def subroutines_list(self) -> List["Subroutine"]:
-        """Returns list of all contract's subroutines"""
-        return list(self._subroutines.values())
-
-    @property
     def contract_name(self) -> str:
         return self._contract_name
 
     @contract_name.setter
     def contract_name(self, name: str) -> None:
         self._contract_name = name
-
-    def subroutine(self, name: str) -> Optional["Subroutine"]:
-        """Return subroutine with id/name `name`, return none if subroutine does not exist."""
-        return self._subroutines.get(name, None)
 
     def get_int_constant(self, index: int) -> Tuple[bool, int]:
         """Return int value stored by intcblock instruction
