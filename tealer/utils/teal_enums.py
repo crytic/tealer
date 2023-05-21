@@ -25,7 +25,7 @@ class TealerTransactionType(ComparableEnum):
         return self.name
 
 
-class TransactionTypeEnum(ComparableEnum):
+class TransactionType(ComparableEnum):
     Invalid = 0x0
     Pay = 0x1
     KeyReg = 0x02
@@ -33,6 +33,7 @@ class TransactionTypeEnum(ComparableEnum):
     Axfer = 0x4
     Afrz = 0x5
     Appl = 0x6
+    Unknown = 0x7
 
 
 class TransactionOnCompletion(ComparableEnum):

@@ -467,6 +467,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
                 Default False.
         """
 
+        dest = dest / Path(self._teal.contract_name)
         print(self.description)
         if len(self.paths) == 0:
             print("\tDetector didn't find any vulnerable paths.")

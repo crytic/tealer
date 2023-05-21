@@ -13,8 +13,10 @@ Functions:
 
 """
 import inspect
+import argparse
+import re
 
-from typing import List, Type, Tuple
+from typing import List, Type, Tuple, TYPE_CHECKING
 from pkg_resources import iter_entry_points  # type: ignore
 from prettytable import PrettyTable
 
@@ -27,6 +29,17 @@ from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.detectors import all_detectors
 from tealer.printers import all_printers
 from tealer.exceptions import TealerException
+from tealer.utils.algoexplorer import (
+    get_application_using_app_id,
+    logic_sig_from_contract_account,
+    logic_sig_from_txn_id,
+)
+from tealer.teal.parse_teal import parse_teal
+from tealer.teal.parse_functions import UserConfig, construct_functions
+from tealer.group_config.group_config import GroupTransaction
+
+if TYPE_CHECKING:
+    from tealer.tealer import Tealer
 
 
 def collect_plugins() -> Tuple[List[Type[AbstractDetector]], List[Type[AbstractPrinter]]]:
@@ -270,3 +283,40 @@ def output_wiki(detector_classes: List[Type[AbstractDetector]], filter_wiki: str
             print(exploit_scenario)
         print("\n### Recommendation")
         print(recommendation)
+
+
+def fetch_contract(program: str, network: str) -> Tuple[str, str]:
+    b32_regex = "[A-Z2-7]+"
+    if program.isdigit():
+        # is a number so a app id
+        print(f'Fetching application using id "{program}"')
+        return get_application_using_app_id(network, int(program)), f"app-{program}"
+    if len(program) == 52 and re.fullmatch(b32_regex, program) is not None:
+        # is a txn id: base32 encoded. length after encoding == 52
+        print(f'Fetching logic-sig contract that signed the transaction "{program}"')
+        return logic_sig_from_txn_id(network, program), f"txn-{program[:8].lower()}"
+    if len(program) == 58 and re.fullmatch(b32_regex, program) is not None:
+        # is a address. base32 encoded. length after encoding == 58
+        print(f'Fetching logic-sig of contract account "{program}"')
+        return logic_sig_from_contract_account(network, program), f"lsig-acc-{program[:8].lower()}"
+    # file path
+    print(f'Reading contract from file: "{program}"')
+    try:
+        contract_name = program[: -len(".teal")] if program.endswith(".teal") else program
+        contract_name = contract_name.lower()
+        with open(program, encoding="utf-8") as f:
+            return f.read(), contract_name
+    except FileNotFoundError as e:
+        raise TealerException from e
+
+
+def handle_programs(programs: List[str], network: str) -> "Tealer":
+    contracts = []
+    group_configs: List[GroupTransaction] = []
+    for program in programs:
+        contract_source, contract_name = fetch_contract(program, network)
+        teal = parse_teal(contract_source, contract_name)
+        function = construct_functions(teal, UserConfig())
+        teal.functions = [function]
+        contracts.append(teal)
+    return Tealer(contracts, group_configs)
