@@ -17,7 +17,7 @@ from tealer.printers.abstract_printer import AbstractPrinter
 
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.subroutine import Subroutine
-from tealer.teal.instructions.instructions import Instruction, ContractType
+from tealer.teal.instructions.instructions import Instruction, ExecutionMode
 from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
@@ -79,7 +79,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     def __init__(  # pylint: disable=too-many-arguments
         self,
         version: int,
-        mode: ContractType,
+        mode: ExecutionMode,
         instructions: List[Instruction],
         bbs: List[BasicBlock],
         main: Subroutine,
@@ -125,7 +125,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         self._version = ver
 
     @property
-    def mode(self) -> ContractType:
+    def mode(self) -> ExecutionMode:
         """Type of the contract: Stateless, Stateful or Any.
 
         Mode is determined based on the instructions of the contract. if there are
@@ -137,7 +137,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         return self._mode
 
     @mode.setter
-    def mode(self, m: ContractType) -> None:
+    def mode(self, m: ExecutionMode) -> None:
         self._mode = m
 
     @property
@@ -193,7 +193,14 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         return True, self._int_constants[index]
 
     def get_byte_constant(self, index: int) -> Tuple[bool, str]:
-        """Return []byte value stored by bytecblock instruction"""
+        """Return []byte value stored by bytecblock instruction
+
+        Behavior is same as `get_int_constant`.
+
+        Returns:
+            bool: True if Tealer was able to determine the value referred by that instruction or else False
+            int: value referred by bytec instruction at that index.
+        """
         if len(self._byte_constants) <= index:
             return False, ""
         return True, self._byte_constants[index]

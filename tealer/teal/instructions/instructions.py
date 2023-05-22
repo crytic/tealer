@@ -6,20 +6,6 @@ class which defines common methods and properties of teal instructions.
 
 Few teal instructions have immediate values which are defined and stored
 as appropriate properties in the class representing that instruction.
-
-Attributes:
-    ContractType: ContractType is a comparable enumerator. it defines
-        three symbols ``STATELESS``, ``STATEFULL``, ``ANY``.
-        ``STATELESS`` represents stateless(signature) contracts,
-        ``STATEFULL`` represents stateful(Application) contracts and
-        ``ANY`` represents that contract is either ``STATELESS`` Or
-        ``STATEFULL``. Exact meaning of the symbols depend on the place
-        of usage.
-
-    contract_type_to_txt: This is a mapping from ContractType symbol to
-        their corresponding string representation. Useful while printing
-        or outputting ContractType variable.
-
 """
 
 # pylint: disable=too-many-lines
@@ -31,25 +17,12 @@ from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
 from tealer.teal.instructions.acct_params_field import AcctParamsField
-from tealer.utils.comparable_enum import ComparableEnum
+from tealer.utils.teal_enums import ExecutionMode
 from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
     from tealer.teal.subroutine import Subroutine
-
-
-class ContractType(ComparableEnum):
-    STATELESS = 0
-    STATEFULL = 1
-    ANY = 2
-
-
-contract_type_to_txt = {
-    ContractType.STATEFULL: "stateful",
-    ContractType.STATELESS: "stateless",
-    ContractType.ANY: "any",
-}
 
 
 class Instruction:  # pylint: disable=too-many-instance-attributes
@@ -71,7 +44,7 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         self._tealer_comments: List[str] = []
         self._bb: Optional["BasicBlock"] = None
         self._version: int = 1
-        self._mode: ContractType = ContractType.ANY
+        self._mode: ExecutionMode = ExecutionMode.ANY
 
     def add_prev(self, prev_ins: "Instruction") -> None:
         """Add instruction that may execute just before this instruction.
@@ -230,7 +203,7 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         return 0
 
     @property
-    def mode(self) -> ContractType:
+    def mode(self) -> ExecutionMode:
         """Type of smart contract this instruction execution is supported in.
 
         Execution of every teal instruction is not supported in all types
@@ -693,7 +666,7 @@ class Gload(Instruction):
         self._idx = idx
         self._slot = slot
         self._version: int = 4
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return f"gload {self._idx} {self._slot}"
@@ -725,7 +698,7 @@ class Gloads(Instruction):
         super().__init__()
         self._slot = slot
         self._version: int = 4
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return f"gloads {self._slot}"
@@ -757,7 +730,7 @@ class Gaid(Instruction):
         super().__init__()
         self._idx = idx
         self._version: int = 4
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return f"gaid {self._idx}"
@@ -784,7 +757,7 @@ class Gaids(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 4
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -1798,7 +1771,7 @@ class AppGlobalGet(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_global_get"
@@ -1833,7 +1806,7 @@ class AppGlobalGetEx(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_global_get_ex"
@@ -1861,7 +1834,7 @@ class AppGlobalPut(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_global_put"
@@ -1886,7 +1859,7 @@ class AppGlobalDel(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_global_del"
@@ -1920,7 +1893,7 @@ class AppLocalGetEx(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_local_get_ex"
@@ -1954,7 +1927,7 @@ class AppLocalGet(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_local_get"
@@ -1987,7 +1960,7 @@ class AppLocalPut(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_local_put"
@@ -2015,7 +1988,7 @@ class AppLocalDel(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_local_del"
@@ -2051,7 +2024,7 @@ class AssetHoldingGet(Instruction):
         super().__init__()
         self._field: AssetHoldingField = field
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> AssetHoldingField:
@@ -2093,7 +2066,7 @@ class AssetParamsGet(Instruction):
         super().__init__()
         self._field: AssetParamsField = field
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> AssetParamsField:
@@ -2135,7 +2108,7 @@ class AppParamsGet(Instruction):
         super().__init__()
         self._field: AppParamsField = field
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> AppParamsField:
@@ -2175,7 +2148,7 @@ class AppOptedIn(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_opted_in"
@@ -2209,7 +2182,7 @@ class Balance(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -2238,7 +2211,7 @@ class MinBalance(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 3
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "min_balance"
@@ -3473,7 +3446,7 @@ class Log(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -3493,7 +3466,7 @@ class Itxn_begin(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
 
 class Itxn_field(Instruction):
@@ -3517,7 +3490,7 @@ class Itxn_field(Instruction):
         super().__init__()
         self._field: TransactionField = field
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> TransactionField:
@@ -3548,7 +3521,7 @@ class Itxn_submit(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
 
 class Itxn(Instruction):
@@ -3567,7 +3540,7 @@ class Itxn(Instruction):
         super().__init__()
         self._field: TransactionField = field
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> TransactionField:
@@ -3606,7 +3579,7 @@ class Itxna(Instruction):
         super().__init__()
         self._field: TransactionField = field
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> TransactionField:
@@ -3759,7 +3732,7 @@ class Args(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     @property
     def stack_pop_size(self) -> int:
@@ -4279,7 +4252,7 @@ class Arg(Instruction):
     def __init__(self, idx: int):
         super().__init__()
         self._idx = idx
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     def __str__(self) -> str:
         return f"arg {self._idx}"
@@ -4299,7 +4272,7 @@ class Arg0(Instruction):
 
     def __init__(self) -> None:
         super().__init__()
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     def __str__(self) -> str:
         return "arg_0"
@@ -4319,7 +4292,7 @@ class Arg1(Instruction):
 
     def __init__(self) -> None:
         super().__init__()
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     def __str__(self) -> str:
         return "arg_1"
@@ -4339,7 +4312,7 @@ class Arg2(Instruction):
 
     def __init__(self) -> None:
         super().__init__()
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     def __str__(self) -> str:
         return "arg_2"
@@ -4359,7 +4332,7 @@ class Arg3(Instruction):
 
     def __init__(self) -> None:
         super().__init__()
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     def __str__(self) -> str:
         return "arg_3"
@@ -4562,7 +4535,7 @@ class AcctParamsGet(Instruction):
         super().__init__()
         self._field: AcctParamsField = field
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> AcctParamsField:
@@ -4641,7 +4614,7 @@ class Itxn_next(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
 
 class Divw(Instruction):
@@ -4690,7 +4663,7 @@ class Gitxn(Instruction):
         self._idx = idx
         self._field: TransactionField = field
         self._version = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def idx(self) -> int:
@@ -4732,7 +4705,7 @@ class Gitxna(Instruction):
         self._idx = idx
         self._field: TransactionField = field
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def idx(self) -> int:
@@ -4779,7 +4752,7 @@ class Gloadss(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
 
 class Itxnas(Instruction):
@@ -4804,7 +4777,7 @@ class Itxnas(Instruction):
         super().__init__()
         self._field: TransactionField = field
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> TransactionField:
@@ -4847,7 +4820,7 @@ class Gitxnas(Instruction):
         self._idx: int = idx
         self._field: TransactionField = field
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def idx(self) -> int:
@@ -5582,7 +5555,7 @@ class BoxCreate(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -5608,7 +5581,7 @@ class BoxExtract(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -5634,7 +5607,7 @@ class BoxReplace(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -5655,7 +5628,7 @@ class BoxDel(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -5680,7 +5653,7 @@ class BoxLen(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -5706,7 +5679,7 @@ class BoxGet(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -5732,7 +5705,7 @@ class BoxPut(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:

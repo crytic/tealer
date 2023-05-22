@@ -1,7 +1,7 @@
 import pytest  # pylint: disable=unused-import
 
 from tealer.teal.parse_teal import parse_teal
-from tealer.teal.instructions.instructions import ContractType
+from tealer.utils.teal_enums import ExecutionMode
 
 STATEFULL = """
 #pragma version 5
@@ -27,12 +27,12 @@ txn Sender
 def test_mode() -> None:
     teal = parse_teal(STATEFULL)
     assert teal.version == 5
-    assert teal.mode == ContractType.STATEFULL
+    assert teal.mode == ExecutionMode.STATEFUL
 
     teal = parse_teal(STATELESS)
     assert teal.version == 1
-    assert teal.mode == ContractType.STATELESS
+    assert teal.mode == ExecutionMode.STATELESS
 
     teal = parse_teal(ANY)
     assert teal.version == 1
-    assert teal.mode == ContractType.ANY
+    assert teal.mode == ExecutionMode.ANY

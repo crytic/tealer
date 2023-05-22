@@ -41,8 +41,6 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
         self._idx: int = 0
         self._teal: Optional["Teal"] = None
         self._transaction_context = BlockTransactionContext()
-        self._callsub_block: Optional[BasicBlock] = None
-        self._sub_return_point: Optional[BasicBlock] = None
         self._tealer_comments: List[str] = []
         self._subroutine: Optional["Subroutine"] = None
 

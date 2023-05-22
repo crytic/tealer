@@ -15,7 +15,6 @@ Summary includes :
 from typing import List, Tuple, TYPE_CHECKING
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.teal.instructions.instructions import contract_type_to_txt
 from tealer.utils.code_complexity import compute_cyclomatic_complexity
 from tealer.detectors.abstract_detector import DetectorClassification
 
@@ -138,7 +137,7 @@ class PrinterHumanSummary(AbstractPrinter):
 
         txt = "\n"
         txt += f"Program version: {teal.version}\n"
-        txt += f"Mode: {contract_type_to_txt[teal.mode]}\n"
+        txt += f"Mode: {str(teal.mode)}\n"
         txt += f"Number of basic blocks: {len(teal.bbs)}\n"
         txt += f"Number of instructions: {len(teal.instructions)}\n"
 

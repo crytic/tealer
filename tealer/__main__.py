@@ -76,8 +76,8 @@ from pkg_resources import require  # type: ignore
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.exceptions import TealerException
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.teal.instructions.instructions import ContractType
 from tealer.teal.parse_teal import parse_teal
+from tealer.utils.teal_enums import ExecutionMode
 from tealer.utils.algoexplorer import (
     get_application_using_app_id,
     logic_sig_from_contract_account,
@@ -131,9 +131,9 @@ def choose_detectors(
         # IF there is no detectors provided:
         # - Stateful: run everything expect the stateless detectors
         # - Stateless: run only stateless and stateless & stateful
-        if teal.mode == ContractType.STATEFULL:
+        if teal.mode == ExecutionMode.STATEFUL:
             detectors_to_run = [d for d in detectors_to_run if d.TYPE != DetectorType.STATELESS]
-        if teal.mode == ContractType.STATELESS:
+        if teal.mode == ExecutionMode.STATELESS:
             detectors_to_run = [
                 d
                 for d in detectors_to_run
@@ -275,6 +275,7 @@ def parse_args(
         default=False,
     )
 
+    # TODO: Remove this option. Doesn't seem to be useful.
     group_detector.add_argument(
         "--all-paths-in-one",
         help="highlights all the vunerable paths in a single file.",

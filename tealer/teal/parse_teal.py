@@ -52,7 +52,7 @@ from tealer.teal.instructions.instructions import (
     Txn,
     Method,
 )
-from tealer.teal.instructions.instructions import ContractType
+
 from tealer.teal.instructions.parse_instruction import parse_line, ParseError
 from tealer.teal.instructions.transaction_field import TransactionField, ApplicationID
 from tealer.teal.instructions.asset_holding_field import AssetHoldingField
@@ -64,38 +64,30 @@ from tealer.analyses.dataflow import all_constraints
 from tealer.analyses.dataflow.generic import DataflowTransactionContext
 from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, compute_equations
 from tealer.utils.arc4_abi import get_method_selector
+from tealer.utils.teal_enums import ExecutionMode
 
 
 logger_parsing = logging.getLogger("Parsing")
 logging.basicConfig()
 
 
-def _detect_contract_type(instructions: List[Instruction]) -> ContractType:
-    """Determine type of contract given it's instructions.
+def _detect_execution_mode(instructions: List[Instruction]) -> ExecutionMode:
+    """Determine type of contract given its instructions.
 
-    It isn't possible to determine how a contract might be used, whether
-    as an application or a signature in all cases. This function uses the
-    fact that there are certain instructions in teal that are only valid if used
-    in a certain kind of contract. So, this function looks for instructions
-    that are valid in only one type and return that as the type for the given
-    contract. if all instructions in the contract are valid for both types
-    of contracts, then this function returns ContractType.ANY as it isn't
-    sure how the contract might be used.
+    If any of the instructions is supported in only one execution mode then return that as
+    contract's execution mode. Otherwise, return ExecutionMode.ANY
 
     Args:
         instructions: List of all the instructions present in the contract.
 
     Returns:
-        Type of the contract indicated by ContractType enum symbol.
-        ``STATEFULL`` if there's a instruction only valid in applications,
-        ``STATELESS`` if there's a instruction only valid in signatures,
-        ``ANY`` if there isn't any such instruction.
+        Execution mode of the contract: Stateful, Stateless or Any.
     """
 
     for ins in instructions:
-        if ins.mode != ContractType.ANY:
+        if ins.mode != ExecutionMode.ANY:
             return ins.mode
-    return ContractType.ANY
+    return ExecutionMode.ANY
 
 
 def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> None:
@@ -410,9 +402,9 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
                         file=sys.stderr,
                     )
                     error = True
-        if ins.mode == ContractType.STATEFULL:
+        if ins.mode == ExecutionMode.STATEFUL:
             stateful_ins.append(ins)
-        elif ins.mode == ContractType.STATELESS:
+        elif ins.mode == ExecutionMode.STATELESS:
             stateless_ins.append(ins)
 
     if stateless_ins and stateful_ins:
@@ -515,7 +507,7 @@ def parse_teal(  # pylint: disable=too-many-locals
     _fourth_pass(all_bbs)
 
     all_bbs = _add_basic_blocks_idx(all_bbs)
-    mode = _detect_contract_type(instructions)
+    mode = _detect_execution_mode(instructions)
 
     version = 1
     if isinstance(instructions[0], Pragma):
