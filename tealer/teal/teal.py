@@ -102,7 +102,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @property
     def instructions(self) -> List[Instruction]:
         """List of instructions of the contract
-        
+
         Returns:
             List of instructions of the contract
         """
@@ -111,7 +111,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @property
     def bbs(self) -> List[BasicBlock]:
         """List of all basic blocks of the contract
-        
+
         Returns:
             List of all basic blocks of the contract
         """
@@ -157,7 +157,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @property
     def main(self) -> "Subroutine":
         """Returns subroutine representing the contract entry-point
-        
+
         Returns:
             Returns the subroutine object representing the non-subroutine blocks.
         """
@@ -166,7 +166,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @property
     def subroutines(self) -> Dict[str, "Subroutine"]:
         """Returns dict of subroutine names and corresponding subroutine obj.
-        
+
         Returns:
             Returns the subroutines in the contract. keys are the subroutine's name
             and the value is the subroutine.
@@ -176,7 +176,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @property
     def subroutines_list(self) -> List["Subroutine"]:
         """Returns list of all contract's subroutines
-        
+
         Returns:
             Returns the list of all subroutines in the contract.
         """
@@ -192,7 +192,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
 
     def subroutine(self, name: str) -> Optional["Subroutine"]:
         """Return subroutine with id/name `name`, return none if subroutine does not exist.
-        
+
         Args:
             name: name of the subroutine.
 
@@ -256,7 +256,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @property
     def detectors(self) -> List[AbstractDetector]:
         """return list of registered detectors.
-        
+
         Returns:
             Returns the list of registered detectors.
         """
@@ -266,7 +266,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @property
     def detectors_high(self) -> List[AbstractDetector]:
         """return list of registered detectors with impact high
-        
+
         Returns:
             Returns the list of registered detectors with impact high.
         """
@@ -276,7 +276,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @property
     def detectors_medium(self) -> List[AbstractDetector]:
         """return list of registered detectors with impact medium
-        
+
         Returns:
             Returns the list of registered detectors with impact medium.
         """
@@ -286,7 +286,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @property
     def detectors_low(self) -> List[AbstractDetector]:
         """return list of registered detectors with impact low
-        
+
         Returns:
             Returns the list of registered detectors with impact low.
         """
@@ -296,7 +296,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @property
     def detectors_informational(self) -> List[AbstractDetector]:
         """return list of registered detectors with impact informational
-        
+
         Returns:
             Returns the list of registered detectors with impact informational.
         """
@@ -316,7 +316,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @property
     def printers(self) -> List[AbstractPrinter]:
         """return list of registered printers.
-        
+
         Returns:
             Returns the list of registered printers.
         """

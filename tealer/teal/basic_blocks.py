@@ -56,7 +56,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def instructions(self) -> List[Instruction]:
         """List of instructions part of this basic block.
-        
+
         Returns:
             list of basic block instructions.
         """
@@ -65,7 +65,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def entry_instr(self) -> Instruction:
         """Entry(first) instruction of this basic block.
-        
+
         Returns:
             The entry instruction of the basic block.
         """
@@ -74,7 +74,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def exit_instr(self) -> Instruction:
         """Exit(Last) instruction of this basic block.
-        
+
         Returns:
             The exit instruction of the basic block.
         """
@@ -124,7 +124,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def next(self) -> List["BasicBlock"]:
         """List of next basic blocks to this basic block.
-        
+
         Returns:
             list of next basic blocks that might be executed after this block.
         """
@@ -133,7 +133,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def idx(self) -> int:
         """Index of this basic block when ordered by line number of entry instruction.
-        
+
         Returns:
             index of this basic block in list of all basic blocks.
         """
@@ -146,7 +146,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def cost(self) -> int:
         """cost of executing all instructions in this basic block
-        
+
         Returns:
             Returns the OpcodeCost of executing all instructions in the block.
         """
@@ -155,7 +155,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def teal(self) -> Optional["Teal"]:
         """Teal instance of the contract this basic block belongs to.
-        
+
         Returns:
             Returns the contract of this basic block.
         """
@@ -168,10 +168,10 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def subroutine(self) -> "Subroutine":
         """Subroutine instrance of the subroutine this basic block belongs to.
-        
+
         Returns:
             Returns the subroutine this block belongs to.
-        
+
         Raises:
             TealerException: raises error if subroutine is not set during parsing.
         """
@@ -186,7 +186,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def is_callsub_block(self) -> bool:
         """Return True if the block calls a subroutine.
-        
+
         Returns:
             Returns True if this block has a callsub instruction.
         """
@@ -226,7 +226,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def is_sub_return_point(self) -> bool:
         """Return True if this block is executed after the subroutine i.e next block of callsub_block
-        
+
         Returns:
             Returns True if this block is executed a subroutine: The next block of a block with callsub
             instruction. Otherwise, returns False.
@@ -239,7 +239,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def callsub_block(self) -> "BasicBlock":
         """Return the callsub_block which calls the subroutine. This block is the return point block.
-        
+
         Returns:
             Return the callsub_block which calls the subroutine that returns the execution to this
             basic block.
@@ -263,7 +263,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def tealer_comments(self) -> List[str]:
         """Additional comments added by tealer for each basic block in the output CFG.
-        
+
         Returns:
             Returns the additional comments added by tealer for this basic block.
         """

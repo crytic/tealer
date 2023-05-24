@@ -319,7 +319,7 @@ def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
         bbs: List of BasicBlock objects representing the teal contract.
 
     Returns:
-        Returns :bbs: after sorting and updating their indexes(idx). 
+        Returns :bbs: after sorting and updating their indexes(idx).
     """
 
     bbs = sorted(bbs, key=lambda x: x.entry_instr.line)
