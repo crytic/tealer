@@ -17,7 +17,16 @@ if TYPE_CHECKING:
 
 
 def _is_rekey_check(ins1: "Instruction", ins2: "Instruction") -> bool:
-    """check if ins1 is txn RekeyTo and ins2 is global ZeroAddress or addr ..."""
+    """check if ins1 is txn RekeyTo and ins2 is global ZeroAddress or addr ...
+
+    Args:
+        ins1: First instruction.
+        ins2: Second instruction.
+
+    Returns:
+        Returns True is :ins1: is "txn RekeyTo" and ins2 pushes an address value onto the stack.
+        Otherwise, returns False.
+    """
     if isinstance(ins1, Txn) and isinstance(ins1.field, RekeyTo):
         if isinstance(ins2, Global) and isinstance(ins2.field, ZeroAddress):
             return True

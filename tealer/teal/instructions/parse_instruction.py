@@ -236,7 +236,7 @@ def _parse_byte_arguments(fields: List[str]) -> List[str]:
 
     Raises:
         ParseError: raises ParseError if the byte arguments are not correctly
-        encoded.
+            encoded.
     """
 
     arguments: List[str] = []

@@ -112,6 +112,7 @@ def choose_detectors(
         args: Namespace object representing the command line arguments selected
             by the user.
         all_detector_classes: list of all available detectors.
+        teal: The Teal contract.
 
     Returns:
         list of chosen detectors from the available list using the tealer
@@ -170,7 +171,7 @@ def choose_printers(
     Args:
         args: Namespace object representing the command line arguments selected
             by the user.
-        all_detector_classes: list of all available printers.
+        all_printer_classes: list of all available printers.
 
     Returns:
         list of chosen printers from the available list based on tealer
@@ -402,8 +403,6 @@ def handle_detectors_and_printers(
     """Util function to register and run detectors, printers.
 
     Args:
-        args: Namespace object representing the command line arguments selected
-            by the user.
         teal: Teal object representing the contract being analyzed.
         detectors: Detector classes to register and run.
         printers: Printer classes to register and run.
@@ -438,6 +437,8 @@ def handle_output(
             by the user.
         detector_results: results of running the selected detectors.
         _printer_results: results of running the selected printers.
+        teal: The contract.
+        error: Error string if any detector or printer resulted in an error.
     """
 
     output_directory = ROOT_OUTPUT_DIRECTORY / Path(teal.contract_name)

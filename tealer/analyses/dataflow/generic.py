@@ -294,17 +294,41 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
     @staticmethod
     def gtx_key(idx: int, key: str) -> str:
-        """return key used for tracking context of gtxn {idx} {field represented by key}"""
+        """return key used for tracking context of gtxn {idx} {field represented by key}
+
+        Args:
+            idx: The transaction index
+            key: The base key used to represent context of the transaction field. This key
+                stores the context of `txn {field}`.
+
+        Returns:
+            Return the key used to store the context of txn field at idx index: gtxn {idx} {field}.
+        """
         return f"GTXN_{idx:02d}_{key}"
 
     @staticmethod
     def is_gtx_key(key: str) -> bool:
-        """return if given key represents gtxn {i} {field}"""
+        """return True if given key represents gtxn {i} {field}
+
+        Args:
+            key: The key used to represent values of a field in the analysis.
+
+        Returns:
+            Returns True if the :key: stores the values of gtxn field.
+        """
         return key.startswith("GTXN_")
 
     @staticmethod
     def get_gtx_ind_and_base_key(key: str) -> Tuple[int, str]:
-        """given a gtx key, return it's index and base key"""
+        """given a gtx key, return it's index and base key
+
+        Args:
+            key: The key used to represent values of a field in the analysis.
+                The :key: should be in the format: f"GTXN_{idx:02d}_{key}"
+
+        Returns:
+            Returns the transaction index and base_key given the "gtxn" :key:.
+        """
         # will fail if the key is not a GTXN key.
         _, ind, base_key = key.split("_")
         return int(ind), base_key
@@ -315,6 +339,14 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
         "key" should be string representation of the field. e.g if field is RekeyTo, then
         key should also be "RekeyTo".
+
+        Args:
+            key: The key used to represent values of a field in the analysis.
+            ins: An instruction.
+
+        Returns:
+            Returns True if the instruction :ins: access the value of the field tracked by
+            the key :key:.
         """
         if DataflowTransactionContext.is_gtx_key(key):
             idx, field = DataflowTransactionContext.get_gtx_ind_and_base_key(key)
@@ -331,19 +363,52 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
     @abstractmethod
     def _universal_set(self, key: str) -> Any:
-        """Return universal set for the field corresponding to given key"""
+        """Return universal set for the field corresponding to given key
+
+        Args:
+            key: The key used to represent values of a field in the analysis.
+
+        Returns:
+            Returns the universal set: list of all possible values for the field tracked by the
+            :key:
+        """
 
     @abstractmethod
     def _null_set(self, key: str) -> Any:
-        """Return null set for the field corresponding to given key"""
+        """Return null set for the field corresponding to given key
+
+        Args:
+            key: The key used to represent values of a field in the analysis.
+
+        Returns:
+            Returns the null set: empty value for the field tracked by the :key:
+        """
 
     @abstractmethod
     def _union(self, key: str, a: Any, b: Any) -> Any:
-        """return union of a and b, where a, b represent values for the given key"""
+        """return union of a and b, where a, b represent values for the given key
+
+        Args:
+            key: The analysis key. The values in set :a: and :b: are values of this key.
+            a: Set 1.
+            b: Set 2.
+
+        Returns:
+            Returns union of set a and b.
+        """
 
     @abstractmethod
     def _intersection(self, key: str, a: Any, b: Any) -> Any:
-        """return intersection of a and b, where a, b represent values for the given key"""
+        """return intersection of a and b, where a, b represent values for the given key
+
+        Args:
+            key: The analysis key. The values in set :a: and :b: are values of this key.
+            a: Set 1.
+            b: Set 2.
+
+        Returns:
+            Returns union of set a and b.
+        """
 
     @abstractmethod
     def _get_asserted_single(self, key: str, ins_stack_value: KnownStackValue) -> Tuple[Any, Any]:
@@ -353,6 +418,14 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
             values for the key.
         false_values: Given that the result of `ins_stack_value` is ZERO, what are the possible values
             for the key.
+
+        Args:
+            key: The key used to represent values of a field in the analysis.
+            ins_stack_value: The stack value being considered for assertion. The :ins_stack_value: is
+                not the result of "And" or "Or" or "Not" instructions.
+
+        Returns:
+            Returns the "true_values" and "false_values" for the key.
         """
 
     @abstractmethod
@@ -366,6 +439,13 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
             values for the key.
         false_values: Given that the result of `ins_stack_value` is ZERO, what are the possible values
             for the key.
+
+        Args:
+            key: The key used to represent values of a field in the analysis.
+            ins_stack_value: The stack value being considered for assertion.
+
+        Returns:
+            Returns the "true_values" and "false_values" for the key.
         """
         if not isinstance(ins_stack_value.instruction, (And, Or, Not)):
             # and not isinstance(ins_stack_value.instruction, Or):
@@ -433,6 +513,13 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         if block contains assert instruction, values are further constrained using the comparison being
         asserted. Values are stored in self._block_contexts
         self._block_contexts[KEY][B] -> block_context of KEY for block B
+
+        Args:
+            analysis_keys: List of keys, each representing a field.
+            block: The basic block.
+
+        Fills the _block_contexts[:key:][:block:] based on assertions performed by the instructions in the
+        :block:
         """
         for key in analysis_keys:
             if key not in self._block_contexts:
@@ -486,6 +573,13 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         if block contains bz/bnz instruction, possible values are calculated for each branch and
         are stored in self._path_contexts
         self._path_contexts[KEY][Bi][Bj] -> path_context of KEY for path Bj -> Bi
+
+        Args:
+            analysis_keys: List of keys, each representing a field.
+            block: The basic block.
+
+        Fills the _path_contexts[key][Bj][Bi] where :key: is the key in analysis_keys and
+        Bi is the :block: and Bj are next blocks of :block: in the global CFG.
         """
 
         for key in analysis_keys:
@@ -552,6 +646,13 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         of `txn` when index of `txn` is `i`.
 
         This requires that group_indices analysis is done before any other analysis.
+
+        Args:
+            keys_with_gtxn: The list of base keys whose gtxn {idx} {RekeyTo} should be tracked.
+            block: The basic block
+
+        Fill the _block_contexts[gtx_key][block] using the possible group indices of the transaction and possible
+        values of the base key.
         """
         for key in keys_with_gtxn:
             for ind in range(MAX_GROUP_SIZE):
@@ -614,7 +715,12 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         return updated
 
     def forward_analyis(self, analysis_keys: List[str], worklist: List["BasicBlock"]) -> None:
-        """Perform forward analysis for analysis_keys and update self._block_contexts"""
+        """Perform forward analysis for analysis_keys and update self._block_contexts
+
+        Args:
+            analysis_keys: List of keys.
+            worklist: List of basic blocks considered for the analysis. Initial worklist.
+        """
         # reachout for all analysis keys. global_reachout[key] -> reachout of key.
         # global_reachout[key][block] -> reachout of block for key.
         global_reachout: Dict[str, Dict["BasicBlock", Any]] = {}
@@ -685,7 +791,12 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         return updated
 
     def backward_analysis(self, analysis_keys: List[str], worklist: List["BasicBlock"]) -> None:
-        """Perform backward analysis for analysis_keys and update self._block_contexts"""
+        """Perform backward analysis for analysis_keys and update self._block_contexts
+
+        Args:
+            analysis_keys: List of keys.
+            worklist: List of basic blocks considered for the analysis. Initial worklist.
+        """
         global_liveout: Dict[str, Dict["BasicBlock", Any]] = {}
         for key in analysis_keys:
             global_liveout[key] = {}

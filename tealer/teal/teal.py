@@ -101,12 +101,20 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
 
     @property
     def instructions(self) -> List[Instruction]:
-        """List of instructions of the contract"""
+        """List of instructions of the contract
+        
+        Returns:
+            List of instructions of the contract
+        """
         return self._instructions
 
     @property
     def bbs(self) -> List[BasicBlock]:
-        """List of all basic blocks of the contract"""
+        """List of all basic blocks of the contract
+        
+        Returns:
+            List of all basic blocks of the contract
+        """
         return self._bbs
 
     @property
@@ -116,6 +124,9 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         Version of the contract is based on whether the first instruction of the
         contract is #pragma version instruction or not. if it is, then version will
         be the teal version specified or else version will be 1.
+
+        Returns:
+            Returns the contract version.
         """
 
         return self._version
@@ -132,6 +143,9 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         any instructions that are only supported in one kind of contract then that
         will be the contract type. if there aren't any such type of instructions, then
         this will be "Any".
+
+        Returns:
+            Returns the execution mode this contract can be executed successfully.
         """
 
         return self._mode
@@ -142,17 +156,30 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
 
     @property
     def main(self) -> "Subroutine":
-        "Returns subroutine representing the contract entry-point"
+        """Returns subroutine representing the contract entry-point
+        
+        Returns:
+            Returns the subroutine object representing the non-subroutine blocks.
+        """
         return self._main
 
     @property
     def subroutines(self) -> Dict[str, "Subroutine"]:
-        """Returns dict of subroutine names and corresponding subroutine obj."""
+        """Returns dict of subroutine names and corresponding subroutine obj.
+        
+        Returns:
+            Returns the subroutines in the contract. keys are the subroutine's name
+            and the value is the subroutine.
+        """
         return self._subroutines
 
     @property
     def subroutines_list(self) -> List["Subroutine"]:
-        """Returns list of all contract's subroutines"""
+        """Returns list of all contract's subroutines
+        
+        Returns:
+            Returns the list of all subroutines in the contract.
+        """
         return list(self._subroutines.values())
 
     @property
@@ -164,7 +191,15 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         self._contract_name = name
 
     def subroutine(self, name: str) -> Optional["Subroutine"]:
-        """Return subroutine with id/name `name`, return none if subroutine does not exist."""
+        """Return subroutine with id/name `name`, return none if subroutine does not exist.
+        
+        Args:
+            name: name of the subroutine.
+
+        Returns:
+            Returns the subroutine object given its name. Returns None if the subroutine is
+            not in identified subroutines list.
+        """
         return self._subroutines.get(name, None)
 
     def get_int_constant(self, index: int) -> Tuple[bool, int]:
@@ -184,6 +219,9 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
             intcblock only stores 3 values in the constant space and a intc instruction refers to 5th value. Execution
             will fail at runtime in this case. Return value will be `False` in this case as well.
 
+        Args:
+            index: The index into the int constants filled by the intcblock instruction.
+
         Returns:
             bool: True if Tealer was able to determine the value referred by that instruction or else False
             int: value referred by intc instruction at that index.
@@ -196,6 +234,9 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         """Return []byte value stored by bytecblock instruction
 
         Behavior is same as `get_int_constant`.
+
+        Args:
+            index: The index into the byte constants filled by the bytecblock instruction.
 
         Returns:
             bool: True if Tealer was able to determine the value referred by that instruction or else False
@@ -214,43 +255,71 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     # from slither: Slither Class in slither/slither.py
     @property
     def detectors(self) -> List[AbstractDetector]:
-        """return list of registered detectors."""
+        """return list of registered detectors.
+        
+        Returns:
+            Returns the list of registered detectors.
+        """
         return self._detectors
 
     # from slither: Slither Class in slither/slither.py
     @property
     def detectors_high(self) -> List[AbstractDetector]:
-        """return list of registered detectors with impact high"""
+        """return list of registered detectors with impact high
+        
+        Returns:
+            Returns the list of registered detectors with impact high.
+        """
         return [d for d in self._detectors if d.IMPACT == DetectorClassification.HIGH]
 
     # from slither: Slither Class in slither/slither.py
     @property
     def detectors_medium(self) -> List[AbstractDetector]:
-        """return list of registered detectors with impact medium"""
+        """return list of registered detectors with impact medium
+        
+        Returns:
+            Returns the list of registered detectors with impact medium.
+        """
         return [d for d in self._detectors if d.IMPACT == DetectorClassification.MEDIUM]
 
     # from slither: Slither Class in slither/slither.py
     @property
     def detectors_low(self) -> List[AbstractDetector]:
-        """return list of registered detectors with impact low"""
+        """return list of registered detectors with impact low
+        
+        Returns:
+            Returns the list of registered detectors with impact low.
+        """
         return [d for d in self._detectors if d.IMPACT == DetectorClassification.LOW]
 
     # from slither: Slither Class in slither/slither.py
     @property
     def detectors_informational(self) -> List[AbstractDetector]:
-        """return list of registered detectors with impact informational"""
+        """return list of registered detectors with impact informational
+        
+        Returns:
+            Returns the list of registered detectors with impact informational.
+        """
         return [d for d in self._detectors if d.IMPACT == DetectorClassification.INFORMATIONAL]
 
     # from slither: Slither Class in slither/slither.py
     @property
     def detectors_optimization(self) -> List[AbstractDetector]:
-        """return list of registered detectors with impact optimization"""
+        """return list of registered detectors with impact optimization
+
+        Returns:
+            Returns the list of registered detectors with impact optimization.
+        """
         return [d for d in self._detectors if d.IMPACT == DetectorClassification.OPTIMIZATION]
 
     # from slither: Slither Class in slither/slither.py
     @property
     def printers(self) -> List[AbstractPrinter]:
-        """return list of registered printers."""
+        """return list of registered printers.
+        
+        Returns:
+            Returns the list of registered printers.
+        """
         return self._printers
 
     # from slither: Slither Class in slither/slither.py
@@ -299,12 +368,6 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     # from slither: Slither Class in slither/slither.py
     def run_printers(self) -> List:
         """Run all the registered printers.
-
-        Args:
-            dest: Optional. :dest: is used by printers to determine
-                the destination directory to save the output files.
-                if :dest: is None, current directory is used as destination
-                directory.
 
         Returns:
             List of results, each result corresponds to the output

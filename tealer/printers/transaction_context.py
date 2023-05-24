@@ -41,6 +41,12 @@ class PrinterTransactionContext(AbstractPrinter):  # pylint: disable=too-few-pub
 
             1 2 3 5 6 7 8 9 11 13 14 15 16
            => 1 2 3 5..9 11 13..16
+
+        Args:
+            values: Sorted list of integers. smaller value is first.
+
+        Returns:
+            Returns short string representation of the :values:
         """
         values = sorted(values)
         sequences: List[List[int]] = [[]]

@@ -81,7 +81,7 @@ def _detect_execution_mode(instructions: List[Instruction]) -> ExecutionMode:
         instructions: List of all the instructions present in the contract.
 
     Returns:
-        Execution mode of the contract: Stateful, Stateless or Any.
+        Returns the execution mode of the contract: Stateful, Stateless or Any.
     """
 
     for ins in instructions:
@@ -317,6 +317,9 @@ def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
 
     Args:
         bbs: List of BasicBlock objects representing the teal contract.
+
+    Returns:
+        Returns :bbs: after sorting and updating their indexes(idx). 
     """
 
     bbs = sorted(bbs, key=lambda x: x.entry_instr.line)
@@ -329,12 +332,10 @@ def _identify_subroutine_blocks(entry_block: "BasicBlock") -> List["BasicBlock"]
     """find all the basic blocks part of a subroutine using DFS.
 
     Args:
-        label ("Label"): label instruction of the subroutine.
-        bbs (List["BasicBlock"]): CFG of the contract.
+        entry_block: Entry block of the subroutine.
 
     Returns:
-        "BasicBlock": Entry block of the subroutine.
-        List["BasicBlock"]: list of all basic blocks part of a subroutine.
+        Returns the list of all basic blocks part of a subroutine.
     """
 
     subroutines_blocks: List["BasicBlock"] = []
@@ -459,6 +460,12 @@ def _fill_intc_bytec_info(
 
     This is the case for most of the contracts as intcblock/bytecblock instructions are generated
     internally by the assembler or PyTeal compiler.
+
+    Args:
+        intcblock_ins: List of all "intcblock" instructions in the contract.
+        bytecblock_ins: List of all "bytecblock" instructions in the contract.
+        entry_block: Entry block of the contract.
+        teal: The contract.
     """
     if len(intcblock_ins) == 1 and intcblock_ins[0].bb == entry_block:
         teal.set_int_constants(intcblock_ins[0].constants)
@@ -481,6 +488,7 @@ def parse_teal(  # pylint: disable=too-many-locals
 
     Args:
         source_code: TEAL source code of the contract.
+        contract_name: Name of the contract.
 
     Returns:
         Teal representing the given contract.

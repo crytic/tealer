@@ -255,6 +255,8 @@ def all_subroutines_to_dot(
     Args:
         teal: contract instance
         dest: destination directory to save the dot files.
+        config: CFGDotConfig to use for generating the dot files. if None, function uses
+            default settings.
         filename_prefix: prefix to add before each filename to distinguish files generated
             by multiple calls to this function.
     """
@@ -283,12 +285,14 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
     as rows.
 
     Args:
-        bbs: list of basic blocks representing the control
-            flow graph.
+        teal: The contract.
         config: optional configuration for dot output.
         filename: name of the file to save the dot representation
             of control flow graph in.
 
+    Returns:
+        Returns dot representation of the CFG if filename is not given. If filename is given,
+        writes the dot representation to the file.
     """
 
     bbs = teal.bbs
@@ -363,7 +367,15 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
 
 
 def detector_terminal_description(detector: "AbstractDetector") -> str:
-    """Return description for the detector that is printed to terminal before listing vulnerable paths."""
+    """Return description for the detector that is printed to terminal before listing vulnerable paths.
+
+    Args:
+        detector: A detector object.
+
+    Returns:
+        Returns description for the :detector: that can be printed on the terminal or used as general description
+        for the detector.
+    """
     return (
         f'\nCheck: "{detector.NAME}", Impact: {detector.IMPACT}, Confidence: {detector.CONFIDENCE}\n'
         f"Description: {detector.DESCRIPTION}\n\n"
@@ -395,12 +407,20 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
 
     @property
     def paths(self) -> List[List["BasicBlock"]]:
-        """List of execution paths stored in the result."""
+        """List of execution paths stored in the result.
+
+        Returns:
+            List of execution paths stored in the result.
+        """
         return self._paths
 
     @property
     def cfg(self) -> List["BasicBlock"]:
-        """Control Flow of the teal contract."""
+        """Control Flow of the teal contract.
+
+        Returns:
+            List of basic blocks that represent the contract.
+        """
         return self._teal.bbs
 
     @property
@@ -409,27 +429,47 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
 
     @property
     def description(self) -> str:
-        """Description of execution paths stored in this result"""
+        """Description of execution paths stored in this result
+
+        Returns:
+            The description of the detector.
+        """
         return detector_terminal_description(self._detector)
 
     @property
     def check(self) -> str:
-        """Name of the detector whose result is being represented."""
+        """Name of the detector whose result is being represented.
+
+        Returns:
+            Returns name of the detector.
+        """
         return self._detector.NAME
 
     @property
     def impact(self) -> str:
-        """Impact of the detector whose result is being represented."""
+        """Impact of the detector whose result is being represented.
+
+        Returns:
+            Returns string representation of the detector's impact.
+        """
         return str(self._detector.IMPACT)
 
     @property
     def confidence(self) -> str:
-        """Confidence of the detector whose result is being represented."""
+        """Confidence of the detector whose result is being represented.
+
+        Returns:
+            Returns string representation of the detector's confidence.
+        """
         return str(self._detector.CONFIDENCE)
 
     @property
     def help(self) -> str:
-        """Recommendations to fix the reported issues."""
+        """Recommendations to fix the reported issues.
+
+        Returns:
+            Returns recommendations to fix the reported issue.
+        """
         return self._detector.WIKI_RECOMMENDATION.strip()
 
     def filename(self, path_index: int) -> Path:
@@ -437,7 +477,16 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
 
     @staticmethod
     def _short_notation(path_bbs: List["BasicBlock"]) -> str:
-        """Return short notation representation of path"""
+        """Return short notation representation of path
+
+        Args:
+            path_bbs: List of basic blocks in the path from the contract's entry.
+
+        Returns:
+            Returns short notation representation of the path.
+            if path has [B0, B2, B3, B5] then short notation is "0 -> 2 -> 3 -> 5"
+        """
+        # TODO: Change notation from "0 -> 2 -> 3 -> 5" to "B0 -> B2 -> B3 -> B5"
         return " -> ".join(map(str, [bb.idx for bb in path_bbs]))
 
     def filter_paths(self, filter_regex: str) -> None:

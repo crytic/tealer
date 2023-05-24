@@ -230,10 +230,10 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
         called to execute it.
 
         Returns:
-            detector results represented in one of the supported types. Currently,
+            Detector results represented in one of the supported types. Currently,
             all detectors work on Control Flow Graph(CFG) of the contract and represent
             the issues in the form of execution path in the CFG. ExecutionPaths class
-            is used to represent them. It is the only type supported currently and
-            AbstractDetector comes with a helper method to construct the result object
-            given the vulnerable execution paths, description and filenames.
+            is used to represent them.
+
+        # noqa: DAR202
         """
