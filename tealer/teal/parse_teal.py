@@ -60,8 +60,8 @@ from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
 from tealer.teal.instructions.acct_params_field import AcctParamsField
 from tealer.teal.teal import Teal
-from tealer.analyses.dataflow import all_constraints
-from tealer.analyses.dataflow.generic import DataflowTransactionContext
+from tealer.analyses.dataflow.transaction_context import all_constraints
+from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
 from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, compute_equations
 from tealer.utils.arc4_abi import get_method_selector
 from tealer.utils.teal_enums import ExecutionMode

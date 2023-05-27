@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List, Set, Tuple, Callable
 
-from tealer.analyses.dataflow.generic import DataflowTransactionContext
+from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
 from tealer.teal.instructions.instructions import (
     Eq,
     Neq,
