@@ -227,20 +227,21 @@ if any of equation in Or(<1>, ...) is UnknownStackValue then `true_values` for O
 from abc import ABC, abstractmethod
 import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Set
+from collections import defaultdict
 
+from tealer.analyses.dataflow.transaction_context.utils.key_helpers import (
+    get_gtxn_at_index_key,
+)
 from tealer.teal.instructions.instructions import (
     Assert,
     Return,
     BZ,
     BNZ,
     Err,
-    Txn,
-    Gtxn,
     And,
     Or,
     Not,
 )
-from tealer.teal.instructions.parse_transaction_field import TX_FIELD_TXT_TO_OBJECT
 from tealer.utils.analyses import (
     is_int_push_ins,
     prev_blocks_global,
@@ -251,7 +252,7 @@ from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 from tealer.analyses.utils.stack_ast_builder import (
     KnownStackValue,
     UnknownStackValue,
-    construct_stack_ast,
+    get_stack_value_for_ins,
     compute_equations,
 )
 
@@ -284,82 +285,15 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         # entry block of CFG
         self._entry_block: "BasicBlock" = teal.main.entry
         # self._block_contexts[KEY][B] -> block_context of KEY for block B
-        self._block_contexts: Dict[str, Dict["BasicBlock", Any]] = {}
+        self._block_contexts: Dict[str, Dict["BasicBlock", Any]] = defaultdict(dict)
         # self._path_contexts[KEY][Bi][Bj] -> path_context of KEY for path Bj -> Bi
-        self._path_contexts: Dict[str, Dict["BasicBlock", Dict["BasicBlock", Any]]] = {}
+        self._path_contexts: Dict[str, Dict["BasicBlock", Dict["BasicBlock", Any]]] = defaultdict(
+            dict
+        )
         if not self.BASE_KEYS:
             raise IncorrectDataflowTransactionContextInitialization(
                 f"BASE_KEYS are not initialized {self.__class__.__name__}"
             )
-
-    @staticmethod
-    def gtx_key(idx: int, key: str) -> str:
-        """return key used for tracking context of gtxn {idx} {field represented by key}
-
-        Args:
-            idx: The transaction index
-            key: The base key used to represent context of the transaction field. This key
-                stores the context of `txn {field}`.
-
-        Returns:
-            Return the key used to store the context of txn field at idx index: gtxn {idx} {field}.
-        """
-        return f"GTXN_{idx:02d}_{key}"
-
-    @staticmethod
-    def is_gtx_key(key: str) -> bool:
-        """return True if given key represents gtxn {i} {field}
-
-        Args:
-            key: The key used to represent values of a field in the analysis.
-
-        Returns:
-            Returns True if the :key: stores the values of gtxn field.
-        """
-        return key.startswith("GTXN_")
-
-    @staticmethod
-    def get_gtx_ind_and_base_key(key: str) -> Tuple[int, str]:
-        """given a gtx key, return it's index and base key
-
-        Args:
-            key: The key used to represent values of a field in the analysis.
-                The :key: should be in the format: f"GTXN_{idx:02d}_{key}"
-
-        Returns:
-            Returns the transaction index and base_key given the "gtxn" :key:.
-        """
-        # will fail if the key is not a GTXN key.
-        _, ind, base_key = key.split("_")
-        return int(ind), base_key
-
-    @staticmethod
-    def _is_txn_or_gtxn(key: str, ins: "Instruction") -> bool:
-        """return True if ins is of form txn {key} or gtxn {ind} {key} else False
-
-        "key" should be string representation of the field. e.g if field is RekeyTo, then
-        key should also be "RekeyTo".
-
-        Args:
-            key: The key used to represent values of a field in the analysis.
-            ins: An instruction.
-
-        Returns:
-            Returns True if the instruction :ins: access the value of the field tracked by
-            the key :key:.
-        """
-        if DataflowTransactionContext.is_gtx_key(key):
-            idx, field = DataflowTransactionContext.get_gtx_ind_and_base_key(key)
-            return (
-                isinstance(ins, Gtxn)
-                and ins.idx == idx
-                and isinstance(ins.field, TX_FIELD_TXT_TO_OBJECT[field])
-            )
-        return isinstance(ins, Txn) and isinstance(ins.field, TX_FIELD_TXT_TO_OBJECT[key])
-
-    @staticmethod
-    def _get_stack_value(ins: "Instruction") -> KnownStackValue:
-        return construct_stack_ast(ins.bb)[ins]
 
     @abstractmethod
     def _universal_set(self, key: str) -> Any:
@@ -522,13 +456,11 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         :block:
         """
         for key in analysis_keys:
-            if key not in self._block_contexts:
-                self._block_contexts[key] = {}
             self._block_contexts[key][block] = self._universal_set(key)
 
         for ins in block.instructions:
             if isinstance(ins, Assert):
-                assert_ins_stack_value = self._get_stack_value(ins)
+                assert_ins_stack_value = get_stack_value_for_ins(ins)
                 assert_ins_arg = assert_ins_stack_value.args[0]
                 if isinstance(assert_ins_arg, UnknownStackValue):
                     continue
@@ -541,7 +473,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                     )
             elif isinstance(ins, Return):
                 # if return 0, set possible values to NullSet()
-                return_ins_value = self._get_stack_value(ins)
+                return_ins_value = get_stack_value_for_ins(ins)
                 return_ins_arg = return_ins_value.args[0]
                 if isinstance(return_ins_arg, UnknownStackValue):
                     continue
@@ -583,8 +515,6 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         """
 
         for key in analysis_keys:
-            if key not in self._path_contexts:
-                self._path_contexts[key] = {}
             path_context = self._path_contexts[key]
             for b in next_blocks_global(block):
                 # path_context[bi][bj]: path context of path bj -> bi, bi is the successor
@@ -594,7 +524,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                 path_context[b][block] = self._universal_set(key)
 
         if isinstance(block.exit_instr, (BZ, BNZ)):
-            exit_ins_stack_value = self._get_stack_value(block.exit_instr)
+            exit_ins_stack_value = get_stack_value_for_ins(block.exit_instr)
             exit_ins_arg = exit_ins_stack_value.args[0]
             if isinstance(exit_ins_arg, UnknownStackValue):
                 return
@@ -656,7 +586,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         """
         for key in keys_with_gtxn:
             for ind in range(MAX_GROUP_SIZE):
-                gtx_key = self.gtx_key(ind, key)
+                gtx_key = get_gtxn_at_index_key(ind, key)
                 if ind in block.transaction_context.group_indices:
                     # txn can have index {ind}
                     # gtxn {ind} {field} can have a value if and only if {txn} {field} can also have that value
@@ -841,7 +771,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         gtx_keys = []
         for key in self.KEYS_WITH_GTXN:
             for ind in range(MAX_GROUP_SIZE):
-                gtx_keys.append(self.gtx_key(ind, key))
+                gtx_keys.append(get_gtxn_at_index_key(ind, key))
 
         all_keys = self.BASE_KEYS + gtx_keys
 

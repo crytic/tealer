@@ -548,3 +548,7 @@ def compute_equations(
         else:
             known_equations.append(eq)
     return known_equations, has_unkown_value
+
+
+def get_stack_value_for_ins(ins: "Instruction") -> KnownStackValue:
+    return construct_stack_ast(ins.bb)[ins]
