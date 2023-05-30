@@ -126,10 +126,6 @@ def test_parsing(target: str) -> None:
 # pylint: disable=too-many-locals
 @pytest.mark.parametrize("target", TARGETS)  # type: ignore
 def test_copy_main_cfg(target: str) -> None:
-    if target == "tests/parsing/teal4-test3.teal":
-        # the contract has unreachable blocks. Unreachable are
-        # part of main.blocks but they are absent in copied_blocks.
-        return
     with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     copied_main = copy_main_cfg(teal)
