@@ -184,7 +184,7 @@ def construct_function(
                 bi.next[j] = err_block
                 err_block.add_prev(bi)
                 bi_next.prev.remove(bi)
-                print("bi_next.idx", bi_next.idx, bi_next.prev)
+                # print("bi_next.idx", bi_next.idx, bi_next.prev)
 
                 # instruction edges are not changed here.
                 # instruction edges should not be used. Prefer using basic_block .next and .prev.
@@ -193,10 +193,10 @@ def construct_function(
     if function_name is None:
         function_name = "_".join(dispatch_path)
     function_main_name = f"__main__.{function_name}"
-    print(function_name)
-    print(function_main_blocks)
-    for block in function_main_blocks:
-        print(block.idx, block.prev, block.next)
+    # print(function_name)
+    # print(function_main_blocks)
+    # for block in function_main_blocks:
+    #     print(block.idx, block.prev, block.next)
     function_main = Subroutine(function_main_name, entry, function_main_blocks)
     for bi in function_main_blocks:
         bi.subroutine = function_main

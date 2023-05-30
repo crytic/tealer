@@ -16,7 +16,7 @@ setup(
         "py-algorand-sdk",
         "pycryptodomex",
         "requests",
-        "ruamel.yaml",
+        "pyyaml",
     ],
     extras_require={"dev": ["pylint==2.13.4", "black==22.3.0", "mypy==0.942"]},
     license="AGPL-3.0",

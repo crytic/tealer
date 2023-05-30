@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from ruamel.yaml import YAML
+import yaml
 
 
 GROUP_CONFIG_CONTRACT_TYPES = [
@@ -256,15 +256,15 @@ class GroupConfig:
 
 def write_to_yaml_file(file: Path, output: Dict[str, Any]) -> None:
     with open(file, "w", encoding="utf-8") as f:
-        yaml = YAML()
-        yaml.indent(sequence=4, offset=2)
-        yaml.dump(output, f)
+        # yaml = YAML()
+        # yaml.indent(sequence=4, offset=2)
+        # yaml.dump(output, f)
+        yaml.safe_dump(output, f, sort_keys=False)
 
 
 def read_config_from_file(file: Path) -> GroupConfig:
     with open(file, encoding="utf-8") as f:
-        yaml = YAML()
-        d = yaml.load(f.read())  # .load() use SafeLoader.
+        d = yaml.safe_load(f.read())
     try:
         parsed_config = GroupConfig.from_yaml(d)
         return parsed_config
@@ -275,15 +275,13 @@ def read_config_from_file(file: Path) -> GroupConfig:
 
 
 # if __name__ == "__main__":
-#     with open("tests/group_transactions/ans_config.yaml") as f:
-#         yaml = YAML()
-#         d = yaml.load(f.read())
-#         print(d)
-#         # try:
-#         if 1:
-#             parsed_config = GroupConfig.from_yaml(d)
-#             write_to_yaml_file(Path("test.yaml"), parsed_config.to_yaml())
-#         # except InvalidGroupConfiguration as err:
-#             # print(f"\nInvalidGroupConfiguration:\n\n{err}")
-#             # print(err)
-#             # sys.exit(1)
+# filename = "tests/group_transactions/ans/ans_config.yaml"
+# with open("tests/group_transactions/ans_config.yaml") as f:
+# try:
+# if 1:
+# parsed_config = read_config_from_file(filename)
+# write_to_yaml_file(Path("test.yaml"), parsed_config.to_yaml())
+# except InvalidGroupConfiguration as err:
+# print(f"\nInvalidGroupConfiguration:\n\n{err}")
+# print(err)
+# sys.exit(1)
