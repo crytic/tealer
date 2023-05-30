@@ -1,0 +1,1104 @@
+#pragma version 6
+txn ApplicationID
+int 0
+==
+bnz main_l48
+txn OnCompletion
+int OptIn
+==
+bnz main_l47
+txn OnCompletion
+int UpdateApplication
+==
+bnz main_l46
+txn OnCompletion
+int DeleteApplication
+==
+bnz main_l45
+txn OnCompletion
+int CloseOut
+==
+bnz main_l44
+txn OnCompletion
+int ClearState
+==
+bnz main_l43
+txna ApplicationArgs 0
+byte "update_global_state"
+==
+bnz main_l42
+txna ApplicationArgs 0
+byte "register_name"
+==
+bnz main_l34
+txna ApplicationArgs 0
+byte "update_name"
+==
+bnz main_l33
+txna ApplicationArgs 0
+byte "remove_property"
+==
+bnz main_l29
+txna ApplicationArgs 0
+byte "renew_name"
+==
+bnz main_l22
+txna ApplicationArgs 0
+byte "update_resolver_account"
+==
+bnz main_l21
+txna ApplicationArgs 0
+byte "initiate_transfer"
+==
+bnz main_l20
+txna ApplicationArgs 0
+byte "accept_transfer"
+==
+bnz main_l19
+txna ApplicationArgs 0
+byte "withdraw_transfer"
+==
+bnz main_l18
+txna ApplicationArgs 0
+byte "withdraw_funds"
+==
+bnz main_l17
+err
+main_l17:
+callsub basictxnchecks_0
+int 1
+==
+assert
+txn Sender
+byte "name_controller"
+app_global_get
+==
+assert
+itxn_begin
+int pay
+itxn_field TypeEnum
+txna Accounts 1
+itxn_field Receiver
+txna ApplicationArgs 1
+btoi
+itxn_field Amount
+int 1000
+itxn_field Fee
+itxn_submit
+int 1
+return
+main_l18:
+callsub iswithingraceperiod_4
+int 0
+==
+assert
+callsub basictxnchecks_0
+int 1
+==
+assert
+int 1
+byte "owner"
+app_local_get
+txn Sender
+==
+assert
+txn NumAppArgs
+int 1
+==
+assert
+txn NumAccounts
+int 1
+==
+assert
+int 1
+byte "transfer_price"
+int 0
+app_local_put
+int 1
+byte "transfer_to"
+byte ""
+app_local_put
+int 1
+return
+main_l19:
+callsub iswithingraceperiod_4
+int 0
+==
+assert
+callsub basictxnchecks_0
+int 1
+==
+assert
+int 2
+int 1
+callsub checkappargssize_2
+assert
+int 2
+int 1
+callsub checkappacctssize_3
+assert
+global GroupSize
+int 3
+==
+assert
+gtxn 0 Receiver
+int 1
+byte "owner"
+app_local_get
+==
+assert
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+int 0
+callsub checkcloseremndr_1
+int 1
+==
+assert
+gtxn 0 Amount
+int 1
+byte "transfer_price"
+app_local_get
+==
+assert
+gtxn 0 Sender
+int 1
+byte "transfer_to"
+app_local_get
+==
+assert
+gtxn 0 Sender
+gtxn 1 Sender
+==
+assert
+gtxn 0 Sender
+gtxn 2 Sender
+==
+assert
+gtxn 1 Receiver
+global CurrentApplicationAddress
+==
+assert
+gtxn 1 Amount
+int 2000000
+==
+assert
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+callsub checkcloseremndr_1
+int 1
+==
+assert
+callsub resetdomainproperties_5
+int 1
+==
+assert
+int 1
+byte "owner"
+gtxn 0 Sender
+app_local_put
+int 1
+byte "value"
+gtxn 0 Sender
+app_local_put
+int 1
+byte "transfer_to"
+byte ""
+app_local_put
+int 1
+byte "transfer_price"
+int 0
+app_local_put
+int 1
+byte "subdomain"
+int 0
+app_local_put
+int 1
+return
+main_l20:
+callsub iswithingraceperiod_4
+int 0
+==
+assert
+callsub basictxnchecks_0
+int 1
+==
+assert
+int 0
+int 2
+callsub checkappargssize_2
+assert
+int 0
+int 2
+callsub checkappacctssize_3
+assert
+global GroupSize
+int 1
+==
+assert
+int 1
+byte "owner"
+app_local_get
+txn Sender
+==
+assert
+int 1
+byte "transfer_price"
+txna ApplicationArgs 1
+btoi
+app_local_put
+int 1
+byte "transfer_to"
+txna Accounts 2
+app_local_put
+int 1
+return
+main_l21:
+callsub iswithingraceperiod_4
+int 0
+==
+assert
+callsub basictxnchecks_0
+int 1
+==
+assert
+global GroupSize
+int 1
+==
+assert
+txn NumAppArgs
+int 1
+==
+assert
+int 1
+byte "owner"
+app_local_get
+txn Sender
+==
+assert
+int 1
+byte "value"
+txna Accounts 2
+app_local_put
+int 1
+return
+main_l22:
+callsub basictxnchecks_0
+int 1
+==
+int 1
+int 2
+callsub checkappargssize_2
+int 1
+==
+&&
+int 1
+int 1
+callsub checkappacctssize_3
+int 1
+==
+&&
+int 0
+callsub checkcloseremndr_1
+int 1
+==
+&&
+global GroupSize
+int 2
+==
+&&
+gtxn 0 TypeEnum
+int pay
+==
+&&
+gtxn 0 Sender
+int 1
+byte "owner"
+app_local_get
+==
+&&
+gtxn 0 Receiver
+global CurrentApplicationAddress
+==
+&&
+gtxn 1 Sender
+gtxn 0 Sender
+==
+&&
+assert
+int 1
+byte "name"
+app_local_get
+len
+int 3
+==
+bnz main_l28
+int 1
+byte "name"
+app_local_get
+len
+int 4
+==
+bnz main_l27
+int 1
+byte "name"
+app_local_get
+len
+int 5
+>=
+bnz main_l26
+main_l25:
+int 1
+byte "expiry"
+int 1
+byte "expiry"
+app_local_get
+txna ApplicationArgs 1
+btoi
+int 31536000
+*
++
+app_local_put
+int 1
+return
+main_l26:
+gtxn 0 Amount
+txna ApplicationArgs 1
+btoi
+int 5000000
+*
+==
+assert
+b main_l25
+main_l27:
+gtxn 0 Amount
+txna ApplicationArgs 1
+btoi
+int 50000000
+*
+==
+assert
+b main_l25
+main_l28:
+gtxn 0 Amount
+txna ApplicationArgs 1
+btoi
+int 150000000
+*
+==
+assert
+b main_l25
+main_l29:
+callsub iswithingraceperiod_4
+int 0
+==
+assert
+callsub basictxnchecks_0
+int 1
+==
+callsub iswithingraceperiod_4
+int 0
+==
+&&
+txn NumAppArgs
+int 2
+==
+&&
+txna ApplicationArgs 1
+byte "name"
+!=
+&&
+txna ApplicationArgs 1
+byte "owner"
+!=
+&&
+txna ApplicationArgs 1
+byte "expiry"
+!=
+&&
+txna ApplicationArgs 1
+byte "transfer_price"
+!=
+&&
+txna ApplicationArgs 1
+byte "transfer_to"
+!=
+&&
+txna ApplicationArgs 1
+byte "subdomain"
+!=
+&&
+txna ApplicationArgs 1
+byte "value"
+!=
+&&
+assert
+int 1
+byte "owner"
+app_local_get
+txn Sender
+==
+assert
+int 1
+global CurrentApplicationID
+txna ApplicationArgs 1
+app_local_get_ex
+store 3
+store 2
+load 3
+bnz main_l32
+int 0
+return
+main_l31:
+int 1
+return
+main_l32:
+int 1
+txna ApplicationArgs 1
+app_local_del
+b main_l31
+main_l33:
+callsub iswithingraceperiod_4
+int 0
+==
+assert
+callsub basictxnchecks_0
+int 1
+==
+assert
+txn NumAppArgs
+int 3
+==
+assert
+txn NumAccounts
+int 1
+==
+assert
+txna ApplicationArgs 1
+byte "name"
+!=
+assert
+txna ApplicationArgs 1
+byte "owner"
+!=
+assert
+txna ApplicationArgs 1
+byte "expiry"
+!=
+assert
+txna ApplicationArgs 1
+byte "transfer_price"
+!=
+assert
+txna ApplicationArgs 1
+byte "transfer_to"
+!=
+assert
+txna ApplicationArgs 1
+byte "value"
+!=
+assert
+int 1
+byte "owner"
+app_local_get
+txn Sender
+==
+assert
+int 1
+txna ApplicationArgs 1
+txna ApplicationArgs 2
+app_local_put
+int 1
+return
+main_l34:
+int 0
+callsub checkcloseremndr_1
+int 1
+==
+assert
+callsub basictxnchecks_0
+int 1
+==
+assert
+global GroupSize
+int 2
+==
+global GroupSize
+int 4
+==
+||
+assert
+gtxn 0 Sender
+gtxn 1 Sender
+==
+assert
+gtxn 0 Receiver
+global CurrentApplicationAddress
+==
+assert
+global GroupSize
+int 2
+==
+bnz main_l41
+global GroupSize
+int 4
+==
+bnz main_l40
+int 0
+return
+main_l37:
+int 1
+assert
+int 1
+txn ApplicationID
+byte "owner"
+app_local_get_ex
+store 1
+store 0
+load 1
+bnz main_l39
+main_l38:
+load 1
+int 0
+==
+global LatestTimestamp
+int 1
+byte "expiry"
+app_local_get
+>=
+||
+assert
+txna ApplicationArgs 1
+len
+int 3
+==
+gtxn 0 Amount
+int 150000000
+txna ApplicationArgs 2
+btoi
+int 1
+-
+int 150000000
+*
++
+>=
+&&
+txna ApplicationArgs 1
+len
+int 4
+==
+gtxn 0 Amount
+int 50000000
+txna ApplicationArgs 2
+btoi
+int 1
+-
+int 50000000
+*
++
+>=
+&&
+||
+txna ApplicationArgs 1
+len
+int 5
+>=
+gtxn 0 Amount
+int 5000000
+txna ApplicationArgs 2
+btoi
+int 1
+-
+int 5000000
+*
++
+>=
+&&
+||
+assert
+int 1
+byte "owner"
+txn Sender
+app_local_put
+int 1
+byte "expiry"
+global LatestTimestamp
+int 31536000
+txna ApplicationArgs 2
+btoi
+int 1
+-
+int 1
++
+*
++
+app_local_put
+int 1
+byte "subdomain"
+int 0
+app_local_put
+int 1
+byte "transfer_price"
+byte ""
+app_local_put
+int 1
+byte "transfer_to"
+byte ""
+app_local_put
+int 1
+byte "value"
+txn Sender
+app_local_put
+int 1
+byte "name"
+txna ApplicationArgs 1
+app_local_put
+int 1
+return
+main_l39:
+global LatestTimestamp
+int 1
+byte "expiry"
+app_local_get
+int 7776000
++
+>=
+assert
+b main_l38
+main_l40:
+int 2
+int 0
+callsub checkappacctssize_3
+int 3
+int 1
+callsub checkappacctssize_3
+&&
+int 1
+callsub checkcloseremndr_1
+int 1
+==
+&&
+int 3
+int 3
+callsub checkappargssize_2
+int 1
+==
+&&
+gtxn 1 Receiver
+gtxn 2 Sender
+==
+&&
+gtxn 2 ApplicationID
+global CurrentApplicationID
+==
+&&
+gtxn 2 OnCompletion
+int OptIn
+==
+&&
+gtxn 3 ApplicationID
+global CurrentApplicationID
+==
+&&
+gtxn 3 Sender
+gtxn 0 Sender
+==
+&&
+gtxna 3 ApplicationArgs 0
+byte "register_name"
+==
+&&
+assert
+b main_l37
+main_l41:
+int 1
+int 1
+callsub checkappacctssize_3
+int 1
+int 3
+callsub checkappargssize_2
+int 1
+==
+&&
+gtxn 1 ApplicationID
+global CurrentApplicationID
+==
+&&
+gtxn 1 Sender
+gtxn 0 Sender
+==
+&&
+gtxna 1 ApplicationArgs 0
+byte "register_name"
+==
+&&
+assert
+b main_l37
+main_l42:
+callsub basictxnchecks_0
+int 1
+==
+assert
+txn Sender
+byte "name_controller"
+app_global_get
+==
+assert
+txna ApplicationArgs 1
+txna ApplicationArgs 2
+app_global_put
+int 1
+return
+main_l43:
+int 0
+return
+main_l44:
+int 0
+return
+main_l45:
+callsub basictxnchecks_0
+int 1
+==
+assert
+txn Sender
+byte "name_controller"
+app_global_get
+==
+assert
+int 1
+return
+main_l46:
+callsub basictxnchecks_0
+int 1
+==
+assert
+txn Sender
+byte "name_controller"
+app_global_get
+==
+assert
+int 1
+return
+main_l47:
+int 1
+return
+main_l48:
+byte "name_controller"
+txn Sender
+app_global_put
+int 1
+return
+
+// basic_txn_checks
+basictxnchecks_0:
+int 0
+store 4
+basictxnchecks_0_l1:
+load 4
+global GroupSize
+<
+bz basictxnchecks_0_l3
+load 4
+gtxns RekeyTo
+global ZeroAddress
+==
+load 4
+gtxns NumApplications
+int 0
+==
+&&
+load 4
+gtxns NumAssets
+int 0
+==
+&&
+load 4
+gtxns Fee
+int 1000
+<=
+&&
+assert
+load 4
+int 1
++
+store 4
+b basictxnchecks_0_l1
+basictxnchecks_0_l3:
+int 1
+retsub
+
+// check_closeremndr
+checkcloseremndr_1:
+store 5
+load 5
+gtxns CloseRemainderTo
+global ZeroAddress
+==
+assert
+int 1
+retsub
+
+// check_app_args_size
+checkappargssize_2:
+store 7
+store 6
+load 6
+gtxns NumAppArgs
+load 7
+==
+assert
+int 1
+retsub
+
+// check_app_accts_size
+checkappacctssize_3:
+store 9
+store 8
+load 8
+gtxns NumAccounts
+load 9
+==
+assert
+int 1
+retsub
+
+// is_within_grace_period
+iswithingraceperiod_4:
+int 1
+txn ApplicationID
+byte "owner"
+app_local_get_ex
+store 1
+store 0
+load 1
+bnz iswithingraceperiod_4_l2
+int 0
+retsub
+iswithingraceperiod_4_l2:
+global LatestTimestamp
+int 1
+byte "expiry"
+app_local_get
+int 7776000
++
+<=
+global LatestTimestamp
+int 1
+byte "expiry"
+app_local_get
+>=
+&&
+bnz iswithingraceperiod_4_l4
+int 0
+retsub
+iswithingraceperiod_4_l4:
+int 1
+retsub
+
+// reset_domain_properties
+resetdomainproperties_5:
+int 1
+txn ApplicationID
+byte "discord"
+app_local_get_ex
+store 11
+store 10
+int 1
+txn ApplicationID
+byte "discord"
+app_local_get_ex
+store 11
+store 10
+load 11
+bnz resetdomainproperties_5_l19
+resetdomainproperties_5_l1:
+int 1
+txn ApplicationID
+byte "github"
+app_local_get_ex
+store 13
+store 12
+int 1
+txn ApplicationID
+byte "github"
+app_local_get_ex
+store 13
+store 12
+load 13
+bnz resetdomainproperties_5_l18
+resetdomainproperties_5_l2:
+int 1
+txn ApplicationID
+byte "twitter"
+app_local_get_ex
+store 15
+store 14
+int 1
+txn ApplicationID
+byte "twitter"
+app_local_get_ex
+store 15
+store 14
+load 15
+bnz resetdomainproperties_5_l17
+resetdomainproperties_5_l3:
+int 1
+txn ApplicationID
+byte "reddit"
+app_local_get_ex
+store 17
+store 16
+int 1
+txn ApplicationID
+byte "reddit"
+app_local_get_ex
+store 17
+store 16
+load 17
+bnz resetdomainproperties_5_l16
+resetdomainproperties_5_l4:
+int 1
+txn ApplicationID
+byte "telegram"
+app_local_get_ex
+store 19
+store 18
+int 1
+txn ApplicationID
+byte "telegram"
+app_local_get_ex
+store 19
+store 18
+load 19
+bnz resetdomainproperties_5_l15
+resetdomainproperties_5_l5:
+int 1
+txn ApplicationID
+byte "youtube"
+app_local_get_ex
+store 21
+store 20
+int 1
+txn ApplicationID
+byte "youtube"
+app_local_get_ex
+store 21
+store 20
+load 21
+bnz resetdomainproperties_5_l14
+resetdomainproperties_5_l6:
+int 1
+txn ApplicationID
+byte "avatar"
+app_local_get_ex
+store 23
+store 22
+int 1
+txn ApplicationID
+byte "avatar"
+app_local_get_ex
+store 23
+store 22
+load 23
+bnz resetdomainproperties_5_l13
+resetdomainproperties_5_l7:
+int 1
+txn ApplicationID
+byte "content"
+app_local_get_ex
+store 25
+store 24
+int 1
+txn ApplicationID
+byte "content"
+app_local_get_ex
+store 25
+store 24
+load 25
+bnz resetdomainproperties_5_l12
+resetdomainproperties_5_l8:
+int 1
+txn ApplicationID
+byte "ipaddress"
+app_local_get_ex
+store 27
+store 26
+int 1
+txn ApplicationID
+byte "ipaddress"
+app_local_get_ex
+store 27
+store 26
+load 27
+bnz resetdomainproperties_5_l11
+resetdomainproperties_5_l9:
+int 1
+txn ApplicationID
+byte "is_default"
+app_local_get_ex
+store 29
+store 28
+int 1
+txn ApplicationID
+byte "is_default"
+app_local_get_ex
+store 29
+store 28
+load 29
+bz resetdomainproperties_5_l20
+int 1
+byte "is_default"
+app_local_del
+b resetdomainproperties_5_l20
+resetdomainproperties_5_l11:
+int 1
+byte "ipaddress"
+app_local_del
+b resetdomainproperties_5_l9
+resetdomainproperties_5_l12:
+int 1
+byte "content"
+app_local_del
+b resetdomainproperties_5_l8
+resetdomainproperties_5_l13:
+int 1
+byte "avatar"
+app_local_del
+b resetdomainproperties_5_l7
+resetdomainproperties_5_l14:
+int 1
+byte "youtube"
+app_local_del
+b resetdomainproperties_5_l6
+resetdomainproperties_5_l15:
+int 1
+byte "telegram"
+app_local_del
+b resetdomainproperties_5_l5
+resetdomainproperties_5_l16:
+int 1
+byte "reddit"
+app_local_del
+b resetdomainproperties_5_l4
+resetdomainproperties_5_l17:
+int 1
+byte "twitter"
+app_local_del
+b resetdomainproperties_5_l3
+resetdomainproperties_5_l18:
+int 1
+byte "github"
+app_local_del
+b resetdomainproperties_5_l2
+resetdomainproperties_5_l19:
+int 1
+byte "discord"
+app_local_del
+b resetdomainproperties_5_l1
+resetdomainproperties_5_l20:
+int 1
+retsub

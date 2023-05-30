@@ -115,3 +115,12 @@ class Subroutine:  # pylint: disable=too-many-instance-attributes
             subroutine to the caller.
         """
         return [b for b in self._exit_blocks if isinstance(b.exit_instr, Retsub)]
+
+    @property
+    def called_subroutines(self) -> List["Subroutine"]:
+        """List of subroutines called by this subroutine.
+
+        Returns:
+            Returns a list of subroutines called by the subroutine.
+        """
+        return list(set(bi.called_subroutine for bi in self._blocks if bi.is_callsub_block))

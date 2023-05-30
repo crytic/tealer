@@ -17,11 +17,14 @@ from tealer.printers.abstract_printer import AbstractPrinter
 
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.subroutine import Subroutine
-from tealer.teal.instructions.instructions import Instruction, ExecutionMode
+from tealer.teal.instructions.instructions import Instruction
+from tealer.utils.teal_enums import ContractType, ExecutionMode
 from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
+    from tealer.teal.functions import Function
+
 
 # from slither: slither/slither.py
 def _check_common_things(
@@ -94,8 +97,14 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         self._bbs = bbs
         self._main = main
         self._subroutines = subroutines
+        self._functions: Dict[str, "Function"] = {}
 
         self._contract_name: str = ""
+        self._contract_type: ContractType = (
+            ContractType.ApprovalProgram
+            if mode == ExecutionMode.STATEFUL
+            else ContractType.LogicSig
+        )
         self._detectors: List[AbstractDetector] = []
         self._printers: List[AbstractPrinter] = []
 
@@ -137,7 +146,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
 
     @property
     def mode(self) -> ExecutionMode:
-        """Type of the contract: Stateless, Stateful or Any.
+        """Execution mode of the contract: Stateless, Stateful or Any.
 
         Mode is determined based on the instructions of the contract. if there are
         any instructions that are only supported in one kind of contract then that
@@ -153,6 +162,19 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
     @mode.setter
     def mode(self, m: ExecutionMode) -> None:
         self._mode = m
+
+    @property
+    def contract_type(self) -> ContractType:
+        """Type of the contract: ApprovalProgram, ClearStateProgram or LogicSig
+
+        Returns:
+            Returns the type of the contract
+        """
+        return self._contract_type
+
+    @contract_type.setter
+    def contract_type(self, contract_type: ContractType) -> None:
+        self._contract_type = contract_type
 
     @property
     def main(self) -> "Subroutine":
@@ -181,6 +203,18 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
             Returns the list of all subroutines in the contract.
         """
         return list(self._subroutines.values())
+
+    @property
+    def functions(self) -> Dict[str, "Function"]:
+        return self._functions
+
+    @functions.setter
+    def functions(self, functions: Dict[str, "Function"]) -> None:
+        self._functions = functions
+
+    @property
+    def functions_list(self) -> List["Function"]:
+        return list(self._functions.values())
 
     @property
     def contract_name(self) -> str:

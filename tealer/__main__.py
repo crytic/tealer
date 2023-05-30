@@ -89,7 +89,11 @@ from tealer.utils.command_line.command_output import (
     output_to_markdown,
     output_wiki,
 )
-from tealer.utils.command_line.common import get_detectors_and_printers
+from tealer.utils.command_line.common import (
+    get_detectors_and_printers,
+    validate_command_line_options,
+    handle_detect,
+)
 from tealer.utils.output import ROOT_OUTPUT_DIRECTORY
 
 if TYPE_CHECKING:
@@ -524,6 +528,7 @@ def main() -> None:
 
     detector_classes, printer_classes = get_detectors_and_printers()
     args = parse_args(detector_classes, printer_classes)
+    validate_command_line_options(args)
 
     default_log = logging.INFO if not args.debug else logging.DEBUG
     for (logger_name, logger_level) in [
@@ -538,6 +543,10 @@ def main() -> None:
     results_detectors: List["SupportedOutput"] = []
     _results_printers: List = []
     error = None
+    if args.detectors_to_run is not None and args.group_config is not None:
+        # handle this case specially for now.
+        handle_detect(args)
+        sys.exit(1)
     try:
         contract_source, contract_name = fetch_contract(args)
         logger.debug("[+] Parsing the contract")

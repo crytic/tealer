@@ -30,24 +30,30 @@ def cmp_cfg(bbs1: List[BasicBlock], bbs2: List[BasicBlock]) -> bool:
     bbs1, bbs2 = map(order_basic_blocks, (bbs1, bbs2))
 
     for bb1, bb2 in zip(bbs1, bbs2):
-
+        print("1")
         if not cmp_basic_blocks(bb1, bb2):
             return False
+        print("2")
 
         if len(bb1.prev) != len(bb2.prev):
+            print(bb1.prev)
+            print(bb2.prev)
             return False
+        print("3")
 
         if len(bb1.next) != len(bb2.next):
             return False
 
         bbs_prev_1, bbs_prev_2 = map(order_basic_blocks, (bb1.prev, bb2.prev))
-
+        print(bb1.idx, "Reached")
         for bbp1, bbp2 in zip(bbs_prev_1, bbs_prev_2):
+            print(bbp1.entry_instr.line, bbp2.entry_instr.line)
             if bbp1.entry_instr.line != bbp2.entry_instr.line:
                 return False
 
         bbs_next_1, bbs_next_2 = map(order_basic_blocks, (bb1.next, bb2.next))
         for bbn1, bbn2 in zip(bbs_next_1, bbs_next_2):
+            print(bbn1.entry_instr.line, bbn2.entry_instr.line)
             if bbn1.entry_instr.line != bbn2.entry_instr.line:
                 return False
 
