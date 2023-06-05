@@ -10,7 +10,6 @@ Classes:
 """
 
 import logging
-from pathlib import Path
 from typing import List, Any, Optional, Type, TYPE_CHECKING, Tuple, Dict
 
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorClassification
@@ -291,7 +290,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
         return results
 
     # from slither: Slither Class in slither/slither.py
-    def run_printers(self, dest: Optional[Path] = None) -> List:
+    def run_printers(self) -> List:
         """Run all the registered printers.
 
         Args:
@@ -305,4 +304,4 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
             of a single printer.
         """
 
-        return [p.print(dest) for p in self._printers]
+        return [p.print() for p in self._printers]

@@ -4,12 +4,11 @@ Classes:
     PrinterCFG: Printer to export contract CFG.
 """
 
+import os
 from pathlib import Path
 
-from typing import Optional
-
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.utils.output import full_cfg_to_dot
+from tealer.utils.output import full_cfg_to_dot, ROOT_OUTPUT_DIRECTORY
 
 
 class PrinterCFG(AbstractPrinter):  # pylint: disable=too-few-public-methods
@@ -19,15 +18,13 @@ class PrinterCFG(AbstractPrinter):  # pylint: disable=too-few-public-methods
     HELP = "Export the CFG of entire contract"
     WIKI_URL = "https://github.com/crytic/tealer/wiki/Printer-documentation#cfg"
 
-    def print(self, dest: Optional[Path] = None) -> None:
-        """Export the CFG of entire contract.
+    def print(self) -> None:
+        """Export the CFG of entire contract."""
+        # outputs a single file: set the dir to {ROOT_DIRECTORY}/{CONTRACT_NAME}
+        dest = ROOT_OUTPUT_DIRECTORY / Path(self.teal.contract_name)
+        os.makedirs(dest, exist_ok=True)
 
-        Args:
-            dest (Optional[Path]): destination directory to save the dot file in.
-        """
-        if dest is None:
-            dest = Path(".")
+        filename = dest / Path("full_cfg.dot")
 
-        filename = Path("full_cfg.dot")
         print(f"\nCFG exported to file: {filename}")
-        full_cfg_to_dot(self.teal.bbs, filename=dest / filename)
+        full_cfg_to_dot(self.teal.bbs, filename=filename)

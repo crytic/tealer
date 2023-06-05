@@ -12,7 +12,7 @@ Summary includes :
 
 """
 
-from typing import List, Tuple, Optional, TYPE_CHECKING
+from typing import List, Tuple, TYPE_CHECKING
 
 from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.teal.instructions.instructions import contract_type_to_txt
@@ -127,16 +127,11 @@ class PrinterHumanSummary(AbstractPrinter):
 
         return txt
 
-    def print(self, dest: Optional["Path"] = None) -> None:
+    def print(self) -> None:
         """Print summary of the contract to stdout.
 
         Currently displays version, mode, number of basic blocks, instructions, subroutines,
         Names of subroutines, number of results found by detectors for each level of impact.
-
-        Args:
-            dest: if printer saves output in files then they will be saved in
-                :dest: directory. Currently, the printer doesn't save output in
-                files, this argument is ignored.
         """
 
         teal = self.teal

@@ -21,6 +21,7 @@ Types:
 
 import html
 import re
+import os
 from pathlib import Path
 from typing import List, TYPE_CHECKING, Dict, Callable, Optional
 from dataclasses import dataclass
@@ -32,6 +33,10 @@ if TYPE_CHECKING:
     from tealer.teal.subroutine import Subroutine
     from tealer.teal.teal import Teal
     from tealer.teal.instructions.instructions import Instruction
+    from tealer.detectors.abstract_detector import AbstractDetector
+
+
+ROOT_OUTPUT_DIRECTORY = Path("tealer-export")
 
 
 @dataclass
@@ -260,14 +265,14 @@ def all_subroutines_to_dot(
     """
     if filename_prefix:  # not empty string
         filename_prefix = f"{filename_prefix}_"
-    main_entry_sub_filename = f"{teal.contract_name}_{filename_prefix}contract_shortened_cfg.dot"
+    main_entry_sub_filename = f"{filename_prefix}contract_shortened_cfg.dot"
 
     with open(dest / Path(main_entry_sub_filename), "w", encoding="utf-8") as f:
         f.write(subroutine_to_dot(teal.main, config))
         print(f"Exported contract's shortened cfg to: {dest / Path(main_entry_sub_filename)}")
 
     for sub_name, subroutine in teal.subroutines.items():
-        filename = f"{teal.contract_name}_{filename_prefix}subroutine_{sub_name}_cfg.dot"
+        filename = f"{filename_prefix}subroutine_{sub_name}_cfg.dot"
         with open(dest / Path(filename), "w", encoding="utf-8") as f:
             f.write(subroutine_to_dot(subroutine, config))
             print(f'Exported cfg of "{sub_name}" subroutine to: {dest / Path(filename)}')
@@ -343,26 +348,26 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
     return None
 
 
+def detector_terminal_description(detector: "AbstractDetector") -> str:
+    """Return description for the detector that is printed to terminal before listing vulnerable paths."""
+    return (
+        f'\nCheck: "{detector.NAME}", Impact: {detector.IMPACT}, Confidence: {detector.CONFIDENCE}\n'
+        f"Description: {detector.DESCRIPTION}\n\n"
+        f"Wiki: {detector.WIKI_URL}\n"
+    )
+
+
+def detector_ouptut_dir(destination: Path, detector: "AbstractDetector") -> Path:
+    return destination / Path(detector.NAME)
+
+
 class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
-    """Detector output class to store list of execution paths.
+    """Detector output class to represent vulnerable execution paths."""
 
-    Args:
-        cfg: Control Flow Graph of the teal contract.
-        description: Description of the execution path detected by
-            the detector.
-        filename: The dot representation of execution paths will be
-            saved in the filenames starting with :filename: prefix.
-    """
-
-    def __init__(self, cfg: List["BasicBlock"], description: str, filename: str):
-        self._cfg = cfg
-        self._description = description
-        self._filename = filename
-        self._paths: List[List["BasicBlock"]] = []
-        self._check: str = ""
-        self._impact: str = ""
-        self._confidence: str = ""
-        self._help: str = ""
+    def __init__(self, teal: "Teal", detector: "AbstractDetector", paths: List[List["BasicBlock"]]):
+        self._teal = teal
+        self._detector = detector
+        self._paths: List[List["BasicBlock"]] = paths
 
     def add_path(self, path: List["BasicBlock"]) -> None:
         """Add given execution path to current list of execution paths.
@@ -382,48 +387,39 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
     @property
     def cfg(self) -> List["BasicBlock"]:
         """Control Flow of the teal contract."""
-        return self._cfg
+        return self._teal.bbs
+
+    @property
+    def detector(self) -> "AbstractDetector":
+        return self._detector
 
     @property
     def description(self) -> str:
         """Description of execution paths stored in this result"""
-        return self._description
+        return detector_terminal_description(self._detector)
 
     @property
     def check(self) -> str:
         """Name of the detector whose result is being represented."""
-        return self._check
-
-    @check.setter
-    def check(self, c: str) -> None:
-        self._check = c
+        return self._detector.NAME
 
     @property
     def impact(self) -> str:
         """Impact of the detector whose result is being represented."""
-        return self._impact
-
-    @impact.setter
-    def impact(self, i: str) -> None:
-        self._impact = i
+        return str(self._detector.IMPACT)
 
     @property
     def confidence(self) -> str:
         """Confidence of the detector whose result is being represented."""
-        return self._confidence
-
-    @confidence.setter
-    def confidence(self, c: str) -> None:
-        self._confidence = c
+        return str(self._detector.CONFIDENCE)
 
     @property
     def help(self) -> str:
-        """Help message to remove detected issues from the contract."""
-        return self._help
+        """Recommendations to fix the reported issues."""
+        return self._detector.WIKI_RECOMMENDATION.strip()
 
-    @help.setter
-    def help(self, h: str) -> None:
-        self._help = h
+    def filename(self, path_index: int) -> Path:
+        return Path(f"{self._detector.NAME}-{path_index}.dot")
 
     @staticmethod
     def _short_notation(path_bbs: List["BasicBlock"]) -> str:
@@ -466,6 +462,11 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         config = CFGDotConfig()
         config.color_edges = False
         print("\tFollowing are the vulnerable paths found:")
+
+        dest = detector_ouptut_dir(dest, self._detector)
+        # create output directory if not present
+        os.makedirs(dest, exist_ok=True)
+
         if not all_paths_in_one:
 
             for idx, path in enumerate(self._paths, start=1):
@@ -473,7 +474,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
                 short = self._short_notation(path)
                 print(f"\n\t\t path: {short}")
 
-                filename = dest / Path(f"{self._filename}_{idx}.dot")
+                filename = dest / self.filename(idx)
                 print(f"\t\t check file: {filename}")
 
                 config.bb_border_color = (
@@ -493,7 +494,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
                     if bb not in bbs_to_highlight:
                         bbs_to_highlight.append(bb)
 
-            filename = dest / Path(f"{self._filename}.dot")
+            filename = dest / Path(f"{self._detector.NAME}.dot")
             print(f"\t\t check file: {filename}")
 
             config.bb_border_color = lambda bb: "BLACK" if bb not in bbs_to_highlight else "RED"

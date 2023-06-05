@@ -21,10 +21,9 @@ from tealer.teal.teal import Teal
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 from tealer.utils.analyses import is_int_push_ins
 from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, UnknownStackValue
-from tealer.detectors.utils import (
-    detect_missing_tx_field_validations,
-    detector_terminal_description,
-)
+from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.utils.output import ExecutionPaths
+
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
@@ -147,10 +146,6 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
         paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
             self.teal.bbs[0], checks_group_size, satisfies_report_condition
         )
-
-        description = detector_terminal_description(self)
-        filename = "missing_group_size"
-
-        results = self.generate_result(paths_without_check, description, filename)
         construct_stack_ast.cache_clear()
-        return results
+
+        return ExecutionPaths(self.teal, self, paths_without_check)
