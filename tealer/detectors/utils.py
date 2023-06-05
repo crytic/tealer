@@ -49,7 +49,9 @@ def validated_in_block(
 
 
 def detect_missing_tx_field_validations(
-    entry_block: "BasicBlock", checks_field: Callable[["BlockTransactionContext"], bool]
+    entry_block: "BasicBlock",
+    checks_field: Callable[["BlockTransactionContext"], bool],
+    satisfies_report_condition: Callable[[List["BasicBlock"]], bool] = lambda _x: True,
 ) -> List[List["BasicBlock"]]:
     """search for execution paths lacking validations on transaction fields.
 
@@ -80,6 +82,7 @@ def detect_missing_tx_field_validations(
             e.g: For is_updatable detector, vulnerable value is `UpdateApplication`.
             if `block_ctx.transaction_types` can have `UpdateApplication`, this method will
             return false or else returns True.
+        satisfies_report_condition: Given a path, should return True if the "path" satifies the vulnerable condition.
     Returns:
         Returns a list of vulnerable execution paths: none of the blocks in the path check the fields.
     """
@@ -178,7 +181,12 @@ def detect_missing_tx_field_validations(
         # leaf block
         if len(bb.next) == 0:
             logger_detectors.debug(f"Vulnerable Path: current_full_path = {current_path}")
-            paths_without_check.append(current_path)
+            if satisfies_report_condition(current_path):
+                # only report if it satisfies the report condition
+                logger_detectors.debug(
+                    f"Vulnerable Path Satisfied Report Condition: current_full_path = {current_path} "
+                )
+                paths_without_check.append(current_path)
             return
 
         # do we need to make a copy of lists in [:-1]???

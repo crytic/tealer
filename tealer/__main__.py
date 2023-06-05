@@ -512,6 +512,7 @@ def main() -> None:
         ("Detectors", default_log),
         ("TransactionCtxAnalysis", default_log),
         ("Parsing", default_log),
+        ("Tealer", default_log),
     ]:
         logger = logging.getLogger(logger_name)
         logger.setLevel(logger_level)
@@ -526,7 +527,9 @@ def main() -> None:
     error = None
     try:
         contract_source = fetch_contract(args)
+        logger.debug("[+] Parsing the contract")
         teal = parse_teal(contract_source)
+        logger.debug("[+] Completed Parsing")
 
         detector_classes = choose_detectors(args, detector_classes, teal)
         printer_classes = choose_printers(args, printer_classes)

@@ -9,6 +9,7 @@ Classes:
     Teal: Class to represent a contract.
 """
 
+import logging
 from pathlib import Path
 from typing import List, Any, Optional, Type, TYPE_CHECKING, Tuple, Dict
 
@@ -281,7 +282,11 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
             of a single detector.
         """
 
-        results = [d.detect() for d in self._detectors]
+        results = []
+        logger = logging.getLogger("Tealer")
+        for d in self._detectors:
+            logger.debug(f'[+] Running detector "{d.NAME}"')
+            results.append(d.detect())
 
         return results
 

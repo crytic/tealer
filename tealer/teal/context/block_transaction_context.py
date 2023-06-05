@@ -26,9 +26,11 @@ class BlockTransactionContext:  # pylint: disable=too-few-public-methods, too-ma
             # information from gtxn {i} instructions.
             self.group_indices = []
             self.group_sizes = []
+            self.is_gtxn_context = True
         else:
             self.group_sizes = list(range(1, MAX_GROUP_SIZE + 1))
             self.group_indices = list(range(0, MAX_GROUP_SIZE))
+            self.is_gtxn_context = False
         self.transaction_types = list(ALL_TRANSACTION_TYPES)
         self.rekeyto: AddrFieldValue = AddrFieldValue()
         self.closeto: AddrFieldValue = AddrFieldValue()
