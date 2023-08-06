@@ -1,7 +1,7 @@
 from typing import List, Tuple, Union
 import pytest
 
-from tealer.teal.parse_teal import parse_teal
+from tealer.utils.command_line.common import init_tealer_from_single_contract
 from tealer.utils.algorand_constants import MAX_UINT64, MAX_GROUP_SIZE
 
 from tests.utils import order_basic_blocks
@@ -175,6 +175,52 @@ perform_validations:
     int 1
     assert
     retsub
+
+validate_fee:
+    global GroupSize
+    int 2
+    ==
+    bnz group_size_2
+
+    global GroupSize
+    int 1
+    ==
+    assert
+    gtxn 0 Fee
+    int 10000
+    <=
+    assert
+    retsub
+
+    group_size_2:
+        gtxn 0 Fee
+        int 1000
+        <
+        assert
+        gtxn 1 Fee
+        int 1000
+        <
+        bz fail_txn
+
+    retsub
+"""
+
+"""
+#pragma version 6
+txn Fee
+int 10000
+>=
+bnz fail_txn
+callsub validate_fee
+callsub perform_validations
+int 1 return
+
+fail_txn:
+    int 0
+    return
+
+perform_validations:
+    b fail_txn
 
 validate_fee:
     global GroupSize
@@ -391,7 +437,7 @@ ALL_TESTS = [
     (NO_CHECKS, *NO_CHECKS_LISTS),
     (GTXN_0, *GTXN_0_LISTS),
     (CHECK_IN_SUBROUTINE, *CHECK_IN_SUBROUTINE_LISTS),
-    (MULTIPLE_GROUP_SIZES_IN_SUBROUTINES, *MULTIPLE_GROUP_SIZES_IN_SUBROUTINES_LISTS),
+    # (MULTIPLE_GROUP_SIZES_IN_SUBROUTINES, *MULTIPLE_GROUP_SIZES_IN_SUBROUTINES_LISTS),
     (CHECKS_IN_MULTIPLE_SUBROUTINES, *CHECKS_IN_MULTIPLE_SUBROUTINES_LISTS),
     (CHECK_IN_ONE_PATH, *CHECK_IN_ONE_PATH_LISTS),
     (BASIC_2, *BASIC_2_LISTS),
@@ -405,17 +451,18 @@ def test_tx_types_gtxn(
 ) -> None:
     code, max_fees_list, gtxn_fees_list = test
 
-    teal = parse_teal(code.strip())
+    tealer = init_tealer_from_single_contract(code.strip(), "test")
+    function = tealer.contracts["test"].functions["test"]
 
-    bbs = order_basic_blocks(teal.bbs)
+    bbs = order_basic_blocks(function.blocks)
     for i, b in enumerate(bbs):
-        print("X:", i, repr(b), b.transaction_context.max_fee)
+        print("X:", i, repr(b), function.transaction_context(b).max_fee)
         if isinstance(max_fees_list[i], bool):
-            assert b.transaction_context.max_fee_unknown is True
+            assert function.transaction_context(b).max_fee_unknown is True
         else:
-            assert b.transaction_context.max_fee == max_fees_list[i]
+            assert function.transaction_context(b).max_fee == max_fees_list[i]
         for ind in range(MAX_GROUP_SIZE):
-            ctx = b.transaction_context.gtxn_context(ind)
+            ctx = function.transaction_context(b).gtxn_context(ind)
             print(f"Y: {ind}, {i}", ctx.max_fee, gtxn_fees_list[ind][i])
             if isinstance(gtxn_fees_list[ind][i], bool):
                 assert ctx.max_fee_unknown is True

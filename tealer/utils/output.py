@@ -578,4 +578,4 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         return result
 
 
-SupportedOutput = ExecutionPaths
+SupportedOutput = ExecutionPaths | List[ExecutionPaths]

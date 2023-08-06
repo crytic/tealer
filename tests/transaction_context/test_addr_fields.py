@@ -1,7 +1,7 @@
 from typing import Tuple, List
 import pytest
 
-from tealer.teal.parse_teal import parse_teal
+from tealer.utils.command_line.common import init_tealer_from_single_contract
 from tests.utils import order_basic_blocks
 
 
@@ -101,18 +101,18 @@ def test_addr_fields(  # pylint: disable=too-many-locals
     test: Tuple[str, List[Tuple[List[bool], List[bool], List[List[str]]]], int]
 ) -> None:
     code, values, idx = test
-    teal = parse_teal(code.strip())
-
+    tealer = init_tealer_from_single_contract(code.strip(), "test")
+    function = tealer.contracts["test"].functions["test"]
     ex_rekeyto_any, ex_rekeyto_none, ex_rekeyto = values[0]
     ex_closeto_any, ex_closeto_none, ex_closeto = values[1]
     ex_assetcloseto_any, ex_assetcloseto_none, ex_assetcloseto = values[2]
 
-    bbs = order_basic_blocks(teal.bbs)
+    bbs = order_basic_blocks(function.blocks)
     for b in bbs:
         if idx == -1:
-            ctx = b.transaction_context
+            ctx = function.transaction_context(b)
         else:
-            ctx = b.transaction_context.gtxn_context(idx)
+            ctx = function.transaction_context(b).gtxn_context(idx)
 
         assert ctx.rekeyto.any_addr == ex_rekeyto_any[b.idx]
         assert ctx.rekeyto.no_addr == ex_rekeyto_none[b.idx]

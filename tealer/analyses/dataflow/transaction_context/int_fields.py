@@ -194,15 +194,19 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
         # use group_sizes to update group_indices
         group_sizes_context = self._block_contexts[self.GROUP_SIZE_KEY]
         group_indices_context = self._block_contexts[self.GROUP_INDEX_KEY]
-        for bi in self._teal.bbs:
+        for bi in self._function.blocks:
             group_indices_context[bi] = group_indices_context[bi] & set(
                 range(0, max(group_sizes_context[bi], default=0))
             )
 
         group_size_block_context = self._block_contexts[self.GROUP_SIZE_KEY]
-        for block in self._teal.bbs:
-            block.transaction_context.group_sizes = list(group_size_block_context[block])
+        for block in self._function.blocks:
+            self._function.transaction_context(block).group_sizes = list(
+                group_size_block_context[block]
+            )
 
         group_index_block_context = self._block_contexts[self.GROUP_INDEX_KEY]
-        for block in self._teal.bbs:
-            block.transaction_context.group_indices = list(group_index_block_context[block])
+        for block in self._function.blocks:
+            self._function.transaction_context(block).group_indices = list(
+                group_index_block_context[block]
+            )

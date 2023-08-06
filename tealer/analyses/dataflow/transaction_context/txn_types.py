@@ -213,11 +213,15 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
     def _store_results(self) -> None:
         transaction_type_context = self._block_contexts[self.TRANSACTION_TYPE_KEY]
 
-        for block in self._teal.bbs:
-            block.transaction_context.transaction_types = list(transaction_type_context[block])
+        for block in self._function.blocks:
+            self._function.transaction_context(block).transaction_types = list(
+                transaction_type_context[block]
+            )
 
             for idx in range(16):
                 values = self._block_contexts[
                     get_gtxn_at_index_key(idx, self.TRANSACTION_TYPE_KEY)
                 ][block]
-                block.transaction_context.gtxn_context(idx).transaction_types = list(values)
+                self._function.transaction_context(block).gtxn_context(
+                    idx
+                ).transaction_types = list(values)

@@ -201,14 +201,14 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         for key, addr_field_obj in key_and_addr_obj:
             if key not in self.BASE_KEYS:
                 continue
-            for block in self._teal.bbs:
+            for block in self._function.blocks:
                 self._set_addr_values(
-                    addr_field_obj(block.transaction_context),
+                    addr_field_obj(self._function.transaction_context(block)),
                     self._block_contexts[key][block],
                 )
                 for idx in range(16):
                     addr_values = self._block_contexts[get_gtxn_at_index_key(idx, key)][block]
                     self._set_addr_values(
-                        addr_field_obj(block.transaction_context.gtxn_context(idx)),
+                        addr_field_obj(self._function.transaction_context(block).gtxn_context(idx)),
                         addr_values,
                     )

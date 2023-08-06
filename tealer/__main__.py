@@ -76,7 +76,6 @@ from pkg_resources import require  # type: ignore
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.exceptions import TealerException
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.teal.parse_teal import parse_teal
 from tealer.utils.teal_enums import ExecutionMode
 from tealer.utils.algoexplorer import (
     get_application_using_app_id,
@@ -93,11 +92,13 @@ from tealer.utils.command_line.common import (
     get_detectors_and_printers,
     validate_command_line_options,
     handle_detect,
+    init_tealer_from_single_contract,
 )
-from tealer.utils.output import ROOT_OUTPUT_DIRECTORY
+from tealer.utils.output import ROOT_OUTPUT_DIRECTORY, ExecutionPaths
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
+    from tealer.tealer import Tealer
     from tealer.utils.output import SupportedOutput
 
 
@@ -411,7 +412,7 @@ class OutputWiki(argparse.Action):  # pylint: disable=too-few-public-methods
 
 
 def handle_detectors_and_printers(
-    teal: "Teal",
+    tealer: "Tealer",
     detectors: List[Type[AbstractDetector]],
     printers: List[Type[AbstractPrinter]],
 ) -> Tuple[List["SupportedOutput"], List]:
@@ -427,12 +428,12 @@ def handle_detectors_and_printers(
     """
 
     for detector_cls in detectors:
-        teal.register_detector(detector_cls)
+        tealer.register_detector(detector_cls)
 
     for printer_cls in printers:
-        teal.register_printer(printer_cls)
+        tealer.register_printer(printer_cls)
 
-    return teal.run_detectors(), teal.run_printers()
+    return tealer.run_detectors(), tealer.run_printers()
 
 
 def handle_output(
@@ -455,6 +456,12 @@ def handle_output(
         teal: The contract.
         error: Error string if any detector or printer resulted in an error.
     """
+    expanded_detector_results: List["ExecutionPaths"] = []
+    for result in detector_results:
+        if isinstance(result, ExecutionPaths):
+            expanded_detector_results.append(result)
+        else:
+            expanded_detector_results.extend(result)
 
     output_directory = ROOT_OUTPUT_DIRECTORY / Path(teal.contract_name)
     os.makedirs(output_directory, exist_ok=True)
@@ -465,7 +472,7 @@ def handle_output(
             sys.exit(-1)
 
         detectors_with_0_results: List["AbstractDetector"] = []
-        for output in detector_results:
+        for output in expanded_detector_results:
             if output.paths:
                 output.write_to_files(output_directory)
             else:
@@ -474,7 +481,7 @@ def handle_output(
             detectors_with_0_results_str = ", ".join(d.NAME for d in detectors_with_0_results)
             print(f"\n 0 results found for {detectors_with_0_results_str}.")
     else:
-        json_results = [output.to_json() for output in detector_results]
+        json_results = [output.to_json() for output in expanded_detector_results]
 
         json_output = {
             "success": error is not None,
@@ -518,6 +525,7 @@ def fetch_contract(args: argparse.Namespace) -> Tuple[str, str]:
         raise TealerException from e
 
 
+# pylint: disable=too-many-locals
 def main() -> None:
     """Entry point of the tealer tool.
 
@@ -549,11 +557,9 @@ def main() -> None:
         sys.exit(1)
     try:
         contract_source, contract_name = fetch_contract(args)
-        logger.debug("[+] Parsing the contract")
-        teal = parse_teal(contract_source, contract_name)
-        logger.debug("[+] Completed Parsing")
-
-        detector_classes = choose_detectors(args, detector_classes, teal)
+        tealer = init_tealer_from_single_contract(contract_source, contract_name)
+        # TODO: decide on default classification for detectors in group transaction context.
+        detector_classes = choose_detectors(args, detector_classes, tealer.contracts[contract_name])
         printer_classes = choose_printers(args, printer_classes)
 
         # if a printer is ran using --print ... don't run all detectors.
@@ -568,7 +574,7 @@ def main() -> None:
             detector_classes = []
 
         results_detectors, _results_printers = handle_detectors_and_printers(
-            teal, detector_classes, printer_classes
+            tealer, detector_classes, printer_classes
         )
 
     except TealerException as e:
@@ -576,8 +582,14 @@ def main() -> None:
 
     if args.filter_paths is not None:
         for detector_result in results_detectors:
-            detector_result.filter_paths(args.filter_paths)
-    handle_output(args, results_detectors, _results_printers, teal, error)
+            if isinstance(detector_result, ExecutionPaths):
+                detector_result.filter_paths(args.filter_paths)
+            else:
+                for result in detector_result:
+                    result.filter_paths(args.filter_paths)
+    handle_output(
+        args, results_detectors, _results_printers, tealer.contracts[contract_name], error
+    )
 
 
 if __name__ == "__main__":

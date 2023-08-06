@@ -1,9 +1,9 @@
 from typing import List, Tuple
 import pytest
 
-from tealer.teal.parse_teal import parse_teal
 from tealer.utils.teal_enums import TealerTransactionType
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
+from tealer.utils.command_line.common import init_tealer_from_single_contract
 
 from tests.utils import order_basic_blocks
 
@@ -320,14 +320,16 @@ ALL_TESTS_TXN = [
 @pytest.mark.parametrize("test", ALL_TESTS_TXN)  # type: ignore
 def test_tx_types(test: Tuple[str, List[List[int]], int]) -> None:
     code, tx_types_list, idx = test
-    teal = parse_teal(code.strip())
 
-    bbs = order_basic_blocks(teal.bbs)
+    tealer = init_tealer_from_single_contract(code.strip(), "test")
+    function = tealer.contracts["test"].functions["test"]
+
+    bbs = order_basic_blocks(function.blocks)
     for b, tx_types in zip(bbs, tx_types_list):
         if idx == -1:
-            ctx = b.transaction_context
+            ctx = function.transaction_context(b)
         else:
-            ctx = b.transaction_context.gtxn_context(idx)
+            ctx = function.transaction_context(b).gtxn_context(idx)
         assert set(ctx.transaction_types) == set(tx_types)
 
 
@@ -503,14 +505,18 @@ def test_tx_types_gtxn(
 ) -> None:
     code, ex_txn_types_list, ex_gtxn_types_list = test
 
-    teal = parse_teal(code.strip())
-    bbs = order_basic_blocks(teal.bbs)
+    tealer = init_tealer_from_single_contract(code.strip(), "test")
+    function = tealer.contracts["test"].functions["test"]
+
+    bbs = order_basic_blocks(function.blocks)
     print("number of blocks:", len(bbs))
     for block_num, b in enumerate(bbs):
         print(block_num, b)
-        assert set(b.transaction_context.transaction_types) == set(ex_txn_types_list[block_num])
+        assert set(function.transaction_context(b).transaction_types) == set(
+            ex_txn_types_list[block_num]
+        )
         print(block_num, b)
         for txn_ind in range(MAX_GROUP_SIZE):
-            ctx = b.transaction_context.gtxn_context(txn_ind)
+            ctx = function.transaction_context(b).gtxn_context(txn_ind)
             print("txn_ind =", txn_ind)
             assert set(ctx.transaction_types) == set(ex_gtxn_types_list[txn_ind][block_num])
