@@ -61,7 +61,16 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         return set([NO_ADDRESS])
 
     def _union(self, key: str, a: Set, b: Set) -> Set:
-        """A union U = U, A union NullSet = A"""
+        """A union U = U, A union NullSet = A
+
+        Args:
+            key: The analysis key. The values in set :a: and :b: are values for this key.
+            a: Set 1.
+            b: Set 2.
+
+        Returns:
+            Returns union of set a and b.
+        """
         if ANY_ADDRESS in a or ANY_ADDRESS in b:
             return self._universal_set()
 
@@ -75,7 +84,16 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         return a | b
 
     def _intersection(self, key: str, a: Set, b: Set) -> Set:
-        """A intersection NullSet = NullSet, A intersection U = A"""
+        """A intersection NullSet = NullSet, A intersection U = A
+
+        Args:
+            key: The analysis key. The values in set :a: and :b: are values for this key.
+            a: Set 1.
+            b: Set 2.
+
+        Returns:
+            Returns union of set a and b.
+        """
         if NO_ADDRESS in a or NO_ADDRESS in b:
             return self._null_set()
 
@@ -92,6 +110,15 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         """return set of address which are represented by the ins
 
         ZeroAddress is considered to be null set.
+
+        Args:
+            ins: An instruction. The function considers that executing :ins: pushes an
+                "address" value onto the stack. Based on the instruction, the function
+                returns list of possible values.
+
+        Returns:
+            Returns a list of possible address values for the field when that field value is
+            asserted against the output of :ins:.
         """
         if isinstance(ins, Global) and isinstance(ins.field, ZeroAddress):
             # ZeroAddress

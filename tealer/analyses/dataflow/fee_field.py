@@ -100,8 +100,9 @@ class FeeField(DataflowTransactionContext):
         Args:
             comparison_ins: Comparison operator.
             compared_value: fee value being compared with.
+
         Returns:
-            Tuple[int, int]: Max possible value that will make the comparison instruction return True and
+            Max possible value that will make the comparison instruction return True and
                 Max possible value that will make the comparison False.
         """
         # U = max_possible_value  # universal set

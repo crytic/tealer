@@ -67,7 +67,19 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
     def _is_ins_tx_field(
         cls, key: str, ins: "Instruction", field: Type["TransactionField"]
     ) -> bool:
-        """return True if ins is "txn {field}" or ins is gtxn {idx} field"""
+        """return True if ins is "txn {field}" or ins is gtxn {idx} field
+
+        Args:
+            key: The analysis key. Used to find if the analysis is value of `gtxn` instruction and
+                is for the correct transaction index.
+            ins: The instruction.
+            field: The transaction field class.
+
+        Returns:
+            Returns True if key is for txn field and instruction is "txn {:field:}". And if key is
+            for a gtxn instruction, return True if instruction and the key have the same index and the
+            field accessed by the instruction is :field:.
+        """
         if cls.is_gtx_key(key):
             idx, _ = cls.get_gtx_ind_and_base_key(key)
             return isinstance(ins, Gtxn) and ins.idx == idx and isinstance(ins.field, field)
@@ -100,6 +112,15 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
         int [UpdateApplication | DeleteApplication | ...]
         ( == | != )
         bz/bnz
+
+        Args:
+            key: The analysis key.
+            ins_stack_value: A stack value. The stack value represents the result of ins_stack_value.instruction.
+                This function assumes that this value is being asserted/checked.
+
+        Returns:
+            Set of possible values for the :key: when the ins_stack_value is asserted to be True and when ins_stack_value is
+            asserted to be False.
         """
         U = set(self.UNIVERSAL_SETS[self.TRANSACTION_TYPE_KEY])
 

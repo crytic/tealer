@@ -29,12 +29,14 @@ def validated_in_block(
     `i`. It only represents possible values of current txn given that txn index is `i`.
 
     Args:
-        block:
-        checks_field: Given a block context, should return True if the target field cannot have the vulnerable value or else False
+        block: A basic block of the CFG
+        checks_field: A function which given a block context, should return True if the target field
+            cannot have the vulnerable value or else False.
 
         e.g: For is_updatable detector, vulnerable value is `UpdateApplication`.
         if `block_ctx.transaction_types` can have `UpdateApplication`, this method will
         return false or else returns True.
+
     Returns:
         returns True if the field(s) is validated in this block or else False
     """
@@ -77,14 +79,23 @@ def detect_missing_tx_field_validations(
     whether transaction field(s) can have the target vulnerable value.
 
     Args:
-        entry_block: entry basic block of the CFG
+        teal: The contract being checked
         checks_field: Given a block context, should return True if the target field cannot have the vulnerable value
             or else False.
+        satisfies_report_condition: Given a path, should return True if the "path" satifies the vulnerable condition.
 
+        Example for checks_field
             e.g: For is_updatable detector, vulnerable value is `UpdateApplication`.
             if `block_ctx.transaction_types` can have `UpdateApplication`, this method will
             return false or else returns True.
-        satisfies_report_condition: Given a path, should return True if the "path" satifies the vulnerable condition.
+
+        Example for satisfies_report_condition
+            The group-size detectors reports path lacking GroupSize check. However, it only reports the path
+            if an absolute index is used by one of the blocks in the path. That dectector can use this function
+            to decide on whether to report or not.
+            Other detectors can also use additional constraints that are based on entire vulnerable path before
+            reporting.
+
     Returns:
         Returns a list of vulnerable execution paths: none of the blocks in the path check the fields.
     """
@@ -97,7 +108,17 @@ def detect_missing_tx_field_validations(
         current_subroutine_executed: List[List["BasicBlock"]],
     ) -> None:
         """
+        Traverse the CFG, generate possible execution paths and report vulnerable execution paths.
+
+        Execution paths are generated for the global CFG, where callsub blocks are connected to the subroutine's
+        entry block.
+
         Args:
+            bb: current basic block.
+            current_path: List of basic blocks in the execution path from the contract's entry block to
+                the current basic block bb.
+            paths_without_check: List of execution paths considered vulnerable out of the generated execution paths
+                upto now.
             current_call_stack: list of callsub blocks and called subroutine along the current path.
                 e.g current_callsub_blocks = [(Bi, S1), (Bj, S2), (Bk, S3), ...]
                 => 1. Bi, Bj, Bk, .. all end with callsub instruction.

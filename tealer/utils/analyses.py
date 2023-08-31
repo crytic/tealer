@@ -17,7 +17,30 @@ if TYPE_CHECKING:
 
 
 def is_int_push_ins(ins: Instruction) -> Tuple[bool, Optional[Union[int, str]]]:
-    """Return true if :ins: pushes a int literal on to the stack"""
+    """Return true if :ins: pushes a int literal on to the stack
+
+    Args:
+        ins: An instruction.
+
+    Returns:
+        Returns "pushes_int" and "value".
+
+        pushes_int is True if the instruction pushes an uint64 value during execution.
+        Otherwise, it is False.
+
+        value is always None if pushes_int is False.
+        value is None when pushes_int is True but the Tealer cannot compute the pushed value.
+        value will be not None if Tealer can compute it.
+
+        value will be a string if it is a named constant. The named constants are converted to
+        integers by the assembler. Tealer directly returns the string instead of finding the compiled
+        integer.
+
+        value will be an int if the value is an integer in the Teal code.
+
+    Raises:
+        TealerException: Raises error if ins.bb or ins.bb.teal are not initialized properly.
+    """
     if isinstance(ins, Int) or isinstance(  # pylint: disable=consider-merging-isinstance
         ins, PushInt
     ):
@@ -35,7 +58,24 @@ def is_int_push_ins(ins: Instruction) -> Tuple[bool, Optional[Union[int, str]]]:
 
 
 def is_byte_push_ins(ins: Instruction) -> Tuple[bool, Optional[str]]:
-    """Return true if :ins: pushes a byte literal on to the stack."""
+    """Return true if :ins: pushes a byte literal on to the stack.
+
+    Args:
+        ins: An instruction.
+
+    Returns:
+        Returns "pushes_byte_value" and "value".
+
+        pushes_byte_value is True if the instruction pushes an uint64 value during execution.
+        Otherwise, it is False.
+
+        value is always None if pushes_byte_value is False.
+        value is None when pushes_byte_value is True but the Tealer cannot compute the pushed value.
+        value will be the string if Tealer can compute it.
+
+    Raises:
+        TealerException: Raises error if ins.bb or ins.bb.teal are not initialized properly.
+    """
     if isinstance(ins, (Byte, PushBytes)):
         return True, ins.value
     if isinstance(ins, BytecInstruction):
@@ -55,6 +95,13 @@ def next_blocks_global(block: "BasicBlock") -> List["BasicBlock"]:
 
     global CFG is the single CFG representing the entire contract with callsub blocks connected
     to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
+
+    Args:
+        block: A basic block.
+
+    Returns:
+        Returns the next basic blocks of :block: in the global CFG. The global CFG is the CFG where
+        callsub_blocks are connected to the subroutine entry blocks.
     """
     if block.is_retsub_block:
         return block.subroutine.return_point_blocks
@@ -68,6 +115,13 @@ def prev_blocks_global(block: "BasicBlock") -> List["BasicBlock"]:
 
     global CFG is the single CFG representing the entire contract with callsub blocks connected
     to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
+
+    Args:
+        block: A basic block.
+
+    Returns:
+        Returns the previous basic blocks of :block: in the global CFG. The global CFG is the CFG where
+        callsub_blocks are connected to the subroutine entry blocks.
     """
     assert block.teal is not None
     if block == block.subroutine.entry:
@@ -83,11 +137,18 @@ def prev_blocks_global(block: "BasicBlock") -> List["BasicBlock"]:
     return block.prev
 
 
+# TODO: Rename this to is_leaf_block_global
 def leaf_block_global(block: "BasicBlock") -> bool:
     """Return True if block is a leaf block in the global CFG.
 
     global CFG is the single CFG representing the entire contract with callsub blocks connected
     to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
+
+    Args:
+        block: A basic block.
+
+    Returns:
+        Returns True if :block: is a leaf block in the global CFG. otherwise, False.
     """
     # Retsub blocks will not have any next blocks but are not considered as leaf blocks in global CFG.
     # Callsub block will have a next block, which is executed after executing the subroutine. However, when

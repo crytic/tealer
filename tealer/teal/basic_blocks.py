@@ -55,17 +55,29 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
 
     @property
     def instructions(self) -> List[Instruction]:
-        """List of instructions part of this basic block."""
+        """List of instructions part of this basic block.
+
+        Returns:
+            list of basic block instructions.
+        """
         return self._instructions
 
     @property
     def entry_instr(self) -> Instruction:
-        """Entry(first) instruction of this basic block."""
+        """Entry(first) instruction of this basic block.
+
+        Returns:
+            The entry instruction of the basic block.
+        """
         return self._instructions[0]
 
     @property
     def exit_instr(self) -> Instruction:
-        """Exit(Last) instruction of this basic block."""
+        """Exit(Last) instruction of this basic block.
+
+        Returns:
+            The exit instruction of the basic block.
+        """
         return self._instructions[-1]
 
     def add_prev(self, prev_bb: "BasicBlock") -> None:
@@ -102,17 +114,29 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
 
     @property
     def prev(self) -> List["BasicBlock"]:
-        """List of previous basic blocks to this basic block."""
+        """List of previous basic blocks to this basic block.
+
+        Returns:
+            list of previous instructions that might have been executed before this block.
+        """
         return self._prev
 
     @property
     def next(self) -> List["BasicBlock"]:
-        """List of next basic blocks to this basic block."""
+        """List of next basic blocks to this basic block.
+
+        Returns:
+            list of next basic blocks that might be executed after this block.
+        """
         return self._next
 
     @property
     def idx(self) -> int:
-        """Index of this basic block when ordered by line number of entry instruction."""
+        """Index of this basic block when ordered by line number of entry instruction.
+
+        Returns:
+            index of this basic block in list of all basic blocks.
+        """
         return self._idx
 
     @idx.setter
@@ -121,12 +145,20 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
 
     @property
     def cost(self) -> int:
-        """cost of executing all instructions in this basic block"""
+        """cost of executing all instructions in this basic block
+
+        Returns:
+            Returns the OpcodeCost of executing all instructions in the block.
+        """
         return sum(ins.cost for ins in self.instructions)
 
     @property
     def teal(self) -> Optional["Teal"]:
-        """Teal instance of the contract this basic block belongs to."""
+        """Teal instance of the contract this basic block belongs to.
+
+        Returns:
+            Returns the contract of this basic block.
+        """
         return self._teal
 
     @teal.setter
@@ -135,7 +167,14 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
 
     @property
     def subroutine(self) -> "Subroutine":
-        """Subroutine instrance of the subroutine this basic block belongs to."""
+        """Subroutine instrance of the subroutine this basic block belongs to.
+
+        Returns:
+            Returns the subroutine this block belongs to.
+
+        Raises:
+            TealerException: raises error if subroutine is not set during parsing.
+        """
         if self._subroutine is None:
             raise TealerException(f"subroutine of B{self._idx} is not initialized")
         return self._subroutine
@@ -146,12 +185,19 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
 
     @property
     def is_callsub_block(self) -> bool:
-        """Return True if the block calls a subroutine"""
+        """Return True if the block calls a subroutine.
+
+        Returns:
+            Returns True if this block has a callsub instruction.
+        """
         return isinstance(self.exit_instr, Callsub)
 
     @property
     def called_subroutine(self) -> "Subroutine":
         """Return the subroutine called by this subroutine.
+
+        Returns:
+            Returns the subroutine called by the callsub instruction in this block.
 
         Raises:
             TealerException: if this block is not a callsub_block.
@@ -179,7 +225,12 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
 
     @property
     def is_sub_return_point(self) -> bool:
-        """Return True if this block is executed after the subroutine i.e next block of callsub_block"""
+        """Return True if this block is executed after the subroutine i.e next block of callsub_block
+
+        Returns:
+            Returns True if this block is executed a subroutine: The next block of a block with callsub
+            instruction. Otherwise, returns False.
+        """
         for bi in self.prev:
             if bi.is_callsub_block:
                 return True
@@ -187,7 +238,11 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
 
     @property
     def callsub_block(self) -> "BasicBlock":
-        """Return the callsub_block which calls the subroutine. This block is executed after the subroutine.
+        """Return the callsub_block which calls the subroutine. This block is the return point block.
+
+        Returns:
+            Return the callsub_block which calls the subroutine that returns the execution to this
+            basic block.
 
         Raises:
             TealerException: if this block is not a sub_return_point block.
@@ -207,7 +262,11 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
 
     @property
     def tealer_comments(self) -> List[str]:
-        """Additional comments added by tealer for each basic block in the output CFG."""
+        """Additional comments added by tealer for each basic block in the output CFG.
+
+        Returns:
+            Returns the additional comments added by tealer for this basic block.
+        """
         return self._tealer_comments
 
     @tealer_comments.setter

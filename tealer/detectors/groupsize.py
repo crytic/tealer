@@ -100,6 +100,13 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
         `gtxns f` and `gtxnsa f i` take only one argument and it is the transaction index.
         `gtxnsas f` takes two arguments and transaction index is the first argument.
         Return True if the transaction index is pushed by an int instruction.
+
+        Args:
+            bb: A basic block of the CFG
+
+        Returns:
+            Returns True if a instruction in bb access a field of group transaction using
+            an absolute index. returns False otherwise.
         """
         stack_gtxns_ins: List["Instruction"] = []
         for ins in bb.instructions:

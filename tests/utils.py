@@ -65,16 +65,16 @@ def construct_cfg(
     and their relation.
 
     Args:
-            ins_list (List[Instruction]): list of instructions of the program.
-            ins_partitions (List[Tuple[int]]): list of tuple indicating starting and
-                    ending index into ins_list where ins_list[starting: ending] belong to a
-                    single basic_block.
-            bbs_links (List[Tuple[int]]): links two basic blocks (b1, b2). indexes of basic block
-                    corresponds to index in ins_partition. order of indexes is important as this adds
-                    a directed edge from b1 to b2.
+        ins_list: list of instructions of the program.
+        ins_partitions (List[Tuple[int]]): list of tuple indicating starting and
+                ending index into ins_list where ins_list[starting: ending] belong to a
+                single basic_block.
+        bbs_links (List[Tuple[int]]): links two basic blocks (b1, b2). indexes of basic block
+                corresponds to index in ins_partition. order of indexes is important as this adds
+                a directed edge from b1 to b2.
 
     Returns:
-            List[BasicBlock]: returns a list of basic blocks representing the CFG.
+        List[BasicBlock]: returns a list of basic blocks representing the CFG.
     """
     for idx, ins in enumerate(ins_list, start=1):
         ins.line = idx
