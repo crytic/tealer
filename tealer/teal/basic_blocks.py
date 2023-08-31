@@ -15,15 +15,16 @@ Classes:
 
 from typing import List, Optional, TYPE_CHECKING
 
-from tealer.teal.instructions.instructions import Instruction
+from tealer.teal.instructions.instructions import Instruction, Callsub, Retsub
 from tealer.teal.context.block_transaction_context import BlockTransactionContext
-
+from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
+    from tealer.teal.subroutine import Subroutine
 
 
-class BasicBlock:  # pylint: disable=too-many-instance-attributes
+class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-public-methods
     """Class to represent basic blocks of the teal contract.
 
     A basic block is a sequence of instructions with a single entry
@@ -43,6 +44,7 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes
         self._callsub_block: Optional[BasicBlock] = None
         self._sub_return_point: Optional[BasicBlock] = None
         self._tealer_comments: List[str] = []
+        self._subroutine: Optional["Subroutine"] = None
 
     def add_instruction(self, instruction: Instruction) -> None:
         """Append instruction to this basic block.
@@ -154,6 +156,74 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes
     @teal.setter
     def teal(self, teal_instance: "Teal") -> None:
         self._teal = teal_instance
+
+    @property
+    def subroutine_NEW(self) -> "Subroutine":
+        """Subroutine instrance of the subroutine this basic block belongs to."""
+        if self._subroutine is None:
+            raise TealerException(f"subroutine of B{self._idx} is not initialized")
+        return self._subroutine
+
+    @subroutine_NEW.setter
+    def subroutine_NEW(self, subroutine_instance: "Subroutine") -> None:
+        self._subroutine = subroutine_instance
+
+    @property
+    def is_callsub_block_NEW(self) -> bool:
+        """Return True if the block calls a subroutine"""
+        return isinstance(self.exit_instr, Callsub)
+
+    @property
+    def called_subroutine_NEW(self) -> "Subroutine":
+        """Return the subroutine called by this subroutine.
+
+        Raises:
+            TealerException: if this block is not a callsub_block.
+        """
+        if not isinstance(self.exit_instr, Callsub):
+            raise TealerException("called subroutine of a non callsub block is accessed")
+        return self.exit_instr.called_subroutine
+
+    @property
+    def sub_return_point_NEW(self) -> Optional["BasicBlock"]:
+        """Return the return point block of this block.
+
+        Returns:
+            The subroutine return_point block of this(callsub) block.
+            Returns None if this callsub block does not have a return point block. This happens when
+            callsub instruction is the last instruction in the contract and The called subroutine always exits
+            the program.
+
+        Raises:
+            TealerException: if this block is not a callsub_block.
+        """
+        if not self.is_callsub_block_NEW:
+            raise TealerException("sub_return_point block of a non callsub block is accessed")
+        return self.next[0] if self.next else None
+
+    @property
+    def is_sub_return_point_NEW(self) -> bool:
+        """Return True if this block is executed after the subroutine i.e next block of callsub_block"""
+        for bi in self.prev:
+            if bi.is_callsub_block_NEW:
+                return True
+        return False
+
+    @property
+    def callsub_block_NEW(self) -> "BasicBlock":
+        """Return the callsub_block which calls the subroutine. This block is executed after the subroutine.
+
+        Raises:
+            TealerException: if this block is not a sub_return_point block.
+        """
+        for bi in self.prev:
+            if bi.is_callsub_block_NEW:
+                return bi
+        raise TealerException("callsub_block of a non sub_return_point block is accessed")
+
+    @property
+    def is_retsub_block_NEW(self) -> bool:
+        return isinstance(self.exit_instr, Retsub)
 
     @property
     def transaction_context(self) -> "BlockTransactionContext":

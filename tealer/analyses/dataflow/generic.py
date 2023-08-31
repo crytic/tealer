@@ -226,7 +226,7 @@ if any of equation in Or(<1>, ...) is UnknownStackValue then `true_values` for O
 
 from abc import ABC, abstractmethod
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Set, Optional
 
 from tealer.teal.instructions.instructions import (
     Assert,
@@ -277,9 +277,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
     def __init__(self, teal: "Teal"):
         self._teal: "Teal" = teal
         # entry block of CFG
-        self._entry_block: "BasicBlock" = teal.bbs[
-            0
-        ]  # blocks are ordered by entry instruction in parsing stage.
+        self._entry_block: "BasicBlock" = teal._main_NEW.entry
         # self._block_contexts[KEY][B] -> block_context of KEY for block B
         self._block_contexts: Dict[str, Dict["BasicBlock", Any]] = {}
         # self._path_contexts[KEY][Bi][Bj] -> path_context of KEY for path Bj -> Bi
@@ -489,7 +487,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
             if key not in self._path_contexts:
                 self._path_contexts[key] = {}
             path_context = self._path_contexts[key]
-            for b in block.next:
+            for b in self._next_blocks(block):
                 # path_context[bi][bj]: path context of path bj -> bi, bi is the successor
                 if b not in path_context:
                     path_context[b] = {}
@@ -550,10 +548,17 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
         This requires that group_indices analysis is done before any other analysis.
         """
+        # block is new CFG block. transaction contexts are stored in old CFG blocks
+        # find the corresponding block in the old CFG and access transaction_context from it.
+        old_block: Optional["BasicBlock"] = None
+        for bi in self._teal.bbs:
+            if bi.idx == block.idx:
+                old_block = bi
+        assert old_block is not None
         for key in keys_with_gtxn:
             for ind in range(MAX_GROUP_SIZE):
                 gtx_key = self.gtx_key(ind, key)
-                if ind in block.transaction_context.group_indices:
+                if ind in old_block.transaction_context.group_indices:
                     # txn can have index {ind}
                     # gtxn {ind} {field} can have a value if and only if {txn} {field} can also have that value
                     self._block_contexts[gtx_key][block] = self._intersection(
@@ -565,6 +570,43 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                     # txn cannot have index {ind}
                     self._block_contexts[gtx_key][block] = self._null_set(gtx_key)
 
+    def _prev_blocks(self, block: "BasicBlock") -> List["BasicBlock"]:
+        """Return basic blocks previous to this block in the global CFG.
+
+        global CFG is the single CFG representing the entire contract with callsub blocks connected
+        to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
+        """
+        if block == block.subroutine_NEW.entry and block.subroutine_NEW != self._teal._main_NEW:
+            # if the block is the entry of the subroutine, return all blocks calling the subroutine
+            return block.subroutine_NEW.caller_blocks
+        if block.is_sub_return_point_NEW:
+            # if the block is the return point of the subroutine, return all retsub blocks of the subroutine
+            return block.callsub_block_NEW.called_subroutine_NEW.retsub_blocks
+        # if its a normal block return previous blocks in the CFG.
+        return block.prev
+
+    @staticmethod
+    def _next_blocks(block: "BasicBlock") -> List["BasicBlock"]:
+        """Return basic blocks next to this block in the global CFG.
+
+        global CFG is the single CFG representing the entire contract with callsub blocks connected
+        to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
+        """
+        if block.is_retsub_block_NEW:
+            return block.subroutine_NEW.return_point_blocks
+        if block.is_callsub_block_NEW:
+            return [block.called_subroutine_NEW.entry]
+        return block.next
+
+    @staticmethod
+    def _leaf_block(block: "BasicBlock") -> bool:
+        """Return True if block is a leaf block in the global CFG.
+
+        global CFG is the single CFG representing the entire contract with callsub blocks connected
+        to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
+        """
+        return len(block.next) == 0 and not block.is_retsub_block_NEW
+
     def _calculate_reachin(
         self, key: str, block: "BasicBlock", reachout: Dict["BasicBlock", Any]
     ) -> Any:
@@ -575,18 +617,18 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
             reachin_information = self._null_set(key)
 
         path_context = self._path_contexts[key]
-        for prev_b in block.prev:
+        for prev_b in self._prev_blocks(block):
             reachin_information = self._union(
                 key,
                 reachin_information,
                 self._intersection(key, reachout[prev_b], path_context[block][prev_b]),
             )
 
-        if block.callsub_block is not None:
+        if block.is_sub_return_point_NEW:
             # this block is the return point for callsub instruction present in `block.callsub_block`
             # execution will only reach this block, if it reaches `block.callsub_block`
             reachin_information = self._intersection(
-                key, reachin_information, reachout[block.callsub_block]
+                key, reachin_information, reachout[block.callsub_block_NEW]
             )
 
         return reachin_information
@@ -617,7 +659,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         global_reachout: Dict[str, Dict["BasicBlock", Any]] = {}
         for key in analysis_keys:
             global_reachout[key] = {}
-            for b in self._teal.bbs:
+            for b in self._teal._bbs_NEW:
                 global_reachout[key][b] = self._null_set(key)
 
         while worklist:
@@ -626,8 +668,15 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
             updated = self._merge_information_forward(analysis_keys, b, global_reachout)
 
             if updated:
-                return_point_block = [b.sub_return_point] if b.sub_return_point is not None else []
-                for bi in b.next + return_point_block:
+                # if b is callsub block the information of the called subroutine and return point need to be computed.
+                # called subroutine entry is already included by self._next_blocks. So, add return point here.
+                return_point_block = (
+                    [b.sub_return_point_NEW]
+                    if b.is_callsub_block_NEW and b.sub_return_point_NEW is not None
+                    else []
+                )
+
+                for bi in self._next_blocks(b) + return_point_block:
                     if bi not in worklist:
                         worklist.append(bi)
 
@@ -639,13 +688,17 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
     ) -> Any:
         livein_information = self._null_set(key)
 
-        for next_b in block.next:
+        for next_b in self._next_blocks(block):
             livein_information = self._union(key, livein_information, liveout[next_b])
 
-        if block.sub_return_point is not None and len(block.sub_return_point.prev) != 0:
+        if (
+            block.is_callsub_block_NEW
+            and block.sub_return_point_NEW is not None
+            and len(block.called_subroutine_NEW.retsub_blocks) != 0
+        ):
             # this block is the `callsub block` and `block.sub_return_point` is the block that will be executed after subroutine.
             livein_information = self._intersection(
-                key, livein_information, liveout[block.sub_return_point]
+                key, livein_information, liveout[block.sub_return_point_NEW]
             )
         return livein_information
 
@@ -655,7 +708,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         block: "BasicBlock",
         global_liveout: Dict[str, Dict["BasicBlock", Any]],
     ) -> bool:
-        if len(block.next) == 0:  # leaf block
+        if self._leaf_block(block):  # leaf block
             return False
 
         updated = False
@@ -675,8 +728,8 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         global_liveout: Dict[str, Dict["BasicBlock", Any]] = {}
         for key in analysis_keys:
             global_liveout[key] = {}
-            for b in self._teal.bbs:
-                if len(b.next) == 0:  # leaf block
+            for b in self._teal._bbs_NEW:
+                if self._leaf_block(b):  # leaf block
                     global_liveout[key][b] = self._block_contexts[key][b]
                 else:
                     global_liveout[key][b] = self._null_set(key)
@@ -687,8 +740,8 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
             updated = self._merge_information_backward(analysis_keys, b, global_liveout)
 
             if updated:
-                callsub_block = [b.callsub_block] if b.callsub_block is not None else []
-                for bi in b.prev + callsub_block:
+                callsub_block = [b.callsub_block_NEW] if b.is_sub_return_point_NEW else []
+                for bi in self._prev_blocks(b) + callsub_block:
                     if bi not in worklist:
                         worklist.append(bi)
 
@@ -710,7 +763,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         dfs(entry)
         return order
 
-    def run_analysis(self) -> None:
+    def run_analysis(self) -> None:  # pylint: disable=too-many-branches
         """Run analysis"""
 
         gtx_keys = []
@@ -721,7 +774,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         all_keys = self.BASE_KEYS + gtx_keys
 
         # step 1: initialise information
-        for block in self._teal.bbs:
+        for block in self._teal._bbs_NEW:
             self._block_level_constraints(all_keys, block)  # initialise information for all keys
             self._path_level_constraints(all_keys, block)
             for debug_key in debug_keys:
@@ -732,43 +785,57 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                     logger_txn_ctx.debug("\n\n")
                     logger_txn_ctx.debug(f"path_context: {self._path_contexts[debug_key]}")
 
-        postorder = self._postorder(self._entry_block)
+        # The contract is represented using multiple CFG, one for each subroutine.
+        # Calculate postorder for each CFG and concatenate the lists for now.
+        postorder = [self._postorder(self._entry_block)]
+        for subroutine in self._teal._subroutines_NEW.values():
+            postorder.append(self._postorder(subroutine.entry))
 
         # perform analysis of base keys first. Information of these base keys will be used for
         # gtxn keys. see `self._update_gtxn_constraints`
         analysis_keys = list(self.BASE_KEYS)
 
-        worklist = postorder[::-1]  # Reverse postorder
+        worklist = []
+        for l in postorder:
+            worklist += l[::-1]  # Reverse postorder
+
         self.forward_analyis(analysis_keys, worklist)
 
         logger_txn_ctx.debug("After Forward:")
         for debug_key in debug_keys:
-            for block in self._teal.bbs:
+            for block in self._teal._bbs_NEW:
                 if debug_key in self.BASE_KEYS:
                     logger_txn_ctx.debug(f"block_id: B{block.idx}")
                     logger_txn_ctx.debug(f"block_ctx: {self._block_contexts[debug_key][block]}")
 
-        worklist = [b for b in postorder if len(b.next) != 0]  # postorder, exclude leaf blocks
+        worklist = []
+        for l in postorder:
+            worklist += [b for b in l if not self._leaf_block(b)]  # postorder, exclude leaf blocks
+
         self.backward_analysis(analysis_keys, worklist)
 
         logger_txn_ctx.debug("After Backward:")
         for debug_key in debug_keys:
-            for block in self._teal.bbs:
+            for block in self._teal._bbs_NEW:
                 if debug_key in self.BASE_KEYS:
                     logger_txn_ctx.debug(f"block_id: B{block.idx}")
                     logger_txn_ctx.debug(f"block_ctx: {self._block_contexts[debug_key][block]}")
 
         # update gtxn constraints using possible group indices and txn constraints.
-        for block in self._teal.bbs:
+        for block in self._teal._bbs_NEW:
             self._update_gtxn_constraints(self.KEYS_WITH_GTXN, block)
 
         # Now perform analysis for gtx_keys
         analysis_keys = gtx_keys
 
-        worklist = postorder[::-1]  # Reverse postorder
+        worklist = []
+        for l in postorder:
+            worklist += l[::-1]  # Reverse postorder
         self.forward_analyis(analysis_keys, worklist)
 
-        worklist = [b for b in postorder if len(b.next) != 0]  # postorder, exclude leaf blocks
+        worklist = []
+        for l in postorder:
+            worklist += [b for b in l if not self._leaf_block(b)]  # postorder, exclude leaf blocks
         self.backward_analysis(analysis_keys, worklist)
 
         self._store_results()

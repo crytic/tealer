@@ -24,6 +24,7 @@ The final result of parsing is the Control Flow Graph(CFG) of the
 contract represented by sequence of the basic blocks.
 
 """
+# pylint: disable=too-many-lines
 
 import inspect
 import sys
@@ -984,13 +985,23 @@ def parse_teal_NEW(  # pylint: disable=too-many-locals
         for ins in subroutine_callsubs[subroutine_name]:
             ins.called_subroutine = subroutine_obj
 
+        # set subroutine to each basic block
+        for bi in subroutine_blocks:
+            bi.subroutine_NEW = subroutine_obj
         subroutines[subroutine_name] = subroutine_obj
 
     main_entry_point_blocks = _identify_subroutine_blocks_NEW(all_bbs[0])
     main_program_name = "__main__"
     main_program = Subroutine(main_program_name, all_bbs[0], main_entry_point_blocks)
+    for bi in main_entry_point_blocks:
+        bi.subroutine_NEW = main_program
 
     # TODO: Handle unreachable basic blocks.
     # Note: PyTeal generated contracts have unreachable code.
+    # unreachable blocks are not part of any subroutine and their subroutine_NEW field would not have been set.
+    # set main_program as the default subroutine for now.
+    for bi in all_bbs:
+        if bi._subroutine is None:
+            bi.subroutine_NEW = main_program
 
     return instructions, all_bbs, main_program, subroutines
