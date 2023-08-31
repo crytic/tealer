@@ -1,10 +1,11 @@
 import logging
 from typing import List, TYPE_CHECKING, Callable, Tuple, Optional
 
-from tealer.teal.instructions.instructions import Retsub, Callsub
+from tealer.utils.analyses import next_blocks_global, leaf_block_global
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
+    from tealer.teal.teal import Teal
     from tealer.teal.subroutine import Subroutine
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
     from tealer.detectors.abstract_detector import AbstractDetector
@@ -38,6 +39,13 @@ def validated_in_block(
         returns True if the field(s) is validated in this block or else False
     """
     # if field is checked using `txn {field}`, return true
+
+    # access transaction context using the block of the old CFG.
+    assert block.teal
+    for bb in block.teal.bbs:
+        if bb.idx == block.idx:
+            block = bb
+            break
     if checks_field(block.transaction_context):
         return True
     # for each possible {index} the transaction can have, check if field is checked using `gtxn {index} {field}`
@@ -49,7 +57,7 @@ def validated_in_block(
 
 
 def detect_missing_tx_field_validations(
-    entry_block: "BasicBlock",
+    teal: "Teal",
     checks_field: Callable[["BlockTransactionContext"], bool],
     satisfies_report_condition: Callable[[List["BasicBlock"]], bool] = lambda _x: True,
 ) -> List[List["BasicBlock"]]:
@@ -179,7 +187,7 @@ def detect_missing_tx_field_validations(
         current_path = current_path + [bb]
 
         # leaf block
-        if len(bb.next) == 0:
+        if leaf_block_global(bb):
             logger_detectors.debug(f"Vulnerable Path: current_full_path = {current_path}")
             if satisfies_report_condition(current_path):
                 # only report if it satisfies the report condition
@@ -193,10 +201,9 @@ def detect_missing_tx_field_validations(
         current_subroutine_executed = current_subroutine_executed[:-1] + [
             current_subroutine_executed[-1] + [bb]
         ]
-        if isinstance(bb.exit_instr, Callsub):
-            teal = bb.teal
-            assert teal is not None
-            called_subroutine = teal.subroutines[bb.exit_instr.label]
+
+        if bb.is_callsub_block_NEW:
+            called_subroutine = bb.called_subroutine_NEW
             # check for recursion
             already_called_subroutines = [frame[1] for frame in current_call_stack]
             if called_subroutine in already_called_subroutines:
@@ -205,14 +212,14 @@ def detect_missing_tx_field_validations(
             current_call_stack = current_call_stack + [(bb, called_subroutine)]
             current_subroutine_executed = current_subroutine_executed + [[]]
 
-        if isinstance(bb.exit_instr, Retsub):
+        if bb.is_retsub_block_NEW:
             # if this block is retsub then it returns execution to the return
             # point of callsub block. return point is the next instruction after the callsub
             # instruction.
             (callsub_block, _) = current_call_stack[-1]
             assert callsub_block is not None
-            return_point = callsub_block.sub_return_point
-            if return_point is not None and return_point in bb.next:
+            return_point = callsub_block.sub_return_point_NEW
+            if return_point is not None:
                 search_paths(
                     return_point,
                     current_path,
@@ -221,7 +228,7 @@ def detect_missing_tx_field_validations(
                     current_subroutine_executed[:-1],
                 )
         else:
-            for next_bb in bb.next:
+            for next_bb in next_blocks_global(bb):
                 search_paths(
                     next_bb,
                     current_path,
@@ -230,8 +237,17 @@ def detect_missing_tx_field_validations(
                     current_subroutine_executed,
                 )
 
-    teal = entry_block.teal
-    assert teal is not None
+    entry_block = teal._main_NEW.entry
     paths_without_check: List[List["BasicBlock"]] = []
-    search_paths(entry_block, [], paths_without_check, [(None, teal.main)], [[]])
-    return paths_without_check
+    search_paths(entry_block, [], paths_without_check, [(None, teal._main_NEW)], [[]])
+
+    # convert the path from new blocks to old blocks
+    converted_paths = []
+    d = {bb.idx: bb for bb in teal.bbs}
+    for path in paths_without_check:
+        s = []
+        for bb in path:
+            s.append(d[bb.idx])
+        converted_paths.append(s)
+
+    return converted_paths

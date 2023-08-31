@@ -115,7 +115,7 @@ Validate `Fee` field in the LogicSig.
             return block_ctx.max_fee_unknown or block_ctx.max_fee <= MAX_TRANSACTION_COST
 
         paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
-            self.teal.bbs[0], checks_field
+            self.teal, checks_field
         )
 
         return ExecutionPaths(self.teal, self, paths_without_check)
