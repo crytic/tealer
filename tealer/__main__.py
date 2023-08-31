@@ -83,12 +83,16 @@ from tealer.utils.algoexplorer import (
     logic_sig_from_contract_account,
     logic_sig_from_txn_id,
 )
-from tealer.utils.command_line import (
-    get_detectors_and_printers,
+from tealer.utils.command_line.command_output import (
     output_detectors,
     output_printers,
     output_to_markdown,
     output_wiki,
+)
+from tealer.utils.command_line.common import (
+    get_detectors_and_printers,
+    validate_command_line_options,
+    handle_detect,
 )
 from tealer.utils.output import ROOT_OUTPUT_DIRECTORY
 
@@ -213,10 +217,8 @@ def parse_args(
 
     parser = argparse.ArgumentParser(
         description="TealAnalyzer",
-        usage="tealer program.teal [flag]",
+        usage="tealer [--init | --detect | --print ] --contracts ...",
     )
-
-    parser.add_argument("program", help="program.teal")
 
     parser.add_argument(
         "--version",
@@ -226,15 +228,36 @@ def parse_args(
     )
 
     parser.add_argument(
+        "--contracts",
+        help="List of files/directories to search for .teal files",
+        action="store",
+        nargs="+",
+    )
+
+    parser.add_argument(
+        "--group-config",
+        help="The group configuration file",
+        action="store",
+    )
+
+    parser.add_argument(
         "--network",
         help='Algorand network to fetch the contract from, ("mainnet" or "testnet"). defaults to "mainnet".',
         action="store",
         default="mainnet",
     )
 
+    group_init = parser.add_argument_group("Initialize")
     group_detector = parser.add_argument_group("Detectors")
     group_printer = parser.add_argument_group("Printers")
     group_misc = parser.add_argument_group("Additional options")
+
+    group_init.add_argument(
+        "--init",
+        help="Initializes group-config.yaml file given the contracts",
+        action="store_true",
+        default=False,
+    )
 
     group_detector.add_argument(
         "--list-detectors",
@@ -272,14 +295,6 @@ def parse_args(
     group_detector.add_argument(
         "--exclude-stateful",
         help="Exclude detectors of stateful type",
-        action="store_true",
-        default=False,
-    )
-
-    # TODO: Remove this option. Doesn't seem to be useful.
-    group_detector.add_argument(
-        "--all-paths-in-one",
-        help="highlights all the vunerable paths in a single file.",
         action="store_true",
         default=False,
     )
@@ -452,7 +467,7 @@ def handle_output(
         detectors_with_0_results: List["AbstractDetector"] = []
         for output in detector_results:
             if output.paths:
-                output.write_to_files(output_directory, args.all_paths_in_one)
+                output.write_to_files(output_directory)
             else:
                 detectors_with_0_results.append(output.detector)
         if detectors_with_0_results:
@@ -477,7 +492,7 @@ def handle_output(
 
 
 def fetch_contract(args: argparse.Namespace) -> Tuple[str, str]:
-    program: str = args.program
+    program: str = args.contracts[0]
     network: str = args.network
     b32_regex = "[A-Z2-7]+"
     if program.isdigit():
@@ -513,6 +528,7 @@ def main() -> None:
 
     detector_classes, printer_classes = get_detectors_and_printers()
     args = parse_args(detector_classes, printer_classes)
+    validate_command_line_options(args)
 
     default_log = logging.INFO if not args.debug else logging.DEBUG
     for (logger_name, logger_level) in [
@@ -527,6 +543,10 @@ def main() -> None:
     results_detectors: List["SupportedOutput"] = []
     _results_printers: List = []
     error = None
+    if args.detectors_to_run is not None and args.group_config is not None:
+        # handle this case specially for now.
+        handle_detect(args)
+        sys.exit(1)
     try:
         contract_source, contract_name = fetch_contract(args)
         logger.debug("[+] Parsing the contract")

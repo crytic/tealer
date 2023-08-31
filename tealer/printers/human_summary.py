@@ -54,7 +54,7 @@ class PrinterHumanSummary(AbstractPrinter):
             the same order.
 
         """
-        from tealer.utils.command_line import (  # pylint: disable=import-outside-toplevel
+        from tealer.utils.command_line.common import (  # pylint: disable=import-outside-toplevel
             get_detectors_and_printers,
         )
 

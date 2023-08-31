@@ -34,7 +34,20 @@ class TransactionType(ComparableEnum):
     Afrz = 0x5
     Appl = 0x6
 
-    Unknown = 99
+    Any = 0x7
+    Unknown = 0x8
+
+
+def transaction_type_from_txt(txn_type: str) -> TransactionType:
+    return {
+        "pay": TransactionType.Pay,
+        "keyreg": TransactionType.KeyReg,
+        "acfg": TransactionType.Acfg,
+        "axfer": TransactionType.Axfer,
+        "afrz": TransactionType.Afrz,
+        "appl": TransactionType.Appl,
+        "txn": TransactionType.Any,
+    }[txn_type]
 
 
 class TransactionOnCompletion(ComparableEnum):
@@ -164,3 +177,11 @@ class ContractType(ComparableEnum):
 
     def __str__(self) -> str:
         return self.name
+
+
+def contract_type_from_txt(contract_type: str) -> ContractType:
+    return {
+        "ApprovalProgram": ContractType.ApprovalProgram,
+        "ClearStateProgram": ContractType.ClearStateProgram,
+        "LogicSig": ContractType.LogicSig,
+    }[contract_type]

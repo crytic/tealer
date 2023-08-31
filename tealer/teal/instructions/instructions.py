@@ -268,6 +268,18 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         return f"<Instruction({self.line}, '{str(self)}')>"
 
 
+class TealerCustomErrInstruction(Instruction):
+    """Instruction used to replace basic blocks that are not part of function.
+
+    The semantics of the instruction are equal to Err instruction.
+    """
+
+    # TODO: Add custom values for line num, source_code, tealer_comments.
+
+    def __str__(self) -> str:
+        return "TealerCustomErrInstruction"
+
+
 class UnsupportedInstruction(Instruction):
     """
     Instruction that is not supported by Tealer.

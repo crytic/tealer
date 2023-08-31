@@ -6,7 +6,7 @@ cd smart-contracts || exit 255
 
 while IFS= read -r -d '' target
 do
-    if ! tealer "$target"; then
+    if ! tealer --contracts "$target" --print human-summary > /dev/null; then
         echo "tests failed"
         exit 1
     fi

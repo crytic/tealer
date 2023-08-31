@@ -167,7 +167,7 @@ def _add_instruction_comments(ins: Instruction) -> None:
         ins.tealer_comments.append(f"method-selector: {method_selector}")
 
 
-def _first_pass(  # pylint: disable=too-many-branches
+def first_pass(  # pylint: disable=too-many-branches
     lines: List[str],
     labels: Dict[str, Label],
     subroutines: Dict[str, List[Callsub]],
@@ -255,7 +255,7 @@ def _first_pass(  # pylint: disable=too-many-branches
     return intcblock_ins, bytecblock_ins
 
 
-def _second_pass(  # pylint: disable=too-many-branches
+def second_pass(  # pylint: disable=too-many-branches
     instructions: List[Instruction],
     labels: Dict[str, Label],
 ) -> None:
@@ -286,7 +286,7 @@ def _second_pass(  # pylint: disable=too-many-branches
                 labels[ins_label].add_prev(ins)
 
 
-def _fourth_pass(basic_blocks: List[BasicBlock]) -> None:  # pylint: disable=too-many-branches
+def fourth_pass(basic_blocks: List[BasicBlock]) -> None:  # pylint: disable=too-many-branches
     """Add jump edges between basic blocks.
 
     Fourth pass of the teal parser. Jump edges
@@ -328,7 +328,7 @@ def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
     return bbs
 
 
-def _identify_subroutine_blocks(entry_block: "BasicBlock") -> List["BasicBlock"]:
+def identify_subroutine_blocks(entry_block: "BasicBlock") -> List["BasicBlock"]:
     """find all the basic blocks part of a subroutine using DFS.
 
     Args:
@@ -501,9 +501,9 @@ def parse_teal(  # pylint: disable=too-many-locals
 
     lines = source_code.splitlines()
 
-    intcblock_ins, bytecblock_ins = _first_pass(lines, labels, subroutine_callsubs, instructions)
+    intcblock_ins, bytecblock_ins = first_pass(lines, labels, subroutine_callsubs, instructions)
     logger_parsing.debug(f"subroutine_callsubs = {subroutine_callsubs}")
-    _second_pass(instructions, labels)
+    second_pass(instructions, labels)
     logger_parsing.debug("instruction and nexts")
     for ins in instructions:
         logger_parsing.debug(f"     {ins}, next: {ins.next}")
@@ -512,7 +512,7 @@ def parse_teal(  # pylint: disable=too-many-locals
     all_bbs: List[BasicBlock] = []
     create_bb(instructions, all_bbs)
 
-    _fourth_pass(all_bbs)
+    fourth_pass(all_bbs)
 
     all_bbs = _add_basic_blocks_idx(all_bbs)
     mode = _detect_execution_mode(instructions)
@@ -530,7 +530,7 @@ def parse_teal(  # pylint: disable=too-many-locals
         # add tealer comment "Subroutine: {label}" to the subroutine entry block
         subroutine_entry_block.tealer_comments.append(f"Subroutine {subroutine_name}")
         # list all blocks of the subroutine using DFS
-        subroutine_blocks = _identify_subroutine_blocks(subroutine_entry_block)
+        subroutine_blocks = identify_subroutine_blocks(subroutine_entry_block)
         subroutine_obj = Subroutine(subroutine_name, subroutine_entry_block, subroutine_blocks)
         # set callsub blocks calling the subroutine
         callsub_blocks = [ins.bb for ins in subroutine_callsubs[subroutine_name]]
@@ -544,7 +544,7 @@ def parse_teal(  # pylint: disable=too-many-locals
             bi.subroutine = subroutine_obj
         subroutines[subroutine_name] = subroutine_obj
 
-    main_entry_point_blocks = _identify_subroutine_blocks(all_bbs[0])
+    main_entry_point_blocks = identify_subroutine_blocks(all_bbs[0])
     main_program_name = "__main__"
     main_program = Subroutine(main_program_name, all_bbs[0], main_entry_point_blocks)
     for bi in main_entry_point_blocks:
@@ -555,6 +555,11 @@ def parse_teal(  # pylint: disable=too-many-locals
     # unreachable blocks are not part of any subroutine and their subroutine field would not have been set.
     # set main_program as the default subroutine for now.
     for bi in all_bbs:
+        # if bi not in main_entry_point_blocks:
+        #     # bi is unreachable
+        #     for bnext in bi.next:
+        #         bnext.prev.remove(bi)
+        #         bi.next.remove(bnext)
         if bi._subroutine is None:  # pylint: disable=protected-access
             bi.subroutine = main_program
 

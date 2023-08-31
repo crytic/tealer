@@ -1,0 +1,197 @@
+name: Algorand Name Service
+contracts:
+  # dot_algo_registry.py
+  - name: Registry
+    file_path: registry_approval.teal
+    type: ApprovalProgram
+    version: 6
+    subroutines:
+      - basictxnchecks_0
+      - checkcloseremndr_1
+      - checkappargssize_2
+      - checkappacctssize_3
+      - iswithingraceperiod_4
+      - resetdomainproperties_5
+    functions:
+      # fill the function information after finalizing the config structure
+      - name: on_creation
+        dispatch_path: [B0, B84]
+      - name: on_optin
+        dispatch_path: [B0, B1, B83]
+      - name: on_update
+        dispatch_path: [B0, B1, B2, B81]
+      - name: on_delete
+        dispatch_path: [B0, B1, B2, B3, B79]
+      - name: on_closeout
+        dispatch_path: [B0, B1, B2, B3, B4, B78]
+      - name: update_global_state
+        dispatch_path: [B0, B1, B2, B3, B4, B5, B6, B75]
+      - name: register_name
+        dispatch_path: [B0, B1, B2, B3, B4, B5, B6, B7, B59]
+      - name: update_name
+        dispatch_path: [B0, B1, B2, B3, B4, B5, B6, B7, B8, B56]
+      - name: remove_property
+        dispatch_path: [B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B49]
+      - name: renew_name
+        dispatch_path: [B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B38]
+      - name: update_resolver_account
+        dispatch_path: [B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B35]
+      - name: initiate_transfer
+        dispatch_path: [B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12, B30]
+      - name: accept_transfer
+        dispatch_path: [B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12, B13, B22]
+      - name: withdraw_transfer
+        dispatch_path: [B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12, B13, B14, B19]
+      - name: withdraw_funds
+        dispatch_path: [B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12, B13, B14, B15, B17]
+  - name: Record
+    file_path: name_record.teal
+    type: LogicSig
+    version: 6
+    subroutines: []
+    functions:
+      - name: Record
+        dispatch_path: [B0]
+        entry: B0
+        exit: [B0]
+
+# group configurations
+groups:
+  # single transactions
+  # Registry
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: on_creation
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: on_optin
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: on_update
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: on_delete
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: on_closeout
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: update_global_state
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: update_name
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: remove_property
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: update_resolver_account
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: initiate_transfer
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: withdraw_transfer
+  - - txn_id: T1
+      txn_type: appl
+      application:
+        contract: Registry
+        function: withdraw_funds
+  # multiple transactions
+  # Registry
+  # Registry.register_name; group size 2;
+  - - txn_id: T1
+      txn_type: pay
+      absolute_index: 0
+    - txn_id: T2
+      txn_type: appl
+      application:
+        contract: Registry
+        function: register_name
+      absolute_index: 1
+  # Registry.register_name; group size 4;
+  - - txn_id: T1
+      txn_type: pay
+      absolute_index: 0
+    - txn_id: T2
+      txn_type: pay
+      absolute_index: 1
+    - txn_id: T3
+      txn_type: appl
+      application:
+        contract: Registry
+        function: on_optin
+      absolute_index: 2
+    - txn_id: T4
+      txn_type: appl
+      application:
+        contract: Registry
+        function: register_name
+      absolute_index: 3
+  # Registry.register_name; group size 4; with logic-sig
+  - - txn_id: T1
+      txn_type: pay
+      absolute_index: 0
+    - txn_id: T2
+      txn_type: pay
+      absolute_index: 1
+    - txn_id: T3
+      txn_type: appl
+      application:
+        contract: Registry
+        function: on_optin
+      logic_sig:
+        contract: Record
+        function: Record
+      absolute_index: 2
+    - txn_id: T4
+      txn_type: appl
+      application:
+        contract: Registry
+        function: register_name
+      absolute_index: 3
+  # Registry.renew_name
+  - - txn_id: T1
+      txn_type: pay
+      absolute_index: 0
+    - txn_id: T2
+      txn_type: appl
+      application:
+        contract: Registry
+        function: renew_name
+      absolute_index: 1
+  # Registry.accept_transfer
+  - - txn_id: T1
+      txn_type: pay
+      absolute_index: 0
+    - txn_id: T2
+      txn_type: pay
+      absolute_index: 1
+    - txn_id: T3
+      txn_type: appl
+      application:
+        contract: Registry
+        function: accept_transfer
+      absolute_index: 2

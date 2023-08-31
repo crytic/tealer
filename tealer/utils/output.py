@@ -500,7 +500,7 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         self._paths = filtered_paths
         return
 
-    def write_to_files(self, dest: Path, all_paths_in_one: bool = False) -> None:
+    def write_to_files(self, dest: Path) -> None:
         """Export execution paths to dot files.
 
         The execution paths are highlighted in the dot representation
@@ -510,10 +510,6 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         Args:
             dest: The dot files will be saved in the given :dest: destination
                 directory.
-            all_paths_in_one: if this is set to True, all the execution
-                paths will be highlighted in a single file. if this is
-                False, each execution path is saved in a different file.
-                Default False.
         """
 
         print(self.description)
@@ -530,38 +526,21 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         # create output directory if not present
         os.makedirs(dest, exist_ok=True)
 
-        if not all_paths_in_one:
+        for idx, path in enumerate(self._paths, start=1):
 
-            for idx, path in enumerate(self._paths, start=1):
+            short = self._short_notation(path)
+            print(f"\n\t\t path: {short}")
 
-                short = self._short_notation(path)
-                print(f"\n\t\t path: {short}")
-
-                filename = dest / self.filename(idx)
-                print(f"\t\t check file: {filename}")
-
-                config.bb_border_color = (
-                    lambda bb: "BLACK"
-                    if bb not in path  # pylint: disable=cell-var-from-loop
-                    else "RED"
-                )
-                full_cfg_to_dot(self._teal, config, filename)
-            print("-" * 100)
-        else:
-            bbs_to_highlight = []
-
-            for path in self._paths:
-                short = self._short_notation(path)
-                print(f"\t\t path: {short}")
-                for bb in path:
-                    if bb not in bbs_to_highlight:
-                        bbs_to_highlight.append(bb)
-
-            filename = dest / Path(f"{self._detector.NAME}.dot")
+            filename = dest / self.filename(idx)
             print(f"\t\t check file: {filename}")
 
-            config.bb_border_color = lambda bb: "BLACK" if bb not in bbs_to_highlight else "RED"
+            config.bb_border_color = (
+                lambda bb: "BLACK"
+                if bb not in path  # pylint: disable=cell-var-from-loop
+                else "RED"
+            )
             full_cfg_to_dot(self._teal, config, filename)
+        print("-" * 100)
 
     def to_json(self) -> Dict:
         """Return json representation of detector result.
