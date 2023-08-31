@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List, Set, Tuple, Dict
 
-from tealer.analyses.dataflow.generic import DataflowTransactionContext
+from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
 from tealer.teal.instructions.instructions import (
     Global,
     Eq,
@@ -104,7 +104,7 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
         [ == | != | < | <= | > | >=]
 
         Args:
-            ins_stack: list of instructions that are executed up until the comparison instruction (including the comparison instruction).
+            ins_stack_value: The stack value. This value represents the result of the group-size check.
 
         Returns:
             set of groupsize values that will make the comparison true, set of groupsize values that will make the comparison false.
@@ -151,7 +151,7 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
         [ == | != | < | <= | > | >=]
 
         Args:
-            ins_stack: list of instructions that are executed up until the comparison instruction (including the comparison instruction).
+            ins_stack_value: The stack value. This value represents the result of the group index check.
 
         Returns:
             List of groupindex values that will make the comparison true.

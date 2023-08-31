@@ -40,7 +40,20 @@ class BlockTransactionContext:  # pylint: disable=too-few-public-methods, too-ma
         self.max_fee_unknown: bool = False  # True if max possible fee is bounded and unknown
 
     def gtxn_context(self, txn_index: int) -> "BlockTransactionContext":
-        """context information collected from gtxn {txn_index} field instructions"""
+        """context information collected from gtxn {txn_index} field instructions
+
+        Args:
+            txn_index: Transaction index.
+
+        Returns:
+            context information collected from "gtxn {txn_index} field" instructions.
+            The information is of the txn executing this contract when it's index in the group
+            is :txn_index:
+
+        Raises:
+            TealerException: Raises error if gtxn_context of a gtxn_context is accessed or if the
+                transaction index is greater than MAX_GROUP_SIZE.
+        """
         if self._group_transactions_context is None:
             raise TealerException()
         if txn_index >= MAX_GROUP_SIZE:

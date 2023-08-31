@@ -76,8 +76,8 @@ from pkg_resources import require  # type: ignore
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.exceptions import TealerException
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.teal.instructions.instructions import ContractType
 from tealer.teal.parse_teal import parse_teal
+from tealer.utils.teal_enums import ExecutionMode
 from tealer.utils.algoexplorer import (
     get_application_using_app_id,
     logic_sig_from_contract_account,
@@ -112,6 +112,7 @@ def choose_detectors(
         args: Namespace object representing the command line arguments selected
             by the user.
         all_detector_classes: list of all available detectors.
+        teal: The Teal contract.
 
     Returns:
         list of chosen detectors from the available list using the tealer
@@ -131,9 +132,9 @@ def choose_detectors(
         # IF there is no detectors provided:
         # - Stateful: run everything expect the stateless detectors
         # - Stateless: run only stateless and stateless & stateful
-        if teal.mode == ContractType.STATEFULL:
+        if teal.mode == ExecutionMode.STATEFUL:
             detectors_to_run = [d for d in detectors_to_run if d.TYPE != DetectorType.STATELESS]
-        if teal.mode == ContractType.STATELESS:
+        if teal.mode == ExecutionMode.STATELESS:
             detectors_to_run = [
                 d
                 for d in detectors_to_run
@@ -170,7 +171,7 @@ def choose_printers(
     Args:
         args: Namespace object representing the command line arguments selected
             by the user.
-        all_detector_classes: list of all available printers.
+        all_printer_classes: list of all available printers.
 
     Returns:
         list of chosen printers from the available list based on tealer
@@ -275,6 +276,7 @@ def parse_args(
         default=False,
     )
 
+    # TODO: Remove this option. Doesn't seem to be useful.
     group_detector.add_argument(
         "--all-paths-in-one",
         help="highlights all the vunerable paths in a single file.",
@@ -401,8 +403,6 @@ def handle_detectors_and_printers(
     """Util function to register and run detectors, printers.
 
     Args:
-        args: Namespace object representing the command line arguments selected
-            by the user.
         teal: Teal object representing the contract being analyzed.
         detectors: Detector classes to register and run.
         printers: Printer classes to register and run.
@@ -437,6 +437,8 @@ def handle_output(
             by the user.
         detector_results: results of running the selected detectors.
         _printer_results: results of running the selected printers.
+        teal: The contract.
+        error: Error string if any detector or printer resulted in an error.
     """
 
     output_directory = ROOT_OUTPUT_DIRECTORY / Path(teal.contract_name)

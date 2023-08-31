@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING, List, Set, Tuple, Callable
 
-from tealer.analyses.dataflow.generic import DataflowTransactionContext
+from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
+from tealer.analyses.dataflow.transaction_context.utils.key_helpers import (
+    get_gtxn_at_index_key,
+    is_txn_or_gtxn,
+)
 from tealer.teal.instructions.instructions import (
     Eq,
     Neq,
@@ -61,7 +65,16 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         return set([NO_ADDRESS])
 
     def _union(self, key: str, a: Set, b: Set) -> Set:
-        """A union U = U, A union NullSet = A"""
+        """A union U = U, A union NullSet = A
+
+        Args:
+            key: The analysis key. The values in set :a: and :b: are values for this key.
+            a: Set 1.
+            b: Set 2.
+
+        Returns:
+            Returns union of set a and b.
+        """
         if ANY_ADDRESS in a or ANY_ADDRESS in b:
             return self._universal_set()
 
@@ -75,7 +88,16 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         return a | b
 
     def _intersection(self, key: str, a: Set, b: Set) -> Set:
-        """A intersection NullSet = NullSet, A intersection U = A"""
+        """A intersection NullSet = NullSet, A intersection U = A
+
+        Args:
+            key: The analysis key. The values in set :a: and :b: are values for this key.
+            a: Set 1.
+            b: Set 2.
+
+        Returns:
+            Returns union of set a and b.
+        """
         if NO_ADDRESS in a or NO_ADDRESS in b:
             return self._null_set()
 
@@ -92,6 +114,15 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         """return set of address which are represented by the ins
 
         ZeroAddress is considered to be null set.
+
+        Args:
+            ins: An instruction. The function considers that executing :ins: pushes an
+                "address" value onto the stack. Based on the instruction, the function
+                returns list of possible values.
+
+        Returns:
+            Returns a list of possible address values for the field when that field value is
+            asserted against the output of :ins:.
         """
         if isinstance(ins, Global) and isinstance(ins.field, ZeroAddress):
             # ZeroAddress
@@ -122,7 +153,7 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
             return self._universal_set(), self._universal_set()
 
         if isinstance(arg1, UnknownStackValue):
-            if not isinstance(arg2, UnknownStackValue) and not self._is_txn_or_gtxn(
+            if not isinstance(arg2, UnknownStackValue) and not is_txn_or_gtxn(
                 key, arg2.instruction
             ):
                 # arg1 is unknown and arg2 is not related to "key"
@@ -130,16 +161,16 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
             # arg2 is related to "key" but arg1 is unknown
             asserted_addresses = set([SOME_ADDRESS])
         elif isinstance(arg2, UnknownStackValue):
-            if not isinstance(arg1, UnknownStackValue) and not self._is_txn_or_gtxn(
+            if not isinstance(arg1, UnknownStackValue) and not is_txn_or_gtxn(
                 key, arg1.instruction
             ):
                 # arg2 is unknown and arg1 is not related to "key"
                 return self._universal_set(), self._universal_set()
             # arg1 is related to "key" but arg2 is unknown
             asserted_addresses = set([SOME_ADDRESS])
-        elif self._is_txn_or_gtxn(key, arg1.instruction):
+        elif is_txn_or_gtxn(key, arg1.instruction):
             asserted_addresses = self._get_asserted_address(arg2.instruction)
-        elif self._is_txn_or_gtxn(key, arg2.instruction):
+        elif is_txn_or_gtxn(key, arg2.instruction):
             asserted_addresses = self._get_asserted_address(arg1.instruction)
 
         if asserted_addresses is None:
@@ -176,7 +207,7 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
                     self._block_contexts[key][block],
                 )
                 for idx in range(16):
-                    addr_values = self._block_contexts[self.gtx_key(idx, key)][block]
+                    addr_values = self._block_contexts[get_gtxn_at_index_key(idx, key)][block]
                     self._set_addr_values(
                         addr_field_obj(block.transaction_context.gtxn_context(idx)),
                         addr_values,

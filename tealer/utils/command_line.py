@@ -40,6 +40,9 @@ def collect_plugins() -> Tuple[List[Type[AbstractDetector]], List[Type[AbstractP
         (Tuple[List[Type[AbstractDetector]], List[Type[AbstractPrinter]]]): detectors and
         printers added in the form of plugins.
 
+    Raises:
+        TealerException: raises exception if a plugin's detector is not a subclass of AbstractDetector
+            or if a plugin's printer is not a subclass of AbstractPrinter.
     """
     detector_classes: List[Type[AbstractDetector]] = []
     printer_classes: List[Type[AbstractPrinter]] = []
@@ -242,7 +245,13 @@ def output_to_markdown(
 
 
 def output_wiki(detector_classes: List[Type[AbstractDetector]], filter_wiki: str) -> None:
-    """Generate dectector documentation for github wiki."""
+    """Generate dectector documentation for github wiki.
+
+    Args:
+        detector_classes: List of detector classes.
+        filter_wiki: filter string used to filter the detector classes. if this string
+            is in a detector's name, then that detector is not included in the list.
+    """
     detectors_list = _sort_detector_classes(detector_classes)
 
     for detector in detectors_list:

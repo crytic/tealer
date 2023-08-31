@@ -3,7 +3,7 @@ import pytest
 
 from tealer.teal.parse_teal import parse_teal
 from tealer.teal.instructions.transaction_field import TransactionField
-from tealer.teal.instructions.instructions import ContractType
+from tealer.utils.teal_enums import ExecutionMode
 
 
 INSTRUCTIONS_TARGETS = [
@@ -31,9 +31,9 @@ def test_instruction_version(target: str) -> None:
             continue
         version, mode_str, pop_size, push_size = match_obj.groups()
         mode = {
-            "Any": ContractType.ANY,
-            "Stateful": ContractType.STATEFULL,
-            "Stateless": ContractType.STATELESS,
+            "Any": ExecutionMode.ANY,
+            "Stateful": ExecutionMode.STATEFUL,
+            "Stateless": ExecutionMode.STATELESS,
         }[mode_str]
         assert ins.mode == mode
         assert ins.version == int(version)

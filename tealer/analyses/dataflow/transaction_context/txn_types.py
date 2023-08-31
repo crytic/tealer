@@ -1,6 +1,11 @@
 from typing import TYPE_CHECKING, List, Set, Tuple, Dict, Type
 
-from tealer.analyses.dataflow.generic import DataflowTransactionContext
+from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
+from tealer.analyses.dataflow.transaction_context.utils.key_helpers import (
+    get_gtxn_at_index_key,
+    is_gtxn_at_index_key,
+    get_ind_base_for_gtxn_at_key,
+)
 from tealer.teal.instructions.instructions import (
     Eq,
     Neq,
@@ -49,8 +54,8 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
     UNIVERSAL_SETS: Dict[str, List] = universal_sets
 
     def _universal_set(self, key: str) -> Set:
-        if self.is_gtx_key(key):
-            _, base_key = self.get_gtx_ind_and_base_key(key)
+        if is_gtxn_at_index_key(key):
+            _, base_key = get_ind_base_for_gtxn_at_key(key)
             return set(self.UNIVERSAL_SETS[base_key])
         return set(self.UNIVERSAL_SETS[key])
 
@@ -67,9 +72,21 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
     def _is_ins_tx_field(
         cls, key: str, ins: "Instruction", field: Type["TransactionField"]
     ) -> bool:
-        """return True if ins is "txn {field}" or ins is gtxn {idx} field"""
-        if cls.is_gtx_key(key):
-            idx, _ = cls.get_gtx_ind_and_base_key(key)
+        """return True if ins is "txn {field}" or ins is gtxn {idx} field
+
+        Args:
+            key: The analysis key. Used to find if the analysis is value of `gtxn` instruction and
+                is for the correct transaction index.
+            ins: The instruction.
+            field: The transaction field class.
+
+        Returns:
+            Returns True if key is for txn field and instruction is "txn {:field:}". And if key is
+            for a gtxn instruction, return True if instruction and the key have the same index and the
+            field accessed by the instruction is :field:.
+        """
+        if is_gtxn_at_index_key(key):
+            idx, _ = get_ind_base_for_gtxn_at_key(key)
             return isinstance(ins, Gtxn) and ins.idx == idx and isinstance(ins.field, field)
         return isinstance(ins, Txn) and isinstance(ins.field, field)
 
@@ -100,6 +117,15 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
         int [UpdateApplication | DeleteApplication | ...]
         ( == | != )
         bz/bnz
+
+        Args:
+            key: The analysis key.
+            ins_stack_value: A stack value. The stack value represents the result of ins_stack_value.instruction.
+                This function assumes that this value is being asserted/checked.
+
+        Returns:
+            Set of possible values for the :key: when the ins_stack_value is asserted to be True and when ins_stack_value is
+            asserted to be False.
         """
         U = set(self.UNIVERSAL_SETS[self.TRANSACTION_TYPE_KEY])
 
@@ -191,5 +217,7 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
             block.transaction_context.transaction_types = list(transaction_type_context[block])
 
             for idx in range(16):
-                values = self._block_contexts[self.gtx_key(idx, self.TRANSACTION_TYPE_KEY)][block]
+                values = self._block_contexts[
+                    get_gtxn_at_index_key(idx, self.TRANSACTION_TYPE_KEY)
+                ][block]
                 block.transaction_context.gtxn_context(idx).transaction_types = list(values)
