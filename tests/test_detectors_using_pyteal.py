@@ -29,12 +29,17 @@ from tests.detectors.multiple_calls_to_subroutine import (  # pylint: disable=wr
     multiple_calls_to_subroutine_tests,
 )
 
+# pylint: disable=wrong-import-position
+from tests.detectors.detector_reduced_output import reduced_output_tests
+
+
 TESTS: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     *router_with_assembled_constants,
     *txn_type_based_tests,
     *group_size_tests_pyteal,
     *subroutine_recursion_patterns_tests,
     *multiple_calls_to_subroutine_tests,
+    *reduced_output_tests,
 ]
 
 

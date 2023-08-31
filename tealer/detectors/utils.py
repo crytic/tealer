@@ -87,13 +87,13 @@ def detect_missing_tx_field_validations(
         Returns a list of vulnerable execution paths: none of the blocks in the path check the fields.
     """
 
-    def search_paths(
+    def search_paths(  # pylint: disable=too-many-branches
         bb: "BasicBlock",
         current_path: List["BasicBlock"],
         paths_without_check: List[List["BasicBlock"]],
         current_call_stack: List[Tuple[Optional["BasicBlock"], "Subroutine"]],
         current_subroutine_executed: List[List["BasicBlock"]],
-    ) -> None:
+    ) -> bool:
         """
         Args:
             current_call_stack: list of callsub blocks and called subroutine along the current path.
@@ -162,19 +162,24 @@ def detect_missing_tx_field_validations(
                         bb = B1, current_path = [B0, B3, B5, B4, B1], current_call_stack = [(None, Main)], current_subroutine_executed = [[B0, B1]]
 
                     ....
+
+        Returns:
+            Returns True if ALL child paths from the path `current_path + [bb]` are vulnerable. Otherwise, returns False.
+            The return value is used to determine whether to add the path to `paths_without_check`. if all child paths are vulnerable, the path is not added.
+            If only some of the child paths are vulnerable, add the individual vulnerable paths.
         """
         # check for loops
         if bb in current_subroutine_executed[-1]:
             logger_detectors.debug(
                 f"Loop Path: current_full_path = {current_path}\n, current_subroutine_executed = {current_subroutine_executed[-1]}, current_block: {repr(bb)}"
             )
-            return
+            return True
 
         if validated_in_block(bb, checks_field):
             logger_detectors.debug(
                 f"Validated Path: current_full_path = {current_path}\n, current_block: {repr(bb)}"
             )
-            return
+            return False
 
         current_path = current_path + [bb]
 
@@ -186,8 +191,9 @@ def detect_missing_tx_field_validations(
                 logger_detectors.debug(
                     f"Vulnerable Path Satisfied Report Condition: current_full_path = {current_path} "
                 )
-                paths_without_check.append(current_path)
-            return
+                # for leaf path, all child paths are vulnerable
+                return True
+            return False
 
         # do we need to make a copy of lists in [:-1]???
         current_subroutine_executed = current_subroutine_executed[:-1] + [
@@ -201,7 +207,7 @@ def detect_missing_tx_field_validations(
             already_called_subroutines = [frame[1] for frame in current_call_stack]
             if called_subroutine in already_called_subroutines:
                 # recursion
-                return
+                return True
             current_call_stack = current_call_stack + [(bb, called_subroutine)]
             current_subroutine_executed = current_subroutine_executed + [[]]
 
@@ -213,25 +219,47 @@ def detect_missing_tx_field_validations(
             assert callsub_block is not None
             return_point = callsub_block.sub_return_point
             if return_point is not None and return_point in bb.next:
-                search_paths(
+                all_child_paths_vulnerable = search_paths(
                     return_point,
                     current_path,
                     paths_without_check,
                     current_call_stack[:-1],  # returning from a subroutine
                     current_subroutine_executed[:-1],
                 )
-        else:
-            for next_bb in bb.next:
-                search_paths(
-                    next_bb,
-                    current_path,
-                    paths_without_check,
-                    current_call_stack,
-                    current_subroutine_executed,
-                )
+                return all_child_paths_vulnerable
+            return True
+
+        vulnerable_child_paths: List["BasicBlock"] = []
+        all_child_paths_vulnerable = True
+        for next_bb in bb.next:
+            child_path_is_vulnerable = search_paths(
+                next_bb,
+                current_path,
+                paths_without_check,
+                current_call_stack,
+                current_subroutine_executed,
+            )
+            if not child_path_is_vulnerable:
+                # one of the child path is not vulnerable.
+                all_child_paths_vulnerable = False
+            else:
+                vulnerable_child_paths.append(next_bb)
+
+        if all_child_paths_vulnerable:
+            return True
+
+        # All of the child paths from the "current_path" are not vulnerable. So, add individual vulnerable paths
+        for next_bb in vulnerable_child_paths:
+            print("current", current_path, f"{repr(next_bb)}")
+            paths_without_check.append(current_path + [next_bb])
+        return False
 
     teal = entry_block.teal
     assert teal is not None
     paths_without_check: List[List["BasicBlock"]] = []
-    search_paths(entry_block, [], paths_without_check, [(None, teal.main)], [[]])
+    all_child_paths_vulnerable = search_paths(
+        entry_block, [], paths_without_check, [(None, teal.main)], [[]]
+    )
+    if all_child_paths_vulnerable:
+        paths_without_check.append([entry_block])
     return paths_without_check
