@@ -10,7 +10,7 @@ Classes:
 """
 
 import logging
-from typing import List, Any, Optional, Type, TYPE_CHECKING, Tuple, Dict
+from typing import List, Any, Type, TYPE_CHECKING, Tuple, Dict, Optional
 
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorClassification
 from tealer.printers.abstract_printer import AbstractPrinter
@@ -78,32 +78,22 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        instructions: List[Instruction],
-        bbs: List[BasicBlock],
         version: int,
         mode: ContractType,
+        instructions: List[Instruction],
+        bbs: List[BasicBlock],
         main: Subroutine,
-        # subroutines: List[List["BasicBlock"]],
         subroutines: Dict[str, Subroutine],
-        # NEW CFG objects
-        instructions_NEW: List[Instruction],
-        bbs_NEW: List[BasicBlock],
-        main_NEW: Subroutine,
-        subroutines_NEW: Dict[str, Subroutine],
     ):
-        self._instructions = instructions
-        self._bbs = bbs
         self._version = version
         self._mode = mode
-        self._main = main
-        self._subroutines = subroutines
         self._int_constants: List[int] = []
         self._byte_constants: List[str] = []
 
-        self._instructions_NEW = instructions_NEW
-        self._bbs_NEW = bbs_NEW
-        self._main_NEW = main_NEW
-        self._subroutines_NEW = subroutines_NEW
+        self._instructions = instructions
+        self._bbs = bbs
+        self._main = main
+        self._subroutines = subroutines
 
         self._contract_name: str = ""
         self._detectors: List[AbstractDetector] = []
@@ -116,7 +106,7 @@ class Teal:  # pylint: disable=too-many-instance-attributes,too-many-public-meth
 
     @property
     def bbs(self) -> List[BasicBlock]:
-        """CFG of the contract"""
+        """List of all basic blocks of the contract"""
         return self._bbs
 
     @property

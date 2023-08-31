@@ -76,7 +76,7 @@ class PrinterTransactionContext(AbstractPrinter):  # pylint: disable=too-few-pub
         config = CFGDotConfig()
         config.bb_additional_comments = get_info
         # generate a Full CFG with all group-size, group-index comments
-        full_cfg_to_dot(self.teal.bbs, config, filename)
+        full_cfg_to_dot(self.teal, config, filename)
         # Also generate shortened CFGs with group-size and group-index comments.
         all_subroutines_to_dot(
             self.teal, dest, config, "txn_ctx"

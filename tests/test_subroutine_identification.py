@@ -51,7 +51,7 @@ ins_list = [
 ]
 
 ins_partitions = [(0, 2), (2, 5), (5, 9), (9, 10), (10, 11), (11, 14), (14, 17), (17, 18)]
-bbs_links = [(0, 6), (6, 2), (2, 3), (2, 5), (3, 1), (1, 4), (4, 7), (5, 7)]
+bbs_links = [(0, 6), (2, 3), (2, 5), (3, 4), (6, 7)]
 
 bbs = construct_cfg(ins_list, ins_partitions, bbs_links)
 MULTIPLE_RETSUB_MAIN = Subroutine("", bbs[0], [bbs[0], bbs[6], bbs[7]])
@@ -91,7 +91,7 @@ ins_list = [
 ]
 
 ins_partitions = [(0, 2), (2, 5), (5, 8), (8, 11), (11, 12)]
-bbs_links = [(0, 3), (3, 2), (2, 1), (1, 4)]
+bbs_links = [(0, 3), (3, 4), (2, 1)]
 
 bbs = construct_cfg(ins_list, ins_partitions, bbs_links)
 SUBROUTINE_BACK_JUMP_MAIN = Subroutine("", bbs[0], [bbs[0], bbs[3], bbs[4]])

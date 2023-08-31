@@ -48,7 +48,7 @@ ins_list = [
 ]
 
 ins_partitions = [(0, 2), (2, 6), (6, 8), (8, 11), (11, 14), (14, 15)]
-bbs_links = [(0, 4), (4, 1), (1, 2), (1, 3), (2, 5), (3, 5)]
+bbs_links = [(0, 4), (4, 5), (1, 2), (1, 3)]
 
 bbs_edges_new = [(0, 4), (4, 5), (1, 2), (1, 3)]
 
@@ -96,7 +96,7 @@ ins_list = [
 ]
 
 ins_partitions = [(0, 2), (2, 5), (5, 8), (8, 11), (11, 12)]
-bbs_links = [(0, 3), (3, 2), (2, 1), (1, 4)]
+bbs_links = [(0, 3), (3, 4), (2, 1)]
 
 bbs_edges_new = [(0, 3), (3, 4), (2, 1)]
 
@@ -312,12 +312,12 @@ def test_cfg_construction_new(
     teal = parse_teal(code.strip())
     for bb in expected_cfg:
         print(bb)
-    for bb in teal._bbs_NEW:
+    for bb in teal.bbs:
         print(bb)
     print("*" * 20)
-    assert cmp_cfg(teal._bbs_NEW, expected_cfg)
-    test_main = teal._main_NEW
-    test_subroutines = teal._subroutines_NEW
+    assert cmp_cfg(teal.bbs, expected_cfg)
+    test_main = teal.main
+    test_subroutines = teal.subroutines
 
     assert cmp_cfg([test_main.entry], [expected_main.entry])
     assert cmp_cfg(test_main.blocks, expected_main.blocks)

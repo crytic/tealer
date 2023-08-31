@@ -72,7 +72,7 @@ ins_list = [
 ]
 
 ins_partitions = [(0, 2), (2, 6), (6, 12), (12, 19), (19, 26), (26, 27)]
-bbs_links = [(0, 4), (4, 1), (1, 2), (1, 3), (2, 5), (3, 5)]
+bbs_links = [(0, 4), (4, 5), (1, 2), (1, 3)]
 
 MULTIPLE_RETSUB_CFG_GROUP_SIZES = [[2], [2], [2], [2], [2], [2]]
 
@@ -126,7 +126,7 @@ ins_list = [
 ]
 
 ins_partitions = [(0, 2), (2, 5), (5, 16), (16, 19), (19, 20)]
-bbs_links = [(0, 3), (3, 2), (2, 1), (1, 4)]
+bbs_links = [(0, 3), (3, 4), (2, 1)]
 
 SUBROUTINE_BACK_JUMP_CFG_GROUP_SIZES = [[1, 3], [1, 3], [1, 3], [1, 3], [1, 3], [1, 3]]
 SUBROUTINE_BACK_JUMP_CFG = construct_cfg(ins_list, ins_partitions, bbs_links)

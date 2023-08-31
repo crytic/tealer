@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.utils.output import full_cfg_to_dot, ROOT_OUTPUT_DIRECTORY, full_cfg_to_dot_NEW
+from tealer.utils.output import full_cfg_to_dot, ROOT_OUTPUT_DIRECTORY
 
 
 class PrinterCFG(AbstractPrinter):  # pylint: disable=too-few-public-methods
@@ -27,8 +27,4 @@ class PrinterCFG(AbstractPrinter):  # pylint: disable=too-few-public-methods
         filename = dest / Path("full_cfg.dot")
 
         print(f"\nCFG exported to file: {filename}")
-        full_cfg_to_dot(self.teal.bbs, filename=filename)
-
-        print("New CFG to file: new-cfg.dot")
-        with open("new-cfg.dot", "w", encoding="utf-8") as f:
-            f.write(full_cfg_to_dot_NEW(self.teal))
+        full_cfg_to_dot(self.teal, filename=filename)

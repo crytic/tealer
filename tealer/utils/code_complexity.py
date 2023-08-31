@@ -11,6 +11,7 @@ Functions:
 """
 
 from typing import List, TYPE_CHECKING
+from tealer.utils.analyses import next_blocks_global, prev_blocks_global
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -29,7 +30,7 @@ def _compute_number_edges(cfg: List["BasicBlock"]) -> int:
 
     n = 0
     for bb in cfg:
-        n += len(bb.next)
+        n += len(next_blocks_global(bb))
     return n
 
 
@@ -61,7 +62,7 @@ def _compute_strongly_connected_components(cfg: List["BasicBlock"]) -> List[List
     def visit(bb: "BasicBlock") -> None:
         if not visited[bb]:
             visited[bb] = True
-            for next_bb in bb.next:
+            for next_bb in next_blocks_global(bb):
                 visit(next_bb)
             l.append(bb)
 
@@ -72,7 +73,7 @@ def _compute_strongly_connected_components(cfg: List["BasicBlock"]) -> List[List
         if not assigned[bb]:
             assigned[bb] = True
             root.append(bb)
-            for prev_bb in bb.prev:
+            for prev_bb in prev_blocks_global(bb):
                 assign(prev_bb, root)
 
     for bb in l:

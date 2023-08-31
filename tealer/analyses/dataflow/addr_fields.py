@@ -13,6 +13,7 @@ from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStac
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
+    from tealer.teal.basic_blocks import BasicBlock
     from tealer.teal.context.block_transaction_context import (
         AddrFieldValue,
         BlockTransactionContext,
@@ -169,13 +170,14 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
         for key, addr_field_obj in key_and_addr_obj:
             if key not in self.BASE_KEYS:
                 continue
-            for b in self._teal.bbs:
+            for block in self._teal.bbs:
                 self._set_addr_values(
-                    addr_field_obj(b.transaction_context), self._block_contexts[key][b]
+                    addr_field_obj(block.transaction_context),
+                    self._block_contexts[key][block],
                 )
                 for idx in range(16):
-                    addr_values = self._block_contexts[self.gtx_key(idx, key)][b]
+                    addr_values = self._block_contexts[self.gtx_key(idx, key)][block]
                     self._set_addr_values(
-                        addr_field_obj(b.transaction_context.gtxn_context(idx)),
+                        addr_field_obj(block.transaction_context.gtxn_context(idx)),
                         addr_values,
                     )

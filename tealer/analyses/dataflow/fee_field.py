@@ -16,7 +16,7 @@ from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStac
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
-
+    from tealer.teal.basic_blocks import BasicBlock
 
 # It's not always possible to know the integer value used to compare Fee.
 # All the unknown values are represented using FeeValue(is_unknown=True).
@@ -188,17 +188,17 @@ class FeeField(DataflowTransactionContext):
         return res
 
     def _store_results(self) -> None:
-        for b in self._teal.bbs:
-            max_fee = self._block_contexts[FEE_KEY][b]
+        for block in self._teal.bbs:
+            max_fee = self._block_contexts[FEE_KEY][block]
             assert isinstance(max_fee, FeeValue)
             if max_fee.is_unknown:
-                b.transaction_context.max_fee_unknown = True
+                block.transaction_context.max_fee_unknown = True
             else:
-                b.transaction_context.max_fee = max_fee.value
+                block.transaction_context.max_fee = max_fee.value
             for idx in range(MAX_GROUP_SIZE):
-                max_fee = self._block_contexts[self.gtx_key(idx, FEE_KEY)][b]
+                max_fee = self._block_contexts[self.gtx_key(idx, FEE_KEY)][block]
                 assert isinstance(max_fee, FeeValue)
                 if max_fee.is_unknown:
-                    b.transaction_context.gtxn_context(idx).max_fee_unknown = True
+                    block.transaction_context.gtxn_context(idx).max_fee_unknown = True
                 else:
-                    b.transaction_context.gtxn_context(idx).max_fee = max_fee.value
+                    block.transaction_context.gtxn_context(idx).max_fee = max_fee.value

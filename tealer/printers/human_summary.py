@@ -142,7 +142,7 @@ class PrinterHumanSummary(AbstractPrinter):
         txt += f"Number of basic blocks: {len(teal.bbs)}\n"
         txt += f"Number of instructions: {len(teal.instructions)}\n"
 
-        txt += f"Number of subroutines: {len(teal.subroutines_list)}\n"
+        txt += f"Number of subroutines: {len(teal.subroutines.items())}\n"
         txt += "Subroutines:\n"
         for sub_name in teal.subroutines:
             txt += f"\t{sub_name}\n"

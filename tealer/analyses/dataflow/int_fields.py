@@ -21,6 +21,7 @@ from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStac
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
+    from tealer.teal.basic_blocks import BasicBlock
 
 # TODO: Change GroupSize, GroupIndex values representation to something similar of FeeValue.
 group_size_key = "GroupSize"
