@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from tealer.teal.teal import Teal
 
 
-class Subroutine:
+class Subroutine:  # pylint: disable=too-many-instance-attributes
     """Represent a Teal subroutine.
 
     Main entry point code, code that is not part of any subroutine, is represented as a separate subroutine.
@@ -22,6 +22,8 @@ class Subroutine:
             b for b in blocks if len(b.next) == 0 or isinstance(b.exit_instr, Retsub)
         ]
         self._contract: Optional["Teal"] = None
+        self._caller_callsub_blocks: List["BasicBlock"] = []
+        self._return_point_blocks: List["BasicBlock"] = []
 
     @property
     def name(self) -> str:
@@ -53,3 +55,32 @@ class Subroutine:
     @contract.setter
     def contract(self, contract_obj: "Teal") -> None:
         self._contract = contract_obj
+
+    @property
+    def caller_blocks(self) -> List["BasicBlock"]:
+        """BasicBlock with callsub instructions which call this subroutine.
+
+        Returns: List of caller callsub basic blocks.
+        """
+        return self._caller_callsub_blocks
+
+    @caller_blocks.setter
+    def caller_blocks(self, caller_callsub_blocks: List["BasicBlock"]) -> None:
+        """Set caller_blocks and return point blocks
+
+        Args:
+            caller_callsub_blocks: basic blocks with callsub instruction calling this subroutine.
+        """
+        self._caller_callsub_blocks = caller_callsub_blocks
+        self._return_point_blocks = [
+            bi.next[0] for bi in caller_callsub_blocks if len(bi.next) == 1
+        ]
+
+    @property
+    def return_point_blocks(self) -> List["BasicBlock"]:
+        return self._return_point_blocks
+
+    @property
+    def retsub_blocks(self) -> List["BasicBlock"]:
+        """List of basic blocks of the subroutine containing `Retsub`."""
+        return [b for b in self._exit_blocks if isinstance(b.exit_instr, Retsub)]

@@ -29,6 +29,7 @@ import inspect
 import sys
 import logging
 from typing import Optional, Dict, List, Tuple
+from collections import defaultdict
 
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.subroutine import Subroutine
@@ -162,6 +163,73 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> Non
             bb = None
 
 
+def create_bb_NEW(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> None:
+    """Construct basic blocks and add basic block default edges.
+
+    Third pass of the teal parser. Instructions are
+    divided into basic blocks based on the following rules:
+
+    * Label instruction is destination for multiple instructions. A new
+        basic block is created for each Label instruction.
+    * Instructions B, Err, Return, Callsub, Retsub are exit instructions
+        of a basic block. A new basic block is created for instructions
+        following them.
+    * A instruction with multiple next instructions is a exit instruction
+        of the basic block. A new basic block is created for instructions
+        following them.
+
+    This function also adds default edges between the constructed basic
+    blocks. Two basic blocks have default edge if the entry instruction
+    of the second basic block is default next instruction for the exit instruction
+    of the first basic block.
+
+    Args:
+        instructions: List of instructions.
+        all_bbs: (in-place) List of BasicBlocks representing the teal contract.
+    """
+
+    bb = BasicBlock()
+    all_bbs.append(bb)
+    for ins in instructions:
+
+        # if instruction is label and basic block is not empty:
+        #   Create a new basic block and add default edge
+        # if basic block is empty, no need to create new one.
+        if isinstance(ins, Label) and len(bb.instructions) != 0:
+            next_bb = BasicBlock()
+            all_bbs.append(next_bb)
+            bb.add_next(next_bb)
+            next_bb.add_prev(bb)
+            bb = next_bb
+
+        bb.add_instruction(ins)
+        ins.bb = bb
+
+        # `BZ`, `BNZ`, `match` and `switch` have more than one next instruction.
+        # `Callsub` has only one next instruction and it is the default next instruction
+        # For these instructions, execution continues on the next instruction by default.
+        if len(ins.next) > 1 or isinstance(ins, Callsub):
+            # if the instruction is the last instruction, do not create a new *empty* block.
+            if ins == instructions[-1]:
+                continue
+            next_bb = BasicBlock()
+            all_bbs.append(next_bb)
+            # add sequential link
+            bb.add_next(next_bb)
+            next_bb.add_prev(bb)
+            bb = next_bb
+
+        # Err, Return, Retsub will have `len(ins.next) == 0` and `B`.
+        if len(ins.next) == 0 or isinstance(ins, B):
+            # if the instruction is the last instruction, do not create a *empty* block.
+            if ins == instructions[-1]:
+                continue
+            next_bb = BasicBlock()
+            all_bbs.append(next_bb)
+            # Do not add any edges. There are no default edges and Jump edges are added in the next pass.
+            bb = next_bb
+
+
 def _add_instruction_comments(ins: Instruction) -> None:
     if isinstance(ins, Txn) and isinstance(ins.field, ApplicationID):
         ins.tealer_comments.append("ApplicationID is 0 in Creation Txn")
@@ -284,6 +352,94 @@ def _first_pass(  # pylint: disable=too-many-branches
     return intcblock_ins, bytecblock_ins
 
 
+def _first_pass_NEW(  # pylint: disable=too-many-branches
+    lines: List[str],
+    labels: Dict[str, Label],
+    subroutines: Dict[str, List[Callsub]],
+    instructions: List[Instruction],
+) -> Tuple[List[Intcblock], List[Bytecblock]]:
+    """Parse instructions and add default instruction edges.
+
+    First pass of the teal parser. Source code lines are parsed into corresponding Instruction objects and default
+    edges are added to the instructions.
+    * default edges are edges between two continuous instructions where execution might pass from the first
+        instruction to the second instruction.
+    * Jump edges are edges between two non-continuous instructions where execution might pass from the first instruction
+        to the second.
+
+    Args:
+        lines: List of source code lines of a teal contract.
+        labels: (in-place) Map from teal label string to the parsed label instruction.
+            instance.
+        subroutines: (in-place) Map from subroutine name to callsub instructions calling the subroutine.
+        instructions: (in-place) List of parsed instructions.
+
+    Returns:
+        intcblock_ins: List of `intcblock` instructions in the contract.
+        bytecblock_ins: List of `bytecblock` instructions in the contract.
+    """
+
+    # First pass over the intructions list: Add default edges and collect other information.
+    idx = 0
+    prev: Optional[Instruction] = None  # Flag: last instruction was an unconditional jump
+    intcblock_ins: List[Intcblock] = []  # List of intcblock instructions present in the contract
+    bytecblock_ins: List[Bytecblock] = []  # List of bytecblock instructions present in the contract
+
+    instruction_comments: List[str] = []
+    for line in lines:
+        try:
+            if line.strip().startswith("//"):
+                # is a comment without any instruction
+                instruction_comments.append(line)
+                ins = None
+            else:
+                ins = parse_line(line)
+                if ins and instruction_comments:
+                    ins.comments_before_ins = list(instruction_comments)
+                    instruction_comments = []
+        except ParseError as e:
+            print(f"Parse error at line {idx}: {e}")
+            sys.exit(1)
+        idx = idx + 1
+        if not ins:
+            continue
+
+        if isinstance(ins, Intcblock):
+            intcblock_ins.append(ins)
+        elif isinstance(ins, Bytecblock):
+            bytecblock_ins.append(ins)
+
+        ins.line = idx
+        _add_instruction_comments(ins)
+
+        # A label? Add it to the global label list
+        if isinstance(ins, Label):
+            labels[ins.label] = ins
+
+        # If the prev. ins. was anything **other** than an unconditional jump or unconditional exit:
+        #   then add default between the two instructions
+        if prev:
+            ins.add_prev(prev)
+            prev.add_next(ins)
+
+        # A flag that says that this was an unconditional jump or unconditional exit instructions.
+        # `Callsub`` is not an unconditional jump instruction.
+        # `B` is unconditional jump.
+        # `Err, Return` is unconditional exit of the program.
+        # `Retsub` is unconditional exit of the subroutine.
+        prev = ins
+        if isinstance(ins, (B, Err, Return, Retsub)):
+            prev = None
+
+        # if ins is callsub, add the label to subroutines and store callsub instruction.
+        if isinstance(ins, Callsub):
+            subroutines[ins.label].append(ins)
+
+        # Finally, add the instruction to the instruction list
+        instructions.append(ins)
+    return intcblock_ins, bytecblock_ins
+
+
 def _second_pass(  # pylint: disable=too-many-branches
     instructions: List[Instruction],
     labels: Dict[str, Label],
@@ -362,6 +518,37 @@ def _second_pass(  # pylint: disable=too-many-branches
                 return_point.add_prev(retsub_ins)
 
 
+def _second_pass_NEW(  # pylint: disable=too-many-branches
+    instructions: List[Instruction],
+    labels: Dict[str, Label],
+) -> None:
+    """Add jump edges between instructions.
+
+    Second pass of the teal parser.
+    * Jump edges are edges between two non-continuous instructions where execution might pass from the first instruction
+        to the second.
+    * Jump instructions: `B`, `BZ`, `BNZ`, `match`, `switch`.
+
+    Args:
+        instructions: List of instructions.
+        labels: Map from teal label string to the parsed label instruction.
+    """
+    logger_parsing.debug("Second Pass")
+    # Second pass over the instructions list: Add instruction links for jumps
+    for ins in instructions:
+
+        # If a labeled jump to a single instruction, link the ins to its label
+        if isinstance(ins, (B, BZ, BNZ)):
+            ins.add_next(labels[ins.label])
+            labels[ins.label].add_prev(ins)
+
+        # if switch or match, link the ins to its labels
+        if isinstance(ins, (Switch, Match)):
+            for ins_label in ins.labels:
+                ins.add_next(labels[ins_label])
+                labels[ins_label].add_prev(ins)
+
+
 def _fourth_pass(instructions: List[Instruction]) -> None:  # pylint: disable=too-many-branches
     """Add jump or non-sequential basic block links.
 
@@ -408,6 +595,29 @@ def _fourth_pass(instructions: List[Instruction]) -> None:  # pylint: disable=to
                         bb.add_next(next_ins.bb)
                     if bb not in next_ins.bb.prev:
                         next_ins.bb.add_prev(bb)
+
+
+def _fourth_pass_NEW(basic_blocks: List[BasicBlock]) -> None:  # pylint: disable=too-many-branches
+    """Add jump edges between basic blocks.
+
+    Fourth pass of the teal parser. Jump edges
+    are added between two basic blocks if there is a jump edge from
+    exit instruction of the first basic block to the entry instruction
+    of the second basic block.
+
+    Args:
+        basic_blocks: List of basic blocks.
+    """
+
+    # Fourth pass over the basic blocks: Add jump edges between basic blocks
+    for bb in basic_blocks:
+        ins = bb.exit_instr
+        for next_ins in ins.next:
+            next_bb = next_ins.bb
+            if next_bb not in bb.next:
+                assert bb not in next_bb.prev
+                bb.add_next(next_bb)
+                next_bb.add_prev(bb)
 
 
 def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
@@ -458,6 +668,33 @@ def _identify_subroutine_blocks(entry_block: "BasicBlock") -> List["BasicBlock"]
                 if return_point.bb is not None:
                     stack.append(return_point.bb)
             continue
+
+        for next_bb in bb.next:
+            if next_bb not in subroutines_blocks:
+                stack.append(next_bb)
+
+    return subroutines_blocks
+
+
+def _identify_subroutine_blocks_NEW(entry_block: "BasicBlock") -> List["BasicBlock"]:
+    """find all the basic blocks part of a subroutine using DFS.
+
+    Args:
+        label ("Label"): label instruction of the subroutine.
+        bbs (List["BasicBlock"]): CFG of the contract.
+
+    Returns:
+        "BasicBlock": Entry block of the subroutine.
+        List["BasicBlock"]: list of all basic blocks part of a subroutine.
+    """
+
+    subroutines_blocks: List["BasicBlock"] = []
+    stack: List["BasicBlock"] = []
+
+    stack.append(entry_block)
+    while len(stack) > 0:
+        bb = stack.pop()
+        subroutines_blocks.append(bb)
 
         for next_bb in bb.next:
             if next_bb not in subroutines_blocks:
@@ -638,9 +875,11 @@ def parse_teal(  # pylint: disable=too-many-locals
     if version >= 4:
         for subroutine_label in rets:
             label_ins = labels[subroutine_label]
-            if label_ins.bb is None:
-                # TODO: Move the `is None` check to `Instruction.bb` property.
-                continue
+            # if label_ins.bb is None:
+            # TODO: Move the `is None` check to `Instruction.bb` property.
+            # Above TODO is done and the following statement is not reachable.
+            # commented for mypy
+            # continue
             subroutine_entry_block = label_ins.bb
             # add tealer comment "Subroutine: {label}" to the subroutine entry block
             subroutine_entry_block.tealer_comments.append(f"Subroutine {subroutine_label}")
@@ -653,15 +892,32 @@ def parse_teal(  # pylint: disable=too-many-locals
     main_entry_point_blocks = _identify_subroutine_blocks(all_bbs[0])
     main_program_name = ""
     main_program = Subroutine(main_program_name, all_bbs[0], main_entry_point_blocks)
-    teal = Teal(instructions, all_bbs, version, mode, main_program, subroutines)
+
+    instructions_NEW, all_bbs_NEW, main_NEW, subroutines_NEW = parse_teal_NEW(
+        source_code, contract_name
+    )
+    teal = Teal(
+        instructions,
+        all_bbs,
+        version,
+        mode,
+        main_program,
+        subroutines,
+        instructions_NEW,
+        all_bbs_NEW,
+        main_NEW,
+        subroutines_NEW,
+    )
 
     # set teal instance to it's basic blocks
-    for bb in teal.bbs:
+    for bb in teal.bbs + all_bbs_NEW:
         bb.teal = teal
         # Add tealer comment of cost and id
         bb.tealer_comments.insert(0, f"block_id = {bb.idx}; cost = {bb.cost}")
 
-    for subroutine in [main_program] + teal.subroutines_list:
+    for subroutine in (
+        [main_program] + teal.subroutines_list + [main_NEW] + list(subroutines_NEW.values())
+    ):
         subroutine.contract = teal
 
     teal.contract_name = contract_name
@@ -669,3 +925,72 @@ def parse_teal(  # pylint: disable=too-many-locals
     _apply_transaction_context_analysis(teal)
 
     return teal
+
+
+def parse_teal_NEW(  # pylint: disable=too-many-locals
+    source_code: str, _contract_name: str = ""
+) -> Tuple[List[Instruction], List[BasicBlock], Subroutine, Dict[str, Subroutine]]:
+    """Parse algorand smart contracts written in teal.
+
+    Parsing teal cotracts consists of four passes:
+
+    #. Parses instructions and adds default edges between instructions.
+    #. Adds jump edges between links.
+    #. Constructs basic blocks and adds default edges between basic block.
+    #. Adds jump edges between basic blocks.
+
+    Args:
+        source_code: TEAL source code of the contract.
+
+    Returns:
+        Teal representing the given contract.
+    """
+
+    instructions: List[Instruction] = []  # Parsed instructions list
+    labels: Dict[str, Label] = {}  # Global map of label names to label instructions
+    # Map from subroutine name to callsub instructions calling it
+    subroutine_callsubs: Dict[str, List[Callsub]] = defaultdict(list)
+
+    lines = source_code.splitlines()
+
+    _, _ = _first_pass_NEW(lines, labels, subroutine_callsubs, instructions)
+    logger_parsing.debug(f"subroutine_callsubs = {subroutine_callsubs}")
+    _second_pass_NEW(instructions, labels)
+    logger_parsing.debug("instruction and nexts")
+    for ins in instructions:
+        logger_parsing.debug(f"     {ins}, next: {ins.next}")
+
+    # Third pass over the instructions list: Construct the basic blocks and sequential links
+    all_bbs: List[BasicBlock] = []
+    create_bb_NEW(instructions, all_bbs)
+
+    _fourth_pass_NEW(all_bbs)
+
+    all_bbs = _add_basic_blocks_idx(all_bbs)
+
+    subroutines: Dict[str, "Subroutine"] = {}
+    for subroutine_name in subroutine_callsubs:
+        label_ins = labels[subroutine_name]
+        subroutine_entry_block = label_ins.bb
+        # add tealer comment "Subroutine: {label}" to the subroutine entry block
+        subroutine_entry_block.tealer_comments.append(f"Subroutine {subroutine_name}")
+        # list all blocks of the subroutine using DFS
+        subroutine_blocks = _identify_subroutine_blocks_NEW(subroutine_entry_block)
+        subroutine_obj = Subroutine(subroutine_name, subroutine_entry_block, subroutine_blocks)
+        # set callsub blocks calling the subroutine
+        callsub_blocks = [ins.bb for ins in subroutine_callsubs[subroutine_name]]
+        subroutine_obj.caller_blocks = callsub_blocks
+        # for each callsub instruction, set the called subroutine
+        for ins in subroutine_callsubs[subroutine_name]:
+            ins.called_subroutine = subroutine_obj
+
+        subroutines[subroutine_name] = subroutine_obj
+
+    main_entry_point_blocks = _identify_subroutine_blocks_NEW(all_bbs[0])
+    main_program_name = "__main__"
+    main_program = Subroutine(main_program_name, all_bbs[0], main_entry_point_blocks)
+
+    # TODO: Handle unreachable basic blocks.
+    # Note: PyTeal generated contracts have unreachable code.
+
+    return instructions, all_bbs, main_program, subroutines
