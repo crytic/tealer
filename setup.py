@@ -18,7 +18,7 @@ setup(
         "requests",
         "pyyaml",
     ],
-    extras_require={"dev": ["pylint==2.13.4", "black==22.3.0", "mypy==0.942"]},
+    extras_require={"dev": ["pylint==2.13.4", "black==22.3.0", "mypy==0.942", "pytest-cov"]},
     license="AGPL-3.0",
     long_description=long_description,
     entry_points={"console_scripts": ["tealer = tealer.__main__:main"]},

@@ -118,9 +118,13 @@ def test_parsing(target: str) -> None:
     with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     # print instruction to trigger __str__ on each ins
+    # print stack pop/push to trigger the function on each ins
     for i in teal.instructions:
         assert not isinstance(i, instructions.UnsupportedInstruction), f'ins "{i}" is not supported'
         print(i, i.cost)
+        print(i, i.stack_pop_size)
+        print(i, i.stack_push_size)
+
 
 
 # pylint: disable=too-many-locals
