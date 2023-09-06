@@ -126,7 +126,6 @@ def test_parsing(target: str) -> None:
         print(i, i.stack_push_size)
 
 
-
 # pylint: disable=too-many-locals
 @pytest.mark.parametrize("target", TARGETS)  # type: ignore
 def test_copy_main_cfg(target: str) -> None:
