@@ -474,7 +474,7 @@ def _fill_intc_bytec_info(
         teal.set_byte_constants(bytecblock_ins[0].constants)
 
 
-def parse_teal(  # pylint: disable=too-many-locals
+def parse_teal(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     source_code: str, contract_name: str = ""
 ) -> Teal:
     """Parse algorand smart contracts written in teal.
@@ -523,6 +523,18 @@ def parse_teal(  # pylint: disable=too-many-locals
 
     _verify_version(instructions, version)
 
+    all_reachable_blocks: List["BasicBlock"] = []
+    subroutines_and_blocks: Dict[str, List["BasicBlock"]] = {}
+    for subroutine_name in subroutine_callsubs:
+        subroutine_entry_block = labels[subroutine_name].bb
+        subroutine_blocks = identify_subroutine_blocks(subroutine_entry_block)
+        subroutines_and_blocks[subroutine_name] = subroutine_blocks
+        all_reachable_blocks += subroutine_blocks
+
+    contract_entry_block = all_bbs[0]
+    main_entry_point_blocks = identify_subroutine_blocks(contract_entry_block)
+    all_reachable_blocks += main_entry_point_blocks
+
     subroutines: Dict[str, "Subroutine"] = {}
     for subroutine_name in subroutine_callsubs:
         label_ins = labels[subroutine_name]
@@ -530,10 +542,11 @@ def parse_teal(  # pylint: disable=too-many-locals
         # add tealer comment "Subroutine: {label}" to the subroutine entry block
         subroutine_entry_block.tealer_comments.append(f"Subroutine {subroutine_name}")
         # list all blocks of the subroutine using DFS
-        subroutine_blocks = identify_subroutine_blocks(subroutine_entry_block)
+        subroutine_blocks = subroutines_and_blocks[subroutine_name]
         subroutine_obj = Subroutine(subroutine_name, subroutine_entry_block, subroutine_blocks)
         # set callsub blocks calling the subroutine
         callsub_blocks = [ins.bb for ins in subroutine_callsubs[subroutine_name]]
+        callsub_blocks = [bb for bb in callsub_blocks if bb in all_reachable_blocks]
         subroutine_obj.caller_blocks = callsub_blocks
         # for each callsub instruction, set the called subroutine
         for ins in subroutine_callsubs[subroutine_name]:
@@ -544,26 +557,29 @@ def parse_teal(  # pylint: disable=too-many-locals
             bi.subroutine = subroutine_obj
         subroutines[subroutine_name] = subroutine_obj
 
-    main_entry_point_blocks = identify_subroutine_blocks(all_bbs[0])
     main_program_name = "__main__"
-    main_program = Subroutine(main_program_name, all_bbs[0], main_entry_point_blocks)
+    main_program = Subroutine(main_program_name, contract_entry_block, main_entry_point_blocks)
     for bi in main_entry_point_blocks:
         bi.subroutine = main_program
 
     # TODO: Handle unreachable basic blocks.
     # Note: PyTeal generated contracts have unreachable code.
-    # unreachable blocks are not part of any subroutine and their subroutine field would not have been set.
-    # set main_program as the default subroutine for now.
     for bi in all_bbs:
-        # if bi not in main_entry_point_blocks:
-        #     # bi is unreachable
-        #     for bnext in bi.next:
-        #         bnext.prev.remove(bi)
-        #         bi.next.remove(bnext)
-        if bi._subroutine is None:  # pylint: disable=protected-access
-            bi.subroutine = main_program
+        if bi not in all_reachable_blocks:
+            # bi is unreachable
+            for bnext in bi.next:
+                bnext.prev.remove(bi)
+                bi.next.remove(bnext)
 
-    teal = Teal(version, mode, instructions, all_bbs, main_program, subroutines)
+            for ins_next in bi.exit_instr.next:
+                ins_next.prev.remove(bi.exit_instr)
+                bi.exit_instr.next.remove(ins_next)
+
+            for ins in bi.instructions:
+                instructions.remove(ins)
+
+    all_reachable_blocks = sorted(list(set(all_reachable_blocks)), key=lambda bi: bi.idx)
+    teal = Teal(version, mode, instructions, all_reachable_blocks, main_program, subroutines)
 
     # set teal instance for it's basic blocks
     for bb in teal.bbs:

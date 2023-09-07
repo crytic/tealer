@@ -118,18 +118,17 @@ def test_parsing(target: str) -> None:
     with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     # print instruction to trigger __str__ on each ins
+    # print stack pop/push to trigger the function on each ins
     for i in teal.instructions:
         assert not isinstance(i, instructions.UnsupportedInstruction), f'ins "{i}" is not supported'
         print(i, i.cost)
+        print(i, i.stack_pop_size)
+        print(i, i.stack_push_size)
 
 
 # pylint: disable=too-many-locals
 @pytest.mark.parametrize("target", TARGETS)  # type: ignore
 def test_copy_main_cfg(target: str) -> None:
-    if target == "tests/parsing/teal4-test3.teal":
-        # the contract has unreachable blocks. Unreachable are
-        # part of main.blocks but they are absent in copied_blocks.
-        return
     with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     copied_main = copy_main_cfg(teal)
