@@ -1,7 +1,7 @@
 from typing import List, Tuple
 import pytest
 
-from tealer.teal.parse_teal import parse_teal
+from tealer.utils.command_line.common import init_tealer_from_single_contract
 from tests.utils import order_basic_blocks
 
 
@@ -181,8 +181,9 @@ ALL_TESTS = [
 @pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
 def test_group_indices(test: Tuple[str, List[List[int]]]) -> None:
     code, group_indices = test
-    teal = parse_teal(code.strip())
+    tealer = init_tealer_from_single_contract(code.strip(), "test")
+    function = tealer.contracts["test"].functions["test"]
 
-    bbs = order_basic_blocks(teal.bbs)
+    bbs = order_basic_blocks(function.blocks)
     for b, indices in zip(bbs, group_indices):
-        assert b.transaction_context.group_indices == indices
+        assert function.transaction_context(b).group_indices == indices

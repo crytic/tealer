@@ -49,7 +49,7 @@ from typing import TYPE_CHECKING
 from tealer.utils.comparable_enum import ComparableEnum
 
 if TYPE_CHECKING:
-    from tealer.teal.teal import Teal
+    from tealer.tealer import Tealer
     from tealer.utils.output import SupportedOutput
 
 
@@ -158,8 +158,8 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
     WIKI_EXPLOIT_SCENARIO = ""
     WIKI_RECOMMENDATION = ""
 
-    def __init__(self, teal: "Teal"):
-        self.teal = teal
+    def __init__(self, tealer: "Tealer"):
+        self.tealer = tealer
 
         if not self.NAME:
             raise IncorrectDetectorInitialization(

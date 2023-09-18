@@ -5,7 +5,8 @@ from typing import Tuple, List, Type
 import pytest
 
 from tealer.detectors.abstract_detector import AbstractDetector
-from tealer.teal.parse_teal import parse_teal
+from tealer.utils.command_line.common import init_tealer_from_single_contract
+from tealer.utils.output import ExecutionPaths
 
 if not sys.version_info >= (3, 10):
     pytest.skip(reason="PyTeal based tests require python >= 3.10", allow_module_level=True)
@@ -41,9 +42,12 @@ TESTS: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
 @pytest.mark.parametrize("test", TESTS)  # type: ignore
 def test_detectors_using_pyteal(test: Tuple[str, Type[AbstractDetector], List[List[int]]]) -> None:
     code, detector, expected_paths = test
-    teal = parse_teal(code.strip())
-    teal.register_detector(detector)
-    result = teal.run_detectors()[0]
+    tealer = init_tealer_from_single_contract(code.strip(), "test")
+    tealer.register_detector(detector)
+    result = tealer.run_detectors()[0]
+    if not isinstance(result, ExecutionPaths):
+        result = result[0]
+
     # for bi in teal.bbs:
     #     print(
     #         bi,

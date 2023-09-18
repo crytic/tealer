@@ -26,7 +26,6 @@ contract represented by sequence of the basic blocks.
 """
 # pylint: disable=too-many-lines
 
-import inspect
 import sys
 import logging
 from typing import Optional, Dict, List, Tuple
@@ -60,9 +59,6 @@ from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
 from tealer.teal.instructions.acct_params_field import AcctParamsField
 from tealer.teal.teal import Teal
-from tealer.analyses.dataflow.transaction_context import all_constraints
-from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
-from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, compute_equations
 from tealer.utils.arc4_abi import get_method_selector
 from tealer.utils.teal_enums import ExecutionMode
 
@@ -424,29 +420,6 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
     return error
 
 
-def _apply_transaction_context_analysis(teal: "Teal") -> None:
-    logger = logging.getLogger("Tealer")
-    logger.debug("[+] Running Transaction context analysis")
-    group_indices_cls = all_constraints.GroupIndices
-    analyses_classes = [getattr(all_constraints, name) for name in dir(all_constraints)]
-    analyses_classes = [
-        c
-        for c in analyses_classes
-        if inspect.isclass(c)
-        and issubclass(c, DataflowTransactionContext)
-        and c != group_indices_cls
-    ]
-    # Run group indices analysis first as other analysis use them.
-    logger.debug(f'[+] Running txn field analysis "{group_indices_cls.__name__}"')
-    group_indices_cls(teal).run_analysis()
-    for cl in analyses_classes:
-        logger.debug(f'[+] Running txn field analysis: "{cl.__name__}"')
-        cl(teal).run_analysis()
-    # clear cache
-    construct_stack_ast.cache_clear()  # construct stack ast is not used after transaction_context_analysis.
-    compute_equations.cache_clear()  # compute_equations is not used after transaction_context_analysis.
-
-
 def _fill_intc_bytec_info(
     intcblock_ins: List[Intcblock],
     bytecblock_ins: List[Bytecblock],
@@ -591,6 +564,5 @@ def parse_teal(  # pylint: disable=too-many-locals,too-many-branches,too-many-st
 
     teal.contract_name = contract_name
     _fill_intc_bytec_info(intcblock_ins, bytecblock_ins, teal.main.entry, teal)
-    _apply_transaction_context_analysis(teal)
 
     return teal

@@ -16,7 +16,6 @@ Classes:
 from typing import List, Optional, TYPE_CHECKING
 
 from tealer.teal.instructions.instructions import Instruction, Callsub, Retsub
-from tealer.teal.context.block_transaction_context import BlockTransactionContext
 from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
@@ -40,7 +39,6 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
         self._next: List[BasicBlock] = []
         self._idx: int = 0
         self._teal: Optional["Teal"] = None
-        self._transaction_context = BlockTransactionContext()
         self._tealer_comments: List[str] = []
         self._subroutine: Optional["Subroutine"] = None
 
@@ -255,10 +253,6 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-publi
     @property
     def is_retsub_block(self) -> bool:
         return isinstance(self.exit_instr, Retsub)
-
-    @property
-    def transaction_context(self) -> "BlockTransactionContext":
-        return self._transaction_context
 
     @property
     def tealer_comments(self) -> List[str]:

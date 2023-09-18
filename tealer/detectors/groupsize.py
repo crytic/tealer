@@ -1,6 +1,6 @@
 """Detector for finding execution paths missing GroupSize check."""
 
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Tuple
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
@@ -16,16 +16,16 @@ from tealer.teal.instructions.instructions import (
     Gtxnsa,
     Gtxnsas,
 )
-from tealer.teal.teal import Teal
 
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 from tealer.utils.analyses import is_int_push_ins
 from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, UnknownStackValue
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import detect_missing_tx_field_validations_group
 from tealer.utils.output import ExecutionPaths
 
 
 if TYPE_CHECKING:
+    from tealer.teal.teal import Teal
     from tealer.utils.output import SupportedOutput
     from tealer.teal.instructions.instructions import Instruction
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
@@ -81,10 +81,6 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
 - Avoid using absolute indexes. Validate GroupSize if used.
 - Favor using ARC-4 ABI and relative indexes for group transactions.
 """
-
-    def __init__(self, teal: Teal):
-        super().__init__(teal)
-        self.results_number = 0
 
     @staticmethod
     def _accessed_using_absolute_index(bb: BasicBlock) -> bool:
@@ -150,9 +146,15 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
                     return True
             return False
 
-        paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
-            self.teal, checks_group_size, satisfies_report_condition
+        output: List[
+            Tuple["Teal", List[List["BasicBlock"]]]
+        ] = detect_missing_tx_field_validations_group(
+            self.tealer, checks_group_size, satisfies_report_condition
         )
         construct_stack_ast.cache_clear()
 
-        return ExecutionPaths(self.teal, self, paths_without_check)
+        detector_output: List[ExecutionPaths] = []
+        for contract, vulnerable_paths in output:
+            detector_output.append(ExecutionPaths(contract, self, vulnerable_paths))
+
+        return detector_output

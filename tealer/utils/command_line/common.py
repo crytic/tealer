@@ -1,3 +1,53 @@
+"""
+NOTE: Incorrect or Inaccurate documentation. ignore for now.
+
+tealer init
+
+positional_arguments: (+), list of filesystem paths
+
+optional_argument: --group-config yaml file
+
+tealer detect
+
+
+
+subcommands
+
+- `init`
+- `detect`
+- `print`
+
+#### init
+
+positional arguments:
+    programs        list of space-separated directories/files.
+
+optional argument:
+    --group-config  yaml configuration file.
+
+Purpose:
+
+program_files = []
+for program in programs:
+    if program is directory:
+        list all files with .teal extension and add them to program_files.
+    if program is file:
+        add it to program_files
+
+if group_config is not null:
+    read the config
+else:
+    create a empty config
+
+if a program file is already in group_config:
+    remove it from program_files
+
+For each program in program_files:
+    analyze the program and append its information to the group_config.
+
+Output updated group-config file
+"""
+
 import sys
 from pathlib import Path
 import inspect
@@ -266,5 +316,27 @@ def init_tealer_from_config(config: "GroupConfig") -> "Tealer":
                 group_obj.absolute_indexes[txn_obj.absoulte_index] = txn_obj
 
         group_objs_list.append(group_obj)
+
+    return Tealer(contracts, group_objs_list)
+
+
+def init_tealer_from_single_contract(contract_src: str, contract_name: str) -> "Tealer":
+    teal = parse_teal(contract_src, contract_name)
+    contracts: Dict[str, "Teal"] = {contract_name: teal}
+    contract_functions: Dict[str, "Function"] = {}
+    contract_functions[contract_name] = construct_function(teal, ["B0"], contract_name)
+    teal.functions = contract_functions
+
+    txn_obj = Transaction()
+    if teal.contract_type == ContractType.LogicSig:
+        txn_obj.has_logic_sig = True
+        txn_obj.logic_sig = contract_functions[contract_name]
+    else:
+        # contract is either Approval or ClearState
+        txn_obj.application = contract_functions[contract_name]
+
+    group_obj = GroupTransaction()
+    group_obj.transactions = [txn_obj]
+    group_objs_list = [group_obj]
 
     return Tealer(contracts, group_objs_list)

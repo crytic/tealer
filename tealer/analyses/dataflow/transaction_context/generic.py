@@ -258,6 +258,7 @@ from tealer.analyses.utils.stack_ast_builder import (
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
+    from tealer.teal.functions import Function
     from tealer.teal.basic_blocks import BasicBlock
     from tealer.teal.instructions.instructions import Instruction
 
@@ -280,10 +281,11 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
     # BASE_KEYS for which transaction context information from `gtxn {i} {field}` is also stored.
     KEYS_WITH_GTXN: List[str] = []  # every key in this list should also present in BASE_KEYS.
 
-    def __init__(self, teal: "Teal"):
-        self._teal: "Teal" = teal
+    def __init__(self, function: "Function"):
+        # self._teal: "Teal" = teal
+        self._function: "Function" = function
         # entry block of CFG
-        self._entry_block: "BasicBlock" = teal.main.entry
+        self._entry_block: "BasicBlock" = function.entry
         # self._block_contexts[KEY][B] -> block_context of KEY for block B
         self._block_contexts: Dict[str, Dict["BasicBlock", Any]] = defaultdict(dict)
         # self._path_contexts[KEY][Bi][Bj] -> path_context of KEY for path Bj -> Bi
@@ -516,10 +518,15 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
         for key in analysis_keys:
             path_context = self._path_contexts[key]
-            for b in next_blocks_global(block):
+            for b in next_blocks_global(self._function, block):
+                # print(
+                #     f"block: {repr(block)}, b: {repr(b)}, {key:}, block: {block.__hash__()}, b: {b.__hash__()}, block sub: {block.subroutine.name}, b sub: {b.subroutine.name}"
+                # )
                 # path_context[bi][bj]: path context of path bj -> bi, bi is the successor
                 if b not in path_context:
                     path_context[b] = {}
+                    # print(f"block: {repr(block)}, b: {repr(b)}, {key:}, ddd")
+
                 # if there are no constraints, set the possible values to universal set
                 path_context[b][block] = self._universal_set(key)
 
@@ -587,7 +594,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         for key in keys_with_gtxn:
             for ind in range(MAX_GROUP_SIZE):
                 gtx_key = get_gtxn_at_index_key(ind, key)
-                if ind in block.transaction_context.group_indices:
+                if ind in self._function.transaction_context(block).group_indices:
                     # txn can have index {ind}
                     # gtxn {ind} {field} can have a value if and only if {txn} {field} can also have that value
                     self._block_contexts[gtx_key][block] = self._intersection(
@@ -609,7 +616,10 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
             reachin_information = self._null_set(key)
 
         path_context = self._path_contexts[key]
-        for prev_b in prev_blocks_global(block):
+        for prev_b in prev_blocks_global(self._function, block):
+            # print(f"block:", repr(block),"prev_b ", repr(prev_b), f"block: {block.__hash__()}, prev_b: {prev_b.__hash__()}")
+            # print(path_context)
+            # print(path_context[block])
             reachin_information = self._union(
                 key,
                 reachin_information,
@@ -656,7 +666,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         global_reachout: Dict[str, Dict["BasicBlock", Any]] = {}
         for key in analysis_keys:
             global_reachout[key] = {}
-            for b in self._teal.bbs:
+            for b in self._function.blocks:
                 global_reachout[key][b] = self._null_set(key)
 
         while worklist:
@@ -673,7 +683,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                     else []
                 )
 
-                for bi in next_blocks_global(b) + return_point_block:
+                for bi in next_blocks_global(self._function, b) + return_point_block:
                     if bi not in worklist:
                         worklist.append(bi)
 
@@ -685,7 +695,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
     ) -> Any:
         livein_information = self._null_set(key)
 
-        for next_b in next_blocks_global(block):
+        for next_b in next_blocks_global(self._function, block):
             livein_information = self._union(key, livein_information, liveout[next_b])
 
         if (
@@ -730,7 +740,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         global_liveout: Dict[str, Dict["BasicBlock", Any]] = {}
         for key in analysis_keys:
             global_liveout[key] = {}
-            for b in self._teal.bbs:
+            for b in self._function.blocks:
                 if leaf_block_global(b):  # leaf block
                     global_liveout[key][b] = self._block_contexts[key][b]
                 else:
@@ -743,7 +753,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
             if updated:
                 callsub_block = [b.callsub_block] if b.is_sub_return_point else []
-                for bi in prev_blocks_global(b) + callsub_block:
+                for bi in prev_blocks_global(self._function, b) + callsub_block:
                     if bi not in worklist:
                         worklist.append(bi)
 
@@ -776,7 +786,8 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         all_keys = self.BASE_KEYS + gtx_keys
 
         # step 1: initialise information
-        for block in self._teal.bbs:
+        # print(self._function.blocks)
+        for block in self._function.blocks:
             self._block_level_constraints(all_keys, block)  # initialise information for all keys
             self._path_level_constraints(all_keys, block)
             for debug_key in debug_keys:
@@ -786,11 +797,11 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                     logger_txn_ctx.debug(f"block_ctx: {self._block_contexts[debug_key][block]}")
                     logger_txn_ctx.debug("\n\n")
                     logger_txn_ctx.debug(f"path_context: {self._path_contexts[debug_key]}")
-
+        # print(self._block_contexts)
         # The contract is represented using multiple CFG, one for each subroutine.
         # Calculate postorder for each CFG and concatenate the lists for now.
         postorder = [self._postorder(self._entry_block)]
-        for subroutine in self._teal.subroutines.values():
+        for subroutine in self._function.subroutines.values():
             postorder.append(self._postorder(subroutine.entry))
 
         # perform analysis of base keys first. Information of these base keys will be used for
@@ -805,7 +816,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
         logger_txn_ctx.debug("After Forward:")
         for debug_key in debug_keys:
-            for block in self._teal.bbs:
+            for block in self._function.blocks:
                 if debug_key in self.BASE_KEYS:
                     logger_txn_ctx.debug(f"block_id: B{block.idx}")
                     logger_txn_ctx.debug(f"block_ctx: {self._block_contexts[debug_key][block]}")
@@ -818,13 +829,13 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
 
         logger_txn_ctx.debug("After Backward:")
         for debug_key in debug_keys:
-            for block in self._teal.bbs:
+            for block in self._function.blocks:
                 if debug_key in self.BASE_KEYS:
                     logger_txn_ctx.debug(f"block_id: B{block.idx}")
                     logger_txn_ctx.debug(f"block_ctx: {self._block_contexts[debug_key][block]}")
 
         # update gtxn constraints using possible group indices and txn constraints.
-        for block in self._teal.bbs:
+        for block in self._function.blocks:
             self._update_gtxn_constraints(self.KEYS_WITH_GTXN, block)
 
         # Now perform analysis for gtx_keys

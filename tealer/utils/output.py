@@ -23,7 +23,7 @@ import html
 import re
 import os
 from pathlib import Path
-from typing import List, TYPE_CHECKING, Dict, Callable, Optional
+from typing import List, TYPE_CHECKING, Dict, Callable, Optional, Union
 from dataclasses import dataclass
 
 from tealer.teal.instructions.instructions import BZ, BNZ, Callsub, Retsub
@@ -578,4 +578,4 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         return result
 
 
-SupportedOutput = ExecutionPaths
+SupportedOutput = Union[ExecutionPaths, List[ExecutionPaths]]

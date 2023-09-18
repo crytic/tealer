@@ -3,7 +3,8 @@ import pytest
 
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.detectors.abstract_detector import AbstractDetector
-from tealer.teal.parse_teal import parse_teal
+from tealer.utils.command_line.common import init_tealer_from_single_contract
+from tealer.utils.output import ExecutionPaths
 
 from tests.detectors.groupsize import missing_group_size_tests
 from tests.detectors.fee_check import missing_fee_check_tests, new_missing_fee_tests
@@ -31,9 +32,11 @@ ALL_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[BasicBlock]]]] = [
 @pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
 def test_detectors(test: Tuple[str, Type[AbstractDetector], List[List[BasicBlock]]]) -> None:
     code, detector, expected_paths = test
-    teal = parse_teal(code.strip())
-    teal.register_detector(detector)
-    result = teal.run_detectors()[0]
+    tealer = init_tealer_from_single_contract(code.strip(), "test")
+    tealer.register_detector(detector)
+    result = tealer.run_detectors()[0]
+    if not isinstance(result, ExecutionPaths):
+        result = result[0]
     assert len(result.paths) == len(expected_paths)
     for path, ex_path in zip(result.paths, expected_paths):
         assert cmp_cfg(path, ex_path)
@@ -53,24 +56,12 @@ ALL_NEW_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
 @pytest.mark.parametrize("test", ALL_NEW_TESTS)  # type: ignore
 def test_just_detectors(test: Tuple[str, Type[AbstractDetector], List[List[int]]]) -> None:
     code, detector, expected_paths = test
-    teal = parse_teal(code.strip())
-    teal.register_detector(detector)
-    result = teal.run_detectors()[0]
-    for bi in teal.bbs:
-        print(
-            bi,
-            bi.idx,
-            bi.transaction_context.transaction_types,
-            bi.transaction_context.group_indices,
-        )
-        print(
-            bi.transaction_context.gtxn_context(0).transaction_types,
-            bi.transaction_context.group_indices,
-        )
-        print(
-            bi.transaction_context.gtxn_context(1).transaction_types,
-            bi.transaction_context.group_indices,
-        )
+    tealer = init_tealer_from_single_contract(code.strip(), "test")
+    tealer.register_detector(detector)
+    result = tealer.run_detectors()[0]
+    if not isinstance(result, ExecutionPaths):
+        result = result[0]
+
     print(f"count: result = {len(result.paths)}, expected = {len(expected_paths)}")
     assert len(result.paths) == len(expected_paths)
     for path, expected_path in zip(result.paths, expected_paths):

@@ -79,6 +79,8 @@ Assumptions:
         * Construct a copy of __main__ CFG without the dispatcher blocks.
 """
 
+import inspect
+import logging
 from typing import TYPE_CHECKING, List, Dict, Optional
 from collections import defaultdict
 
@@ -92,6 +94,9 @@ from tealer.teal.parse_teal import (
     identify_subroutine_blocks,
 )
 from tealer.teal.instructions.instructions import Callsub, TealerCustomErrInstruction
+from tealer.analyses.dataflow.transaction_context import all_constraints
+from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
+from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, compute_equations
 from tealer.exceptions import TealerException
 from tealer.teal.subroutine import Subroutine
 from tealer.teal.basic_blocks import BasicBlock
@@ -145,6 +150,29 @@ def copy_main_cfg(teal: "Teal") -> List["BasicBlock"]:  # pylint: disable=too-ma
         bb.tealer_comments.insert(0, f"block_id = {bb.idx}; cost = {bb.cost}")
 
     return all_bbs
+
+
+def _apply_transaction_context_analysis(function: "Function") -> None:
+    logger = logging.getLogger("Tealer")
+    logger.debug("[+] Running Transaction context analysis")
+    group_indices_cls = all_constraints.GroupIndices
+    analyses_classes = [getattr(all_constraints, name) for name in dir(all_constraints)]
+    analyses_classes = [
+        c
+        for c in analyses_classes
+        if inspect.isclass(c)
+        and issubclass(c, DataflowTransactionContext)
+        and c != group_indices_cls
+    ]
+    # Run group indices analysis first as other analysis use them.
+    logger.debug(f'[+] Running txn field analysis "{group_indices_cls.__name__}"')
+    group_indices_cls(function).run_analysis()
+    for cl in analyses_classes:
+        logger.debug(f'[+] Running txn field analysis: "{cl.__name__}"')
+        cl(function).run_analysis()
+    # clear cache
+    construct_stack_ast.cache_clear()  # construct stack ast is not used after transaction_context_analysis.
+    compute_equations.cache_clear()  # compute_equations is not used after transaction_context_analysis.
 
 
 # pylint: disable=too-many-locals, too-many-branches
@@ -217,7 +245,7 @@ def construct_function(
     all_function_blocks: List[BasicBlock] = []
     for sub in [function_main] + used_subroutines:
         all_function_blocks += sub.blocks
-
+    # print("func_blocks =", all_function_blocks)
     function_obj = Function(
         function_name,
         entry,
@@ -226,4 +254,19 @@ def construct_function(
         function_main,
         function_subroutines,
     )
+
+    # for block in all_function_blocks:
+    #     print("block:", repr(block),  block.__hash__())
+    #     for prev_b in prev_blocks_global(block):
+    #         print("prev_b:", repr(prev_b), prev_b.__hash__())
+    #     for next_b in next_blocks_global(block):
+    #         print("next_b:", repr(next_b), next_b.__hash__())
+
+    # for block in sorted(all_function_blocks, key=lambda b: b.idx):
+    #     print(repr(block))
+    #     print(block)
+    # exit(1)
+
+    # TODO: Analysis fails with KeyError when one of the basic blocks is part of __main__ and a subroutine CFG. Handle this case.
+    _apply_transaction_context_analysis(function_obj)
     return function_obj
