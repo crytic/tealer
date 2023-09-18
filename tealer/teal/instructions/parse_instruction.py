@@ -236,7 +236,7 @@ def _parse_byte_arguments(fields: List[str]) -> List[str]:
 
     Raises:
         ParseError: raises ParseError if the byte arguments are not correctly
-        encoded.
+            encoded.
     """
 
     arguments: List[str] = []
@@ -402,7 +402,7 @@ parser_rules: List[Tuple[str, Callable[[str], Instruction]]] = [
     ("log", lambda _x: instructions.Log()),
     ("itxn_begin", lambda _x: instructions.Itxn_begin()),
     ("itxn_next", lambda _x: instructions.Itxn_next()),
-    ("itxn_field ", lambda x: instructions.Itxn_field(parse_transaction_field(x, False))),
+    ("itxn_field ", lambda x: instructions.Itxn_field(parse_transaction_field(x, True))),
     ("itxn_submit", lambda _x: instructions.Itxn_submit()),
     ("itxn ", lambda x: instructions.Itxn(parse_transaction_field(x, False))),
     ("itxna ", lambda x: instructions.Itxna(parse_transaction_field(x, False))),
@@ -498,6 +498,7 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
     if not line.strip():
         return None
 
+    source_code_line = line
     fields = _split_instruction_into_tokens(line)
     comment = ""
     if fields[-1].startswith("//"):
@@ -513,13 +514,15 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
             raise ParseError(f"incorrect format of label: {line}")
         ins = instructions.Label(fields[0][:-1])
 
-    if fields[0] == "byte" or fields[0] == "pushbytes":
+    if fields[0] == "byte" or fields[0] == "pushbytes" or fields[0] == "method":
         imm: List[str] = _parse_byte_arguments(fields[1:])
         if len(imm) != 1:
             raise ParseError(f"{fields[0]} expects exactly one argument: {line}")
-        ins = {"byte": instructions.Byte, "pushbytes": instructions.PushBytes,}[
-            fields[0]
-        ](imm[0])
+        ins = {
+            "byte": instructions.Byte,
+            "pushbytes": instructions.PushBytes,
+            "method": instructions.Method,
+        }[fields[0]](imm[0])
 
     if fields[0] == "bytecblock":
         imm = _parse_byte_arguments(fields[1:])
@@ -531,6 +534,7 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
 
     if ins is not None:
         ins.comment = comment
+        ins.source_code = source_code_line
         return ins
 
     line = " ".join(fields)
@@ -540,8 +544,12 @@ def parse_line(line: str) -> Optional[instructions.Instruction]:
         if line.startswith(key):
             ins = f(line[len(key) :].strip())
             ins.comment = comment
+            ins.source_code = source_code_line
             return ins
 
     # line is checked to not empty at the start of the function.
-    print(f"Not found {line}")
-    return instructions.UnsupportedInstruction(line)
+    print(f'Not found instruction: "{line}"')
+    ins = instructions.UnsupportedInstruction(line)
+    ins.source_code = source_code_line
+    ins.comment = ins.comment
+    return ins

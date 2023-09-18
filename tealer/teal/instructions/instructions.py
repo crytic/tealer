@@ -6,20 +6,6 @@ class which defines common methods and properties of teal instructions.
 
 Few teal instructions have immediate values which are defined and stored
 as appropriate properties in the class representing that instruction.
-
-Attributes:
-    ContractType: ContractType is a comparable enumerator. it defines
-        three symbols ``STATELESS``, ``STATEFULL``, ``ANY``.
-        ``STATELESS`` represents stateless(signature) contracts,
-        ``STATEFULL`` represents stateful(Application) contracts and
-        ``ANY`` represents that contract is either ``STATELESS`` Or
-        ``STATEFULL``. Exact meaning of the symbols depend on the place
-        of usage.
-
-    contract_type_to_txt: This is a mapping from ContractType symbol to
-        their corresponding string representation. Useful while printing
-        or outputting ContractType variable.
-
 """
 
 # pylint: disable=too-many-lines
@@ -31,24 +17,12 @@ from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
 from tealer.teal.instructions.acct_params_field import AcctParamsField
-from tealer.utils.comparable_enum import ComparableEnum
+from tealer.utils.teal_enums import ExecutionMode
 from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
-
-
-class ContractType(ComparableEnum):
-    STATELESS = 0
-    STATEFULL = 1
-    ANY = 2
-
-
-contract_type_to_txt = {
-    ContractType.STATEFULL: "stateful",
-    ContractType.STATELESS: "stateless",
-    ContractType.ANY: "any",
-}
+    from tealer.teal.subroutine import Subroutine
 
 
 class Instruction:  # pylint: disable=too-many-instance-attributes
@@ -63,12 +37,14 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
     def __init__(self) -> None:
         self._prev: List[Instruction] = []
         self._next: List[Instruction] = []
-        self._line = 0
+        self._line_num = 0
+        self._source_code_line: str = ""
         self._comment = ""
+        self._comments_before_ins: List[str] = []
+        self._tealer_comments: List[str] = []
         self._bb: Optional["BasicBlock"] = None
         self._version: int = 1
-        self._mode: ContractType = ContractType.ANY
-        self._callsub_ins: Optional["Instruction"] = None
+        self._mode: ExecutionMode = ExecutionMode.ANY
 
     def add_prev(self, prev_ins: "Instruction") -> None:
         """Add instruction that may execute just before this instruction.
@@ -105,26 +81,64 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
 
     @property
     def prev(self) -> List["Instruction"]:
-        """List of previous instructions to this instruction."""
+        """List of previous instructions to this instruction.
+
+        Returns:
+            list of previous instructions that might have been executed before this instruction.
+        """
         return self._prev
 
     @property
     def next(self) -> List["Instruction"]:
-        """List of next instructions to this instruction."""
+        """List of next instructions to this instruction.
+
+        Returns:
+            list of next instructions that might be executed after this instruction.
+        """
         return self._next
 
     @property
     def line(self) -> int:
-        """Source code line number of this instruction."""
-        return self._line
+        """Source code line number of this instruction.
+
+        Returns:
+            Returns the line number of this instruction in the contract source file.
+        """
+        return self._line_num
 
     @line.setter
     def line(self, l: int) -> None:
-        self._line = l
+        self._line_num = l
+
+    @property
+    def source_code(self) -> str:
+        """source code line corresponding to this instruction.
+
+        source code line includes the comment, indentation.
+        ```
+        label:
+            int      4   // Number 4
+        ```
+        Int(4).source_line == "    int      4   // Number 4"
+
+        Returns:
+            Returns the source line of this instruction along with the indentation
+            and the comments.
+        """
+        return self._source_code_line
+
+    @source_code.setter
+    def source_code(self, line: str) -> None:
+        self._source_code_line = line
 
     @property
     def comment(self) -> str:
-        """Teal comment present in the instruction line."""
+        """Teal comment present in the instruction line.
+
+        Returns:
+            Returns the user comment present on the same line (at the end) as this
+            instruction.
+        """
         return self._comment
 
     @comment.setter
@@ -132,8 +146,59 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         self._comment = c
 
     @property
-    def bb(self) -> Optional["BasicBlock"]:
-        """Instance of BasicBlock this instruction is part of."""
+    def comments_before_ins(self) -> List[str]:
+        """Represents comments directly above the instruction.
+
+        E.g
+            ```
+            // Check if is UpdateApplication
+            // Txn.oncompletion == int UpdateApplication
+            txn OnCompletion        // OnCompletion
+            int UpdateApplication
+            ==
+            ```
+
+            Txn(..).comments_before_ins == [
+                "// Check if is UpdateApplication",
+                "// Txn.oncompletion == int UpdateApplication",
+            ]
+
+            Txn(..).comment == "// OnCompletion"
+
+        Returns:
+            Returns the user comments that are above this instruction in the source code.
+        """
+        return self._comments_before_ins
+
+    @comments_before_ins.setter
+    def comments_before_ins(self, comments: List[str]) -> None:
+        self._comments_before_ins = comments
+
+    @property
+    def tealer_comments(self) -> List[str]:
+        """Additional comments added by tealer for the instruction in the output CFG.
+
+        Returns:
+            Returns comments added by tealer for the instruction.
+        """
+        return self._tealer_comments
+
+    @tealer_comments.setter
+    def tealer_comments(self, comments: List[str]) -> None:
+        self._tealer_comments = comments
+
+    @property
+    def bb(self) -> "BasicBlock":
+        """Instance of BasicBlock this instruction is part of.
+
+        Returns:
+            The basic block of this instruction
+
+        Raises:
+            TealerException: Raises error if instruction.bb is not initialized during parsing.
+        """
+        if self._bb is None:
+            raise TealerException(f"Instruction.bb is not initialized: {str(self)}")
         return self._bb
 
     @bb.setter
@@ -141,27 +206,12 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         self._bb = b
 
     @property
-    def callsub_ins(self) -> Optional["Instruction"]:
-        """if this instruction is a return point to a callsub instruction i.e callsub instruction is
-        present right before this instruction, then callsub_ins returns a reference to that callsub
-        instruction object.
-
-        e.g
-        callsub main
-        int 1
-        return
-
-        callsub_ins of `int 1` will be instruction obj of `callsub main`.
-        """
-        return self._callsub_ins
-
-    @callsub_ins.setter
-    def callsub_ins(self, ins: "Instruction") -> None:
-        self._callsub_ins = ins
-
-    @property
     def version(self) -> int:
-        """Teal version this instruction is introduced in and supported from."""
+        """Teal version this instruction is introduced in and supported from.
+
+        Returns:
+            Returns the Teal version the instruction is supporte from.
+        """
         return self._version
 
     @property
@@ -173,7 +223,7 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         return 0
 
     @property
-    def mode(self) -> ContractType:
+    def mode(self) -> ExecutionMode:
         """Type of smart contract this instruction execution is supported in.
 
         Execution of every teal instruction is not supported in all types
@@ -188,6 +238,9 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         in stateless(signature) contracts, ``STATEFULL`` implies that the instructions
         only work in application contracts and ``ANY`` represents that this instruction
         is supported in both kind of contracts.
+
+        Returns:
+            Returns the execution mode the instruction is supported in.
         """
 
         return self._mode
@@ -200,12 +253,31 @@ class Instruction:  # pylint: disable=too-many-instance-attributes
         will return 1 independent of contract version. Instructions whose cost
         is not 1 or depends on contract version must override the cost property
         and return the correct cost.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
         """
 
         return 1
 
     def __str__(self) -> str:
         return self.__class__.__qualname__.lower()
+
+    def __repr__(self) -> str:
+        return f"<Instruction({self.line}, '{str(self)}')>"
+
+
+class TealerCustomErrInstruction(Instruction):
+    """Instruction used to replace basic blocks that are not part of function.
+
+    The semantics of the instruction are equal to Err instruction.
+    """
+
+    # TODO: Add custom values for line num, source_code, tealer_comments.
+
+    def __str__(self) -> str:
+        return "TealerCustomErrInstruction"
 
 
 class UnsupportedInstruction(Instruction):
@@ -225,7 +297,11 @@ class UnsupportedInstruction(Instruction):
 
     @property
     def verbatim_line(self) -> str:
-        """unsupported instruction as read from input"""
+        """unsupported instruction as read from input
+
+        Returns:
+            Returns the source line for this instruction as it is.
+        """
         return self._verbatim_line
 
 
@@ -250,7 +326,11 @@ class Pragma(Instruction):
 
     @property
     def program_version(self) -> int:
-        """version number of teal program"""
+        """version number of teal program
+
+        Returns:
+            version argument of the instruction. Specifies the contract version.
+        """
         return self._program_version
 
 
@@ -270,7 +350,6 @@ class Assert(Instruction):
 
     Errors:
         creates error and fails immediately if X is not a non-zero number.
-
     """
 
     def __init__(self) -> None:
@@ -295,7 +374,6 @@ class Int(Instruction):
 
     Pushes:
         (uint64): x if x is uint64 else value corresponding to the given named constant
-
     """
 
     def __init__(self, value: Union[str, int]):
@@ -304,7 +382,11 @@ class Int(Instruction):
 
     @property
     def value(self) -> Union[str, int]:
-        """Immediate value of int instruction."""
+        """Immediate value of int instruction.
+
+        Returns:
+            immediate argument of the instruction.
+        """
         return self._value
 
     def __str__(self) -> str:
@@ -343,7 +425,11 @@ class PushInt(Instruction):
 
     @property
     def value(self) -> Union[str, int]:
-        """Immediate value of pushint instruction."""
+        """Immediate value of pushint instruction.
+
+        Returns:
+            immediate argument of the instruction.
+        """
         return self._value
 
     def __str__(self) -> str:
@@ -372,7 +458,11 @@ class Txn(Instruction):
 
     @property
     def field(self) -> TransactionField:
-        """Transaction field being accessed using the txn instruction."""
+        """Transaction field being accessed using the txn instruction.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     @property
@@ -406,7 +496,11 @@ class Txna(Instruction):
 
     @property
     def field(self) -> TransactionField:
-        """Transaction field being accessed."""
+        """Transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -436,12 +530,20 @@ class Gtxn(Instruction):
 
     @property
     def idx(self) -> int:
-        """Index of the transaction in the atomic group"""
+        """Index of the transaction in the atomic group
+
+        Returns:
+            index of the transaction whose field is being accessed.
+        """
         return self._idx
 
     @property
     def field(self) -> TransactionField:
-        """Transaction field of the instruction being accessed."""
+        """Transaction field of the instruction being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -477,12 +579,20 @@ class Gtxna(Instruction):
 
     @property
     def idx(self) -> int:
-        """Index of the transaction in the atomic group."""
+        """Index of the transaction in the atomic group.
+
+        Returns:
+            index of the transaction whose field is being accessed.
+        """
         return self._idx
 
     @property
     def field(self) -> TransactionField:
-        """Array transaction field being accessed."""
+        """Array transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -514,7 +624,11 @@ class Gtxns(Instruction):
 
     @property
     def field(self) -> TransactionField:
-        """Transaction field being accessed."""
+        """Transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -551,7 +665,11 @@ class Gtxnsa(Instruction):
 
     @property
     def field(self) -> TransactionField:
-        """Array transaction field being accessed."""
+        """Array transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -633,7 +751,7 @@ class Gload(Instruction):
         self._idx = idx
         self._slot = slot
         self._version: int = 4
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return f"gload {self._idx} {self._slot}"
@@ -665,7 +783,7 @@ class Gloads(Instruction):
         super().__init__()
         self._slot = slot
         self._version: int = 4
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return f"gloads {self._slot}"
@@ -697,7 +815,7 @@ class Gaid(Instruction):
         super().__init__()
         self._idx = idx
         self._version: int = 4
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return f"gaid {self._idx}"
@@ -724,7 +842,7 @@ class Gaids(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 4
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -960,12 +1078,20 @@ class Extract(Instruction):
 
     @property
     def start_position(self) -> int:
-        """Starting position of the substring in the bytearray."""
+        """Starting position of the substring in the bytearray.
+
+        Returns:
+            Returns "start_position" immediate argument of the instruction
+        """
         return self._idx
 
     @property
     def length(self) -> int:
-        """Length of the bytearray to extract."""
+        """Length of the bytearray to extract.
+
+        Returns:
+            Returns "length" immediate argument of the instruction
+        """
         return self._idy
 
     def __str__(self) -> str:
@@ -1110,7 +1236,16 @@ class Sha256(Instruction):
 
     @property
     def cost(self) -> int:
-        """cost of executing sha256 instruction."""
+        """cost of executing sha256 instruction.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
+        """
 
         if self.bb and self.bb.teal:
             contract_version = self.bb.teal.version
@@ -1149,7 +1284,16 @@ class Sha512_256(Instruction):
 
     @property
     def cost(self) -> int:
-        """cost of executing sha512_256 instruction."""
+        """cost of executing sha512_256 instruction.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
+        """
 
         if self.bb and self.bb.teal:
             contract_version = self.bb.teal.version
@@ -1188,7 +1332,16 @@ class Keccak256(Instruction):
 
     @property
     def cost(self) -> int:
-        """cost of executing keccak256 instruction."""
+        """cost of executing keccak256 instruction.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
+        """
 
         if self.bb and self.bb.teal:
             contract_version = self.bb.teal.version
@@ -1229,7 +1382,12 @@ class Ed25519verify(Instruction):
 
     @property
     def cost(self) -> int:
-        """cost of executing ed25519verify instruction."""
+        """cost of executing ed25519verify instruction.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+        """
         return 1900
 
     @property
@@ -1277,6 +1435,14 @@ class Ecdsa_verify(Instruction):
         overrides cost property. ecdsa_verify instruction is introduced in
         Teal version 5. if the cost property is accessed for contracts with
         lesser version, value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -1333,6 +1499,14 @@ class Ecdsa_pk_decompress(Instruction):
         overrides cost property. ecdsa_pk_decompress instruction is introduced in
         Teal version 5. if the cost property is accessed for contracts with
         lesser version, value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -1389,6 +1563,14 @@ class Ecdsa_pk_recover(Instruction):
         overrides cost property. ecdsa_pk_recover instruction is introduced in
         Teal version 5. if the cost property is accessed for contracts with
         lesser version, value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -1432,8 +1614,16 @@ class Global(Instruction):
 
     @property
     def field(self) -> GlobalField:
-        """Global field being accessed."""
+        """Global field being accessed.
+
+        Returns:
+            Returns the global field accessed by this instruction.
+        """
         return self._field
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
     def __str__(self) -> str:
         return f"global {self._field}"
@@ -1512,6 +1702,14 @@ class Cover(Instruction):
         self._idx = idx
         self._version: int = 5
 
+    @property
+    def stack_pop_size(self) -> int:
+        return self._idx + 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return self._idx + 1
+
     def __str__(self) -> str:
         return f"cover {self._idx}"
 
@@ -1585,7 +1783,11 @@ class InstructionWithLabel(Instruction):
 
     @property
     def label(self) -> str:
-        """String representing the label."""
+        """String representing the label.
+
+        Returns:
+            Returns the label.
+        """
         return self._label
 
 
@@ -1666,26 +1868,28 @@ class Callsub(InstructionWithLabel):
 
     def __init__(self, label: str):
         super().__init__(label)
-        self._return_point: Optional[Instruction] = None
         self._version: int = 4
+        self._called_subroutine: Optional["Subroutine"] = None
 
     @property
-    def return_point(self) -> Optional[Instruction]:
-        """Return point of this call instruction.
+    def called_subroutine(self) -> "Subroutine":
+        """Return the subroutine object called by this instruction
 
-        Execution returns to the next instruction of the call instruction
-        after executing the called subroutine. This property returns instance
-        of that instruction. This is helpful in construction of contract CFG and
-        subroutine CFGs.
+        Returns:
+            The subroutine object called by this instruction.
+
+        Raises:
+            TealerException: raises error if _called_subroutine is also set during parsing.
         """
+        if self._called_subroutine is None:
+            raise TealerException(
+                f"callsub.called_subroutine is accessed before assignment: {str(self)}"
+            )
+        return self._called_subroutine
 
-        return self._return_point
-
-    @return_point.setter
-    def return_point(self, ins: Instruction) -> None:
-        if self._return_point is not None:
-            raise ValueError("Return point already set")
-        self._return_point = ins
+    @called_subroutine.setter
+    def called_subroutine(self, subroutine: "Subroutine") -> None:
+        self._called_subroutine = subroutine
 
     def __str__(self) -> str:
         return f"callsub {self._label}"
@@ -1731,13 +1935,17 @@ class AppGlobalGet(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_global_get"
 
     @property
     def stack_pop_size(self) -> int:
+        return 1
+
+    @property
+    def stack_push_size(self) -> int:
         return 1
 
 
@@ -1762,7 +1970,7 @@ class AppGlobalGetEx(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_global_get_ex"
@@ -1790,7 +1998,7 @@ class AppGlobalPut(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_global_put"
@@ -1815,7 +2023,7 @@ class AppGlobalDel(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_global_del"
@@ -1849,7 +2057,7 @@ class AppLocalGetEx(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_local_get_ex"
@@ -1883,7 +2091,7 @@ class AppLocalGet(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_local_get"
@@ -1916,7 +2124,7 @@ class AppLocalPut(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_local_put"
@@ -1944,7 +2152,7 @@ class AppLocalDel(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_local_del"
@@ -1980,11 +2188,15 @@ class AssetHoldingGet(Instruction):
         super().__init__()
         self._field: AssetHoldingField = field
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> AssetHoldingField:
-        """Asset holding field being accessed."""
+        """Asset holding field being accessed.
+
+        Returns:
+            Returns the asset holding field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -2022,11 +2234,15 @@ class AssetParamsGet(Instruction):
         super().__init__()
         self._field: AssetParamsField = field
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> AssetParamsField:
-        """Asset Parameter field being accessed."""
+        """Asset Parameter field being accessed.
+
+        Returns:
+            Returns the asset parameter field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -2064,11 +2280,15 @@ class AppParamsGet(Instruction):
         super().__init__()
         self._field: AppParamsField = field
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> AppParamsField:
-        """Application parameter field being accessed."""
+        """Application parameter field being accessed.
+
+        Returns:
+            Returns the application parameter field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -2104,7 +2324,7 @@ class AppOptedIn(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "app_opted_in"
@@ -2138,7 +2358,7 @@ class Balance(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 2
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -2167,7 +2387,7 @@ class MinBalance(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 3
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     def __str__(self) -> str:
         return "min_balance"
@@ -2238,6 +2458,14 @@ class Addr(Instruction):
 
     def __str__(self) -> str:
         return f"addr {self._addr}"
+
+    @property
+    def addr(self) -> str:
+        return self._addr
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
 
 
 class Pop(Instruction):
@@ -2746,6 +2974,14 @@ class BModulo(Instruction):
         overrides cost property. b% instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version,
         value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -2856,6 +3092,14 @@ class BBitwiseAnd(Instruction):
         overrides cost property. b& instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version,
         value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -2906,6 +3150,14 @@ class BBitwiseOr(Instruction):
         overrides cost property. b| instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version,
         value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -2956,6 +3208,14 @@ class BAdd(Instruction):
         overrides cost property. b+ instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version,
         value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -3009,6 +3269,14 @@ class BSubtract(Instruction):
         overrides cost property. b- instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version,
         value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -3062,6 +3330,14 @@ class BDiv(Instruction):
         overrides cost property. b/ instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version,
         value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -3112,6 +3388,14 @@ class BMul(Instruction):
         overrides cost property. b* instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version,
         value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -3282,6 +3566,14 @@ class BBitwiseXor(Instruction):
         overrides cost property. b^ instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version,
         value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -3333,6 +3625,14 @@ class BBitwiseInvert(Instruction):
         overrides cost property. b~ instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version,
         value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -3348,7 +3648,7 @@ class BBitwiseInvert(Instruction):
 
     @property
     def stack_pop_size(self) -> int:
-        return 2
+        return 1
 
     @property
     def stack_push_size(self) -> int:
@@ -3394,7 +3694,7 @@ class Log(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -3414,7 +3714,7 @@ class Itxn_begin(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
 
 class Itxn_field(Instruction):
@@ -3438,11 +3738,15 @@ class Itxn_field(Instruction):
         super().__init__()
         self._field: TransactionField = field
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> TransactionField:
-        """Transaction field of inner transaction being set."""
+        """Transaction field of inner transaction being set.
+
+        Returns:
+            Returns the inner transaction field being set by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -3469,7 +3773,7 @@ class Itxn_submit(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
 
 class Itxn(Instruction):
@@ -3488,11 +3792,15 @@ class Itxn(Instruction):
         super().__init__()
         self._field: TransactionField = field
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> TransactionField:
-        """Transaction field being accessed."""
+        """Transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -3527,11 +3835,15 @@ class Itxna(Instruction):
         super().__init__()
         self._field: TransactionField = field
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> TransactionField:
-        """Array transaction field being accessed."""
+        """Array transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -3563,7 +3875,11 @@ class Txnas(Instruction):
 
     @property
     def field(self) -> TransactionField:
-        """Array transaction field being accessed."""
+        """Array transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -3605,12 +3921,21 @@ class Gtxnas(Instruction):
 
     @property
     def idx(self) -> int:
-        """Index into array of array transaction field."""
+        """Index into array of array transaction field.
+
+        Returns:
+            This instruction can access only one value of the arrary type field at a time.
+            idx returns the index into the field values array.
+        """
         return self._idx
 
     @property
     def field(self) -> TransactionField:
-        """Transaction field being accessed."""
+        """Transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -3651,7 +3976,11 @@ class Gtxnsas(Instruction):
 
     @property
     def field(self) -> TransactionField:
-        """Transaction field being accessed."""
+        """Transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -3680,7 +4009,7 @@ class Args(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 5
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     @property
     def stack_pop_size(self) -> int:
@@ -3770,6 +4099,14 @@ class Divmodw(Instruction):
         overrides cost property. divmodw instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version, value 0
         is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -3847,6 +4184,14 @@ class Expw(Instruction):
         overrides cost property. expw instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version, value 0
         is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -3941,6 +4286,14 @@ class Sqrt(Instruction):
         overrides cost property. sqrt instruction is introduced in Teal version 4.
         if the cost property is accessed for contracts with lesser version, value 0
         is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -3979,8 +4332,28 @@ class Intcblock(Instruction):
     def __str__(self) -> str:
         return " ".join(["intcblock"] + list(map(str, self._constants)))
 
+    @property
+    def constants(self) -> List[int]:
+        return self._constants
 
-class Intc(Instruction):
+
+class IntcInstruction(Instruction):
+    """Base class for Intc, Intc_0, Intc_1, Intc_2, Intc_3"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx: int = 0
+
+    @property
+    def index(self) -> int:
+        return self._idx
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
+
+class Intc(IntcInstruction):
     """`intc i` push integer constant loaded from constant storage space.
 
     Immediates:
@@ -3998,12 +4371,8 @@ class Intc(Instruction):
     def __str__(self) -> str:
         return f"intc {self._idx}"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc0(Instruction):
+class Intc0(IntcInstruction):
     """`intc_0` push integer constant 0 from constant storage space.
 
     Pushes:
@@ -4011,15 +4380,15 @@ class Intc0(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 0
+
     def __str__(self) -> str:
         return "intc_0"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc1(Instruction):
+class Intc1(IntcInstruction):
     """`intc_1` push integer constant 1 from constant storage space.
 
     Pushes:
@@ -4027,15 +4396,15 @@ class Intc1(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 1
+
     def __str__(self) -> str:
         return "intc_1"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc2(Instruction):
+class Intc2(IntcInstruction):
     """`intc_2` push integer constant 2 from constant storage space.
 
     Pushes:
@@ -4043,15 +4412,15 @@ class Intc2(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 2
+
     def __str__(self) -> str:
         return "intc_2"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Intc3(Instruction):
+class Intc3(IntcInstruction):
     """`intc_3` push integer constant 3 from constant storage space.
 
     Pushes:
@@ -4059,11 +4428,31 @@ class Intc3(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 3
+
     def __str__(self) -> str:
         return "intc_3"
 
 
-class Bytec(Instruction):
+class BytecInstruction(Instruction):
+    """Base class for Bytec, Bytec_0, Bytec_1, Bytec_2, Bytec_3"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx: int = 0
+
+    @property
+    def index(self) -> int:
+        return self._idx
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
+
+class Bytec(BytecInstruction):
     """`bytec i` push byte constant loaded from constant storage space.
 
     Immediates:
@@ -4082,13 +4471,17 @@ class Bytec(Instruction):
         return f"bytec {self._idx}"
 
 
-class Bytec0(Instruction):
+class Bytec0(BytecInstruction):
     """`bytec_0` push byte constant 0 from constant storage space.
 
     Pushes:
         push constant 0 from bytecblock to stack.
 
     """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 0
 
     def __str__(self) -> str:
         return "bytec_0"
@@ -4098,7 +4491,7 @@ class Bytec0(Instruction):
         return 1
 
 
-class Bytec1(Instruction):
+class Bytec1(BytecInstruction):
     """`bytec_1` push byte constant 1 from constant storage space.
 
     Pushes:
@@ -4106,15 +4499,15 @@ class Bytec1(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 1
+
     def __str__(self) -> str:
         return "bytec_1"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Bytec2(Instruction):
+class Bytec2(BytecInstruction):
     """`bytec_2` push byte constant 2 from constant storage space.
 
     Pushes:
@@ -4122,15 +4515,15 @@ class Bytec2(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 2
+
     def __str__(self) -> str:
         return "bytec_2"
 
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
-
-class Bytec3(Instruction):
+class Bytec3(BytecInstruction):
     """`bytec_3` push byte constant 3 from constant storage space.
 
     Pushes:
@@ -4138,12 +4531,12 @@ class Bytec3(Instruction):
 
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._idx = 3
+
     def __str__(self) -> str:
         return "bytec_3"
-
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
 
 class Arg(Instruction):
@@ -4160,7 +4553,7 @@ class Arg(Instruction):
     def __init__(self, idx: int):
         super().__init__()
         self._idx = idx
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     def __str__(self) -> str:
         return f"arg {self._idx}"
@@ -4180,7 +4573,7 @@ class Arg0(Instruction):
 
     def __init__(self) -> None:
         super().__init__()
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     def __str__(self) -> str:
         return "arg_0"
@@ -4200,7 +4593,7 @@ class Arg1(Instruction):
 
     def __init__(self) -> None:
         super().__init__()
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     def __str__(self) -> str:
         return "arg_1"
@@ -4220,7 +4613,7 @@ class Arg2(Instruction):
 
     def __init__(self) -> None:
         super().__init__()
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     def __str__(self) -> str:
         return "arg_2"
@@ -4240,7 +4633,7 @@ class Arg3(Instruction):
 
     def __init__(self) -> None:
         super().__init__()
-        self._mode: ContractType = ContractType.STATELESS
+        self._mode = ExecutionMode.STATELESS
 
     def __str__(self) -> str:
         return "arg_3"
@@ -4275,6 +4668,10 @@ class Byte(Instruction):
     def stack_push_size(self) -> int:
         return 1
 
+    @property
+    def value(self) -> str:
+        return self._bytes
+
 
 class PushBytes(Instruction):
     """`pushbytes x` instruction pushes immediate value to the top of the stack.
@@ -4306,6 +4703,10 @@ class PushBytes(Instruction):
     @property
     def stack_push_size(self) -> int:
         return 1
+
+    @property
+    def value(self) -> str:
+        return self._bytes
 
 
 class Len(Instruction):
@@ -4340,6 +4741,10 @@ class Bytecblock(Instruction):
     def __init__(self, bytes_list: List[str]):
         super().__init__()
         self._constants = bytes_list
+
+    @property
+    def constants(self) -> List[str]:
+        return self._constants
 
     def __str__(self) -> str:
         return " ".join(["bytecblock"] + self._constants)
@@ -4404,6 +4809,14 @@ class Substring3(Instruction):
         super().__init__()
         self._version: int = 2
 
+    @property
+    def stack_pop_size(self) -> int:
+        return 3
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
 
 class AcctParamsGet(Instruction):
     """`acct_params_get i` allows reading param field of a given account.
@@ -4423,11 +4836,15 @@ class AcctParamsGet(Instruction):
         super().__init__()
         self._field: AcctParamsField = field
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> AcctParamsField:
-        """Account parameter field being accessed."""
+        """Account parameter field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     def __str__(self) -> str:
@@ -4475,6 +4892,14 @@ class BSqrt(Instruction):
         overrides cost property. bsqrt instruction is introduced in Teal version 6.
         if the cost property is accessed for contracts with lesser version,
         value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -4502,7 +4927,7 @@ class Itxn_next(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
 
 class Divw(Instruction):
@@ -4551,21 +4976,26 @@ class Gitxn(Instruction):
         self._idx = idx
         self._field: TransactionField = field
         self._version = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def idx(self) -> int:
-        """Index of the transaction in the last inner group"""
+        """Index of the transaction in the last inner group
+
+        Returns:
+            index of the transaction whose field is being accessed. index is the index into
+            the last inner group transaction.
+        """
         return self._idx
 
     @property
     def field(self) -> TransactionField:
-        """Transaction field of the instruction being accessed."""
-        return self._field
+        """Transaction field of the instruction being accessed.
 
-    @property
-    def stack_pop_size(self) -> int:
-        return 1
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
+        return self._field
 
     @property
     def stack_push_size(self) -> int:
@@ -4597,16 +5027,25 @@ class Gitxna(Instruction):
         self._idx = idx
         self._field: TransactionField = field
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def idx(self) -> int:
-        """Index of the transaction in the last inner transaction group."""
+        """Index of the transaction in the last inner transaction group.
+
+        Returns:
+            index of the transaction whose field is being accessed. index is the index into
+            the last inner group transaction.
+        """
         return self._idx
 
     @property
     def field(self) -> TransactionField:
-        """Array transaction field being accessed."""
+        """Array transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     @property
@@ -4644,7 +5083,7 @@ class Gloadss(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
 
 class Itxnas(Instruction):
@@ -4669,12 +5108,20 @@ class Itxnas(Instruction):
         super().__init__()
         self._field: TransactionField = field
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def field(self) -> TransactionField:
-        """Array transaction field being accessed."""
+        """Array transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 1
 
     @property
     def stack_push_size(self) -> int:
@@ -4700,7 +5147,6 @@ class Gitxnas(Instruction):
 
     Pushes:
         pushes value at index X of array transaction field f of transaction t of the last inner transaction group.
-
     """
 
     def __init__(self, idx: int, field: TransactionField):
@@ -4708,16 +5154,25 @@ class Gitxnas(Instruction):
         self._idx: int = idx
         self._field: TransactionField = field
         self._version: int = 6
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def idx(self) -> int:
-        """Index into array of array transaction field."""
+        """Index into array of array transaction field.
+
+        Returns:
+            This instruction can access only one value of the arrary type field at a time.
+            idx returns the index into the field values array.
+        """
         return self._idx
 
     @property
     def field(self) -> TransactionField:
-        """Transaction field being accessed."""
+        """Transaction field being accessed.
+
+        Returns:
+            Returns the transaction field accessed by this instruction.
+        """
         return self._field
 
     @property
@@ -4730,6 +5185,26 @@ class Gitxnas(Instruction):
 
     def __str__(self) -> str:
         return f"Gitxnas {self._idx} {self._field}"
+
+
+class Method(Instruction):
+    """method {s}, pushes 4-byte method selector computed from the method signature `s`"""
+
+    def __init__(self, method_signature: str) -> None:
+        super().__init__()
+        self.method_signature = method_signature[1:][:-1]  # remove double qoutes
+        self._version: int = 6
+
+    @property
+    def stack_pop_size(self) -> int:
+        return 0
+
+    @property
+    def stack_push_size(self) -> int:
+        return 1
+
+    def __str__(self) -> str:
+        return f"method {self.method_signature}"
 
 
 class Replace2(Instruction):
@@ -4760,7 +5235,11 @@ class Replace2(Instruction):
 
     @property
     def start_position(self) -> int:
-        """Replacement index."""
+        """Replacement index.
+
+        Returns:
+            Starting position for the replacement.
+        """
         return self._idx
 
     @property
@@ -4842,14 +5321,24 @@ class Replace(Instruction):
 
     @property
     def start_position(self) -> int:
-        """Replacement index."""
+        """Replacement index.
+
+        Returns:
+            Start position for replacing.
+
+        Raises:
+            TealerException: Raises error if start position is not given as an immediate
+                argument and is fetched from the stack at runtime.
+        """
         if self._idx is None:
             raise TealerException("replace instruction does not have any immediates")
         return self._idx
 
     @property
     def stack_pop_size(self) -> int:
-        return 3
+        if self._idx is None:
+            return 3
+        return 2
 
     @property
     def stack_push_size(self) -> int:
@@ -4887,6 +5376,14 @@ class Base64_decode(Instruction):
         """cost of executing base64_decode instruction.
 
         base cost is 1 and cost increases by 1 per 16 bytes of A. returns base cost of 1.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -4939,6 +5436,14 @@ class Json_ref(Instruction):
         """cost of executing json_ref instruction.
 
         base cost is 25 and cost increases by 2 per 7 bytes of A. returns base cost of 25.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -4985,6 +5490,14 @@ class Ed25519verify_bare(Instruction):
         """cost of executing json_ref instruction.
 
         base cost is 25 and cost increases by 2 per 7 bytes of A. returns base cost of 1.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -5058,6 +5571,14 @@ class Vrf_verify(Instruction):
         overrides cost property. vrf_verify instruction is introduced in
         Teal version 7. if the cost property is accessed for contracts with
         lesser version, value 0 is returned instead of raising an error.
+
+        Returns:
+            OpcodeCost of the instruction if the instruction is supported in the
+            contract version. Returns zero if it is not supported.
+
+        Raises:
+            ValueError: Raises value error if self.bb or self.bb.teal are not initialized
+                properly.
         """
 
         if self.bb and self.bb.teal:
@@ -5106,7 +5627,11 @@ class Block(Instruction):
 
     @property
     def field(self) -> str:
-        """block field"""
+        """block field
+
+        Returns:
+            block field being accessed by this instruction.
+        """
         return self._field
 
     @property
@@ -5144,11 +5669,12 @@ class Bury(Instruction):
 
     @property
     def stack_pop_size(self) -> int:
-        return 1
+        # Assuming the `stack depth n` includes A value as well. if not this should be `self._index`
+        return 1 + self._index
 
     @property
     def stack_push_size(self) -> int:
-        return 1
+        return self._index
 
     def __str__(self) -> str:
         return f"bury {self._index}"
@@ -5173,8 +5699,8 @@ class Popn(Instruction):
         self._version: int = 8
 
     @property
-    def stack_push_size(self) -> int:
-        return 1
+    def stack_pop_size(self) -> int:
+        return self._nelements
 
     def __str__(self) -> str:
         return f"popn {self._nelements}"
@@ -5196,8 +5722,12 @@ class Dupn(Instruction):
         self._version: int = 8
 
     @property
-    def stack_push_size(self) -> int:
+    def stack_pop_size(self) -> int:
         return 1
+
+    @property
+    def stack_push_size(self) -> int:
+        return self._count + 1
 
     def __str__(self) -> str:
         return f"dupn {self._count}"
@@ -5222,7 +5752,7 @@ class PushBytess(Instruction):
 
     @property
     def stack_push_size(self) -> int:
-        return 1
+        return len(self._bytes_list)
 
     def __str__(self) -> str:
         return " ".join(["pushbytess"] + self._bytes_list)
@@ -5247,7 +5777,7 @@ class PushInts(Instruction):
 
     @property
     def stack_push_size(self) -> int:
-        return 1
+        return len(self._int_list)
 
     def __str__(self) -> str:
         return " ".join(["pushints"] + list(map(str, self._int_list)))
@@ -5293,6 +5823,8 @@ class FrameDig(Instruction):
 
     @property
     def stack_push_size(self) -> int:
+        # TODO: It's not clear where the frame pointer is stored and what are the exact
+        # semantics of this opcode. Recheck this later.
         return 1
 
     def __str__(self) -> str:
@@ -5319,6 +5851,8 @@ class FrameBury(Instruction):
 
     @property
     def stack_pop_size(self) -> int:
+        # TODO: It's not clear where the frame pointer is stored and what are the exact
+        # semantics of this opcode. Recheck this later.
         return 1
 
     @property
@@ -5412,7 +5946,7 @@ class BoxCreate(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -5438,7 +5972,7 @@ class BoxExtract(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -5455,7 +5989,7 @@ class BoxExtract(Instruction):
 class BoxReplace(Instruction):
     """`box_replace` replace data of a box.
 
-    Stack: ...., A: []byte, B: uint64, C: []byte -> ...., uint64
+    Stack: ...., A: []byte, B: uint64, C: []byte -> ....
 
     Write byte-array C into box A, starting at offset B. Fail if A does not exist, or the byte range
     is outside A's size.
@@ -5464,15 +5998,11 @@ class BoxReplace(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
         return 3
-
-    @property
-    def stack_push_size(self) -> int:
-        return 1
 
     def __str__(self) -> str:
         return "box_replace"
@@ -5489,7 +6019,7 @@ class BoxDel(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -5514,7 +6044,7 @@ class BoxLen(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -5540,7 +6070,7 @@ class BoxGet(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:
@@ -5566,7 +6096,7 @@ class BoxPut(Instruction):
     def __init__(self) -> None:
         super().__init__()
         self._version: int = 8
-        self._mode: ContractType = ContractType.STATEFULL
+        self._mode = ExecutionMode.STATEFUL
 
     @property
     def stack_pop_size(self) -> int:

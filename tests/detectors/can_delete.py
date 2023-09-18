@@ -1,6 +1,9 @@
+from typing import List, Tuple, Type
+
 from tealer.teal.instructions import instructions
 from tealer.teal.instructions import transaction_field
-from tealer.detectors.all_detectors import CanDelete
+from tealer.detectors.abstract_detector import AbstractDetector
+from tealer.detectors.all_detectors import IsDeletable, CanCloseAccount, CanCloseAsset
 
 from tests.utils import construct_cfg
 
@@ -253,6 +256,153 @@ CAN_DELETE_LOOP_VULNERABLE_PATHS = [
 
 
 can_delete_tests = [
-    (CAN_DELETE, CanDelete, CAN_DELETE_VULNERABLE_PATHS),
-    (CAN_DELETE_LOOP, CanDelete, CAN_DELETE_LOOP_VULNERABLE_PATHS),
+    (CAN_DELETE, IsDeletable, CAN_DELETE_VULNERABLE_PATHS),
+    (CAN_DELETE_LOOP, IsDeletable, CAN_DELETE_LOOP_VULNERABLE_PATHS),
+]
+
+
+CAN_DELETE_GROUP_INDEX_0 = """
+#pragma version 6
+txn GroupIndex
+int 0
+==
+assert
+int 0
+gtxn 0 ApplicationID
+==
+bz not_creation
+int 1
+return
+not_creation:
+    gtxn 0 OnCompletion
+    int NoOp
+    ==
+    bnz handle_noop
+    gtxn 0 OnCompletion
+    int OptIn
+    ==
+    bnz handle_optin
+    gtxn 0 OnCompletion
+    int CloseOut
+    ==
+    bnz handle_closeout
+    gtxn 0 OnCompletion
+    int UpdateApplication
+    ==
+    bnz handle_updateapp
+    int 1
+    return
+handle_noop:
+handle_optin:
+handle_closeout:
+int 1
+return
+handle_updateapp:
+err
+"""
+
+CAN_DELETE_GROUP_INDEX_0_VULNERABLE_PATHS: List[List[int]] = [[0, 2, 3, 4, 5, 6]]
+
+CAN_DELETE_GROUP_INDEX_1 = """
+#pragma version 6
+global GroupSize
+int 1
+==
+assert
+int 0
+txn ApplicationID
+==
+bz not_creation
+int 1
+return
+not_creation:
+    txn OnCompletion
+    int NoOp
+    ==
+    bnz handle_noop
+    gtxn 0 OnCompletion
+    int OptIn
+    ==
+    bnz handle_optin
+    gtxn 0 OnCompletion
+    int CloseOut
+    ==
+    bnz handle_closeout
+    gtxn 0 OnCompletion
+    int DeleteApplication
+    ==
+    bnz handle_deleteapp
+    int 1
+    return
+handle_noop:
+handle_optin:
+handle_closeout:
+int 1
+return
+handle_deleteapp:
+err
+"""
+
+CAN_DELETE_GROUP_INDEX_1_VULNERABLE_PATHS: List[List[int]] = []
+
+CAN_DELETE_GROUP_INDEX_2 = """
+#pragma version 6
+global GroupSize
+int 2
+==
+assert
+int 0
+txn ApplicationID
+==
+bz not_creation
+int 1
+return
+not_creation:
+    gtxn 1 OnCompletion
+    int NoOp
+    ==
+    bnz handle_noop
+    gtxn 1 OnCompletion
+    int OptIn
+    ==
+    bnz handle_optin
+    gtxn 1 OnCompletion
+    int CloseOut
+    ==
+    bz handle_closeout
+    gtxn 0 OnCompletion
+    int DeleteApplication
+    ==
+    bnz handle_deleteapp
+    int 1
+    return
+handle_noop:
+handle_optin:
+handle_closeout:
+int 1
+return
+handle_deleteapp:
+err
+"""
+
+CAN_DELETE_GROUP_INDEX_2_VULNERABLE_PATHS: List[List[int]] = [
+    [0, 2, 3, 4, 9],
+    [0, 2, 3, 8, 9],
+    [0, 2, 7, 8, 9],
+]
+
+new_can_delete_tests: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
+    (CAN_DELETE_GROUP_INDEX_0, IsDeletable, CAN_DELETE_GROUP_INDEX_0_VULNERABLE_PATHS),
+    (CAN_DELETE_GROUP_INDEX_1, IsDeletable, CAN_DELETE_GROUP_INDEX_1_VULNERABLE_PATHS),
+    (CAN_DELETE_GROUP_INDEX_2, IsDeletable, CAN_DELETE_GROUP_INDEX_2_VULNERABLE_PATHS),
+    (CAN_DELETE, CanCloseAccount, []),
+    (CAN_DELETE_LOOP, CanCloseAccount, []),
+    (CAN_DELETE_GROUP_INDEX_0, CanCloseAccount, []),
+    (CAN_DELETE_GROUP_INDEX_1, CanCloseAccount, []),
+    (CAN_DELETE_GROUP_INDEX_2, CanCloseAccount, []),
+    (CAN_DELETE, CanCloseAsset, []),
+    (CAN_DELETE_LOOP, CanCloseAsset, []),
+    (CAN_DELETE_GROUP_INDEX_0, CanCloseAsset, []),
+    (CAN_DELETE_GROUP_INDEX_1, CanCloseAsset, []),
+    (CAN_DELETE_GROUP_INDEX_2, CanCloseAsset, []),
 ]

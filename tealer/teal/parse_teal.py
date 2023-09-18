@@ -24,12 +24,16 @@ The final result of parsing is the Control Flow Graph(CFG) of the
 contract represented by sequence of the basic blocks.
 
 """
+# pylint: disable=too-many-lines
 
 import inspect
 import sys
-from typing import Optional, Dict, List
+import logging
+from typing import Optional, Dict, List, Tuple
+from collections import defaultdict
 
 from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.subroutine import Subroutine
 from tealer.teal.instructions.instructions import (
     Instruction,
     Label,
@@ -43,54 +47,57 @@ from tealer.teal.instructions.instructions import (
     Pragma,
     Switch,
     Match,
+    Intcblock,
+    Bytecblock,
+    Txn,
+    Method,
 )
-from tealer.teal.instructions.instructions import ContractType
+
 from tealer.teal.instructions.parse_instruction import parse_line, ParseError
-from tealer.teal.instructions.transaction_field import TransactionField
+from tealer.teal.instructions.transaction_field import TransactionField, ApplicationID
 from tealer.teal.instructions.asset_holding_field import AssetHoldingField
 from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.app_params_field import AppParamsField
 from tealer.teal.instructions.acct_params_field import AcctParamsField
 from tealer.teal.teal import Teal
-from tealer.analyses.dataflow import all_constraints
-from tealer.analyses.dataflow.generic import DataflowTransactionContext
+from tealer.analyses.dataflow.transaction_context import all_constraints
+from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
+from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, compute_equations
+from tealer.utils.arc4_abi import get_method_selector
+from tealer.utils.teal_enums import ExecutionMode
 
 
-def _detect_contract_type(instructions: List[Instruction]) -> ContractType:
-    """Determine type of contract given it's instructions.
+logger_parsing = logging.getLogger("Parsing")
+logging.basicConfig()
 
-    It isn't possible to determine how a contract might be used, whether
-    as an application or a signature in all cases. This function uses the
-    fact that there are certain instructions in teal that are only valid if used
-    in a certain kind of contract. So, this function looks for instructions
-    that are valid in only one type and return that as the type for the given
-    contract. if all instructions in the contract are valid for both types
-    of contracts, then this function returns ContractType.ANY as it isn't
-    sure how the contract might be used.
+
+def _detect_execution_mode(instructions: List[Instruction]) -> ExecutionMode:
+    """Determine type of contract given its instructions.
+
+    If any of the instructions is supported in only one execution mode then return that as
+    contract's execution mode. Otherwise, return ExecutionMode.ANY
 
     Args:
         instructions: List of all the instructions present in the contract.
 
     Returns:
-        Type of the contract indicated by ContractType enum symbol.
-        ``STATEFULL`` if there's a instruction only valid in applications,
-        ``STATELESS`` if there's a instruction only valid in signatures,
-        ``ANY`` if there isn't any such instruction.
+        Returns the execution mode of the contract: Stateful, Stateless or Any.
     """
 
     for ins in instructions:
-        if ins.mode != ContractType.ANY:
+        if ins.mode != ExecutionMode.ANY:
             return ins.mode
-    return ContractType.ANY
+    return ExecutionMode.ANY
 
 
 def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> None:
-    """Construct basic blocks and add basic block sequential links.
+    """Construct basic blocks and add basic block default edges.
 
-    This function is the third pass of the teal parser. Instructions are
+    Third pass of the teal parser. Instructions are
     divided into basic blocks based on the following rules:
 
-    * A new basic block is created for each Label instruction.
+    * Label instruction is destination for multiple instructions. A new
+        basic block is created for each Label instruction.
     * Instructions B, Err, Return, Callsub, Retsub are exit instructions
         of a basic block. A new basic block is created for instructions
         following them.
@@ -98,176 +105,177 @@ def create_bb(instructions: List[Instruction], all_bbs: List[BasicBlock]) -> Non
         of the basic block. A new basic block is created for instructions
         following them.
 
-    This function also adds sequential links between the constructed basic
-    blocks. Two sequential basic blocks are linked if the exit instruction
-    of the first basic block is sequentially previous instruction to the
-    entry instruction of the second basic block.
-
-    This is a "in place" function, given arguments are modified with the
-    data this function is supposed to return.
+    This function also adds default edges between the constructed basic
+    blocks. Two basic blocks have default edge if the entry instruction
+    of the second basic block is default next instruction for the exit instruction
+    of the first basic block.
 
     Args:
-        instructions: List of parsed instruction objects.
-        all_bbs: List of BasicBlock objects representing the teal contract.
-            This is an "in place" argument, the basic blocks created in
-            the function are appended to this list in the order they are created.
+        instructions: List of instructions.
+        all_bbs: (in-place) List of BasicBlocks representing the teal contract.
     """
 
-    bb: Optional[BasicBlock] = BasicBlock()
-    if bb:  # to make mypy happy
-        all_bbs.append(bb)
+    bb = BasicBlock()
+    all_bbs.append(bb)
     for ins in instructions:
 
-        if isinstance(ins, Label) or not bb:
-            # use bb if it is empty instead of creating new BasicBlock.
-            if bb is None or len(bb.instructions) != 0:
-                next_bb = BasicBlock()
-                all_bbs.append(next_bb)
-                if bb:
-                    bb.add_next(next_bb)
-                    next_bb.add_prev(bb)
-                bb = next_bb
+        # if instruction is label and basic block is not empty:
+        #   Create a new basic block and add default edge
+        # if basic block is empty, no need to create new one.
+        if isinstance(ins, Label) and len(bb.instructions) != 0:
+            next_bb = BasicBlock()
+            all_bbs.append(next_bb)
+            bb.add_next(next_bb)
+            next_bb.add_prev(bb)
+            bb = next_bb
+
         bb.add_instruction(ins)
         ins.bb = bb
 
-        if ins.callsub_ins is not None and ins.bb is not None:
-            # callsub is before this instruction in the code. so, bb should have been assigned
-            # already
-            callsub_basic_block = ins.callsub_ins.bb
-            if callsub_basic_block is not None:
-                ins.bb.callsub_block = callsub_basic_block
-                callsub_basic_block.sub_return_point = ins.bb
+        # `BZ`, `BNZ`, `match` and `switch` have more than one next instruction.
+        # `Callsub` has only one next instruction and it is the default next instruction
+        # For these instructions, execution continues on the next instruction by default.
+        if len(ins.next) > 1 or isinstance(ins, Callsub):
+            # if the instruction is the last instruction, do not create a new *empty* block.
+            if ins == instructions[-1]:
+                continue
+            next_bb = BasicBlock()
+            all_bbs.append(next_bb)
+            # add sequential link
+            bb.add_next(next_bb)
+            next_bb.add_prev(bb)
+            bb = next_bb
 
-        if len(ins.next) > 1 and not isinstance(ins, Retsub):
-            if not isinstance(ins.next[0], Label):
-                next_bb = BasicBlock()
-                all_bbs.append(next_bb)
-                bb.add_next(next_bb)
-                next_bb.add_prev(bb)
-                bb = next_bb
+        # Err, Return, Retsub will have `len(ins.next) == 0` and `B`.
+        if len(ins.next) == 0 or isinstance(ins, B):
+            # if the instruction is the last instruction, do not create a *empty* block.
+            if ins == instructions[-1]:
+                continue
+            next_bb = BasicBlock()
+            all_bbs.append(next_bb)
+            # Do not add any edges. There are no default edges and Jump edges are added in the next pass.
+            bb = next_bb
 
-        if len(ins.next) == 0 or isinstance(ins, (B, Err, Return, Callsub, Retsub)):
-            bb = None
+
+def _add_instruction_comments(ins: Instruction) -> None:
+    if isinstance(ins, Txn) and isinstance(ins.field, ApplicationID):
+        ins.tealer_comments.append("ApplicationID is 0 in Creation Txn")
+    elif isinstance(ins, Method):
+        method_signature = ins.method_signature
+        method_signature.strip('"')  # quotes are not removed while parsing
+        method_selector = get_method_selector(method_signature)
+        ins.tealer_comments.append(f"method-selector: {method_selector}")
 
 
-def _first_pass(
+def first_pass(  # pylint: disable=too-many-branches
     lines: List[str],
     labels: Dict[str, Label],
-    rets: Dict[str, List[Instruction]],
+    subroutines: Dict[str, List[Callsub]],
     instructions: List[Instruction],
-) -> None:
-    """Parse instructions and add sequential instruction links.
+) -> Tuple[List[Intcblock], List[Bytecblock]]:
+    """Parse instructions and add default instruction edges.
 
-    This function is the first pass of the teal parser. Source code
-    lines are parsed into corresponding Instruction objects and non-jump
-    instructions are linked. Adding instructions links is linking two
-    instruction objects as previous and next. Non-jump instruction links
-    are links between instructions that are previous, next in terms of
-    execution flow as well as previous, next in terms of source code i.e
-    links that are directly evident from just those two instructions that
-    are continous in source code. Jump links are links between branch
-    instructions and their destination, callsub and their destination,
-    retsub and their return points, etc. This function adds non-jump or
-    sequential instruction links.
-
-    This is a "in place" function, given arguments are modified with the
-    data this function is supposed to return.
+    First pass of the teal parser. Source code lines are parsed into corresponding Instruction objects and default
+    edges are added to the instructions.
+    * default edges are edges between two continuous instructions where execution might pass from the first
+        instruction to the second instruction.
+    * Jump edges are edges between two non-continuous instructions where execution might pass from the first instruction
+        to the second.
 
     Args:
         lines: List of source code lines of a teal contract.
-        labels: Dict map from teal label string to the parsed label instruction.
-            instance. This argument is an "in place" argument and will be
-            populated by the function while parsing.
-        rets: Dict map from teal label string of a subroutine to list of it's
-            return point instructions. subroutines are supported from teal v4 and
-            can be called with callsub instruction using the label of the subroutine.
-            The execution flow is passed from the subroutine to next instruction of
-            the callsub after executing the subroutine. This variable stores all those
-            return points(next instruction after callsub) for each subroutine label
-            in the contract.
-            This argument is an "in place" argument and will be populated by the
-            function while parsing.
-        instructions: List of parsed instruction objects.
-            This argument is also an "in place" argument and will be populated
-            by the function while parsing.
+        labels: (in-place) Map from teal label string to the parsed label instruction.
+            instance.
+        subroutines: (in-place) Map from subroutine name to callsub instructions calling the subroutine.
+        instructions: (in-place) List of parsed instructions.
+
+    Returns:
+        intcblock_ins: List of `intcblock` instructions in the contract.
+        bytecblock_ins: List of `bytecblock` instructions in the contract.
     """
 
-    # First pass over the intructions list: Add non-jump instruction links and collect meta-data
+    # First pass over the intructions list: Add default edges and collect other information.
     idx = 0
     prev: Optional[Instruction] = None  # Flag: last instruction was an unconditional jump
-    call: Optional[Callsub] = None  # Flag: last instruction was a callsub
+    intcblock_ins: List[Intcblock] = []  # List of intcblock instructions present in the contract
+    bytecblock_ins: List[Bytecblock] = []  # List of bytecblock instructions present in the contract
 
+    instruction_comments: List[str] = []
     for line in lines:
         try:
-            ins = parse_line(line.strip())
+            if line.strip().startswith("//"):
+                # is a comment without any instruction
+                instruction_comments.append(line)
+                ins = None
+            else:
+                ins = parse_line(line)
+                if ins and instruction_comments:
+                    ins.comments_before_ins = list(instruction_comments)
+                    instruction_comments = []
         except ParseError as e:
             print(f"Parse error at line {idx}: {e}")
             sys.exit(1)
         idx = idx + 1
         if not ins:
             continue
+
+        if isinstance(ins, Intcblock):
+            intcblock_ins.append(ins)
+        elif isinstance(ins, Bytecblock):
+            bytecblock_ins.append(ins)
+
         ins.line = idx
+        _add_instruction_comments(ins)
 
         # A label? Add it to the global label list
         if isinstance(ins, Label):
             labels[ins.label] = ins
 
-        # If the prev. ins. was anything other than an unconditional jump, then link the two instructions
+        # If the prev. ins. was anything **other** than an unconditional jump or unconditional exit:
+        #   then add default between the two instructions
         if prev:
             ins.add_prev(prev)
             prev.add_next(ins)
 
-        # If the prev. inst was a callsub, add the current instruction as a return point for the callsub label
-        if call:
-            call.return_point = ins
-            if call.label in rets.keys():
-                rets[call.label].append(ins)
-            else:
-                rets[call.label] = [ins]
-            ins.callsub_ins = call  # ins is the return point when call is executed.
-
-        # Now prepare for the next-line instruction
-        # A flag that says that this was an unconditional jump
+        # A flag that says that this was an unconditional jump or unconditional exit instructions.
+        # `Callsub`` is not an unconditional jump instruction.
+        # `B` is unconditional jump.
+        # `Err, Return` is unconditional exit of the program.
+        # `Retsub` is unconditional exit of the subroutine.
         prev = ins
-        if isinstance(ins, (B, Err, Return, Callsub, Retsub)):
+        if isinstance(ins, (B, Err, Return, Retsub)):
             prev = None
 
-        # A flag that says that this was a callsub
-        call = None
+        # if ins is callsub, add the label to subroutines and store callsub instruction.
         if isinstance(ins, Callsub):
-            call = ins
+            subroutines[ins.label].append(ins)
 
         # Finally, add the instruction to the instruction list
         instructions.append(ins)
+    return intcblock_ins, bytecblock_ins
 
 
-def _second_pass(  # pylint: disable=too-many-branches
+def second_pass(  # pylint: disable=too-many-branches
     instructions: List[Instruction],
     labels: Dict[str, Label],
-    rets: Dict[str, List[Instruction]],
 ) -> None:
-    """Add jump or non-sequential instruction links.
+    """Add jump edges between instructions.
 
-    This function is second pass of the teal parser. Adding jump links is
-    linking two instruction objects where execution flow is passed
-    from the first instruction to the second instruction because of
-    a jump. A jump is passing execution from one instruction to the
-    next that are not sequential. A execution jump might happen because
-    of branch, callsub, retsub instructions in TEAL. This function links
-    such pairs of instructions as previous, next.
+    Second pass of the teal parser.
+    * Jump edges are edges between two non-continuous instructions where execution might pass from the first instruction
+        to the second.
+    * Jump instructions: `B`, `BZ`, `BNZ`, `match`, `switch`.
 
     Args:
-        instructions: List of parsed instruction objects.
-        labels: Dict map from teal label string to the parsed label instruction.
-        rets: Dict map from teal label string of a subroutine to list of it's
-            return point instructions.
+        instructions: List of instructions.
+        labels: Map from teal label string to the parsed label instruction.
     """
-
+    logger_parsing.debug("Second Pass")
     # Second pass over the instructions list: Add instruction links for jumps
     for ins in instructions:
 
-        # If a labeled jump, link the ins. to its label
-        if isinstance(ins, (B, BZ, BNZ, Callsub)):
+        # If a labeled jump to a single instruction, link the ins to its label
+        if isinstance(ins, (B, BZ, BNZ)):
             ins.add_next(labels[ins.label])
             labels[ins.label].add_prev(ins)
 
@@ -277,89 +285,28 @@ def _second_pass(  # pylint: disable=too-many-branches
                 ins.add_next(labels[ins_label])
                 labels[ins_label].add_prev(ins)
 
-    # link retsub instructions to return points of corresponding subroutines
-    retsubs: Dict[str, List[Retsub]] = {}  # map each subroutine label to list of it's retsubs
-    for subroutine in rets:
-        label = labels[subroutine]
-        retsubs[subroutine] = []
 
-        # use dfs to find all retsub instructions starting from subroutine label instruction
-        stack: List[Instruction] = []
-        visited: List[Instruction] = []
+def fourth_pass(basic_blocks: List[BasicBlock]) -> None:  # pylint: disable=too-many-branches
+    """Add jump edges between basic blocks.
 
-        stack.append(label)
-        while len(stack) > 0:
-            ins = stack.pop()
-            visited.append(ins)
-
-            if isinstance(ins, Retsub):
-                retsubs[subroutine].append(ins)
-                continue
-
-            for next_ins in ins.next:
-                # don't follow callsub path, which initself is another subroutine
-                if isinstance(next_ins, Callsub):
-                    if next_ins.return_point is None:
-                        continue
-                    next_ins = next_ins.return_point
-
-                if next_ins not in visited:
-                    stack.append(next_ins)
-
-    # link retsub to return points
-    for subroutine in rets:
-        for return_point in rets[subroutine]:
-            for retsub_ins in retsubs[subroutine]:
-                retsub_ins.add_next(return_point)
-                return_point.add_prev(retsub_ins)
-
-
-def _fourth_pass(instructions: List[Instruction]) -> None:  # pylint: disable=too-many-branches
-    """Add jump or non-sequential basic block links.
-
-    This function is the fourth pass of the teal parser. Jump links
-    are added between two basic blocks if there is a jump link from
+    Fourth pass of the teal parser. Jump edges
+    are added between two basic blocks if there is a jump edge from
     exit instruction of the first basic block to the entry instruction
     of the second basic block.
 
     Args:
-        instructions: List of parsed instruction objects.
+        basic_blocks: List of basic blocks.
     """
 
-    # Fourth pass over the instructiions list: Add jump-based basic block links
-    for ins in instructions:
-        # A branching instruction with more than one target (other than a retsub)
-        if len(ins.next) > 1 and not isinstance(ins, (Retsub, Switch, Match)):
-            branch = ins.next[1]
-            if branch.bb and ins.bb:
-                branch.bb.add_prev(ins.bb)
-            if ins.bb and branch.bb:
-                ins.bb.add_next(branch.bb)
-        # A single-target branching instruction (b or callsub or bz/bnz appearing as the last instruction in the list)
-        if isinstance(ins, (B, Callsub)) or (
-            ins == instructions[-1] and isinstance(ins, (BZ, BNZ))
-        ):
-            dst = ins.next[0].bb
-            if dst and ins.bb:
-                dst.add_prev(ins.bb)
-            if ins.bb and dst:
-                ins.bb.add_next(dst)
-        # A retsub
-        if isinstance(ins, Retsub):
-            for branch in ins.next:
-                if branch.bb and ins.bb:
-                    branch.bb.add_prev(ins.bb)
-                if ins.bb and branch.bb:
-                    ins.bb.add_next(branch.bb)
-        # switch and match
-        if isinstance(ins, (Switch, Match)):
-            bb = ins.bb
-            for next_ins in ins.next:
-                if next_ins.bb and bb:
-                    if next_ins.bb not in bb.next:
-                        bb.add_next(next_ins.bb)
-                    if bb not in next_ins.bb.prev:
-                        next_ins.bb.add_prev(bb)
+    # Fourth pass over the basic blocks: Add jump edges between basic blocks
+    for bb in basic_blocks:
+        ins = bb.exit_instr
+        for next_ins in ins.next:
+            next_bb = next_ins.bb
+            if next_bb not in bb.next:
+                assert bb not in next_bb.prev
+                bb.add_next(next_bb)
+                next_bb.add_prev(bb)
 
 
 def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
@@ -370,6 +317,9 @@ def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
 
     Args:
         bbs: List of BasicBlock objects representing the teal contract.
+
+    Returns:
+        Returns :bbs: after sorting and updating their indexes(idx).
     """
 
     bbs = sorted(bbs, key=lambda x: x.entry_instr.line)
@@ -378,43 +328,26 @@ def _add_basic_blocks_idx(bbs: List[BasicBlock]) -> List[BasicBlock]:
     return bbs
 
 
-def _identify_subroutine_blocks(label: "Label") -> List["BasicBlock"]:
-    """find all the basic blocks part of a subroutine given it's label instruction.
+def identify_subroutine_blocks(entry_block: "BasicBlock") -> List["BasicBlock"]:
+    """find all the basic blocks part of a subroutine using DFS.
 
     Args:
-        label ("Label"): label instruction of the subroutine.
-        bbs (List["BasicBlock"]): CFG of the contract.
+        entry_block: Entry block of the subroutine.
 
     Returns:
-        List["BasicBlock"]: list of all basic blocks part of a subroutine.
+        Returns the list of all basic blocks part of a subroutine.
     """
-
-    if label.bb is None:
-        return []
 
     subroutines_blocks: List["BasicBlock"] = []
     stack: List["BasicBlock"] = []
 
-    stack.append(label.bb)
+    stack.append(entry_block)
     while len(stack) > 0:
         bb = stack.pop()
         subroutines_blocks.append(bb)
 
-        # check for retsub before exploring as retsubs are connected to return points
-        if isinstance(bb.exit_instr, Retsub):
-            continue
-
-        # callsub return point is part of the subroutine
-        if isinstance(bb.exit_instr, Callsub):
-            return_point = bb.exit_instr.return_point
-
-            if return_point and return_point.bb not in subroutines_blocks:
-                if return_point.bb is not None:
-                    stack.append(return_point.bb)
-            continue
-
         for next_bb in bb.next:
-            if next_bb not in subroutines_blocks:
+            if next_bb not in subroutines_blocks and next_bb not in stack:
                 stack.append(next_bb)
 
     return subroutines_blocks
@@ -443,7 +376,6 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
     stateless_ins: List[Instruction] = []
     error = False
 
-    print("\nchecking instruction, field versions with contract version\n")
     for ins in ins_list:
         if program_version < ins.version:
             print(
@@ -471,9 +403,9 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
                         file=sys.stderr,
                     )
                     error = True
-        if ins.mode == ContractType.STATEFULL:
+        if ins.mode == ExecutionMode.STATEFUL:
             stateful_ins.append(ins)
-        elif ins.mode == ContractType.STATELESS:
+        elif ins.mode == ExecutionMode.STATELESS:
             stateless_ins.append(ins)
 
     if stateless_ins and stateful_ins:
@@ -493,6 +425,8 @@ def _verify_version(ins_list: List[Instruction], program_version: int) -> bool:
 
 
 def _apply_transaction_context_analysis(teal: "Teal") -> None:
+    logger = logging.getLogger("Tealer")
+    logger.debug("[+] Running Transaction context analysis")
     group_indices_cls = all_constraints.GroupIndices
     analyses_classes = [getattr(all_constraints, name) for name in dir(all_constraints)]
     analyses_classes = [
@@ -503,52 +437,85 @@ def _apply_transaction_context_analysis(teal: "Teal") -> None:
         and c != group_indices_cls
     ]
     # Run group indices analysis first as other analysis use them.
+    logger.debug(f'[+] Running txn field analysis "{group_indices_cls.__name__}"')
     group_indices_cls(teal).run_analysis()
     for cl in analyses_classes:
+        logger.debug(f'[+] Running txn field analysis: "{cl.__name__}"')
         cl(teal).run_analysis()
+    # clear cache
+    construct_stack_ast.cache_clear()  # construct stack ast is not used after transaction_context_analysis.
+    compute_equations.cache_clear()  # compute_equations is not used after transaction_context_analysis.
 
 
-def parse_teal(source_code: str) -> Teal:
+def _fill_intc_bytec_info(
+    intcblock_ins: List[Intcblock],
+    bytecblock_ins: List[Bytecblock],
+    entry_block: BasicBlock,
+    teal: Teal,
+) -> None:
+    """Find intcblock, bytecblock instructions and fill that information in Teal class
+
+    Tealer determines intc_*/bytec_* instruction values if and only if intcblock, bytecblock
+    instructions are used only once and that too in the entry block itself.
+
+    This is the case for most of the contracts as intcblock/bytecblock instructions are generated
+    internally by the assembler or PyTeal compiler.
+
+    Args:
+        intcblock_ins: List of all "intcblock" instructions in the contract.
+        bytecblock_ins: List of all "bytecblock" instructions in the contract.
+        entry_block: Entry block of the contract.
+        teal: The contract.
+    """
+    if len(intcblock_ins) == 1 and intcblock_ins[0].bb == entry_block:
+        teal.set_int_constants(intcblock_ins[0].constants)
+
+    if len(bytecblock_ins) == 1 and bytecblock_ins[0].bb == entry_block:
+        teal.set_byte_constants(bytecblock_ins[0].constants)
+
+
+def parse_teal(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    source_code: str, contract_name: str = ""
+) -> Teal:
     """Parse algorand smart contracts written in teal.
 
     Parsing teal cotracts consists of four passes:
 
-    #. Parses instructions and adds sequential instruction links.
-    #. Adds jump based instruction links.
-    #. Constructs basic blocks and adds sequential basic block links.
-    #. Adds jump based basic block links.
-
-    This function also performs basic version checks on the instructions
-    and fields.
-
-    Teal object is created with the parsed instructions, basic blocks and
-    subroutines identified in the contract.
+    #. Parses instructions and adds default edges between instructions.
+    #. Adds jump edges between links.
+    #. Constructs basic blocks and adds default edges between basic block.
+    #. Adds jump edges between basic blocks.
 
     Args:
         source_code: TEAL source code of the contract.
+        contract_name: Name of the contract.
 
     Returns:
-        Teal object representing the given contract created with the related
-        information.
+        Teal representing the given contract.
     """
 
     instructions: List[Instruction] = []  # Parsed instructions list
     labels: Dict[str, Label] = {}  # Global map of label names to label instructions
-    rets: Dict[str, List[Instruction]] = {}  # Lists of return points corresponding to labels
+    # Map from subroutine name to callsub instructions calling it
+    subroutine_callsubs: Dict[str, List[Callsub]] = defaultdict(list)
 
     lines = source_code.splitlines()
 
-    _first_pass(lines, labels, rets, instructions)
-    _second_pass(instructions, labels, rets)
+    intcblock_ins, bytecblock_ins = first_pass(lines, labels, subroutine_callsubs, instructions)
+    logger_parsing.debug(f"subroutine_callsubs = {subroutine_callsubs}")
+    second_pass(instructions, labels)
+    logger_parsing.debug("instruction and nexts")
+    for ins in instructions:
+        logger_parsing.debug(f"     {ins}, next: {ins.next}")
 
     # Third pass over the instructions list: Construct the basic blocks and sequential links
     all_bbs: List[BasicBlock] = []
     create_bb(instructions, all_bbs)
 
-    _fourth_pass(instructions)
+    fourth_pass(all_bbs)
 
     all_bbs = _add_basic_blocks_idx(all_bbs)
-    mode = _detect_contract_type(instructions)
+    mode = _detect_execution_mode(instructions)
 
     version = 1
     if isinstance(instructions[0], Pragma):
@@ -556,18 +523,74 @@ def parse_teal(source_code: str) -> Teal:
 
     _verify_version(instructions, version)
 
-    subroutines = []
-    if version >= 4:
-        for subroutine_label in rets:
-            label_ins = labels[subroutine_label]
-            subroutines.append(_identify_subroutine_blocks(label_ins))
+    all_reachable_blocks: List["BasicBlock"] = []
+    subroutines_and_blocks: Dict[str, List["BasicBlock"]] = {}
+    for subroutine_name in subroutine_callsubs:
+        subroutine_entry_block = labels[subroutine_name].bb
+        subroutine_blocks = identify_subroutine_blocks(subroutine_entry_block)
+        subroutines_and_blocks[subroutine_name] = subroutine_blocks
+        all_reachable_blocks += subroutine_blocks
 
-    teal = Teal(instructions, all_bbs, version, mode, subroutines)
+    contract_entry_block = all_bbs[0]
+    main_entry_point_blocks = identify_subroutine_blocks(contract_entry_block)
+    all_reachable_blocks += main_entry_point_blocks
 
-    # set teal instance to it's basic blocks
+    subroutines: Dict[str, "Subroutine"] = {}
+    for subroutine_name in subroutine_callsubs:
+        label_ins = labels[subroutine_name]
+        subroutine_entry_block = label_ins.bb
+        # add tealer comment "Subroutine: {label}" to the subroutine entry block
+        subroutine_entry_block.tealer_comments.append(f"Subroutine {subroutine_name}")
+        # list all blocks of the subroutine using DFS
+        subroutine_blocks = subroutines_and_blocks[subroutine_name]
+        subroutine_obj = Subroutine(subroutine_name, subroutine_entry_block, subroutine_blocks)
+        # set callsub blocks calling the subroutine
+        callsub_blocks = [ins.bb for ins in subroutine_callsubs[subroutine_name]]
+        callsub_blocks = [bb for bb in callsub_blocks if bb in all_reachable_blocks]
+        subroutine_obj.caller_blocks = callsub_blocks
+        # for each callsub instruction, set the called subroutine
+        for ins in subroutine_callsubs[subroutine_name]:
+            ins.called_subroutine = subroutine_obj
+
+        # set subroutine to each basic block
+        for bi in subroutine_blocks:
+            bi.subroutine = subroutine_obj
+        subroutines[subroutine_name] = subroutine_obj
+
+    main_program_name = "__main__"
+    main_program = Subroutine(main_program_name, contract_entry_block, main_entry_point_blocks)
+    for bi in main_entry_point_blocks:
+        bi.subroutine = main_program
+
+    # TODO: Handle unreachable basic blocks.
+    # Note: PyTeal generated contracts have unreachable code.
+    for bi in all_bbs:
+        if bi not in all_reachable_blocks:
+            # bi is unreachable
+            for bnext in bi.next:
+                bnext.prev.remove(bi)
+                bi.next.remove(bnext)
+
+            for ins_next in bi.exit_instr.next:
+                ins_next.prev.remove(bi.exit_instr)
+                bi.exit_instr.next.remove(ins_next)
+
+            for ins in bi.instructions:
+                instructions.remove(ins)
+
+    all_reachable_blocks = sorted(list(set(all_reachable_blocks)), key=lambda bi: bi.idx)
+    teal = Teal(version, mode, instructions, all_reachable_blocks, main_program, subroutines)
+
+    # set teal instance for it's basic blocks
     for bb in teal.bbs:
         bb.teal = teal
+        bb.tealer_comments.insert(0, f"block_id = {bb.idx}; cost = {bb.cost}")
 
+    for subroutine in [main_program] + list(subroutines.values()):
+        subroutine.contract = teal
+
+    teal.contract_name = contract_name
+    _fill_intc_bytec_info(intcblock_ins, bytecblock_ins, teal.main.entry, teal)
     _apply_transaction_context_analysis(teal)
 
     return teal

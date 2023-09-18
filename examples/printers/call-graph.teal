@@ -1,0 +1,97 @@
+#pragma version 7
+txna ApplicationArgs 0
+method "method_a()void"
+==
+bnz main_l6
+txna ApplicationArgs 0
+method "method_b()void"
+==
+bnz main_l5
+txna ApplicationArgs 0
+method "method_c()void"
+==
+bnz main_l4
+err
+main_l4:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+callsub methodc_5
+int 1
+return
+main_l5:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+callsub methodb_4
+int 1
+return
+main_l6:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+callsub methoda_3
+int 1
+return
+
+// my_subroutine
+mysubroutine_0:
+int 1
+return
+
+// recursive_subroutine
+recursivesubroutine_1:
+store 0
+load 0
+int 4
+==
+bnz recursivesubroutine_1_l2
+load 0
+int 1
++
+load 0
+swap
+callsub recursivesubroutine_1
+store 0
+b recursivesubroutine_1_l3
+recursivesubroutine_1_l2:
+retsub
+recursivesubroutine_1_l3:
+retsub
+
+// main_subroutine
+mainsubroutine_2:
+callsub mysubroutine_0
+int 0
+callsub recursivesubroutine_1
+retsub
+
+// method_a
+methoda_3:
+callsub mysubroutine_0
+retsub
+
+// method_b
+methodb_4:
+callsub mainsubroutine_2
+retsub
+
+// method_c
+methodc_5:
+int 1
+return

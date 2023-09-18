@@ -56,3 +56,23 @@ itxnas ApplicationArgs
 gitxnas 1 ApplicationArgs
 gitxnas 2 Accounts
 gitxnas 3 Assets
+
+
+method "increment(uint64,pay)uint64"
+
+itxn_begin
+byte "app_arg_1"
+itxn_field ApplicationArgs  // ArrayType argument
+byte "app_arg_2"
+itxn_field ApplicationArgs
+byte "app_arg_3"
+itxn_field ApplicationArgs
+txn Sender
+itxn_field Accounts     // ArrayType argument
+int 6
+itxn_field TypeEnum
+int 1
+itxn_field OnCompletion
+int 0
+itxn_field Fee
+itxn_submit

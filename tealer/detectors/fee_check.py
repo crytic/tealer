@@ -8,40 +8,13 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.instructions.instructions import (
-    Eq,
-    Greater,
-    GreaterE,
-    Instruction,
-    Int,
-    Less,
-    LessE,
-    Return,
-    Txn,
-)
-from tealer.teal.instructions.transaction_field import Fee
+from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.utils.algorand_constants import MAX_TRANSACTION_COST
+from tealer.utils.output import ExecutionPaths
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
-
-
-def _is_fee_check(ins1: Instruction, ins2: Instruction) -> bool:
-    """Util function to check if given instructions form Fee check.
-
-    Args:
-        ins1: First instruction of the execution sequence that is supposed
-            to form a comparison check for Fee transaction field.
-        ins2: Second instruction in the execution sequence, will be executed
-            right after :ins1:.
-
-    Returns:
-        True if the given instructions :ins1:, :ins2: form a Fee check
-        i.e True if :ins1: is txn Fee and :ins2: is int .. .
-    """
-
-    if isinstance(ins1, Txn) and isinstance(ins1.field, Fee):
-        return isinstance(ins2, Int)
-    return False
+    from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
 class MissingFeeCheck(AbstractDetector):  # pylint: disable=too-few-public-methods
@@ -56,93 +29,51 @@ class MissingFeeCheck(AbstractDetector):  # pylint: disable=too-few-public-metho
     transaction("return 1") and doesn't check the Fee field.
     """
 
-    NAME = "feeCheck"
-    DESCRIPTION = "Detect paths with a missing Fee check"
+    NAME = "missing-fee-check"
+    DESCRIPTION = "Missing Fee Field Validation"
     TYPE = DetectorType.STATELESS
 
     IMPACT = DetectorClassification.HIGH
     CONFIDENCE = DetectorClassification.HIGH
 
-    WIKI_TITLE = "Missing Fee check"
-    WIKI_DESCRIPTION = "Detect paths with a missing Fee check"
+    WIKI_URL = (
+        "https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-fee-field-validation"
+    )
+    WIKI_TITLE = "Missing Fee Field Validation"
+    WIKI_DESCRIPTION = (
+        "LogicSig does not validate `Fee` field."
+        " Attacker can submit a transaction with `Fee` field set to large value and drain the account balance."
+        " More at [building-secure-contracts/not-so-smart-contracts/algorand/unchecked_transaction_fee]"
+        "(https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/algorand/unchecked_transaction_fee)"
+    )
     WIKI_EXPLOIT_SCENARIO = """
-```
-#pragma version 2
-txn Receiver
-addr BAZ7SJR2DVKCO6EHLLPXT7FRSYHNCZ35UTQD6K2FI4VALM2SSFIWTBZCTA
-==
-txn Amount
-int 1000000
-==
-&&
-...
+```py
+def withdraw(...) -> Expr:
+    return Seq(
+        [
+            Assert(
+                And(
+                    Txn.type_enum() == TxnType.Payment,
+                    Txn.first_valid() % period == Int(0),
+                    Txn.last_valid() == Txn.first_valid() + duration,
+                    Txn.receiver() == receiver,
+                    Txn.amount() == amount,
+                    Txn.first_valid() < timeout,
+                )
+            ),
+            Approve(),
+        ]
+    )
 ```
 
-Above stateless contract could be used to allow witdraw certain amount by a predefined receiver. if the contract doesn't check the transaction fee, the receiver who turns out be malicious could set it to a high value and drain the
-balance of the account that signed the contract as the fee will be deducted from that account.
-
+Alice signs the logic-sig to allow recurring payments to Bob.\
+ Eve uses the logic-sig and submits a valid transaction with `Fee` set to 1 million ALGOs.\
+ Alice loses 1 million ALGOs.
 """
 
     WIKI_RECOMMENDATION = """
-Always check that transaction fee which can be accessed using `txn Fee` in Teal is less than certain limit and fail if that's not the case.
+Validate `Fee` field in the LogicSig.
 """
-
-    def _check_fee(
-        self,
-        bb: BasicBlock,
-        current_path: List[BasicBlock],
-        paths_without_check: List[List[BasicBlock]],
-    ) -> None:
-        """Find execution paths with missing Fee check.
-
-        This function recursively explores the Control Flow Graph(CFG) of the
-        contract and reports execution paths with missing Fee check.
-
-        This function is "in place", modifies arguments with the data it is
-        supposed to return.
-
-        Args:
-            bb: Current basic block being checked(whose execution is simulated.)
-            current_path: Current execution path being explored.
-            paths_without_check:
-                Execution paths with missing Fee check. This is a
-                "in place" argument. Vulnerable paths found by this function are
-                appended to this list.
-        """
-
-        # check for loops
-        if bb in current_path:
-            return
-
-        current_path = current_path + [bb]
-
-        stack: List[Instruction] = []
-
-        for ins in bb.instructions:
-
-            if isinstance(ins, (Less, LessE, Greater, GreaterE, Eq)):
-                if len(stack) >= 2:
-                    one = stack[-1]
-                    two = stack[-2]
-                    # int .. <[=?] txn fee or txn fee <[=?] int .. or
-                    # int .. >[=?] txnfee or txn fee >[=?] int .. or
-                    #  txn fee == int .. or txn fee == int ..
-                    if _is_fee_check(one, two) or _is_fee_check(two, one):
-                        return
-
-            if isinstance(ins, Return):
-                if len(ins.prev) == 1:
-                    prev = ins.prev[0]
-                    if isinstance(prev, Int) and prev.value == 0:
-                        return
-
-                paths_without_check.append(current_path)
-                return
-
-            stack.append(ins)
-
-        for next_bb in bb.next:
-            self._check_fee(next_bb, current_path, paths_without_check)
 
     def detect(self) -> "SupportedOutput":
         """Detect execution paths with missing Fee check.
@@ -153,11 +84,13 @@ Always check that transaction fee which can be accessed using `txn Fee` in Teal 
             information.
         """
 
-        paths_without_check: List[List[BasicBlock]] = []
-        self._check_fee(self.teal.bbs[0], [], paths_without_check)
+        def checks_field(block_ctx: "BlockTransactionContext") -> bool:
+            # returns True if fee is bounded by some unknown value
+            # or is bounded by some known value less than maximum transaction cost.
+            return block_ctx.max_fee_unknown or block_ctx.max_fee <= MAX_TRANSACTION_COST
 
-        description = "Lack of fee check allows draining the funds of sender account,"
-        description += "contract account or signer of delegate contract."
-        filename = "missing_fee_check"
+        paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
+            self.teal, checks_field
+        )
 
-        return self.generate_result(paths_without_check, description, filename)
+        return ExecutionPaths(self.teal, self, paths_without_check)

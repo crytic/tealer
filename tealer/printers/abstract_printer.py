@@ -11,7 +11,7 @@ Classes:
 
 import abc
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
@@ -52,6 +52,7 @@ class AbstractPrinter(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public-
 
     NAME = ""
     HELP = ""
+    WIKI_URL = ""
 
     def __init__(self, teal: "Teal"):
         self.teal = teal
@@ -66,17 +67,16 @@ class AbstractPrinter(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public-
                 f"HELP is not initialized {self.__class__.__name__}"
             )
 
+        if not self.WIKI_URL:
+            raise IncorrectPrinterInitialization(
+                f"WIKI_URL is not initialized for {self.__class__.__name__}"
+            )
+
     @abc.abstractmethod
-    def print(self, dest: Optional["Path"] = None) -> None:
+    def print(self) -> None:
         """entry method of the printer.
 
         All printers must override this method with the functionality
         specific to them. This method is the entry point of the printer
         and will be called to execute it.
-
-        Args:
-            dest: if printer generates and saves output in files then
-                :dest: will be used as destination directory if given. if
-                :dest: is None, files must be saved in the current
-                directory.
         """

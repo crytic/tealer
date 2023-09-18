@@ -8,6 +8,7 @@ from tealer.detectors.abstract_detector import (
 from tealer.teal.global_field import ZeroAddress
 from tealer.teal.instructions.instructions import Addr, Eq, Global, Int, Neq, Return, Txn
 from tealer.teal.instructions.transaction_field import RekeyTo
+from tealer.utils.output import ExecutionPaths
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -16,7 +17,16 @@ if TYPE_CHECKING:
 
 
 def _is_rekey_check(ins1: "Instruction", ins2: "Instruction") -> bool:
-    """check if ins1 is txn RekeyTo and ins2 is global ZeroAddress or addr ..."""
+    """check if ins1 is txn RekeyTo and ins2 is global ZeroAddress or addr ...
+
+    Args:
+        ins1: First instruction.
+        ins2: Second instruction.
+
+    Returns:
+        Returns True is :ins1: is "txn RekeyTo" and ins2 pushes an address value onto the stack.
+        Otherwise, returns False.
+    """
     if isinstance(ins1, Txn) and isinstance(ins1.field, RekeyTo):
         if isinstance(ins2, Global) and isinstance(ins2.field, ZeroAddress):
             return True
@@ -88,8 +98,4 @@ Add a check in the contract code verifying that `RekeyTo` property of any transa
         paths_without_check: List[List["BasicBlock"]] = []
         self._check_rekey_to(self.teal.bbs[0], [], paths_without_check)
 
-        description = "Lack of txn RekeyTo check allows rekeying the account to"
-        description += " attacker controlled address and control the account"
-        filename = "missing_rekeyto_check_stateless"
-
-        return self.generate_result(paths_without_check, description, filename)
+        return ExecutionPaths(self.teal, self, paths_without_check)

@@ -1,0 +1,30 @@
+#pragma version 7
+global GroupSize
+int 4
+<=
+bnz main_l2
+global GroupSize
+int 5
+>
+global GroupSize
+int 11
+<
+&&
+txn GroupIndex
+int 2
+==
+&&
+assert
+b main_l3
+main_l2:
+global GroupSize
+int 3
+==
+assert
+txn GroupIndex
+int 1
+==
+assert
+main_l3:
+int 1
+return

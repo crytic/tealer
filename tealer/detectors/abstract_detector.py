@@ -44,14 +44,12 @@ Classes:
 """
 
 import abc
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from tealer.utils.comparable_enum import ComparableEnum
-from tealer.utils.output import ExecutionPaths
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
-    from tealer.teal.basic_blocks import BasicBlock
     from tealer.utils.output import SupportedOutput
 
 
@@ -63,10 +61,13 @@ class IncorrectDetectorInitialization(Exception):
     """
 
 
+# DetectorType is used to specify "Applicability of a detector."
 class DetectorType(ComparableEnum):
-    STATELESS = 0
-    STATEFULL = 1
-    STATEFULLGROUP = 2
+    # Order by stateful, stateless and stateful, stateless
+    STATEFULL = 0
+    STATELESS_AND_STATEFULL = 1
+    STATELESS = 2
+    STATEFULLGROUP = 3
 
     UNDEFINED = 255
 
@@ -74,6 +75,7 @@ class DetectorType(ComparableEnum):
 DETECTOR_TYPE_TXT = {
     DetectorType.STATELESS: "Stateless",
     DetectorType.STATEFULL: "Stateful",
+    DetectorType.STATELESS_AND_STATEFULL: "Stateless, Stateful",
     DetectorType.STATEFULLGROUP: "StatefulGroup",
 }
 
@@ -86,6 +88,9 @@ class DetectorClassification(ComparableEnum):
     OPTIMIZATION = 4
 
     UNIMPLEMENTED = 999
+
+    def __str__(self) -> str:
+        return self.name.title()
 
 
 classification_txt = {
@@ -147,6 +152,7 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
     IMPACT: DetectorClassification = DetectorClassification.UNIMPLEMENTED
     CONFIDENCE: DetectorClassification = DetectorClassification.UNIMPLEMENTED
 
+    WIKI_URL = ""
     WIKI_TITLE = ""
     WIKI_DESCRIPTION = ""
     WIKI_EXPLOIT_SCENARIO = ""
@@ -190,6 +196,11 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
                 f"WIKI_RECOMMENDATION is not initialized {self.__class__.__name__}"
             )
 
+        if not self.WIKI_URL:
+            raise IncorrectDetectorInitialization(
+                f"WIKI_URL is not initialized {self.__class__.__name__}"
+            )
+
         if self.IMPACT not in [
             DetectorClassification.LOW,
             DetectorClassification.MEDIUM,
@@ -210,39 +221,6 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
                 f"CONFIDENCE is not initialized {self.__class__.__name__}"
             )
 
-    def generate_result(
-        self, paths: List[List["BasicBlock"]], description: str, filename: str
-    ) -> ExecutionPaths:
-        """Helper method to construct ExecutionPaths result.
-
-        This function constructs and fills up the detector information of
-        ExecutionPaths object. ExecutionPaths is used to store output of
-        detector's that represent issues/vulnerabilities as execution paths.
-
-        Args:
-            paths: List of execution paths. Each execution path is represented
-                by a list of basic blocks.
-            description: Description of the issue/vulns.
-            filename: The execution paths are saved in dot files. :filename: is
-                used as the filename prefix for that dot files.
-
-        Returns:
-            ExecutionPaths object populated with the given args and detector
-            specific information.
-        """
-
-        output = ExecutionPaths(self.teal.bbs, description, filename)
-
-        for path in paths:
-            output.add_path(path)
-
-        output.check = self.NAME
-        output.impact = classification_txt[self.IMPACT]
-        output.confidence = classification_txt[self.CONFIDENCE]
-        output.help = self.WIKI_RECOMMENDATION.strip()
-
-        return output
-
     @abc.abstractmethod
     def detect(self) -> "SupportedOutput":
         """Entry method of detector.
@@ -252,10 +230,10 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
         called to execute it.
 
         Returns:
-            detector results represented in one of the supported types. Currently,
+            Detector results represented in one of the supported types. Currently,
             all detectors work on Control Flow Graph(CFG) of the contract and represent
             the issues in the form of execution path in the CFG. ExecutionPaths class
-            is used to represent them. It is the only type supported currently and
-            AbstractDetector comes with a helper method to construct the result object
-            given the vulnerable execution paths, description and filenames.
+            is used to represent them.
+
+        # noqa: DAR202
         """

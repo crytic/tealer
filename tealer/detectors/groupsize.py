@@ -8,103 +8,123 @@ from tealer.detectors.abstract_detector import (
     DetectorType,
 )
 from tealer.teal.basic_blocks import BasicBlock
-from tealer.teal.global_field import GroupSize
-from tealer.teal.instructions.instructions import Return, Int, Global
+from tealer.teal.instructions.instructions import (
+    Gtxn,
+    Gtxna,
+    Gtxnas,
+    Gtxns,
+    Gtxnsa,
+    Gtxnsas,
+)
 from tealer.teal.teal import Teal
+
+from tealer.utils.algorand_constants import MAX_GROUP_SIZE
+from tealer.utils.analyses import is_int_push_ins
+from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, UnknownStackValue
+from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.utils.output import ExecutionPaths
+
 
 if TYPE_CHECKING:
     from tealer.utils.output import SupportedOutput
+    from tealer.teal.instructions.instructions import Instruction
+    from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
 class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-methods
-    """Detector to find execution paths missing GroupSize check.
+    """Detector to find execution paths using absoulte index without checking group size."""
 
-    Algorand supports atomic transactions. Atomic transactions are a
-    group of transactions with the property that either all execute
-    successfully or None of them. It is necessary to check the group size
-    of the transaction based on the application.
+    NAME = "group-size-check"
+    DESCRIPTION = "Usage of absolute indexes without validating GroupSize"
+    TYPE = DetectorType.STATELESS_AND_STATEFULL
 
-    This detector tries to find execution paths that approve the algorand
-    transaction("return 1") and doesn't check the CloseRemainderTo field.
-    """
-
-    NAME = "groupSize"
-    DESCRIPTION = "Detect paths with a missing GroupSize check"
-    TYPE = DetectorType.STATEFULLGROUP
-
-    IMPACT = DetectorClassification.MEDIUM
+    IMPACT = DetectorClassification.HIGH
     CONFIDENCE = DetectorClassification.HIGH
 
-    WIKI_TITLE = "Missing GroupSize check"
-    WIKI_DESCRIPTION = "Detect paths with a missing GroupSize check"
+    WIKI_URL = (
+        "https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-groupsize-validation"
+    )
+    WIKI_TITLE = "Missing GroupSize Validation"
+    WIKI_DESCRIPTION = (
+        "Contract's execution depends on multiple transactions in the group"
+        " and it uses absolute index to access information of other transactions in the group."
+        " Attacker can exploit the contract by abusing the lack of validations on `GroupSize`."
+        " More at [building-secure-contracts/not-so-smart-contracts/algorand/group_size_check]"
+        "(https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/algorand/group_size_check)"
+    )
     WIKI_EXPLOIT_SCENARIO = """
-Consider the system consisting of two contracts, designed in such a way that first contract should be called by the
-first transaction of the group and second one by the second transaction. first contract handles all the verification,
-second contract approves the transfer of certain amount of assets if first contract approves its transaction.
-ofcourse, second contract verifies that first transaction in the group is call to the first contract.
+```py
+def mint_wrapped_algo() -> Expr:
+    validations = Assert(
+        And(
+            Gtxn[0].receiver() == Global.current_application_address(),
+            Gtxn[0].type_enum() == TxnType.Payment,
+        )
+    )
+    transfer_op = transfer_wrapped_algo(Txn.sender(), Gtxn[0].amount())
+    return Seq([validations, transfer_op, Approve()])
+```
 
-Possible exploit scenario is if second contract **only** verifies that first transaction is a call to first contract and
-doesn't check the group size to the expected value of `2`. The attacker could add an additional transaction(s) which are
-copy of second transaction i.e transfer of assets. As all the transactions to second contract only verify the first transaction,
-the attacker may possibly transfer all the assets by appending transactions which are each a copy of second transaction.
+Eve sends the following group transaction:
+```
+0. Payment of 1 million ALGOs to application address
+1. Call mint_wrapped_algo
+2. Call mint_wrapped_algo 
+...
+15. Call mint_wrapped_algo
+```
 
-Attacker can get upto 14 times(max atomic group size 16) more than the intended amount.
+Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
+ Eve exchanges the Wrapped-algo to ALGO and steals 14 million ALGOs.
 """
     WIKI_RECOMMENDATION = """
-Always verify that group size(number of transactions in atomic group) is equal to what logic is expecting.
+- Avoid using absolute indexes. Validate GroupSize if used.
+- Favor using ARC-4 ABI and relative indexes for group transactions.
 """
 
     def __init__(self, teal: Teal):
         super().__init__(teal)
         self.results_number = 0
 
-    def _check_groupsize(
-        self,
-        bb: BasicBlock,
-        current_path: List[BasicBlock],
-        # use_gtnx: bool,
-        paths_without_check: List[List[BasicBlock]],
-    ) -> None:
-        """Find execution paths with missing GroupSize check.
+    @staticmethod
+    def _accessed_using_absolute_index(bb: BasicBlock) -> bool:
+        """Return True if a instruction in bb access a field using absolute index
 
-        This function recursively explores the Control Flow Graph(CFG) of the
-        contract and reports execution paths with missing GroupSize
-        check.
+        a. gtxn t f, gtxna t f i, gtxnas t f,
+        b. gtxns f, gtxnsa f i, gtxnsas f
 
-        This function is "in place", modifies arguments with the data it is
-        supposed to return.
+        Instructions in (a) take transaction index as a immediate argument.
+        Return True if bb contains any one of those instructions.
+
+        Instructions in (b) take transaction index from the stack.
+        `gtxns f` and `gtxnsa f i` take only one argument and it is the transaction index.
+        `gtxnsas f` takes two arguments and transaction index is the first argument.
+        Return True if the transaction index is pushed by an int instruction.
 
         Args:
-            bb: Current basic block being checked(whose execution is simulated.)
-            current_path: Current execution path being explored.
-            paths_without_check:
-                Execution paths with missing GroupSize check. This is a
-                "in place" argument. Vulnerable paths found by this function are
-                appended to this list.
+            bb: A basic block of the CFG
+
+        Returns:
+            Returns True if a instruction in bb access a field of group transaction using
+            an absolute index. returns False otherwise.
         """
-
-        # check for loops
-        if bb in current_path:
-            return
-
-        current_path = current_path + [bb]
+        stack_gtxns_ins: List["Instruction"] = []
         for ins in bb.instructions:
-
-            if isinstance(ins, Global):
-                if isinstance(ins.field, GroupSize):
-                    return
-
-            if isinstance(ins, Return):
-                if len(ins.prev) == 1:
-                    prev = ins.prev[0]
-                    if isinstance(prev, Int):
-                        if prev.value == 0:
-                            return
-
-                paths_without_check.append(current_path)
-
-        for next_bb in bb.next:
-            self._check_groupsize(next_bb, current_path, paths_without_check)
+            if isinstance(ins, (Gtxn, Gtxna, Gtxnas)):
+                return True
+            if isinstance(ins, (Gtxns, Gtxnsa, Gtxnsas)):
+                stack_gtxns_ins.append(ins)
+        if not stack_gtxns_ins:
+            return False
+        ast_values = construct_stack_ast(bb)
+        for ins in stack_gtxns_ins:
+            index_value = ast_values[ins].args[0]
+            if isinstance(index_value, UnknownStackValue):
+                continue
+            is_int, _ = is_int_push_ins(index_value.instruction)
+            if is_int:
+                return True
+        return False
 
     def detect(self) -> "SupportedOutput":
         """Detect execution paths with missing GroupSize check.
@@ -115,10 +135,24 @@ Always verify that group size(number of transactions in atomic group) is equal t
             information.
         """
 
-        paths_without_check: List[List[BasicBlock]] = []
-        self._check_groupsize(self.teal.bbs[0], [], paths_without_check)
+        def checks_group_size(block_ctx: "BlockTransactionContext") -> bool:
+            # return True if group-size is checked in the path
+            # otherwise return False
+            if block_ctx.is_gtxn_context:
+                # gtxn_contexts have group-sizes, group-indices set to 0.
+                return False
+            return MAX_GROUP_SIZE not in block_ctx.group_sizes
 
-        description = "Lack of groupSize check found"
-        filename = "missing_group_size"
+        def satisfies_report_condition(path: List["BasicBlock"]) -> bool:
 
-        return self.generate_result(paths_without_check, description, filename)
+            for block in path:
+                if self._accessed_using_absolute_index(block):
+                    return True
+            return False
+
+        paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
+            self.teal, checks_group_size, satisfies_report_condition
+        )
+        construct_stack_ast.cache_clear()
+
+        return ExecutionPaths(self.teal, self, paths_without_check)

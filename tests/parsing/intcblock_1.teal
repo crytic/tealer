@@ -1,0 +1,1708 @@
+// reference: https://algoexplorer.io/application/900932886
+#pragma version 6
+	intcblock 0 1 400 1000 600 1000000000000000 4 1000000000000000000 64 6
+	bytecblock 0x757473 0x737473 0x75737473 0x7575725f 0x6c6d 0x7473 0x72635f 0x727063 0x76656169 0x7270635f 0x726561 0x7572635f 0x757270635f 0x7270735f 0x72695f 0x726d6169 0x6c74 0x637574 0x656461 0x7261695f 0x72705f 0x637564 0x6461 0x6169 0x63756168 0x63756368 0x757662 0x626d 0x75727073
+	txn ApplicationID // id=0
+	intc_0 // 0
+	==
+	bnz label1
+	txn OnCompletion
+	intc 6 // 4
+	==
+	bnz label2
+	txn OnCompletion
+	intc_1 // 1
+	==
+	bnz label3
+	txn Sender // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 22 // "da"
+	app_global_get
+	==
+	txn Sender // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 18 // "eda"
+	app_global_get
+	==
+	||
+	bnz label4
+	bytec 15 // "rmai"
+	app_global_get
+	intc_0 // 0
+	!=
+	bytec 15 // "rmai"
+	app_global_get
+	global CallerApplicationID
+	==
+	&&
+	txn OnCompletion
+	intc_0 // 0
+	==
+	&&
+	bnz label5
+	txn OnCompletion
+	intc_0 // 0
+	==
+	bnz label6
+	txn OnCompletion
+	pushint 2
+	==
+	bnz label7
+	txn OnCompletion
+	pushint 5
+	==
+	bnz label8
+	err
+label8:
+	intc_0 // 0
+	return
+label7:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	intc_0 // 0
+	==
+	assert
+	txna ApplicationArgs 1
+	btoi
+	intc_0 // 0
+	==
+	bnz label9
+label10:
+	intc_1 // 1
+	return
+label9:
+	intc_0 // 0
+	store 0
+label11:
+	load 0
+	bytec 7 // "rpc"
+	app_global_get
+	<
+	bz label10
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	app_local_get
+	intc_0 // 0
+	==
+	assert
+	load 0
+	intc_1 // 1
+	+
+	store 0
+	b label11
+label6:
+	txna ApplicationArgs 0
+	pushbytes 0x666f // "fo"
+	==
+	bnz label12
+	txna ApplicationArgs 0
+	pushbytes 0x757475 // "utu"
+	==
+	bnz label13
+	intc_1 // 1
+	bnz label14
+	err
+label14:
+	intc_0 // 0
+	store 0
+label35:
+	load 0
+	bytec 7 // "rpc"
+	app_global_get
+	<
+	bnz label15
+	bytec 16 // "lt"
+	global LatestTimestamp // Tue, 11 Oct 2022 22:36:03 UTC
+	app_global_put
+	bytec_1 // "sts"
+	bytec_1 // "sts"
+	app_global_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	app_local_get
+	-
+	app_global_put
+	bytec 8 // "veai"
+	app_global_get
+	intc_0 // 0
+	!=
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 8 // "veai"
+	app_global_get
+	app_opted_in
+	&&
+	bnz label16
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	intc_0 // 0
+	app_local_put
+label32:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	intc_2 // 400
+	mulw
+	intc_0 // 0
+	intc_3 // 1000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	app_local_get
+	bytec 5 // "ts"
+	app_global_get
+	mulw
+	intc 4 // 600
+	uncover 2
+	dig 1
+	*
+	cover 2
+	mulw
+	cover 2
+	+
+	swap
+	intc_0 // 0
+	intc 5 // 1000000000000000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	+
+	<
+	bnz label17
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	intc_2 // 400
+	mulw
+	intc_0 // 0
+	intc_3 // 1000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	app_local_get
+	bytec 5 // "ts"
+	app_global_get
+	mulw
+	intc 4 // 600
+	uncover 2
+	dig 1
+	*
+	cover 2
+	mulw
+	cover 2
+	+
+	swap
+	intc_0 // 0
+	intc 5 // 1000000000000000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	+
+label31:
+	app_local_put
+	bytec_1 // "sts"
+	bytec_1 // "sts"
+	app_global_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	app_local_get
+	+
+	app_global_put
+	txna ApplicationArgs 0
+	pushbytes 0x73 // "s"
+	==
+	bnz label18
+	txna ApplicationArgs 0
+	pushbytes 0x75 // "u"
+	==
+	bnz label19
+	txna ApplicationArgs 0
+	pushbytes 0x6372 // "cr"
+	==
+	bnz label20
+	err
+label20:
+	txna ApplicationArgs 1
+	btoi
+	bytec 7 // "rpc"
+	app_global_get
+	<
+	assert
+	txna ApplicationArgs 1
+	btoi
+	store 0
+	bytec 19 // "rai_"
+	load 0
+	itob
+	concat
+	app_global_get
+	intc_1 // 1
+	==
+	bnz label21
+	bytec 10 // "rea"
+	app_global_get
+	bytec 19 // "rai_"
+	load 0
+	itob
+	concat
+	app_global_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	app_local_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	callsub label22
+label24:
+	bytec 20 // "rp_"
+	load 0
+	itob
+	concat
+	bytec 20 // "rp_"
+	load 0
+	itob
+	concat
+	app_global_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	app_local_get
+	+
+	app_global_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	intc_0 // 0
+	app_local_put
+	intc_1 // 1
+	return
+label21:
+	bytec 10 // "rea"
+	app_global_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	app_local_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	callsub label23
+	b label24
+label19:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	txna ApplicationArgs 1
+	btoi
+	>=
+	assert
+	bytec 23 // "ai"
+	app_global_get
+	txna ApplicationArgs 1
+	btoi
+	txn Sender // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	callsub label25
+	bytec_1 // "sts"
+	bytec_1 // "sts"
+	app_global_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	app_local_get
+	-
+	app_global_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	txna ApplicationArgs 1
+	btoi
+	-
+	app_local_put
+	bytec 5 // "ts"
+	bytec 5 // "ts"
+	app_global_get
+	txna ApplicationArgs 1
+	btoi
+	-
+	app_global_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	intc_2 // 400
+	mulw
+	intc_0 // 0
+	intc_3 // 1000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	app_local_get
+	bytec 5 // "ts"
+	app_global_get
+	mulw
+	intc 4 // 600
+	uncover 2
+	dig 1
+	*
+	cover 2
+	mulw
+	cover 2
+	+
+	swap
+	intc_0 // 0
+	intc 5 // 1000000000000000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	+
+	<
+	bnz label26
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	intc_2 // 400
+	mulw
+	intc_0 // 0
+	intc_3 // 1000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	app_local_get
+	bytec 5 // "ts"
+	app_global_get
+	mulw
+	intc 4 // 600
+	uncover 2
+	dig 1
+	*
+	cover 2
+	mulw
+	cover 2
+	+
+	swap
+	intc_0 // 0
+	intc 5 // 1000000000000000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	+
+label27:
+	app_local_put
+	bytec_1 // "sts"
+	bytec_1 // "sts"
+	app_global_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	app_local_get
+	+
+	app_global_put
+	intc_1 // 1
+	return
+label26:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	b label27
+label18:
+	txn GroupIndex // index=1
+	intc_1 // 1
+	-
+	global CurrentApplicationAddress
+	bytec 23 // "ai"
+	app_global_get
+	callsub label28
+	txn GroupIndex // index=1
+	intc_1 // 1
+	-
+	gtxns AssetAmount
+	store 1
+	bytec_1 // "sts"
+	bytec_1 // "sts"
+	app_global_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	app_local_get
+	-
+	app_global_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	load 1
+	+
+	app_local_put
+	bytec 5 // "ts"
+	bytec 5 // "ts"
+	app_global_get
+	load 1
+	+
+	app_global_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	intc_2 // 400
+	mulw
+	intc_0 // 0
+	intc_3 // 1000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	app_local_get
+	bytec 5 // "ts"
+	app_global_get
+	mulw
+	intc 4 // 600
+	uncover 2
+	dig 1
+	*
+	cover 2
+	mulw
+	cover 2
+	+
+	swap
+	intc_0 // 0
+	intc 5 // 1000000000000000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	+
+	<
+	bnz label29
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	intc_2 // 400
+	mulw
+	intc_0 // 0
+	intc_3 // 1000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	app_local_get
+	bytec 5 // "ts"
+	app_global_get
+	mulw
+	intc 4 // 600
+	uncover 2
+	dig 1
+	*
+	cover 2
+	mulw
+	cover 2
+	+
+	swap
+	intc_0 // 0
+	intc 5 // 1000000000000000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	+
+label30:
+	app_local_put
+	bytec_1 // "sts"
+	bytec_1 // "sts"
+	app_global_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	app_local_get
+	+
+	app_global_put
+	intc_1 // 1
+	return
+label29:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	b label30
+label17:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	b label31
+label16:
+	itxn_begin
+	intc 9 // 6
+	itxn_field TypeEnum
+	bytec 8 // "veai"
+	app_global_get
+	itxn_field ApplicationID
+	bytec 26 // "uvb"
+	itxn_field ApplicationArgs
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	itxn_field Accounts
+	intc_0 // 0
+	itxn_field Fee
+	itxn_submit
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 8 // "veai"
+	app_global_get
+	bytec 27 // "bm"
+	app_local_get_ex
+	store 3
+	store 2
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	load 2
+	app_local_put
+	b label32
+label15:
+	bytec_1 // "sts"
+	app_global_get
+	intc_0 // 0
+	>
+	bnz label33
+label37:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 12 // "urpc_"
+	load 0
+	itob
+	concat
+	app_local_get
+	bytec 9 // "rpc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	!=
+	bnz label34
+label36:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	app_local_get
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 11 // "urc_"
+	load 0
+	itob
+	concat
+	app_local_get
+	b-
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	app_local_get
+	itob
+	b*
+	intc 7 // 1000000000000000000
+	itob
+	b/
+	btoi
+	+
+	app_local_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 11 // "urc_"
+	load 0
+	itob
+	concat
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	app_local_put
+	load 0
+	intc_1 // 1
+	+
+	store 0
+	b label35
+label34:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	intc_0 // 0
+	app_local_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 11 // "urc_"
+	load 0
+	itob
+	concat
+	intc 8 // 64
+	bzero
+	app_local_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 12 // "urpc_"
+	load 0
+	itob
+	concat
+	bytec 9 // "rpc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	app_local_put
+	b label36
+label33:
+	global LatestTimestamp // Tue, 11 Oct 2022 22:36:03 UTC
+	bytec 16 // "lt"
+	app_global_get
+	-
+	bytec 13 // "rps_"
+	load 0
+	itob
+	concat
+	app_global_get
+	*
+	store 10
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	intc 7 // 1000000000000000000
+	itob
+	load 10
+	itob
+	b*
+	bytec_1 // "sts"
+	app_global_get
+	itob
+	b/
+	b+
+	app_global_put
+	bytec 14 // "ri_"
+	load 0
+	itob
+	concat
+	bytec 14 // "ri_"
+	load 0
+	itob
+	concat
+	app_global_get
+	load 10
+	+
+	app_global_put
+	b label37
+label13:
+	intc_0 // 0
+	store 0
+label45:
+	load 0
+	bytec 7 // "rpc"
+	app_global_get
+	<
+	bnz label38
+	bytec 16 // "lt"
+	global LatestTimestamp // Tue, 11 Oct 2022 22:36:03 UTC
+	app_global_put
+	bytec_1 // "sts"
+	bytec_1 // "sts"
+	app_global_get
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	app_local_get
+	-
+	app_global_put
+	bytec 8 // "veai"
+	app_global_get
+	intc_0 // 0
+	!=
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 8 // "veai"
+	app_global_get
+	app_opted_in
+	&&
+	bnz label39
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	intc_0 // 0
+	app_local_put
+label42:
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	intc_2 // 400
+	mulw
+	intc_0 // 0
+	intc_3 // 1000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	app_local_get
+	bytec 5 // "ts"
+	app_global_get
+	mulw
+	intc 4 // 600
+	uncover 2
+	dig 1
+	*
+	cover 2
+	mulw
+	cover 2
+	+
+	swap
+	intc_0 // 0
+	intc 5 // 1000000000000000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	+
+	<
+	bnz label40
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	intc_2 // 400
+	mulw
+	intc_0 // 0
+	intc_3 // 1000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	app_local_get
+	bytec 5 // "ts"
+	app_global_get
+	mulw
+	intc 4 // 600
+	uncover 2
+	dig 1
+	*
+	cover 2
+	mulw
+	cover 2
+	+
+	swap
+	intc_0 // 0
+	intc 5 // 1000000000000000
+	divmodw
+	pop
+	pop
+	swap
+	!
+	assert
+	+
+label41:
+	app_local_put
+	bytec_1 // "sts"
+	bytec_1 // "sts"
+	app_global_get
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	app_local_get
+	+
+	app_global_put
+	intc_1 // 1
+	return
+label40:
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	app_local_get
+	b label41
+label39:
+	itxn_begin
+	intc 9 // 6
+	itxn_field TypeEnum
+	bytec 8 // "veai"
+	app_global_get
+	itxn_field ApplicationID
+	bytec 26 // "uvb"
+	itxn_field ApplicationArgs
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	itxn_field Accounts
+	intc_0 // 0
+	itxn_field Fee
+	itxn_submit
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 8 // "veai"
+	app_global_get
+	bytec 27 // "bm"
+	app_local_get_ex
+	store 5
+	store 4
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	load 4
+	app_local_put
+	b label42
+label38:
+	bytec_1 // "sts"
+	app_global_get
+	intc_0 // 0
+	>
+	bnz label43
+label47:
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 12 // "urpc_"
+	load 0
+	itob
+	concat
+	app_local_get
+	bytec 9 // "rpc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	!=
+	bnz label44
+label46:
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	app_local_get
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 11 // "urc_"
+	load 0
+	itob
+	concat
+	app_local_get
+	b-
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	app_local_get
+	itob
+	b*
+	intc 7 // 1000000000000000000
+	itob
+	b/
+	btoi
+	+
+	app_local_put
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 11 // "urc_"
+	load 0
+	itob
+	concat
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	app_local_put
+	load 0
+	intc_1 // 1
+	+
+	store 0
+	b label45
+label44:
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	intc_0 // 0
+	app_local_put
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 11 // "urc_"
+	load 0
+	itob
+	concat
+	intc 8 // 64
+	bzero
+	app_local_put
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 12 // "urpc_"
+	load 0
+	itob
+	concat
+	bytec 9 // "rpc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	app_local_put
+	b label46
+label43:
+	global LatestTimestamp // Tue, 11 Oct 2022 22:36:03 UTC
+	bytec 16 // "lt"
+	app_global_get
+	-
+	bytec 13 // "rps_"
+	load 0
+	itob
+	concat
+	app_global_get
+	*
+	store 10
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	intc 7 // 1000000000000000000
+	itob
+	load 10
+	itob
+	b*
+	bytec_1 // "sts"
+	app_global_get
+	itob
+	b/
+	b+
+	app_global_put
+	bytec 14 // "ri_"
+	load 0
+	itob
+	concat
+	bytec 14 // "ri_"
+	load 0
+	itob
+	concat
+	app_global_get
+	load 10
+	+
+	app_global_put
+	b label47
+label12:
+	intc_1 // 1
+	return
+label5:
+	txna ApplicationArgs 0
+	bytec 28 // "urps"
+	==
+	bnz label48
+	err
+label48:
+	txna ApplicationArgs 1
+	btoi
+	bytec 7 // "rpc"
+	app_global_get
+	<
+	assert
+	txna ApplicationArgs 1
+	btoi
+	store 0
+	bytec 13 // "rps_"
+	load 0
+	itob
+	concat
+	txna ApplicationArgs 2
+	btoi
+	app_global_put
+	intc_1 // 1
+	return
+label4:
+	txn OnCompletion
+	intc_0 // 0
+	==
+	bnz label49
+	err
+label49:
+	txna ApplicationArgs 0
+	pushbytes 0x756461 // "uda"
+	==
+	bnz label50
+	txna ApplicationArgs 0
+	pushbytes 0x75656461 // "ueda"
+	==
+	bnz label51
+	txna ApplicationArgs 0
+	pushbytes 0x69726561 // "irea"
+	==
+	bnz label52
+	txna ApplicationArgs 0
+	pushbytes 0x736375 // "scu"
+	==
+	bnz label53
+	txna ApplicationArgs 0
+	pushbytes 0x69637564 // "icud"
+	==
+	bnz label54
+	txna ApplicationArgs 0
+	pushbytes 0x73726d6169 // "srmai"
+	==
+	bnz label55
+	txna ApplicationArgs 0
+	pushbytes 0x7376656169 // "sveai"
+	==
+	bnz label56
+	txna ApplicationArgs 0
+	pushbytes 0x737270 // "srp"
+	==
+	bnz label57
+	txna ApplicationArgs 0
+	bytec 28 // "urps"
+	==
+	bnz label58
+	txna ApplicationArgs 0
+	pushbytes 0x6f6961 // "oia"
+	==
+	bnz label59
+	txna ApplicationArgs 0
+	pushbytes 0x6f69726d // "oirm"
+	==
+	bnz label60
+	txna ApplicationArgs 0
+	pushbytes 0x727261 // "rra"
+	==
+	bnz label61
+	err
+label61:
+	txna ApplicationArgs 1
+	btoi
+	intc_1 // 1
+	==
+	bnz label62
+	bytec 10 // "rea"
+	app_global_get
+	txna ApplicationArgs 1
+	btoi
+	txna ApplicationArgs 2
+	btoi
+	txn Sender // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	callsub label22
+label63:
+	intc_1 // 1
+	return
+label62:
+	bytec 10 // "rea"
+	app_global_get
+	txna ApplicationArgs 2
+	btoi
+	txn Sender // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	callsub label23
+	b label63
+label60:
+	itxn_begin
+	intc 9 // 6
+	itxn_field TypeEnum
+	intc_1 // 1
+	itxn_field OnCompletion
+	bytec 15 // "rmai"
+	app_global_get
+	itxn_field ApplicationID
+	pushbytes 0x636f69 // "coi"
+	itxn_field ApplicationArgs
+	global CurrentApplicationID // id=900932886
+	itxn_field Applications
+	intc_0 // 0
+	itxn_field Fee
+	itxn_submit
+	intc_1 // 1
+	return
+label59:
+	txna Assets 0
+	intc_0 // 0
+	global CurrentApplicationAddress
+	callsub label25
+	intc_1 // 1
+	return
+label58:
+	txna ApplicationArgs 1
+	btoi
+	bytec 7 // "rpc"
+	app_global_get
+	<
+	assert
+	txna ApplicationArgs 1
+	btoi
+	store 0
+	bytec 13 // "rps_"
+	load 0
+	itob
+	concat
+	txna ApplicationArgs 2
+	btoi
+	app_global_put
+	intc_1 // 1
+	return
+label57:
+	txna ApplicationArgs 1
+	btoi
+	bytec 7 // "rpc"
+	app_global_get
+	<
+	assert
+	txna ApplicationArgs 1
+	btoi
+	store 0
+	bytec 9 // "rpc_"
+	load 0
+	itob
+	concat
+	bytec 9 // "rpc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	intc_1 // 1
+	+
+	app_global_put
+	bytec 19 // "rai_"
+	load 0
+	itob
+	concat
+	txna Assets 0
+	app_global_put
+	bytec 13 // "rps_"
+	load 0
+	itob
+	concat
+	txna ApplicationArgs 2
+	btoi
+	app_global_put
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	intc 8 // 64
+	bzero
+	app_global_put
+	bytec 14 // "ri_"
+	load 0
+	itob
+	concat
+	intc_0 // 0
+	app_global_put
+	bytec 20 // "rp_"
+	load 0
+	itob
+	concat
+	intc_0 // 0
+	app_global_put
+	txna Assets 0
+	intc_1 // 1
+	!=
+	bnz label64
+label65:
+	intc_1 // 1
+	return
+label64:
+	bytec 10 // "rea"
+	app_global_get
+	txna Assets 0
+	intc_0 // 0
+	bytec 10 // "rea"
+	app_global_get
+	callsub label22
+	b label65
+label56:
+	bytec 8 // "veai"
+	txna Applications 1
+	app_global_put
+	intc_1 // 1
+	return
+label55:
+	bytec 15 // "rmai"
+	txna Applications 1
+	app_global_put
+	intc_1 // 1
+	return
+label54:
+	bytec 21 // "cud"
+	app_global_get
+	txna ApplicationArgs 1
+	btoi
+	<
+	assert
+	bytec 21 // "cud"
+	txna ApplicationArgs 1
+	btoi
+	app_global_put
+	intc_1 // 1
+	return
+label53:
+	txna ApplicationArgs 1
+	btoi
+	global LatestTimestamp // Tue, 11 Oct 2022 22:36:03 UTC
+	bytec 21 // "cud"
+	app_global_get
+	+
+	>=
+	assert
+	bytec 24 // "cuah"
+	txna ApplicationArgs 2
+	app_global_put
+	bytec 25 // "cuch"
+	txna ApplicationArgs 3
+	app_global_put
+	bytec 17 // "cut"
+	txna ApplicationArgs 1
+	btoi
+	app_global_put
+	intc_1 // 1
+	return
+label52:
+	bytec 10 // "rea"
+	app_global_get
+	global ZeroAddress
+	==
+	assert
+	txn GroupIndex // index=1
+	intc_1 // 1
+	-
+	gtxns Sender
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	==
+	assert
+	txn GroupIndex // index=1
+	intc_1 // 1
+	-
+	gtxns CloseRemainderTo
+	global ZeroAddress
+	==
+	assert
+	txn GroupIndex // index=1
+	intc_1 // 1
+	-
+	gtxns RekeyTo
+	global CurrentApplicationAddress
+	==
+	assert
+	bytec 10 // "rea"
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	app_global_put
+	intc_1 // 1
+	return
+label51:
+	txn Sender // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 18 // "eda"
+	app_global_get
+	==
+	assert
+	bytec 18 // "eda"
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	app_global_put
+	intc_1 // 1
+	return
+label50:
+	bytec 22 // "da"
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	app_global_put
+	intc_1 // 1
+	return
+label3:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_0 // "uts"
+	intc_0 // 0
+	app_local_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	intc_0 // 0
+	app_local_put
+	intc_0 // 0
+	store 0
+label68:
+	load 0
+	bytec 7 // "rpc"
+	app_global_get
+	<
+	bnz label66
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 4 // "lm"
+	intc_0 // 0
+	app_local_put
+	intc_1 // 1
+	return
+label66:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 12 // "urpc_"
+	load 0
+	itob
+	concat
+	app_local_get
+	bytec 9 // "rpc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	!=
+	bnz label67
+label69:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	app_local_get
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 11 // "urc_"
+	load 0
+	itob
+	concat
+	app_local_get
+	b-
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_2 // "usts"
+	app_local_get
+	itob
+	b*
+	intc 7 // 1000000000000000000
+	itob
+	b/
+	btoi
+	+
+	app_local_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 11 // "urc_"
+	load 0
+	itob
+	concat
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	app_local_put
+	load 0
+	intc_1 // 1
+	+
+	store 0
+	b label68
+label67:
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec_3 // "uur_"
+	load 0
+	itob
+	concat
+	intc_0 // 0
+	app_local_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 11 // "urc_"
+	load 0
+	itob
+	concat
+	intc 8 // 64
+	bzero
+	app_local_put
+	txna Accounts 0 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	bytec 12 // "urpc_"
+	load 0
+	itob
+	concat
+	bytec 9 // "rpc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	app_local_put
+	b label69
+label2:
+	bytec 17 // "cut"
+	app_global_get
+	intc_0 // 0
+	!=
+	assert
+	bytec 17 // "cut"
+	app_global_get
+	global LatestTimestamp // Tue, 11 Oct 2022 22:36:03 UTC
+	<=
+	assert
+	txn ApprovalProgram
+	sha256
+	bytec 24 // "cuah"
+	app_global_get
+	==
+	assert
+	txn ClearStateProgram
+	sha256
+	bytec 25 // "cuch"
+	app_global_get
+	==
+	assert
+	bytec 24 // "cuah"
+	intc_0 // 0
+	app_global_put
+	bytec 25 // "cuch"
+	intc_0 // 0
+	app_global_put
+	bytec 17 // "cut"
+	intc_0 // 0
+	app_global_put
+	intc_1 // 1
+	return
+label1:
+	bytec 22 // "da"
+	txna Accounts 1 // EJAB2PODJFHEPXGR3XZ3JVSZ53DPYBMRHJO7GEDIEYABYA7XT6YLVJ3S4U
+	app_global_put
+	bytec 18 // "eda"
+	txna Accounts 2
+	app_global_put
+	bytec 10 // "rea"
+	global ZeroAddress
+	app_global_put
+	bytec 21 // "cud"
+	intc_0 // 0
+	app_global_put
+	bytec 17 // "cut"
+	intc_0 // 0
+	app_global_put
+	bytec 15 // "rmai"
+	txna Applications 1
+	app_global_put
+	bytec 8 // "veai"
+	txna Applications 2
+	app_global_put
+	bytec 5 // "ts"
+	intc_0 // 0
+	app_global_put
+	bytec_1 // "sts"
+	intc_0 // 0
+	app_global_put
+	bytec 23 // "ai"
+	txna Assets 0
+	app_global_put
+	bytec 7 // "rpc"
+	intc 6 // 4
+	app_global_put
+	intc_0 // 0
+	store 0
+label71:
+	load 0
+	bytec 7 // "rpc"
+	app_global_get
+	<
+	bnz label70
+	bytec 16 // "lt"
+	global LatestTimestamp // Tue, 11 Oct 2022 22:36:03 UTC
+	app_global_put
+	intc_1 // 1
+	return
+label70:
+	bytec 9 // "rpc_"
+	load 0
+	itob
+	concat
+	bytec 9 // "rpc_"
+	load 0
+	itob
+	concat
+	app_global_get
+	intc_1 // 1
+	+
+	app_global_put
+	bytec 19 // "rai_"
+	load 0
+	itob
+	concat
+	intc_1 // 1
+	app_global_put
+	bytec 13 // "rps_"
+	load 0
+	itob
+	concat
+	intc_0 // 0
+	app_global_put
+	bytec 6 // "rc_"
+	load 0
+	itob
+	concat
+	intc 8 // 64
+	bzero
+	app_global_put
+	bytec 14 // "ri_"
+	load 0
+	itob
+	concat
+	intc_0 // 0
+	app_global_put
+	bytec 20 // "rp_"
+	load 0
+	itob
+	concat
+	intc_0 // 0
+	app_global_put
+	load 0
+	intc_1 // 1
+	+
+	store 0
+	b label71
+label28:
+	store 8
+	store 7
+	store 6
+	load 6
+	gtxns TypeEnum
+	intc 6 // 4
+	==
+	assert
+	load 6
+	gtxns AssetReceiver
+	load 7
+	==
+	assert
+	load 6
+	gtxns XferAsset
+	load 8
+	==
+	assert
+	load 6
+	gtxns AssetAmount
+	intc_0 // 0
+	>
+	assert
+	retsub
+label25:
+	store 12
+	store 11
+	store 9
+	itxn_begin
+	intc 6 // 4
+	itxn_field TypeEnum
+	load 9
+	itxn_field XferAsset
+	load 11
+	itxn_field AssetAmount
+	load 12
+	itxn_field AssetReceiver
+	intc_0 // 0
+	itxn_field Fee
+	itxn_submit
+	retsub
+label22:
+	store 16
+	store 15
+	store 14
+	store 13
+	itxn_begin
+	load 13
+	itxn_field Sender
+	intc 6 // 4
+	itxn_field TypeEnum
+	load 14
+	itxn_field XferAsset
+	load 15
+	itxn_field AssetAmount
+	load 16
+	itxn_field AssetReceiver
+	intc_0 // 0
+	itxn_field Fee
+	itxn_submit
+	retsub
+label23:
+	store 19
+	store 18
+	store 17
+	itxn_begin
+	load 17
+	itxn_field Sender
+	intc_1 // 1
+	itxn_field TypeEnum
+	load 18
+	itxn_field Amount
+	load 19
+	itxn_field Receiver
+	intc_0 // 0
+	itxn_field Fee
+	itxn_submit
+	retsub
+	

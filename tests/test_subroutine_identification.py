@@ -1,8 +1,7 @@
-from typing import List, Tuple
+from typing import Tuple, Dict
 import pytest
 
-
-from tealer.teal.basic_blocks import BasicBlock
+from tealer.teal.subroutine import Subroutine
 from tealer.teal.instructions import instructions
 from tealer.teal.parse_teal import parse_teal
 
@@ -52,14 +51,14 @@ ins_list = [
 ]
 
 ins_partitions = [(0, 2), (2, 5), (5, 9), (9, 10), (10, 11), (11, 14), (14, 17), (17, 18)]
-bbs_links = [(0, 6), (6, 2), (2, 3), (2, 5), (3, 1), (1, 4), (4, 7), (5, 7)]
+bbs_links = [(0, 6), (2, 3), (2, 5), (3, 4), (6, 7)]
 
 bbs = construct_cfg(ins_list, ins_partitions, bbs_links)
-MULTIPLE_RETSUB_SUBROUTINES = [
-    [bbs[1]],  # push_zero
-    [bbs[2], bbs[3], bbs[4], bbs[5]],  # is_even
-]
-
+MULTIPLE_RETSUB_MAIN = Subroutine("", bbs[0], [bbs[0], bbs[6], bbs[7]])
+MULTIPLE_RETSUB_SUBROUTINES = {
+    "push_zero": Subroutine("push_zero", bbs[1], [bbs[1]]),
+    "is_even": Subroutine("is_even", bbs[2], [bbs[2], bbs[3], bbs[4], bbs[5]]),
+}
 
 SUBROUTINE_BACK_JUMP = """
 #pragma version 5
@@ -92,25 +91,34 @@ ins_list = [
 ]
 
 ins_partitions = [(0, 2), (2, 5), (5, 8), (8, 11), (11, 12)]
-bbs_links = [(0, 3), (3, 2), (2, 1), (1, 4)]
+bbs_links = [(0, 3), (3, 4), (2, 1)]
 
 bbs = construct_cfg(ins_list, ins_partitions, bbs_links)
-SUBROUTINE_BACK_JUMP_SUBROUTINES = [[bbs[1], bbs[2]]]  # is_odd
+SUBROUTINE_BACK_JUMP_MAIN = Subroutine("", bbs[0], [bbs[0], bbs[3], bbs[4]])
+SUBROUTINE_BACK_JUMP_SUBROUTINES = {"is_odd": Subroutine("is_odd", bbs[2], [bbs[1], bbs[2]])}
 
 ALL_TESTS = [
-    (MULTIPLE_RETSUB, MULTIPLE_RETSUB_SUBROUTINES),
-    (SUBROUTINE_BACK_JUMP, SUBROUTINE_BACK_JUMP_SUBROUTINES),
+    (MULTIPLE_RETSUB, MULTIPLE_RETSUB_MAIN, MULTIPLE_RETSUB_SUBROUTINES),
+    (SUBROUTINE_BACK_JUMP, SUBROUTINE_BACK_JUMP_MAIN, SUBROUTINE_BACK_JUMP_SUBROUTINES),
 ]
 
 
 @pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
-def test_subroutine_identification(test: Tuple[str, List[List[BasicBlock]]]) -> None:
-    code, expected_subroutines = test
+def test_subroutine_identification(test: Tuple[str, Subroutine, Dict[str, Subroutine]]) -> None:
+    code, expected_main, expected_subroutines = test
     teal = parse_teal(code.strip())
-    subroutines = teal.subroutines
-    assert len(subroutines) == len(expected_subroutines)
-    subroutines = sorted(subroutines, key=lambda x: x[0].idx)
-    expected_subroutines = sorted(expected_subroutines, key=lambda x: x[0].idx)
+    test_main = teal.main
 
-    for sub, ex_sub in zip(subroutines, expected_subroutines):
-        assert cmp_cfg(sub, ex_sub)
+    assert cmp_cfg([test_main.entry], [expected_main.entry])
+    assert cmp_cfg(test_main.blocks, expected_main.blocks)
+
+    subroutines = teal.subroutines
+    assert len(subroutines.keys()) == len(expected_subroutines.keys())
+    assert sorted(subroutines.keys()) == sorted(expected_subroutines.keys())
+    for ex_name in expected_subroutines:
+        subroutine = subroutines[ex_name]
+        expected_subroutine = expected_subroutines[ex_name]
+        assert subroutine.name == expected_subroutine.name
+        assert cmp_cfg([subroutine.entry], [expected_subroutine.entry])
+        assert cmp_cfg(subroutine.blocks, expected_subroutine.blocks)
+    assert len(subroutines) == len(expected_subroutines)

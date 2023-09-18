@@ -3,7 +3,7 @@ import pytest
 
 from tealer.teal.parse_teal import parse_teal
 from tealer.teal.instructions.transaction_field import TransactionField
-from tealer.teal.instructions.instructions import ContractType
+from tealer.utils.teal_enums import ExecutionMode
 
 
 INSTRUCTIONS_TARGETS = [
@@ -14,7 +14,9 @@ FIELDS_TARGETS = [
     "tests/parsing/teal-fields-with-versions.teal",
 ]
 
-instruction_info_pattern = re.compile(r"\(version: ([0-9]+), mode: (Any|Stateful|Stateless)\)")
+instruction_info_pattern = re.compile(
+    r"\(version: ([0-9]+), mode: (Any|Stateful|Stateless), pop: ([0-9]+), push: ([0-9+])\)"
+)
 
 field_info_pattern = re.compile(r"\(version: ([0-9]+)\)")
 
@@ -27,14 +29,16 @@ def test_instruction_version(target: str) -> None:
         match_obj = instruction_info_pattern.search(ins.comment)
         if match_obj is None:
             continue
-        version, mode_str = match_obj.groups()
+        version, mode_str, pop_size, push_size = match_obj.groups()
         mode = {
-            "Any": ContractType.ANY,
-            "Stateful": ContractType.STATEFULL,
-            "Stateless": ContractType.STATELESS,
+            "Any": ExecutionMode.ANY,
+            "Stateful": ExecutionMode.STATEFUL,
+            "Stateless": ExecutionMode.STATELESS,
         }[mode_str]
         assert ins.mode == mode
         assert ins.version == int(version)
+        assert ins.stack_push_size == int(push_size)
+        assert ins.stack_pop_size == int(pop_size)
 
 
 @pytest.mark.parametrize("target", FIELDS_TARGETS)  # type: ignore

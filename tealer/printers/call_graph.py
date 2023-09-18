@@ -1,11 +1,12 @@
 """Printer for exporting call-graph of the contract."""
 
 import html
+import os
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import Dict, Set
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.teal.instructions.instructions import Callsub, Label
+from tealer.utils.output import ROOT_OUTPUT_DIRECTORY
 
 
 class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-methods
@@ -20,53 +21,31 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
 
     NAME = "call-graph"
     HELP = "Export the call graph of contract to a dot file"
+    WIKI_URL = "https://github.com/crytic/tealer/wiki/Printer-documentation#call-graph"
 
-    def _construct_call_graph(self) -> Dict[str, List[str]]:
+    def _construct_call_graph(self) -> Dict[str, Set[str]]:
         """construct call graph for the contract.
 
-        entry point is treated as a separate function `__entry__`.
+        entry point is treated as a separate subroutine/function `__main__`.
         For each subroutine, label(subroutine name) represents the node and each callsub
-        instruction in the subroutine corresponds to directed edge from subroutine the
-        callsub instruction is part of to subroutine corresponding to the callsub label.
+        instruction in the subroutine corresponds to directed edge to the target subroutine.
 
         Returns:
-            Dict[str, List[str]]: dictionary representing the graph. each `key` is a node and
-            `value` is a list representing the edges. Each str in value list corresponds to end
-            node for a directed edge from `key` node.
+            Dict[str, Set[str]]: dictionary representing the graph. The graph has edges from each
+            subroutine in d[key] to key. The source node of the edge are values and destination node is the key.
+            if d["S1"] = ["S2", "S3"] then graph has edges "S3 -> S1", "S2 -> S1".
         """
 
-        graph = {}
-        for sub in self.teal.subroutines:
-            # graph node
-            if isinstance(sub[0].entry_instr, Label):
-                sub_name = sub[0].entry_instr.label
-            else:
-                # should be unreachable
-                sub_name = str(sub[0].entry_instr)
+        graph: Dict[str, Set[str]] = {}
+        for _, subroutine in self.teal.subroutines.items():
+            graph[subroutine.name] = set(
+                map(lambda bi: bi.subroutine.name, subroutine.caller_blocks)
+            )
 
-            # graph edges
-            edges = []
-            for bb in sub:
-                for ins in bb.instructions:
-                    if isinstance(ins, Callsub):
-                        edges.append(ins.label)
-
-            graph[sub_name] = edges
-
-        # treat entry point of the contract as a separate function
-        subroutine_blocks = [bb for sub in self.teal.subroutines for bb in sub]
-        entry_function_blocks = [bb for bb in self.teal.bbs if bb not in subroutine_blocks]
-
-        # use __entry__ as function name for entry point
-        graph["__entry__"] = []
-        for bb in entry_function_blocks:
-            for ins in bb.instructions:
-                if isinstance(ins, Callsub):
-                    graph["__entry__"].append(ins.label)
-
+        # no need to handle __main__ subroutine cause it is program entry point and there won't be caller blocks.
         return graph
 
-    def print(self, dest: Optional["Path"] = None) -> None:
+    def print(self) -> None:
         """Export call graph of the contract in dot format.
 
         Each node in the call graph corresponds to a subroutine and edge representing call from
@@ -74,12 +53,7 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
         function and represented with label `__entry__`. Call graph will be saved as `call-graph.dot`
         in the destination directory if given or else in the current directory.
         Subroutines are supported from teal version 4. so, for contracts written in lesser version, this
-        function only prints the error message stating the same.
-
-        Args:
-            dest (Optional[Path]): destination directory to save output files in. files will be saved in
-            the current directory if it is None.
-        """
+        function only prints the error message stating the same."""
 
         if self.teal.version < 4:
             print("subroutines are not supported in teal version 3 or less")
@@ -90,18 +64,21 @@ class PrinterCallGraph(AbstractPrinter):  # pylint: disable=too-few-public-metho
 
         # construct dot representation of the graph
         graph_edges = ""
-        for sub_name, targets in graph.items():
-            sub_name = html.escape(sub_name, quote=True)
-            dot_output += f"{sub_name}[label={sub_name}];\n"
-            for target_sub in targets:
-                target_sub = html.escape(target_sub, quote=True)
-                graph_edges += f"{sub_name} -> {target_sub};\n"
+        for destination_sub, source_subs in graph.items():
+            destination_sub = html.escape(destination_sub, quote=True)
+            dot_output += f"{destination_sub}[label={destination_sub}];\n"
+            for source_sub in source_subs:
+                source_sub = html.escape(source_sub, quote=True)
+                graph_edges += f"{source_sub} -> {destination_sub};\n"
         dot_output += graph_edges
         dot_output += "}\n"
 
+        # outputs a single file: set the dir to {ROOT_DIRECTORY}/{CONTRACT_NAME}
+        dest = ROOT_OUTPUT_DIRECTORY / Path(self.teal.contract_name)
+        os.makedirs(dest, exist_ok=True)
+
         filename = Path("call-graph.dot")
-        if dest is not None:
-            filename = dest / filename
+        filename = dest / filename
 
         print(f"\nExported call graph to {filename}")
         with open(filename, "w", encoding="utf-8") as f:

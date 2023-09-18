@@ -22,7 +22,11 @@ class TransactionField:
 
     @property
     def version(self) -> int:
-        """Teal version this field is introduced in and supported from."""
+        """Teal version this field is introduced in and supported from.
+
+        Returns:
+            Teal version the field is introduced in and supported from.
+        """
         return self._version
 
     def __eq__(self, other: Any) -> bool:

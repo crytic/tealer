@@ -11,7 +11,6 @@ on:
       - main
       - dev
   pull_request:
-    branches: [main, dev]
   schedule:
     # run CI every day even if no PRs/merges occur
     - cron:  '0 12 * * *'
@@ -36,7 +35,7 @@ jobs:
 
     - name: Run Parsing tests
       run: |
-        pytest tests/test_parsing.py --cov=tealer/teal/instructions --cov-branch  --cov-fail-under=96
+        pytest tests/test_parsing.py tests/test_versions.py --cov=tealer/teal/instructions --cov-branch  --cov-fail-under=96
 
     - name: Run string tests
       run: |
@@ -59,3 +58,5 @@ jobs:
       run: |
         pytest tests/transaction_context/test_group_sizes.py
         pytest tests/transaction_context/test_group_indices.py
+        pytest tests/transaction_context/test_transaction_types.py
+        pytest tests/transaction_context/test_addr_fields.py

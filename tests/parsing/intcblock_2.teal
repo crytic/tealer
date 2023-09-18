@@ -1,0 +1,653 @@
+// reference: https://algoexplorer.io/application/843061415
+#pragma version 5
+	intcblock 1 0 2 4 8 16
+	bytecblock 0x706f6f6c5f73697a65 0x746f6b656e5f6964 0x656e645f74696d657374616d70 0x746f74616c5f7374616b65 0x6d61785f706f6f6c5f73697a65 0x6d61785f7368617265 0x61646d696e5f61646472657373 0x6d696e5f6c6f636b7570 0x6d61785f6c6f636b7570 0x6d696e5f617079 0x6d61785f617079
+	txn OnCompletion
+	pushint 5
+	==
+	txn OnCompletion
+	intc_2 // 2
+	==
+	||
+	txn OnCompletion
+	intc_3 // 4
+	==
+	||
+	bnz label1
+	txn ApplicationID // id=0
+	intc_1 // 0
+	==
+	bnz label2
+	txn OnCompletion
+	intc_1 // 0
+	==
+	bnz label3
+	txn OnCompletion
+	intc_0 // 1
+	==
+	bnz label4
+	err
+label2:
+	global GroupSize // size=1
+	intc_0 // 1
+	==
+	assert
+	txn NumAppArgs // index=7
+	pushint 7
+	==
+	assert
+	bytec 4 // "max_pool_size"
+	txna ApplicationArgs 0 // arg=4563918244f40000
+	btoi
+	app_global_put
+	bytec 5 // "max_share"
+	txna ApplicationArgs 1 // arg=4563918244f40000
+	btoi
+	app_global_put
+	bytec 7 // "min_lockup"
+	txna ApplicationArgs 2 // arg=000000000013c680
+	btoi
+	app_global_put
+	bytec 8 // "max_lockup"
+	txna ApplicationArgs 3 // arg=00000000004f1a00
+	btoi
+	app_global_put
+	bytec 9 // "min_apy"
+	txna ApplicationArgs 4 // arg=00000000000001f4
+	btoi
+	app_global_put
+	bytec 10 // "max_apy"
+	txna ApplicationArgs 5 // arg=00000000000007d0
+	btoi
+	app_global_put
+	bytec_2 // "end_timestamp"
+	txna ApplicationArgs 6 // arg=00000000637abf7f
+	btoi
+	app_global_put
+	bytec_0 // "pool_size"
+	intc_1 // 0
+	app_global_put
+	bytec 6 // "admin_address"
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	app_global_put
+	b label4
+label3:
+	txna ApplicationArgs 0 // arg=4563918244f40000
+	pushbytes 0x7365747570 // "setup"
+	==
+	bnz label5
+	txna ApplicationArgs 0 // arg=4563918244f40000
+	pushbytes 0x636c6f7365 // "close"
+	==
+	bnz label6
+	txna ApplicationArgs 0 // arg=4563918244f40000
+	pushbytes 0x7365745f61646d696e5f61646472657373 // "set_admin_address"
+	==
+	bnz label7
+	txna ApplicationArgs 0 // arg=4563918244f40000
+	pushbytes 0x7365745f6d61785f706f6f6c5f73697a65 // "set_max_pool_size"
+	==
+	bnz label8
+	txna ApplicationArgs 0 // arg=4563918244f40000
+	pushbytes 0x7365745f6d61785f7368617265 // "set_max_share"
+	==
+	bnz label9
+	txna ApplicationArgs 0 // arg=4563918244f40000
+	pushbytes 0x7365745f656e645f74696d657374616d70 // "set_end_timestamp"
+	==
+	bnz label10
+	txna ApplicationArgs 0 // arg=4563918244f40000
+	pushbytes 0x7374616b65 // "stake"
+	==
+	bnz label11
+	txna ApplicationArgs 0 // arg=4563918244f40000
+	pushbytes 0x7769746864726177 // "withdraw"
+	==
+	bnz label12
+	txna ApplicationArgs 0 // arg=4563918244f40000
+	pushbytes 0x77697468647261775f6e6f5f72657761726473 // "withdraw_no_rewards"
+	==
+	bnz label13
+	txna ApplicationArgs 0 // arg=4563918244f40000
+	pushbytes 0x646566756e64 // "defund"
+	==
+	bnz label14
+	err
+label5:
+	callsub label15
+	bytec_1 // "token_id"
+	app_global_get
+	intc_1 // 0
+	==
+	assert
+	global GroupSize // size=1
+	intc_2 // 2
+	==
+	assert
+	gtxn 0 TypeEnum
+	intc_0 // 1
+	==
+	assert
+	gtxn 0 Receiver // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+	global CurrentApplicationAddress
+	==
+	assert
+	gtxn 0 CloseRemainderTo // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+	global ZeroAddress
+	==
+	assert
+	txn NumAssets
+	intc_0 // 1
+	==
+	assert
+	itxn_begin
+	intc_3 // 4
+	itxn_field TypeEnum
+	txna Assets 0
+	itxn_field XferAsset
+	global CurrentApplicationAddress
+	itxn_field AssetReceiver
+	intc_1 // 0
+	itxn_field Fee
+	itxn_submit
+	bytec_1 // "token_id"
+	txna Assets 0
+	app_global_put
+	b label4
+label6:
+	callsub label15
+	global GroupSize // size=1
+	intc_0 // 1
+	==
+	assert
+	txn NumAccounts // index=0
+	intc_2 // 2
+	==
+	assert
+	txn NumAssets
+	intc_0 // 1
+	==
+	assert
+	bytec_1 // "token_id"
+	app_global_get
+	txna Assets 0
+	==
+	assert
+	bytec_0 // "pool_size"
+	app_global_get
+	intc_1 // 0
+	==
+	assert
+	itxn_begin
+	intc_3 // 4
+	itxn_field TypeEnum
+	txna Assets 0
+	itxn_field XferAsset
+	txna Accounts 1
+	itxn_field AssetCloseTo
+	intc_1 // 0
+	itxn_field Fee
+	itxn_submit
+	itxn_begin
+	intc_0 // 1
+	itxn_field TypeEnum
+	txna Accounts 2
+	itxn_field CloseRemainderTo
+	intc_1 // 0
+	itxn_field Fee
+	itxn_submit
+	bytec_1 // "token_id"
+	intc_1 // 0
+	app_global_put
+	b label4
+label7:
+	callsub label15
+	global GroupSize // size=1
+	intc_0 // 1
+	==
+	assert
+	txn NumAppArgs // index=7
+	intc_0 // 1
+	==
+	assert
+	txn NumAccounts // index=0
+	intc_0 // 1
+	==
+	assert
+	bytec 6 // "admin_address"
+	txna Accounts 1
+	app_global_put
+	b label4
+label8:
+	callsub label15
+	global GroupSize // size=1
+	intc_0 // 1
+	==
+	assert
+	txn NumAppArgs // index=7
+	intc_2 // 2
+	==
+	assert
+	bytec 4 // "max_pool_size"
+	txna ApplicationArgs 1 // arg=4563918244f40000
+	btoi
+	app_global_put
+	b label4
+label9:
+	callsub label15
+	global GroupSize // size=1
+	intc_0 // 1
+	==
+	assert
+	txn NumAppArgs // index=7
+	intc_2 // 2
+	==
+	assert
+	bytec 5 // "max_share"
+	txna ApplicationArgs 1 // arg=4563918244f40000
+	btoi
+	app_global_put
+	b label4
+label10:
+	callsub label15
+	global GroupSize // size=1
+	intc_0 // 1
+	==
+	assert
+	txn NumAppArgs // index=7
+	intc_2 // 2
+	==
+	assert
+	bytec_2 // "end_timestamp"
+	app_global_get
+	txna ApplicationArgs 1 // arg=4563918244f40000
+	btoi
+	<
+	assert
+	bytec_2 // "end_timestamp"
+	txna ApplicationArgs 1 // arg=4563918244f40000
+	btoi
+	app_global_put
+	b label4
+label11:
+	global GroupSize // size=1
+	intc_2 // 2
+	==
+	assert
+	gtxn 1 TypeEnum
+	intc_3 // 4
+	==
+	assert
+	gtxn 1 Sender // ZW3ISEHZUHPO7OZGMKLKIIMKVICOUDRCERI454I3DB2BH52HGLSO67W754
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	==
+	assert
+	gtxn 1 AssetCloseTo // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+	global ZeroAddress
+	==
+	assert
+	gtxn 1 AssetReceiver // XJJZYVOLPSNLK3UMCZM4N2YSJMLPOIUISZJRP6RWT6FJRET23RJEMDTA5Q
+	global CurrentApplicationAddress
+	==
+	assert
+	gtxn 1 XferAsset // id=27165954
+	bytec_1 // "token_id"
+	app_global_get
+	==
+	assert
+	txn NumAppArgs // index=7
+	pushint 3
+	==
+	assert
+	callsub label16
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	global CurrentApplicationID // id=843061415
+	load 0
+	app_local_get_ex
+	bnz label1
+	pop
+	txna ApplicationArgs 2 // arg=000000000013c680
+	btoi
+	callsub label17
+	>=
+	assert
+	txna ApplicationArgs 2 // arg=000000000013c680
+	btoi
+	callsub label18
+	<=
+	assert
+	global LatestTimestamp // Thu, 18 Aug 2022 12:52:33 UTC
+	txna ApplicationArgs 2 // arg=000000000013c680
+	btoi
+	+
+	bytec_2 // "end_timestamp"
+	app_global_get
+	<=
+	assert
+	gtxn 1 AssetAmount // 0.000000
+	intc_1 // 0
+	>
+	assert
+	bytec_0 // "pool_size"
+	app_global_get
+	gtxn 1 AssetAmount // 0.000000
+	+
+	bytec 4 // "max_pool_size"
+	app_global_get
+	<=
+	assert
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	bytec_3 // "total_stake"
+	app_local_get
+	dup
+	store 1
+	gtxn 1 AssetAmount // 0.000000
+	+
+	bytec 5 // "max_share"
+	app_global_get
+	<=
+	assert
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	load 0
+	gtxn 1 AssetAmount // 0.000000
+	itob
+	global LatestTimestamp // Thu, 18 Aug 2022 12:52:33 UTC
+	itob
+	concat
+	txna ApplicationArgs 2 // arg=000000000013c680
+	concat
+	app_local_put
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	bytec_3 // "total_stake"
+	load 1
+	gtxn 1 AssetAmount // 0.000000
+	+
+	app_local_put
+	bytec_0 // "pool_size"
+	bytec_0 // "pool_size"
+	app_global_get
+	gtxn 1 AssetAmount // 0.000000
+	+
+	app_global_put
+	b label4
+label12:
+	global GroupSize // size=1
+	intc_0 // 1
+	==
+	assert
+	txn NumAppArgs // index=7
+	intc_2 // 2
+	==
+	assert
+	callsub label16
+	callsub label19
+	callsub label20
+	callsub label21
+	callsub label22
+	callsub label23
+	-
+	load 4
+	*
+	store 10
+	callsub label23
+	callsub label18
+	*
+	store 11
+	callsub label22
+	callsub label17
+	*
+	store 12
+	callsub label18
+	callsub label17
+	-
+	store 13
+	load 10
+	load 11
+	+
+	load 12
+	-
+	load 13
+	/
+	store 5
+	load 5
+	callsub label24
+	load 3
+	-
+	*
+	load 2
+	mulw
+	pushint 31536000
+	pushint 10000
+	mulw
+	callsub label25
+	store 7
+	callsub label26
+	load 6
+	load 7
+	-
+	bytec_0 // "pool_size"
+	app_global_get
+	>=
+	assert
+	itxn_begin
+	intc_3 // 4
+	itxn_field TypeEnum
+	bytec_1 // "token_id"
+	app_global_get
+	itxn_field XferAsset
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	itxn_field AssetReceiver
+	load 2
+	load 7
+	+
+	itxn_field AssetAmount
+	intc_1 // 0
+	itxn_field Fee
+	itxn_submit
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	load 0
+	app_local_del
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	bytec_3 // "total_stake"
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	bytec_3 // "total_stake"
+	app_local_get
+	load 2
+	-
+	app_local_put
+	bytec_0 // "pool_size"
+	bytec_0 // "pool_size"
+	app_global_get
+	load 2
+	-
+	app_global_put
+	b label4
+label13:
+	global GroupSize // size=1
+	intc_0 // 1
+	==
+	assert
+	txn NumAppArgs // index=7
+	intc_2 // 2
+	==
+	assert
+	callsub label16
+	callsub label19
+	callsub label20
+	callsub label21
+	itxn_begin
+	intc_3 // 4
+	itxn_field TypeEnum
+	bytec_1 // "token_id"
+	app_global_get
+	itxn_field XferAsset
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	itxn_field AssetReceiver
+	load 2
+	itxn_field AssetAmount
+	intc_1 // 0
+	itxn_field Fee
+	itxn_submit
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	load 0
+	app_local_del
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	bytec_3 // "total_stake"
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	bytec_3 // "total_stake"
+	app_local_get
+	load 2
+	-
+	app_local_put
+	bytec_0 // "pool_size"
+	bytec_0 // "pool_size"
+	app_global_get
+	load 2
+	-
+	app_global_put
+	b label4
+label14:
+	callsub label15
+	global GroupSize // size=1
+	intc_0 // 1
+	==
+	assert
+	txn NumAppArgs // index=7
+	intc_2 // 2
+	==
+	assert
+	txn NumAccounts // index=0
+	intc_0 // 1
+	==
+	assert
+	callsub label26
+	load 6
+	txna ApplicationArgs 1 // arg=4563918244f40000
+	btoi
+	-
+	bytec_0 // "pool_size"
+	app_global_get
+	>=
+	assert
+	itxn_begin
+	intc_3 // 4
+	itxn_field TypeEnum
+	bytec_1 // "token_id"
+	app_global_get
+	itxn_field XferAsset
+	txna Accounts 1
+	itxn_field AssetReceiver
+	txna ApplicationArgs 1 // arg=4563918244f40000
+	btoi
+	itxn_field AssetAmount
+	intc_1 // 0
+	itxn_field Fee
+	itxn_submit
+	b label4
+label4:
+	intc_0 // 1
+	return
+label1:
+	intc_1 // 0
+	return
+label15:
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	bytec 6 // "admin_address"
+	app_global_get
+	==
+	assert
+	retsub
+label19:
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	global CurrentApplicationID // id=843061415
+	load 0
+	app_local_get_ex
+	bz label1
+	pop
+	retsub
+label20:
+	global LatestTimestamp // Thu, 18 Aug 2022 12:52:33 UTC
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	load 0
+	app_local_get
+	intc 4 // 8
+	extract_uint64
+	-
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	load 0
+	app_local_get
+	intc 5 // 16
+	extract_uint64
+	>=
+	assert
+	retsub
+label23:
+	bytec 9 // "min_apy"
+	app_global_get
+	retsub
+label22:
+	bytec 10 // "max_apy"
+	app_global_get
+	retsub
+label17:
+	bytec 7 // "min_lockup"
+	app_global_get
+	retsub
+label18:
+	bytec 8 // "max_lockup"
+	app_global_get
+	retsub
+label16:
+	txna ApplicationArgs 1 // arg=4563918244f40000
+	btoi
+	pushint 10
+	<
+	assert
+	pushbytes 0x7374616b655f // "stake_"
+	txna ApplicationArgs 1 // arg=4563918244f40000
+	concat
+	store 0
+	retsub
+label26:
+	global CurrentApplicationAddress
+	bytec_1 // "token_id"
+	app_global_get
+	asset_holding_get AssetBalance
+	assert
+	store 6
+	retsub
+label24:
+	global LatestTimestamp // Thu, 18 Aug 2022 12:52:33 UTC
+	bytec_2 // "end_timestamp"
+	app_global_get
+	>
+	bnz label27
+	global LatestTimestamp // Thu, 18 Aug 2022 12:52:33 UTC
+	retsub
+label27:
+	bytec_2 // "end_timestamp"
+	app_global_get
+	retsub
+label21:
+	txn Sender // YZP4OCGJJRLHAITQBKUZ47XK4PVZ6MX3XEXJVVYK36GMOTRFWVYWOQ2VZQ
+	load 0
+	app_local_get
+	dup
+	dup
+	intc_1 // 0
+	extract_uint64
+	store 2
+	intc 4 // 8
+	extract_uint64
+	store 3
+	intc 5 // 16
+	extract_uint64
+	store 4
+	retsub
+label25:
+	divmodw
+	pop
+	pop
+	swap
+	pop
+	retsub

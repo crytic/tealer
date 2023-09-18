@@ -1,11 +1,27 @@
 from typing import Type, Tuple
+import base64
 
 import pytest
 
 from tealer.teal.instructions import instructions
+from tealer.teal.instructions.instructions import (
+    IntcInstruction,
+    BytecInstruction,
+)
 from tealer.teal.instructions import transaction_field
+from tealer.teal.global_field import GlobalField
+from tealer.teal.instructions.transaction_field import TransactionField
+from tealer.teal.instructions.acct_params_field import AcctParamsField
+from tealer.teal.instructions.app_params_field import AppParamsField
+from tealer.teal.instructions.asset_holding_field import AssetHoldingField
+from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.parse_instruction import parse_line, ParseError
 from tealer.teal.parse_teal import parse_teal
+from tealer.teal.parse_functions import copy_main_cfg
+from tealer.utils.analyses import is_int_push_ins, is_byte_push_ins
+from tealer.exceptions import TealerException
+
+from tests.utils import cmp_cfg
 
 TARGETS = [
     "tests/parsing/teal1-instructions.teal",
@@ -74,6 +90,7 @@ label1:
 int 1
 label2:
 int 2
+method "add(uint64)uint64"
 """
 
 invalid_instructions = """
@@ -101,9 +118,58 @@ def test_parsing(target: str) -> None:
     with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     # print instruction to trigger __str__ on each ins
+    # print stack pop/push to trigger the function on each ins
     for i in teal.instructions:
         assert not isinstance(i, instructions.UnsupportedInstruction), f'ins "{i}" is not supported'
         print(i, i.cost)
+        print(i, i.stack_pop_size)
+        print(i, i.stack_push_size)
+
+
+# pylint: disable=too-many-locals
+@pytest.mark.parametrize("target", TARGETS)  # type: ignore
+def test_copy_main_cfg(target: str) -> None:
+    with open(target, encoding="utf-8") as f:
+        teal = parse_teal(f.read())
+    copied_main = copy_main_cfg(teal)
+
+    assert cmp_cfg(copied_main, teal.main.blocks)
+    copied_blocks = sorted(copied_main, key=lambda bi: bi.idx)
+    original_blocks = sorted(teal.main.blocks, key=lambda bi: bi.idx)
+    copied_instructions = [ins for bi in copied_blocks for ins in bi.instructions]
+    # original_instructions = [ins for bi in original_blocks for ins in bi.instructions]
+
+    print(vars(copied_blocks[0]).keys())
+    print(vars(copied_instructions[0]).keys())
+
+    ignore_block_fields = ["_instructions", "_prev", "_next", "_transaction_context", "_subroutine"]
+    ignore_instruction_fields = ["_prev", "_next", "_bb"]
+    for bb_copy, bb_orig in zip(copied_blocks, original_blocks):
+        for key in vars(bb_copy):
+            if key in ignore_block_fields:
+                continue
+            print(key)
+            assert vars(bb_copy)[key] == vars(bb_orig)[key]
+        for ins_copy, ins_orig in zip(bb_copy.instructions, bb_orig.instructions):
+            ins_copy_vars = vars(ins_copy)
+            ins_orig_vars = vars(ins_orig)
+            for key in ins_copy_vars:
+                if key in ignore_instruction_fields:
+                    continue
+                if isinstance(
+                    ins_copy_vars[key],
+                    (
+                        TransactionField,
+                        GlobalField,
+                        AppParamsField,
+                        AcctParamsField,
+                        AssetParamsField,
+                        AssetHoldingField,
+                    ),
+                ):
+                    continue
+                print(key)
+                assert ins_copy_vars[key] == ins_orig_vars[key]
 
 
 def _cmp_instructions(
@@ -160,6 +226,7 @@ def test_parsing_2() -> None:
         instructions.Int(1),
         instructions.Label("label2"),
         instructions.Int(2),
+        instructions.Method('"add(uint64)uint64"'),
     ]
     t = [
         (instructions.Intcblock, ("_constants",)),
@@ -194,6 +261,7 @@ def test_parsing_2() -> None:
         (instructions.Int, ("value",)),
         (instructions.Label, ("label",)),
         (instructions.Int, ("value",)),
+        (instructions.Method, ("method_signature",)),
     ]
 
     attributes: Tuple[str]
@@ -247,14 +315,6 @@ def test_instruction_properties() -> None:
     assert ins2.next == []
     assert ins1.comment == "// comment"
 
-    # cannot set return point of callsub instruction multiple times
-    ins = parse_line("callsub main")
-    assert isinstance(ins, instructions.Callsub) and ins.return_point is None
-
-    ins.return_point = parse_line("int 1")
-    with pytest.raises(Exception):
-        ins.return_point = parse_line("int 1")  # cannot set multiple times
-
     # accessing replace instruction start_position fails if it is None i.e if there's no immediate argument.
     # it should be checked that whether given replace instruction is semantically equivalent to replace2 or replace3.
     ins = parse_line("replace 1")
@@ -295,7 +355,7 @@ def test_cost_values() -> None:
     for line in CURRENT_TEST_CODE.strip().splitlines():
         # when cost parameter accessed, it checks that instruction object's BasicBlock is not none. if it is none, then
         # cost property raises exception. These tests are included to cover those brances.
-        with pytest.raises(ValueError):
+        with pytest.raises(TealerException):
             print(line)
             # pylint: disable=expression-not-assigned
             parse_line(line).cost  # type: ignore
@@ -314,3 +374,117 @@ def test_cost_values() -> None:
     for ins in teal.instructions:
         print("DSDF", ins, ins.cost)
         assert ins.cost == 0
+
+
+INTCBLOCK_TESTS = [
+    "tests/parsing/intcblock_1.teal",
+    "tests/parsing/intcblock_2.teal",
+    "tests/parsing/intcblock_3.teal",
+]
+
+
+@pytest.mark.parametrize("test", INTCBLOCK_TESTS)  # type: ignore
+def test_intc_bytec(test: str) -> None:
+    with open(test, encoding="utf-8") as f:
+        teal = parse_teal(f.read())
+
+    for ins in teal.instructions:
+        if isinstance(ins, IntcInstruction):
+            is_known, value = is_int_push_ins(ins)
+            assert is_known
+            assert value == int(ins.comment[2:].strip())
+
+        if isinstance(ins, BytecInstruction):
+            is_known, value = is_byte_push_ins(ins)
+            assert is_known
+            expected_value = ins.comment[2:].strip()
+            if expected_value.startswith('"'):
+                expected_value = "0x" + expected_value[1:-1].encode().hex()
+            elif expected_value.startswith("addr"):
+                s = expected_value.strip("addr ").strip()
+                expected_value = (
+                    "0x" + base64.b32decode(s + "=" * (-len(s) % 8))[:-4].hex()
+                )  # 4-byte checksum
+            assert value == expected_value
+
+
+INTCBLOCK_FALSE_TEST_1 = """
+#pragma version 7
+intcblock 0x00 0x01 0x02 0x03 0x04 0x05 0x06
+intcblock 0x07 0x08 0x09 0x10 0x11 0x12 0x13
+intc0
+intc1
+intc2
+intc3
+intc 4
+return
+"""
+
+INTCBLOCK_FALSE_TEST_2 = """
+#pragma version 7
+int 0
+int 1
++
+b next
+next:
+intcblock 0x00 0x01 0x02 0x03 0x04 0x05 0x06
+intc0
+intc1
+intc2
+intc3
+intc 4
+return
+"""
+
+INTCBLOCK_FALSE_TEST_3 = """
+#pragma version 7
+intc0
+intc1
+return
+"""
+
+# Tealer can determine that this is invalid code in this case. But currently does
+# not do that to be uniform for all cases.
+INTCBLOCK_FALSE_TEST_4 = """
+#pragma version 7
+intcblock 0x00 0x01 0x02 0x03
+intc 7  // Invalid index
+"""
+
+# Tealer cannot determing in this case.
+INTCBLOCK_FALSE_TEST_5 = """
+#pragma version 7
+intcblock 0x00 0x01 0x02 0x03
+txn RekeyTo
+global ZeroAddress
+==
+bnz branch
+b sub
+branch:
+    intcblock 0x04 0x05 0x06 0x07 0x08 0x09 0xa
+sub:
+    intc 9 // Invalid index
+"""
+
+INTCBLOCK_FALSE_TESTS = [
+    INTCBLOCK_FALSE_TEST_1,
+    INTCBLOCK_FALSE_TEST_2,
+    INTCBLOCK_FALSE_TEST_3,
+    INTCBLOCK_FALSE_TEST_4,
+    INTCBLOCK_FALSE_TEST_5,
+]
+
+
+@pytest.mark.parametrize("test", INTCBLOCK_FALSE_TESTS)  # type: ignore
+def test_intc_bytec_false(test: str) -> None:
+    teal = parse_teal(test)
+    for ins in teal.instructions:
+        if isinstance(ins, IntcInstruction):
+            is_int, value = is_int_push_ins(ins)
+            assert is_int and value is None
+
+    teal = parse_teal(test.replace("intc", "bytec"))
+    for ins in teal.instructions:
+        if isinstance(ins, BytecInstruction):
+            is_bytes, value = is_byte_push_ins(ins)
+            assert is_bytes and value is None

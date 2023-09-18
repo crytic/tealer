@@ -1,0 +1,39 @@
+digraph g{
+ ranksep = 1 
+ overlap = scale 
+0[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="1" BORDER="2"><B>// block_id = 0; cost = 5</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">1. #pragma version 7</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">2. txna ApplicationArgs 0</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK"><B>// method-selector: 0xf037ec85</B><BR/>3. method &quot;method_foo_bar()void&quot;</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">4. ==</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">5. bnz main_l2</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 0:s -> 1:6:n [color="#e0182b"];
+0:s -> 2:7:n [color="#36d899"];
+
+2[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="7" BORDER="2"><B>// block_id = 2; cost = 6</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">7. main_l2:</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">8. txn OnCompletion</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">9. int NoOp</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">10. ==</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">11. assert</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">12. <B><I>callsub methodfoobar_1</I></B></TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 
+x2_3[label="Subroutine methodfoobar_1",style=dashed,shape=box,fontname=bold] 2:s -> x2_3:n;
+x2_3:s -> 3:13:n;
+
+3[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="13" BORDER="2"><B>// block_id = 3; cost = 2</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">13. int 1</TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">14. return</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 
+1[label=<<TABLE ALIGN="LEFT" COLOR="BLACK">
+<TR><TD COLOR="BLACK" ALIGN="LEFT" BALIGN="LEFT" PORT="6" BORDER="2"><B>// block_id = 1; cost = 1</B></TD></TR>
+<TR><TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">6. err</TD></TR>
+</TABLE>> labelloc=top shape=plain
+] 
+}
