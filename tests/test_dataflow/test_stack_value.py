@@ -151,7 +151,7 @@ ALL_TESTS = [
 ]
 
 
-@pytest.mark.parametrize("test", ALL_TESTS)
+@pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
 def test_group_indices(test: Tuple[str, Dict[int, List[Any]]]) -> None:
     teal = parse_teal(test[0])
 

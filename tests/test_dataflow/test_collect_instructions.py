@@ -120,7 +120,7 @@ end:
 ALL_TESTS = [(MULTIPLE_RETSUB, 27), (SUBROUTINE_BACK_JUMP, 20), (BRANCHING, 22), (LOOPS, 26)]
 
 
-@pytest.mark.parametrize("test", ALL_TESTS)
+@pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
 def test_group_indices(test: Tuple[str, int]) -> None:
     teal = parse_teal(test[0])
 
