@@ -419,7 +419,7 @@ def handle_detectors_and_printers(
     """Util function to register and run detectors, printers.
 
     Args:
-        teal: Teal object representing the contract being analyzed.
+        tealer: Teal object representing the contract being analyzed.
         detectors: Detector classes to register and run.
         printers: Printer classes to register and run.
 

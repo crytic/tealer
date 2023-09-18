@@ -98,6 +98,7 @@ def next_blocks_global(function: "Function", block: "BasicBlock") -> List["Basic
     to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
 
     Args:
+        function: The function
         block: A basic block.
 
     Returns:
@@ -118,6 +119,7 @@ def prev_blocks_global(function: "Function", block: "BasicBlock") -> List["Basic
     to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
 
     Args:
+        function: The function
         block: A basic block.
 
     Returns:

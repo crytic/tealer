@@ -73,6 +73,9 @@ class Function:
     def caller_blocks(self, subroutine: "Subroutine") -> List["BasicBlock"]:
         """BasicBlock with callsub instructions which call the subroutine.
 
+        Args:
+            subroutine: the subroutine
+
         Returns:
             List of caller callsub basic blocks. This blocks have "callsub {subroutine.name}"
             as exit instruction.

@@ -33,6 +33,7 @@ def validated_in_block(
 
     Args:
         block: A basic block of the CFG
+        function: The function
         checks_field: A function which given a block context, should return True if the target field
             cannot have the vulnerable value or else False.
 
@@ -82,7 +83,7 @@ def detect_missing_tx_field_validations(
     whether transaction field(s) can have the target vulnerable value.
 
     Args:
-        teal: The contract being checked
+        function: The function being checked
         checks_field: Given a block context, should return True if the target field cannot have the vulnerable value
             or else False.
         satisfies_report_condition: Given a path, should return True if the "path" satifies the vulnerable condition.
@@ -268,8 +269,16 @@ def detect_missing_tx_field_validations_group(
     satisfies_report_condition: Callable[[List["BasicBlock"]], bool] = lambda _x: True,
 ) -> List[Tuple["Teal", List[List["BasicBlock"]]]]:
     """Given the tealer object, return vulnerable execution paths.
-
     The current implementation ignores the transaction structure. It iterates over the
+
+    Args:
+        tealer: the tealer object
+        checks_field:  A function which given a block context, should return True if the target field
+            cannot have the vulnerable value or else False.
+        satisfies_report_condition: Given a path, should return True if the "path" satifies the vulnerable condition.
+
+    Returns:
+        Returns a list of vulnerable execution paths: none of the blocks in the path check the fields.
     """
     output: List[Tuple["Teal", List[List["BasicBlock"]]]] = []
     for group_txn in tealer.groups:
