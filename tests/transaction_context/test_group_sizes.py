@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 import pytest
 
 
@@ -6,7 +6,7 @@ from tealer.teal.basic_blocks import BasicBlock
 from tealer.teal.instructions import instructions
 from tealer.teal.instructions import transaction_field
 from tealer.teal import global_field
-from tealer.teal.parse_teal import parse_teal
+from tealer.utils.command_line.common import init_tealer_from_single_contract
 
 from tests.utils import cmp_cfg, construct_cfg, order_basic_blocks
 
@@ -266,34 +266,38 @@ cfg_group_sizes = [
     (LOOPS_CFG, LOOPS_CFG_GROUP_SIZES),
 ]
 
+transaction_contexts = []
 for cfg, sizes in cfg_group_sizes:
     bb = order_basic_blocks(cfg)
+    transaction_context = {}
     for b, group_sizes in zip(bb, sizes):  # type: ignore
-        b.transaction_context.group_sizes = group_sizes
-
+        transaction_context[b] = group_sizes
+    transaction_contexts.append(transaction_context)
 
 ALL_TESTS = [
-    (MULTIPLE_RETSUB, MULTIPLE_RETSUB_CFG),
-    (SUBROUTINE_BACK_JUMP, SUBROUTINE_BACK_JUMP_CFG),
-    (BRANCHING, BRANCHING_CFG),
-    (LOOPS, LOOPS_CFG),
+    (MULTIPLE_RETSUB, MULTIPLE_RETSUB_CFG, transaction_contexts[0]),
+    (SUBROUTINE_BACK_JUMP, SUBROUTINE_BACK_JUMP_CFG, transaction_contexts[1]),
+    (BRANCHING, BRANCHING_CFG, transaction_contexts[2]),
+    (LOOPS, LOOPS_CFG, transaction_contexts[3]),
 ]
 
 
 @pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
-def test_group_sizes(test: Tuple[str, List[BasicBlock]]) -> None:
-    code, cfg_tested = test
-    teal = parse_teal(code.strip())
+def test_group_sizes(test: Tuple[str, List[BasicBlock], Dict]) -> None:
+    code, cfg_tested, cfg_tested_txn_context = test
+
+    tealer = init_tealer_from_single_contract(code.strip(), "test")
+    function = tealer.contracts["test"].functions["test"]
     for bb_tested in cfg_tested:
         print(bb_tested)
     print("*" * 20)
-    assert cmp_cfg(teal.bbs, cfg_tested)
+    assert cmp_cfg(function.blocks, cfg_tested)
 
-    bbs = order_basic_blocks(teal.bbs)
+    bbs = order_basic_blocks(function.blocks)
     cfg_tested = order_basic_blocks(cfg_tested)
     for b1, b2 in zip(bbs, cfg_tested):
-        print(b1.transaction_context.group_sizes, b2.transaction_context.group_sizes)
-        assert b1.transaction_context.group_sizes == b2.transaction_context.group_sizes
+        print(function.transaction_context(b1).group_sizes, cfg_tested_txn_context[b2])
+        assert function.transaction_context(b1).group_sizes == cfg_tested_txn_context[b2]
 
 
 MULTIPLE_RETSUB_CFG_GROUP_INDICES = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
@@ -319,9 +323,10 @@ GROUP_INDICES_TESTS = [
 @pytest.mark.parametrize("test", GROUP_INDICES_TESTS)  # type: ignore
 def test_group_indices(test: Tuple[str, List[List[int]]]) -> None:
     code, group_indices_list = test
-    teal = parse_teal(code.strip())
+    tealer = init_tealer_from_single_contract(code.strip(), "test")
+    function = tealer.contracts["test"].functions["test"]
 
-    bbs = order_basic_blocks(teal.bbs)
+    bbs = order_basic_blocks(function.blocks)
     for bb_tested, group_indices in zip(bbs, group_indices_list):
-        print(bb_tested.transaction_context.group_indices, group_indices)
-        assert bb_tested.transaction_context.group_indices == group_indices
+        print(function.transaction_context(bb_tested).group_indices, group_indices)
+        assert function.transaction_context(bb_tested).group_indices == group_indices

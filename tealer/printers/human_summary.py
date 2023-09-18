@@ -12,16 +12,16 @@ Summary includes :
 
 """
 
-from typing import List, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.utils.code_complexity import compute_cyclomatic_complexity
-from tealer.detectors.abstract_detector import DetectorClassification
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
+# pylint: disable=too-few-public-methods
 class PrinterHumanSummary(AbstractPrinter):
     """Printer to print summary of the contract"""
 
@@ -44,87 +44,88 @@ class PrinterHumanSummary(AbstractPrinter):
         result = "Yes" if is_complex else "No"
         return result
 
-    # pylint: disable=too-many-locals
-    def _get_detectors_result(self) -> Tuple[List, int, int, int, int, int]:
-        """Return dectector results and number of issues found in the contract for each `impact` class.
+        # pylint: disable=too-many-locals
+        # TODO: Decide on how printers should behave in group context
+        # def _get_detectors_result(self) -> Tuple[List, int, int, int, int, int]:
+        #     """Return dectector results and number of issues found in the contract for each `impact` class.
 
-        Returns:
-            (Tuple[List, int, int, int, int, int]): returns list of results found by all the detectors and
-            number of issues found by detectors of impact optimization, informational, low, medium, high in
-            the same order.
+        #     Returns:
+        #         (Tuple[List, int, int, int, int, int]): returns list of results found by all the detectors and
+        #         number of issues found by detectors of impact optimization, informational, low, medium, high in
+        #         the same order.
 
-        """
-        from tealer.utils.command_line.common import (  # pylint: disable=import-outside-toplevel
-            get_detectors_and_printers,
-        )
+        #     """
+        #     from tealer.utils.command_line.common import (  # pylint: disable=import-outside-toplevel
+        #         get_detectors_and_printers,
+        #     )
 
-        detector_classes, _ = get_detectors_and_printers()
-        detectors = [d(self.teal) for d in detector_classes]
+        #     detector_classes, _ = get_detectors_and_printers()
+        #     detectors = [d(self.teal) for d in detector_classes]
 
-        checks_optimization = [
-            d for d in detectors if d.IMPACT == DetectorClassification.OPTIMIZATION
-        ]
-        checks_informational = [
-            d for d in detectors if d.IMPACT == DetectorClassification.INFORMATIONAL
-        ]
-        checks_low = [d for d in detectors if d.IMPACT == DetectorClassification.LOW]
-        checks_medium = [d for d in detectors if d.IMPACT == DetectorClassification.MEDIUM]
-        checks_high = [d for d in detectors if d.IMPACT == DetectorClassification.HIGH]
+        #     checks_optimization = [
+        #         d for d in detectors if d.IMPACT == DetectorClassification.OPTIMIZATION
+        #     ]
+        #     checks_informational = [
+        #         d for d in detectors if d.IMPACT == DetectorClassification.INFORMATIONAL
+        #     ]
+        #     checks_low = [d for d in detectors if d.IMPACT == DetectorClassification.LOW]
+        #     checks_medium = [d for d in detectors if d.IMPACT == DetectorClassification.MEDIUM]
+        #     checks_high = [d for d in detectors if d.IMPACT == DetectorClassification.HIGH]
 
-        issues_optimization = [c.detect().paths for c in checks_optimization]
-        issues_optimization = [c for c in issues_optimization if c]
+        #     issues_optimization = [c.detect().paths for c in checks_optimization]
+        #     issues_optimization = [c for c in issues_optimization if c]
 
-        issues_informational = [c.detect().paths for c in checks_informational]
-        issues_informational = [c for c in issues_informational if c]
+        #     issues_informational = [c.detect().paths for c in checks_informational]
+        #     issues_informational = [c for c in issues_informational if c]
 
-        issues_low = [c.detect().paths for c in checks_low]
-        issues_low = [c for c in issues_low if c]
+        #     issues_low = [c.detect().paths for c in checks_low]
+        #     issues_low = [c for c in issues_low if c]
 
-        issues_medium = [c.detect().paths for c in checks_medium]
-        issues_medium = [c for c in issues_medium if c]
+        #     issues_medium = [c.detect().paths for c in checks_medium]
+        #     issues_medium = [c for c in issues_medium if c]
 
-        issues_high = [c.detect().paths for c in checks_high]
-        issues_high = [c for c in issues_high if c]
+        #     issues_high = [c.detect().paths for c in checks_high]
+        #     issues_high = [c for c in issues_high if c]
 
-        all_results = (
-            issues_optimization + issues_informational + issues_low + issues_medium + issues_high
-        )
+        #     all_results = (
+        #         issues_optimization + issues_informational + issues_low + issues_medium + issues_high
+        #     )
 
-        return (
-            all_results,
-            len(issues_optimization),
-            len(issues_informational),
-            len(issues_low),
-            len(issues_medium),
-            len(issues_high),
-        )
+        #     return (
+        #         all_results,
+        #         len(issues_optimization),
+        #         len(issues_informational),
+        #         len(issues_low),
+        #         len(issues_medium),
+        #         len(issues_high),
+        #     )
 
-    def get_detectors_result(self) -> str:
-        """Return textual summary of number of issues found by detectors.
+        # def get_detectors_result(self) -> str:
+        # """Return textual summary of number of issues found by detectors.
 
-        Textual summary contains number of issues found in the contract
-        for each class of impact(severity).
+        # Textual summary contains number of issues found in the contract
+        # for each class of impact(severity).
 
-        Returns:
-            (str): textual summary of number of issues found by detectors.
-        """
+        # Returns:
+        #     (str): textual summary of number of issues found by detectors.
+        # """
 
-        (
-            _,
-            optimization,
-            informational,
-            low,
-            medium,
-            high,
-        ) = self._get_detectors_result()
+        # (
+        #     _,
+        #     optimization,
+        #     informational,
+        #     low,
+        #     medium,
+        #     high,
+        # ) = self._get_detectors_result()
 
-        txt = f"Number of optimization issues: {optimization}\n"
-        txt += f"Number of informational issues: {informational}\n"
-        txt += f"Number of low issues: {low}\n"
-        txt += f"Number of medium issues: {medium}\n"
-        txt += f"Number of high issues: {high}\n"
+        # txt = f"Number of optimization issues: {optimization}\n"
+        # txt += f"Number of informational issues: {informational}\n"
+        # txt += f"Number of low issues: {low}\n"
+        # txt += f"Number of medium issues: {medium}\n"
+        # txt += f"Number of high issues: {high}\n"
 
-        return txt
+        # return txt
 
     def print(self) -> None:
         """Print summary of the contract to stdout.
@@ -147,6 +148,6 @@ class PrinterHumanSummary(AbstractPrinter):
             txt += f"\t{sub_name}\n"
             block_ids = ", ".join(repr(bi) for bi in teal.subroutines[sub_name].blocks)
             txt += f'\t\t"{block_ids}"\n'
-        txt += f"is_complex: {self._is_complex_code()}\n"
+        # txt += f"is_complex: {self._is_complex_code()}\n" # update printer after deciding on its semantics
         print(txt)
-        print(self.get_detectors_result())
+        # print(self.get_detectors_result())

@@ -73,10 +73,12 @@ class PrinterTransactionContext(AbstractPrinter):  # pylint: disable=too-few-pub
         os.makedirs(dest, exist_ok=True)
 
         filename = dest / filename
+        function = list(self.teal.functions.values())[0]
 
         def get_info(bb: "BasicBlock") -> List[str]:
-            group_indices_str = self._repr_num_list(bb.transaction_context.group_indices)
-            group_sizes_str = self._repr_num_list(bb.transaction_context.group_sizes)
+            # NOTE: use the first function for now as `init_tealer_from_single_contract` uses entire contract as single function.
+            group_indices_str = self._repr_num_list(function.transaction_context(bb).group_indices)
+            group_sizes_str = self._repr_num_list(function.transaction_context(bb).group_sizes)
             return [f"GroupIndex: {group_indices_str}", f"GroupSize: {group_sizes_str}"]
 
         config = CFGDotConfig()

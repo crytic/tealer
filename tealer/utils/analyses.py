@@ -14,6 +14,7 @@ from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
+    from tealer.teal.functions import Function
 
 
 def is_int_push_ins(ins: Instruction) -> Tuple[bool, Optional[Union[int, str]]]:
@@ -90,13 +91,14 @@ def is_byte_push_ins(ins: Instruction) -> Tuple[bool, Optional[str]]:
     return False, None
 
 
-def next_blocks_global(block: "BasicBlock") -> List["BasicBlock"]:
+def next_blocks_global(function: "Function", block: "BasicBlock") -> List["BasicBlock"]:
     """Return basic blocks next to this block in the global CFG.
 
     global CFG is the single CFG representing the entire contract with callsub blocks connected
     to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
 
     Args:
+        function: The function
         block: A basic block.
 
     Returns:
@@ -104,19 +106,20 @@ def next_blocks_global(block: "BasicBlock") -> List["BasicBlock"]:
         callsub_blocks are connected to the subroutine entry blocks.
     """
     if block.is_retsub_block:
-        return block.subroutine.return_point_blocks
+        return function.return_point_blocks(block.subroutine)
     if block.is_callsub_block:
         return [block.called_subroutine.entry]
     return block.next
 
 
-def prev_blocks_global(block: "BasicBlock") -> List["BasicBlock"]:
+def prev_blocks_global(function: "Function", block: "BasicBlock") -> List["BasicBlock"]:
     """Return basic blocks previous to this block in the global CFG.
 
     global CFG is the single CFG representing the entire contract with callsub blocks connected
     to the subroutine entry blocks and retsub blocks of the subroutine connected to return point block.
 
     Args:
+        function: The function
         block: A basic block.
 
     Returns:
@@ -126,8 +129,8 @@ def prev_blocks_global(block: "BasicBlock") -> List["BasicBlock"]:
     assert block.teal is not None
     if block == block.subroutine.entry:
         # if the block is the entry of the subroutine, return all blocks calling the subroutine
-        if block.subroutine != block.teal.main:
-            return block.subroutine.caller_blocks
+        if block.subroutine != function.main:
+            return function.caller_blocks(block.subroutine)
         # the block is the main entry block of the contract
         return []
     if block.is_sub_return_point:

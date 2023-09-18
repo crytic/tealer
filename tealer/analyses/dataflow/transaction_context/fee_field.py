@@ -193,17 +193,21 @@ class FeeField(DataflowTransactionContext):
         return res
 
     def _store_results(self) -> None:
-        for block in self._teal.bbs:
+        for block in self._function.blocks:
             max_fee = self._block_contexts[FEE_KEY][block]
             assert isinstance(max_fee, FeeValue)
             if max_fee.is_unknown:
-                block.transaction_context.max_fee_unknown = True
+                self._function.transaction_context(block).max_fee_unknown = True
             else:
-                block.transaction_context.max_fee = max_fee.value
+                self._function.transaction_context(block).max_fee = max_fee.value
             for idx in range(MAX_GROUP_SIZE):
                 max_fee = self._block_contexts[get_gtxn_at_index_key(idx, FEE_KEY)][block]
                 assert isinstance(max_fee, FeeValue)
                 if max_fee.is_unknown:
-                    block.transaction_context.gtxn_context(idx).max_fee_unknown = True
+                    self._function.transaction_context(block).gtxn_context(
+                        idx
+                    ).max_fee_unknown = True
                 else:
-                    block.transaction_context.gtxn_context(idx).max_fee = max_fee.value
+                    self._function.transaction_context(block).gtxn_context(
+                        idx
+                    ).max_fee = max_fee.value

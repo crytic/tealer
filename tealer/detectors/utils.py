@@ -6,16 +6,19 @@ from tealer.utils.analyses import next_blocks_global, leaf_block_global
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
     from tealer.teal.teal import Teal
+    from tealer.tealer import Tealer
+    from tealer.teal.functions import Function
     from tealer.teal.subroutine import Subroutine
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
-    from tealer.detectors.abstract_detector import AbstractDetector
 
 logger_detectors = logging.getLogger("Detectors")
 logging.basicConfig(level=logging.DEBUG)
 
 
 def validated_in_block(
-    block: "BasicBlock", checks_field: Callable[["BlockTransactionContext"], bool]
+    block: "BasicBlock",
+    function: "Function",
+    checks_field: Callable[["BlockTransactionContext"], bool],
 ) -> bool:
     """
     A transaction field can be validated by accessing using instructions
@@ -30,6 +33,7 @@ def validated_in_block(
 
     Args:
         block: A basic block of the CFG
+        function: The function
         checks_field: A function which given a block context, should return True if the target field
             cannot have the vulnerable value or else False.
 
@@ -42,18 +46,18 @@ def validated_in_block(
     """
     # if field is checked using `txn {field}`, return true
 
-    if checks_field(block.transaction_context):
+    if checks_field(function.transaction_context(block)):
         return True
     # for each possible {index} the transaction can have, check if field is checked using `gtxn {index} {field}`
-    for i in block.transaction_context.group_indices:
-        if not checks_field(block.transaction_context.gtxn_context(i)):
+    for i in function.transaction_context(block).group_indices:
+        if not checks_field(function.transaction_context(block).gtxn_context(i)):
             return False
     # the field is checked for all possible indices.
     return True
 
 
 def detect_missing_tx_field_validations(
-    teal: "Teal",
+    function: "Function",
     checks_field: Callable[["BlockTransactionContext"], bool],
     satisfies_report_condition: Callable[[List["BasicBlock"]], bool] = lambda _x: True,
 ) -> List[List["BasicBlock"]]:
@@ -79,7 +83,7 @@ def detect_missing_tx_field_validations(
     whether transaction field(s) can have the target vulnerable value.
 
     Args:
-        teal: The contract being checked
+        function: The function being checked
         checks_field: Given a block context, should return True if the target field cannot have the vulnerable value
             or else False.
         satisfies_report_condition: Given a path, should return True if the "path" satifies the vulnerable condition.
@@ -193,7 +197,7 @@ def detect_missing_tx_field_validations(
             )
             return
 
-        if validated_in_block(bb, checks_field):
+        if validated_in_block(bb, function, checks_field):
             logger_detectors.debug(
                 f"Validated Path: current_full_path = {current_path}\n, current_block: {repr(bb)}"
             )
@@ -243,7 +247,7 @@ def detect_missing_tx_field_validations(
                     current_subroutine_executed[:-1],
                 )
         else:
-            for next_bb in next_blocks_global(bb):
+            for next_bb in next_blocks_global(function, bb):
                 search_paths(
                     next_bb,
                     current_path,
@@ -252,8 +256,47 @@ def detect_missing_tx_field_validations(
                     current_subroutine_executed,
                 )
 
-    entry_block = teal.main.entry
+    entry_block = function.entry
     paths_without_check: List[List["BasicBlock"]] = []
-    search_paths(entry_block, [], paths_without_check, [(None, teal.main)], [[]])
+    search_paths(entry_block, [], paths_without_check, [(None, function.main)], [[]])
 
     return paths_without_check
+
+
+def detect_missing_tx_field_validations_group(
+    tealer: "Tealer",
+    checks_field: Callable[["BlockTransactionContext"], bool],
+    satisfies_report_condition: Callable[[List["BasicBlock"]], bool] = lambda _x: True,
+) -> List[Tuple["Teal", List[List["BasicBlock"]]]]:
+    """Given the tealer object, return vulnerable execution paths.
+    The current implementation ignores the transaction structure. It iterates over the
+
+    Args:
+        tealer: the tealer object
+        checks_field:  A function which given a block context, should return True if the target field
+            cannot have the vulnerable value or else False.
+        satisfies_report_condition: Given a path, should return True if the "path" satifies the vulnerable condition.
+
+    Returns:
+        Returns a list of vulnerable execution paths: none of the blocks in the path check the fields.
+    """
+    output: List[Tuple["Teal", List[List["BasicBlock"]]]] = []
+    for group_txn in tealer.groups:
+        # Current implementation only works for single contract invocations
+        # assert len(group_txn.transactions) == 1
+        for txn in group_txn.transactions:
+            if txn.has_logic_sig and txn.logic_sig is not None:
+                vulnerable_paths = detect_missing_tx_field_validations(
+                    txn.logic_sig, checks_field, satisfies_report_condition
+                )
+                # Using old output class for now.
+                # TODO: create new output class to represent vulnerable paths in a group transaction context.
+                contract = txn.logic_sig.contract
+                output.append((contract, vulnerable_paths))
+            if txn.application is not None:
+                vulnerable_paths = detect_missing_tx_field_validations(
+                    txn.application, checks_field, satisfies_report_condition
+                )
+                contract = txn.application.contract
+                output.append((contract, vulnerable_paths))
+    return output

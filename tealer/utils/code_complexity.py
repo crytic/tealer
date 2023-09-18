@@ -9,6 +9,9 @@ Functions:
         it's Control Flow Graph(CFG) :cfg:.
 
 """
+# pylint: skip-file
+# mypy: ignore-errors
+# TODO: Functions in this module are not used anywhere. Have to decide on how to calculate the code complexity.
 
 from typing import List, TYPE_CHECKING
 from tealer.utils.analyses import next_blocks_global, prev_blocks_global

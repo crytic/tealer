@@ -1,20 +1,21 @@
 """Detector for finding execution paths missing UpdateApplication."""
 
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Tuple
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
     DetectorClassification,
     DetectorType,
 )
-from tealer.teal.basic_blocks import BasicBlock
-from tealer.detectors.utils import detect_missing_tx_field_validations
+from tealer.detectors.utils import detect_missing_tx_field_validations_group
 from tealer.utils.teal_enums import TealerTransactionType
 from tealer.utils.output import ExecutionPaths
 
 if TYPE_CHECKING:
+    from tealer.teal.basic_blocks import BasicBlock
     from tealer.utils.output import SupportedOutput
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
+    from tealer.teal.teal import Teal
 
 
 class IsUpdatable(AbstractDetector):  # pylint: disable=too-few-public-methods
@@ -72,8 +73,16 @@ Do not approve `UpdateApplication` type application calls.
             # return True if Txn Type cannot be UpdateApplication.
             return not TealerTransactionType.ApplUpdateApplication in block_ctx.transaction_types
 
-        paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
-            self.teal, checks_field
-        )
+        # paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
+        #     self.teal, checks_field
+        # )
 
-        return ExecutionPaths(self.teal, self, paths_without_check)
+        # return ExecutionPaths(self.teal, self, paths_without_check)
+        output: List[
+            Tuple["Teal", List[List["BasicBlock"]]]
+        ] = detect_missing_tx_field_validations_group(self.tealer, checks_field)
+        detector_output: List[ExecutionPaths] = []
+        for contract, vulnerable_paths in output:
+            detector_output.append(ExecutionPaths(contract, self, vulnerable_paths))
+
+        return detector_output
