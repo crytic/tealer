@@ -45,6 +45,7 @@ def test_detectors(test: Tuple[str, Type[AbstractDetector], List[List[BasicBlock
         # Not implemented yet
         assert False
 
+
 ALL_NEW_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     *new_can_close_account_tests,
     *new_missing_rekeyto_tests,
