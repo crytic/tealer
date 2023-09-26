@@ -414,7 +414,7 @@ class Output(abc.ABC):
             Returns true if something was written - False if there is nothing to be written
         """
 
-        pass  # pylint: disable=unnecessary-pass
+        return False  # this statement is needed for darglint
 
 
 class ExecutionPaths(Output):
