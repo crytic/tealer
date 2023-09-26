@@ -18,12 +18,12 @@ Types:
         For now, it is an alias for ExecutionPaths.
 
 """
-
+import abc
 import html
 import re
 import os
 from pathlib import Path
-from typing import List, TYPE_CHECKING, Dict, Callable, Optional, Union
+from typing import List, TYPE_CHECKING, Dict, Callable, Optional
 from dataclasses import dataclass
 
 from tealer.teal.instructions.instructions import BZ, BNZ, Callsub, Retsub
@@ -387,93 +387,50 @@ def detector_ouptut_dir(destination: Path, detector: "AbstractDetector") -> Path
     return destination / Path(detector.NAME)
 
 
-class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
+class Output(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def detector(self) -> "AbstractDetector":
+        pass  # pylint: disable=unnecessary-pass
+
+    @abc.abstractmethod
+    def filter_paths(self, filter_regex: str) -> None:
+        pass  # pylint: disable=unnecessary-pass
+
+    @abc.abstractmethod
+    def to_json(self) -> Dict:
+        pass  # pylint: disable=unnecessary-pass
+
+    @abc.abstractmethod
+    def write_to_files(self, dest: Path) -> bool:
+        """
+        Write the result to dest
+
+
+        Args:
+            dest: The files will be saved in the given :dest: destination directory.
+
+        Returns:
+            Returns true if something was written - False if there is nothing to be written
+        """
+
+        pass  # pylint: disable=unnecessary-pass
+
+
+class ExecutionPaths(Output):  # pylint: disable=too-many-instance-attributes
     """Detector output class to represent vulnerable execution paths."""
 
     def __init__(self, teal: "Teal", detector: "AbstractDetector", paths: List[List["BasicBlock"]]):
         self._teal = teal
         self._detector = detector
-        self._paths: List[List["BasicBlock"]] = paths
-
-    def add_path(self, path: List["BasicBlock"]) -> None:
-        """Add given execution path to current list of execution paths.
-
-        Args:
-            path: new execution path detected by the detector which
-                will be added to the list of execution paths.
-        """
-
-        self._paths.append(path)
-
-    @property
-    def paths(self) -> List[List["BasicBlock"]]:
-        """List of execution paths stored in the result.
-
-        Returns:
-            List of execution paths stored in the result.
-        """
-        return self._paths
-
-    @property
-    def cfg(self) -> List["BasicBlock"]:
-        """Control Flow of the teal contract.
-
-        Returns:
-            List of basic blocks that represent the contract.
-        """
-        return self._teal.bbs
+        self.paths: List[List["BasicBlock"]] = paths
 
     @property
     def detector(self) -> "AbstractDetector":
-        return self._detector
+        return self.detector
 
-    @property
-    def description(self) -> str:
-        """Description of execution paths stored in this result
-
-        Returns:
-            The description of the detector.
-        """
-        return detector_terminal_description(self._detector)
-
-    @property
-    def check(self) -> str:
-        """Name of the detector whose result is being represented.
-
-        Returns:
-            Returns name of the detector.
-        """
-        return self._detector.NAME
-
-    @property
-    def impact(self) -> str:
-        """Impact of the detector whose result is being represented.
-
-        Returns:
-            Returns string representation of the detector's impact.
-        """
-        return str(self._detector.IMPACT)
-
-    @property
-    def confidence(self) -> str:
-        """Confidence of the detector whose result is being represented.
-
-        Returns:
-            Returns string representation of the detector's confidence.
-        """
-        return str(self._detector.CONFIDENCE)
-
-    @property
-    def help(self) -> str:
-        """Recommendations to fix the reported issues.
-
-        Returns:
-            Returns recommendations to fix the reported issue.
-        """
-        return self._detector.WIKI_RECOMMENDATION.strip()
-
-    def filename(self, path_index: int) -> Path:
-        return Path(f"{self._detector.NAME}-{path_index}.dot")
+    def _filename(self, path_index: int) -> Path:
+        return Path(f"{self.detector.NAME}-{path_index}.dot")
 
     @staticmethod
     def _short_notation(path_bbs: List["BasicBlock"]) -> str:
@@ -493,14 +450,14 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         if filter_regex == "":
             return
         filtered_paths: List[List["BasicBlock"]] = []
-        for path in self._paths:
+        for path in self.paths:
             if re.search(filter_regex, self._short_notation(path)) is None:
                 # short notation does not contain string matching the regex
                 filtered_paths.append(path)
-        self._paths = filtered_paths
+        self.paths = filtered_paths
         return
 
-    def write_to_files(self, dest: Path) -> None:
+    def write_to_files(self, dest: Path) -> bool:
         """Export execution paths to dot files.
 
         The execution paths are highlighted in the dot representation
@@ -510,28 +467,31 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         Args:
             dest: The dot files will be saved in the given :dest: destination
                 directory.
+
+        Returns:
+            Returns true if something was written - False if there is nothing to be written
         """
 
-        print(self.description)
-        if len(self.paths) == 0:
-            print("\tDetector didn't find any vulnerable paths.")
-            print("-" * 100)
-            return
+        if not self.paths:
+            return False
+
+        print(detector_terminal_description(self.detector))
+
         # cfg_to_dot config
         config = CFGDotConfig()
         config.color_edges = False
         print("\tFollowing are the vulnerable paths found:")
 
-        dest = detector_ouptut_dir(dest, self._detector)
+        dest = detector_ouptut_dir(dest, self.detector)
         # create output directory if not present
         os.makedirs(dest, exist_ok=True)
 
-        for idx, path in enumerate(self._paths, start=1):
+        for idx, path in enumerate(self.paths, start=1):
 
             short = self._short_notation(path)
             print(f"\n\t\t path: {short}")
 
-            filename = dest / self.filename(idx)
+            filename = dest / self._filename(idx)
             print(f"\t\t check file: {filename}")
 
             config.bb_border_color = (
@@ -541,6 +501,8 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
             )
             full_cfg_to_dot(self._teal, config, filename)
         print("-" * 100)
+
+        return True
 
     def to_json(self) -> Dict:
         """Return json representation of detector result.
@@ -556,11 +518,11 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         result = {
             "type": "ExecutionPaths",
             "count": len(self.paths),
-            "description": self.description,
-            "check": self.check,
-            "impact": self.impact,
-            "confidence": self.confidence,
-            "help": self.help,
+            "description": detector_terminal_description(self.detector),
+            "check": self.detector.NAME,
+            "impact": str(self.detector.IMPACT),
+            "confidence": str(self.detector.CONFIDENCE),
+            "help": self.detector.WIKI_RECOMMENDATION.strip(),
         }
         paths = []
         for path in self.paths:
@@ -578,4 +540,4 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         return result
 
 
-SupportedOutput = Union[ExecutionPaths, List[ExecutionPaths]]
+ListOutput = List[Output]

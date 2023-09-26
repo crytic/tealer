@@ -26,7 +26,7 @@ from tealer.utils.output import ExecutionPaths
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
-    from tealer.utils.output import SupportedOutput
+    from tealer.utils.output import ListOutput
     from tealer.teal.instructions.instructions import Instruction
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
@@ -122,7 +122,7 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
                 return True
         return False
 
-    def detect(self) -> "SupportedOutput":
+    def detect(self) -> "ListOutput":
         """Detect execution paths with missing GroupSize check.
 
         Returns:
@@ -153,7 +153,7 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
         )
         construct_stack_ast.cache_clear()
 
-        detector_output: List[ExecutionPaths] = []
+        detector_output: "ListOutput" = []
         for contract, vulnerable_paths in output:
             detector_output.append(ExecutionPaths(contract, self, vulnerable_paths))
 
