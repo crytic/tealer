@@ -391,15 +391,15 @@ class Output(abc.ABC):
     @property
     @abc.abstractmethod
     def detector(self) -> "AbstractDetector":
-        pass  # pylint: disable=unnecessary-pass
+        pass
 
     @abc.abstractmethod
     def filter_paths(self, filter_regex: str) -> None:
-        pass  # pylint: disable=unnecessary-pass
+        pass
 
     @abc.abstractmethod
     def to_json(self) -> Dict:
-        pass  # pylint: disable=unnecessary-pass
+        pass
 
     @abc.abstractmethod
     def write_to_files(self, dest: Path) -> bool:
@@ -417,7 +417,7 @@ class Output(abc.ABC):
         pass  # pylint: disable=unnecessary-pass
 
 
-class ExecutionPaths(Output):  # pylint: disable=too-many-instance-attributes
+class ExecutionPaths(Output):
     """Detector output class to represent vulnerable execution paths."""
 
     def __init__(self, teal: "Teal", detector: "AbstractDetector", paths: List[List["BasicBlock"]]):
