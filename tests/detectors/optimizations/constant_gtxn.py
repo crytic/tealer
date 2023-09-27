@@ -6,4 +6,4 @@ int 1
 gtxns CloseRemainderTo
 """
 
-constant_gtxn = [(GTXN, ConstantGtxn, [2, 3])]
+constant_gtxn = [(GTXN, ConstantGtxn, [[2, 3]])]

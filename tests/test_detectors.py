@@ -83,8 +83,10 @@ def test_just_detectors(test: Tuple[str, Type[AbstractDetector], List[List[int]]
 # This test is for the detectors using InstructionsOutput
 # This type return only a list of instructions
 # So we compare the expected lines of the source code
-# source code -> detector -> expected lines
-TESTS_INSTRUCTIONS_OUTPUT: List[Tuple[str, Type[AbstractDetector], List[int]]] = [*constant_gtxn]
+# source code -> detector -> lust(expected lines)
+TESTS_INSTRUCTIONS_OUTPUT: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
+    *constant_gtxn
+]
 
 
 @pytest.mark.parametrize("test", TESTS_INSTRUCTIONS_OUTPUT)  # type: ignore
@@ -100,9 +102,12 @@ def test_instructions_output_detectors(
         print(
             f"count: result = {len(result.instructions)}, expected = {len(expected_instruction_lines)}"
         )
-        assert len(result.instructions) == len(expected_instruction_lines)
-        for ins, expected_instruction_line in zip(result.instructions, expected_instruction_lines):
-            assert ins.line == expected_instruction_line
+
+        actual_instruction_lines = [
+            [ins.line for ins in instructions] for instructions in result.instructions
+        ]
+
+        assert actual_instruction_lines == expected_instruction_lines
 
     else:
         # Not implemented yet

@@ -1,13 +1,14 @@
 """Detector for finding execution paths missing Fee check."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
     DetectorClassification,
     DetectorType,
 )
-from tealer.teal.instructions.instructions import Int, Gtxns
+from tealer.teal.instructions.instructions import Gtxns, Instruction
+from tealer.utils.analyses import is_int_push_ins
 from tealer.utils.output import InstructionsOutput
 
 if TYPE_CHECKING:
@@ -44,6 +45,9 @@ class ConstantGtxn(AbstractDetector):  # pylint: disable=too-few-public-methods
         detector_output: "ListOutput" = []
 
         for contract in self.tealer.contracts.values():
+
+            all_findings: List[List[Instruction]] = []
+
             for function in contract.functions.values():
                 for block in function.blocks:
                     if len(block.instructions) < 2:
@@ -55,7 +59,13 @@ class ConstantGtxn(AbstractDetector):  # pylint: disable=too-few-public-methods
                         second = block.instructions[i + 1]
 
                     # Note: first / second are always assigned, as we check for len(block.instructions) first
-                    if isinstance(first, Int) and isinstance(second, Gtxns):
-                        detector_output.append(InstructionsOutput(contract, self, [first, second]))
+                    # pylint: disable=undefined-loop-variable
+                    first_ins_is_int, _ = is_int_push_ins(first)
+                    # pylint: disable=undefined-loop-variable
+                    if first_ins_is_int and isinstance(second, Gtxns):
+                        # pylint: disable=undefined-loop-variable
+                        all_findings.append([first, second])
+
+            detector_output.append(InstructionsOutput(contract, self, all_findings))
 
         return detector_output

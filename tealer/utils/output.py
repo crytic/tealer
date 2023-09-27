@@ -401,16 +401,16 @@ class Output(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def write_to_files(self, dest: Path) -> bool:
+    def generate_output(self, dest: Path) -> bool:
         """
-        Write the result to dest
+        Generate the output
 
 
         Args:
             dest: The files will be saved in the given :dest: destination directory.
 
         Returns:
-            Returns true if something was written - False if there is nothing to be written
+            Returns true if something was generated - False if there is nothing to be written
         """
 
         return False  # this statement is needed for darglint
@@ -418,11 +418,11 @@ class Output(abc.ABC):
 
 class InstructionsOutput(Output):
     def __init__(
-        self, teal: "Teal", detector: "AbstractDetector", instructions: List["Instruction"]
+        self, teal: "Teal", detector: "AbstractDetector", instructions: List[List["Instruction"]]
     ):
         self._teal = teal
         self._detector = detector
-        self.instructions: List["Instruction"] = instructions
+        self.instructions: List[List["Instruction"]] = instructions
 
     @property
     def detector(self) -> "AbstractDetector":
@@ -444,16 +444,16 @@ class InstructionsOutput(Output):
         }
         return result
 
-    def write_to_files(self, dest: Path) -> bool:
+    def generate_output(self, dest: Path) -> bool:
         """
-        Write the result to dest
+        Generate the output
 
 
         Args:
-            dest: The files will be saved in the given :dest: destination directory.
+            dest: Not use (no files are generated for InstructionsOutput)
 
         Returns:
-            Returns true if something was written - False if there is nothing to be written
+            Returns true if something was generated - False if there is nothing to be written
         """
 
         if not self.instructions:
@@ -508,7 +508,7 @@ class ExecutionPaths(Output):
         self.paths = filtered_paths
         return
 
-    def write_to_files(self, dest: Path) -> bool:
+    def generate_output(self, dest: Path) -> bool:
         """Export execution paths to dot files.
 
         The execution paths are highlighted in the dot representation

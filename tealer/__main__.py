@@ -470,7 +470,7 @@ def handle_output(
 
         detectors_with_0_results: List["AbstractDetector"] = []
         for output in expanded_detector_results:
-            if not output.write_to_files(output_directory):
+            if not output.generate_output(output_directory):
                 detectors_with_0_results.append(output.detector)
         if detectors_with_0_results:
             detectors_with_0_results_str = ", ".join(d.NAME for d in detectors_with_0_results)
