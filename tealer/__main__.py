@@ -99,7 +99,7 @@ from tealer.utils.output import ROOT_OUTPUT_DIRECTORY, ExecutionPaths
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
     from tealer.tealer import Tealer
-    from tealer.utils.output import SupportedOutput
+    from tealer.utils.output import ListOutput
 
 
 # from slither: slither/__main__.py
@@ -415,7 +415,7 @@ def handle_detectors_and_printers(
     tealer: "Tealer",
     detectors: List[Type[AbstractDetector]],
     printers: List[Type[AbstractPrinter]],
-) -> Tuple[List["SupportedOutput"], List]:
+) -> Tuple[List["ListOutput"], List]:
     """Util function to register and run detectors, printers.
 
     Args:
@@ -438,7 +438,7 @@ def handle_detectors_and_printers(
 
 def handle_output(
     args: argparse.Namespace,
-    detector_results: List["SupportedOutput"],
+    detector_results: List["ListOutput"],
     _printer_results: List,
     teal: "Teal",
     error: Optional[str],
@@ -456,12 +456,9 @@ def handle_output(
         teal: The contract.
         error: Error string if any detector or printer resulted in an error.
     """
-    expanded_detector_results: List["ExecutionPaths"] = []
+    expanded_detector_results: "ListOutput" = []
     for result in detector_results:
-        if isinstance(result, ExecutionPaths):
-            expanded_detector_results.append(result)
-        else:
-            expanded_detector_results.extend(result)
+        expanded_detector_results.extend(result)
 
     output_directory = ROOT_OUTPUT_DIRECTORY / Path(teal.contract_name)
     os.makedirs(output_directory, exist_ok=True)
@@ -473,9 +470,7 @@ def handle_output(
 
         detectors_with_0_results: List["AbstractDetector"] = []
         for output in expanded_detector_results:
-            if output.paths:
-                output.write_to_files(output_directory)
-            else:
+            if not output.write_to_files(output_directory):
                 detectors_with_0_results.append(output.detector)
         if detectors_with_0_results:
             detectors_with_0_results_str = ", ".join(d.NAME for d in detectors_with_0_results)
@@ -548,7 +543,7 @@ def main() -> None:
         logger = logging.getLogger(logger_name)
         logger.setLevel(logger_level)
 
-    results_detectors: List["SupportedOutput"] = []
+    results_detectors: List["ListOutput"] = []
     _results_printers: List = []
     error = None
     if args.detectors_to_run is not None and args.group_config is not None:

@@ -8,7 +8,7 @@ from tealer.detectors.abstract_detector import (
 
 
 if TYPE_CHECKING:
-    from tealer.utils.output import SupportedOutput
+    from tealer.utils.output import ListOutput
 
 
 class Example(AbstractDetector):  # pylint: disable=too-few-public-methods
@@ -28,7 +28,7 @@ class Example(AbstractDetector):  # pylint: disable=too-few-public-methods
     WIKI_EXPLOIT_SCENARIO = ""
     WIKI_RECOMMENDATION = ""  # this will be shown in json output as help message
 
-    def detect(self) -> "SupportedOutput":
+    def detect(self) -> "ListOutput":
         """This method will be called if this detector is chosen.
 
         Implement this method to return output in one of the supported formats (ExecutionPaths).

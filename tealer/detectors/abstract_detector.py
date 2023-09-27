@@ -50,7 +50,7 @@ from tealer.utils.comparable_enum import ComparableEnum
 
 if TYPE_CHECKING:
     from tealer.tealer import Tealer
-    from tealer.utils.output import SupportedOutput
+    from tealer.utils.output import ListOutput
 
 
 class IncorrectDetectorInitialization(Exception):
@@ -222,7 +222,7 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
             )
 
     @abc.abstractmethod
-    def detect(self) -> "SupportedOutput":
+    def detect(self) -> "ListOutput":
         """Entry method of detector.
 
         All detectors must override this method with the functionality specific

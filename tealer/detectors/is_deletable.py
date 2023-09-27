@@ -13,7 +13,7 @@ from tealer.utils.teal_enums import TealerTransactionType
 from tealer.utils.output import ExecutionPaths
 
 if TYPE_CHECKING:
-    from tealer.utils.output import SupportedOutput
+    from tealer.utils.output import ListOutput
     from tealer.teal.basic_blocks import BasicBlock
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
     from tealer.teal.teal import Teal
@@ -59,7 +59,7 @@ Eve steals application creator's private key and deletes the application. Applic
 Do not approve `DeleteApplication` type application calls.
 """
 
-    def detect(self) -> "SupportedOutput":
+    def detect(self) -> "ListOutput":
         """Detect execution paths with missing DeleteApplication check.
 
         Returns:
@@ -76,7 +76,7 @@ Do not approve `DeleteApplication` type application calls.
         output: List[
             Tuple["Teal", List[List["BasicBlock"]]]
         ] = detect_missing_tx_field_validations_group(self.tealer, checks_field)
-        detector_output: List[ExecutionPaths] = []
+        detector_output: "ListOutput" = []
         for contract, vulnerable_paths in output:
             detector_output.append(ExecutionPaths(contract, self, vulnerable_paths))
 

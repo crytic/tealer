@@ -13,7 +13,7 @@ from tealer.utils.output import ExecutionPaths
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
-    from tealer.utils.output import SupportedOutput
+    from tealer.utils.output import ListOutput
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
     from tealer.teal.teal import Teal
 
@@ -75,7 +75,7 @@ Alice signs the logic-sig to allow recurring payments to Bob in USDC.\
 Validate `AssetCloseTo` field in the LogicSig.
 """
 
-    def detect(self) -> "SupportedOutput":
+    def detect(self) -> "ListOutput":
         """Detect execution paths with missing AssetCloseTo check.
 
         Returns:
@@ -96,7 +96,7 @@ Validate `AssetCloseTo` field in the LogicSig.
         output: List[
             Tuple["Teal", List[List["BasicBlock"]]]
         ] = detect_missing_tx_field_validations_group(self.tealer, checks_field)
-        detector_output: List[ExecutionPaths] = []
+        detector_output: "ListOutput" = []
         for contract, vulnerable_paths in output:
             detector_output.append(ExecutionPaths(contract, self, vulnerable_paths))
 

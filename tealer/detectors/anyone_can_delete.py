@@ -14,7 +14,7 @@ from tealer.utils.output import ExecutionPaths
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
-    from tealer.utils.output import SupportedOutput
+    from tealer.utils.output import ListOutput
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
     from tealer.teal.teal import Teal
 
@@ -60,7 +60,7 @@ Eve calls `delete_application` method and deletes the application making its ass
 - Add access controls to the vulnerable method.
 """
 
-    def detect(self) -> "SupportedOutput":
+    def detect(self) -> "ListOutput":
         """Detect execution paths missing validations on sender field AND can delete the application .
 
         Returns:
@@ -80,7 +80,7 @@ Eve calls `delete_application` method and deletes the application making its ass
         output: List[
             Tuple["Teal", List[List["BasicBlock"]]]
         ] = detect_missing_tx_field_validations_group(self.tealer, checks_field)
-        detector_output: List[ExecutionPaths] = []
+        detector_output: "ListOutput" = []
         for contract, vulnerable_paths in output:
             detector_output.append(ExecutionPaths(contract, self, vulnerable_paths))
 

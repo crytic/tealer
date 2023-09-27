@@ -9,7 +9,7 @@ from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
-    from tealer.utils.output import SupportedOutput
+    from tealer.utils.output import ListOutput
     from tealer.execution_context.transactions import GroupTransaction
 
 
@@ -165,7 +165,7 @@ class Tealer:
         self._printers.append(instance)
 
     # from slither: Slither Class in slither/slither.py
-    def run_detectors(self) -> List["SupportedOutput"]:
+    def run_detectors(self) -> List["ListOutput"]:
         """Run all the registered detectors.
 
         Returns:

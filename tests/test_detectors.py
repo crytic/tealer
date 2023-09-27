@@ -34,12 +34,16 @@ def test_detectors(test: Tuple[str, Type[AbstractDetector], List[List[BasicBlock
     code, detector, expected_paths = test
     tealer = init_tealer_from_single_contract(code.strip(), "test")
     tealer.register_detector(detector)
-    result = tealer.run_detectors()[0]
-    if not isinstance(result, ExecutionPaths):
-        result = result[0]
-    assert len(result.paths) == len(expected_paths)
-    for path, ex_path in zip(result.paths, expected_paths):
-        assert cmp_cfg(path, ex_path)
+    result = tealer.run_detectors()[0][0]
+
+    if isinstance(result, ExecutionPaths):
+        assert len(result.paths) == len(expected_paths)
+        for path, ex_path in zip(result.paths, expected_paths):
+            assert cmp_cfg(path, ex_path)
+
+    else:
+        # Not implemented yet
+        assert False
 
 
 ALL_NEW_TESTS: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
@@ -58,15 +62,18 @@ def test_just_detectors(test: Tuple[str, Type[AbstractDetector], List[List[int]]
     code, detector, expected_paths = test
     tealer = init_tealer_from_single_contract(code.strip(), "test")
     tealer.register_detector(detector)
-    result = tealer.run_detectors()[0]
-    if not isinstance(result, ExecutionPaths):
-        result = result[0]
+    result = tealer.run_detectors()[0][0]
 
-    print(f"count: result = {len(result.paths)}, expected = {len(expected_paths)}")
-    assert len(result.paths) == len(expected_paths)
-    for path, expected_path in zip(result.paths, expected_paths):
-        print(f"path length: result = {len(path)}, expected = {len(expected_path)}")
-        print(f"path ids: result = {path}, expected = {expected_path}")
-        assert len(path) == len(expected_path)
-        for bi, expected_idx in zip(path, expected_path):
-            assert bi.idx == expected_idx
+    if isinstance(result, ExecutionPaths):
+        print(f"count: result = {len(result.paths)}, expected = {len(expected_paths)}")
+        assert len(result.paths) == len(expected_paths)
+        for path, expected_path in zip(result.paths, expected_paths):
+            print(f"path length: result = {len(path)}, expected = {len(expected_path)}")
+            print(f"path ids: result = {path}, expected = {expected_path}")
+            assert len(path) == len(expected_path)
+            for bi, expected_idx in zip(path, expected_path):
+                assert bi.idx == expected_idx
+
+    else:
+        # Not implemented yet
+        assert False
