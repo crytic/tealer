@@ -35,7 +35,6 @@ if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
     from tealer.detectors.abstract_detector import AbstractDetector
 
-
 ROOT_OUTPUT_DIRECTORY = Path("tealer-export")
 
 
@@ -417,6 +416,58 @@ class Output(abc.ABC):
         return False  # this statement is needed for darglint
 
 
+class InstructionsOutput(Output):
+    def __init__(
+        self, teal: "Teal", detector: "AbstractDetector", instructions: List["Instruction"]
+    ):
+        self._teal = teal
+        self._detector = detector
+        self.instructions: List["Instruction"] = instructions
+
+    @property
+    def detector(self) -> "AbstractDetector":
+        return self._detector
+
+    def filter_paths(self, filter_regex: str) -> None:
+        pass
+
+    def to_json(self) -> Dict:
+        result = {
+            "type": "InstructionsOutput",
+            "count": len(self.instructions),
+            "description": detector_terminal_description(self.detector),
+            "check": self.detector.NAME,
+            "impact": str(self.detector.IMPACT),
+            "confidence": str(self.detector.CONFIDENCE),
+            "help": self.detector.WIKI_RECOMMENDATION.strip(),
+            "paths": [str(ins) for ins in self.instructions],
+        }
+        return result
+
+    def write_to_files(self, dest: Path) -> bool:
+        """
+        Write the result to dest
+
+
+        Args:
+            dest: The files will be saved in the given :dest: destination directory.
+
+        Returns:
+            Returns true if something was written - False if there is nothing to be written
+        """
+
+        if not self.instructions:
+            return False
+
+        print(detector_terminal_description(self.detector))
+        print("\tFollowing are the unoptimized instructions found:")
+
+        for ins in self.instructions:
+            print(ins)
+
+        return True
+
+
 class ExecutionPaths(Output):
     """Detector output class to represent vulnerable execution paths."""
 
@@ -487,7 +538,6 @@ class ExecutionPaths(Output):
         os.makedirs(dest, exist_ok=True)
 
         for idx, path in enumerate(self.paths, start=1):
-
             short = self._short_notation(path)
             print(f"\n\t\t path: {short}")
 
