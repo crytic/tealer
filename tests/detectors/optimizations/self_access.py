@@ -1,8 +1,8 @@
-from tealer.detectors.optimizations.send_access import SelfAccess
+from tealer.detectors.optimizations.self_access import SelfAccess
 
 GTXN = """
 #pragma version 3
-txn group index
+txn GroupIndex
 gtxns CloseRemainderTo
 """
 
