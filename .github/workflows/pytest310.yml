@@ -63,4 +63,4 @@ jobs:
 
     - name: Run regex tests in 3.10
       run: |
-        pytest tests/tests_regex.py
+        pytest tests/test_regex.py
