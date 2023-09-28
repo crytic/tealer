@@ -427,7 +427,7 @@ class ExecutionPaths(Output):
 
     @property
     def detector(self) -> "AbstractDetector":
-        return self.detector
+        return self._detector
 
     def _filename(self, path_index: int) -> Path:
         return Path(f"{self.detector.NAME}-{path_index}.dot")
