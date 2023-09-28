@@ -63,11 +63,11 @@ To choose printers to run from the available list:
 """
 
 import argparse
-import re
-import os
-import sys
 import json
 import logging
+import os
+import re
+import sys
 from pathlib import Path
 from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional, Union, Sequence
 
@@ -76,7 +76,6 @@ from pkg_resources import require  # type: ignore
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.exceptions import TealerException
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.utils.teal_enums import ExecutionMode
 from tealer.utils.algoexplorer import (
     get_application_using_app_id,
     logic_sig_from_contract_account,
@@ -95,6 +94,8 @@ from tealer.utils.command_line.common import (
     init_tealer_from_single_contract,
 )
 from tealer.utils.output import ROOT_OUTPUT_DIRECTORY, ExecutionPaths
+from tealer.utils.regex.regex import run_regex
+from tealer.utils.teal_enums import ExecutionMode
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
@@ -246,6 +247,12 @@ def parse_args(
         help='Algorand network to fetch the contract from, ("mainnet" or "testnet"). defaults to "mainnet".',
         action="store",
         default="mainnet",
+    )
+
+    parser.add_argument(
+        "--regex",
+        help="Provide the regex file",
+        action="store",
     )
 
     group_init = parser.add_argument_group("Initialize")
@@ -553,6 +560,17 @@ def main() -> None:
     try:
         contract_source, contract_name = fetch_contract(args)
         tealer = init_tealer_from_single_contract(contract_source, contract_name)
+
+        # TODO: handle this as a subcommand instead of a flag
+        if args.regex:
+            default_path = Path("regex_result.dot")
+            if len(tealer.contracts) != 1:
+                print("Regex works only for single contract")
+                return
+            run_regex(tealer.contracts[contract_name], args.regex, default_path)
+            print(f"Result generated in {default_path}")
+            return
+
         # TODO: decide on default classification for detectors in group transaction context.
         detector_classes = choose_detectors(args, detector_classes, tealer.contracts[contract_name])
         printer_classes = choose_printers(args, printer_classes)

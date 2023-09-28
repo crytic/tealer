@@ -24,7 +24,7 @@ import re
 import os
 from pathlib import Path
 from typing import List, TYPE_CHECKING, Dict, Callable, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from tealer.teal.instructions.instructions import BZ, BNZ, Callsub, Retsub
 
@@ -54,6 +54,7 @@ class CFGDotConfig:  # pylint: disable=too-many-instance-attributes
     remaining_edges_color: str = "BLACK"
     comments_cell_border_size: int = 2  # size of basic block comments cell
     bb_border_color: Callable[["BasicBlock"], str] = lambda _x: "BLACK"
+    custom_background_color: Dict["Instruction", str] = field(default_factory=dict)
 
 
 def _instruction_to_dot(ins: "Instruction", config: CFGDotConfig) -> str:
@@ -111,9 +112,11 @@ def _instruction_to_dot(ins: "Instruction", config: CFGDotConfig) -> str:
         source_code_comments = "<BR/>".join(f"{comment}" for comment in sanitized_comments)
         source_code_comments += "<BR/>"
 
+    color = config.custom_background_color.get(ins, "BLACK")
+
     cell_i = (
         "<TR>"
-        '<TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">'
+        f'<TD ALIGN="LEFT" BALIGN="LEFT" COLOR="{color}">'
         f"{tealer_comments}"
         f"{source_code_comments}"
         f"{ins.line}. {ins_str}"
@@ -427,7 +430,7 @@ class ExecutionPaths(Output):
 
     @property
     def detector(self) -> "AbstractDetector":
-        return self.detector
+        return self._detector
 
     def _filename(self, path_index: int) -> Path:
         return Path(f"{self.detector.NAME}-{path_index}.dot")
