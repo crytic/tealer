@@ -1,3 +1,5 @@
+# pylint: skip-file
+# type: ignore
 # Example from https://pyteal.readthedocs.io/en/stable/examples.html
 
 from pyteal import *

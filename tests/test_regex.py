@@ -22,10 +22,10 @@ def test_parse_regex() -> None:
 
 def test_match() -> None:
 
-    with open("./regex/vote_approval.teal", "r", encoding="utf8") as f_codebase:
+    with open("./tests/regex/vote_approval.teal", "r", encoding="utf8") as f_codebase:
         teal = parse_teal(f_codebase.read())
 
-    with open("./regex/regex.txt", "r", encoding="utf8") as f_regex:
+    with open("./tests/regex/regex.txt", "r", encoding="utf8") as f_regex:
         regex = parse_regex(f_regex.read())
 
     matches, covered = match_regex(teal, regex)
