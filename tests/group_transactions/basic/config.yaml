@@ -17,8 +17,8 @@ contracts:
         dispatch_path: ["B0", "B1", "B2", "B3", "B71"]
       - name: app1_case_5
         dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B70"]
-      # - name: app1_case_6
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B69"]
+      - name: app1_case_6
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B69"]
       # - name: app1_case_7
       #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B68"]
       # - name: app1_case_8
@@ -93,8 +93,8 @@ contracts:
         dispatch_path: ["B0", "B1", "B57"]
       - name: lsig1_case_5
         dispatch_path: ["B0", "B1", "B2", "B56"]
-  #     - name: lsig1_case_6
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B55"]
+      - name: lsig1_case_6
+        dispatch_path: ["B0", "B1", "B2", "B3", "B55"]
   #     - name: lsig1_case_7
   #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B54"]
   #     - name: lsig1_case_8
@@ -257,16 +257,16 @@ groups:
         logic_sig:
           contract: LogicSig_1
           function: lsig1_case_5
-  # - operation: case_6
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_6
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_6
+  - operation: case_6
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_6
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_6
   # - operation: case_7
   #   transactions:
   #     - txn_id: T1

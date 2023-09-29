@@ -17,10 +17,10 @@ Attributes:
     ARRAY_TX_FIELD_TXT_TO_OBJECT: Map(dict) from string representation
         of array transaction field to the corresponding class.
 """
-
+from typing import Dict, Type
 from tealer.teal.instructions import transaction_field
 
-TX_FIELD_TXT_TO_OBJECT = {
+TX_FIELD_TXT_TO_OBJECT: Dict[str, Type[transaction_field.TransactionField]] = {
     "Sender": transaction_field.Sender,
     "Fee": transaction_field.Fee,
     "FirstValid": transaction_field.FirstValid,
