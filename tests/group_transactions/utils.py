@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from dataclasses import dataclass
 from pathlib import Path
 import yaml

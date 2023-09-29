@@ -22,7 +22,8 @@ ALL_TESTS: List[Tuple[Path, Type[AbstractDetector], Path]] = [
 ]
 
 
-@pytest.mark.parametrize("test", ALL_TESTS)
+# pylint: disable=too-many-locals
+@pytest.mark.parametrize("test", ALL_TESTS)  # type: ignore
 def test_instructions_output_detectors(test: Tuple[Path, Type[AbstractDetector], Path]) -> None:
     config_path, detector, expected_output_file_path = test
 

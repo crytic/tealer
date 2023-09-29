@@ -1,7 +1,7 @@
 # pylint: disable=undefined-variable
 # type: ignore[name-defined]
-from pyteal import *
 from pathlib import Path
+from pyteal import *  # pylint: disable=wildcard-import, unused-wildcard-import
 
 
 def lsig2_case_7() -> Expr:
@@ -220,11 +220,11 @@ def logic_sig() -> Expr:
     )
 
 
-def compile(output_file: Path) -> None:
+def compile_program(output_file: Path) -> None:
     teal = compileTeal(logic_sig(), mode=Mode.Signature, version=7)
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(teal)
 
 
 if __name__ == "__main__":
-    compile(Path("logicsig_2.teal"))
+    compile_program(Path("logicsig_2.teal"))

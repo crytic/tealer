@@ -1,7 +1,7 @@
 # pylint: disable=undefined-variable
 # type: ignore[name-defined]
-from pyteal import *
 from pathlib import Path
+from pyteal import *  # pylint: disable=wildcard-import, unused-wildcard-import
 
 
 def app1_case_1() -> Expr:
@@ -242,11 +242,11 @@ def approval_program() -> Expr:
     )
 
 
-def compile(output_file: Path) -> None:
+def compile_program(output_file: Path) -> None:
     teal = compileTeal(approval_program(), mode=Mode.Application, version=7)
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(teal)
 
 
 if __name__ == "__main__":
-    compile(Path("app_1.teal"))
+    compile_program(Path("app_1.teal"))

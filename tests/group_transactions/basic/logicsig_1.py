@@ -1,3 +1,5 @@
+# pylint: disable=undefined-variable
+# type: ignore[name-defined]
 """
 case 1:
     - Single transaction.
@@ -429,14 +431,12 @@ case 37:
     - Application does not check anything.
     - Logic checks the field using absolute index.
     - Absolute index is given in the config.
-    
+
 Expected:
     Not Vulnerable
 """
-# pylint: disable=undefined-variable
-# type: ignore[name-defined]
-from pyteal import *
 from pathlib import Path
+from pyteal import *  # pylint: disable=wildcard-import, unused-wildcard-import
 
 
 def lsig1_case_1() -> Expr:
@@ -737,11 +737,11 @@ def logic_sig() -> Expr:
     )
 
 
-def compile(output_file: Path) -> None:
+def compile_program(output_file: Path) -> None:
     teal = compileTeal(logic_sig(), mode=Mode.Signature, version=7)
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(teal)
 
 
 if __name__ == "__main__":
-    compile(Path("logicsig_1.teal"))
+    compile_program(Path("logicsig_1.teal"))
