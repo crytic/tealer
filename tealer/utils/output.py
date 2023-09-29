@@ -35,7 +35,6 @@ if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
     from tealer.detectors.abstract_detector import AbstractDetector
 
-
 ROOT_OUTPUT_DIRECTORY = Path("tealer-export")
 
 
@@ -402,19 +401,71 @@ class Output(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def write_to_files(self, dest: Path) -> bool:
+    def generate_output(self, dest: Path) -> bool:
         """
-        Write the result to dest
+        Generate the output
 
 
         Args:
             dest: The files will be saved in the given :dest: destination directory.
 
         Returns:
-            Returns true if something was written - False if there is nothing to be written
+            Returns true if something was generated - False if there is nothing to be written
         """
 
         return False  # this statement is needed for darglint
+
+
+class InstructionsOutput(Output):
+    def __init__(
+        self, teal: "Teal", detector: "AbstractDetector", instructions: List[List["Instruction"]]
+    ):
+        self._teal = teal
+        self._detector = detector
+        self.instructions: List[List["Instruction"]] = instructions
+
+    @property
+    def detector(self) -> "AbstractDetector":
+        return self._detector
+
+    def filter_paths(self, filter_regex: str) -> None:
+        pass
+
+    def to_json(self) -> Dict:
+        result = {
+            "type": "InstructionsOutput",
+            "count": len(self.instructions),
+            "description": detector_terminal_description(self.detector),
+            "check": self.detector.NAME,
+            "impact": str(self.detector.IMPACT),
+            "confidence": str(self.detector.CONFIDENCE),
+            "help": self.detector.WIKI_RECOMMENDATION.strip(),
+            "paths": [str(ins) for ins in self.instructions],
+        }
+        return result
+
+    def generate_output(self, dest: Path) -> bool:
+        """
+        Generate the output
+
+
+        Args:
+            dest: Not use (no files are generated for InstructionsOutput)
+
+        Returns:
+            Returns true if something was generated - False if there is nothing to be written
+        """
+
+        if not self.instructions:
+            return False
+
+        print(detector_terminal_description(self.detector))
+        print("\tFollowing are the unoptimized instructions found:")
+
+        for ins in self.instructions:
+            print(ins)
+
+        return True
 
 
 class ExecutionPaths(Output):
@@ -457,7 +508,7 @@ class ExecutionPaths(Output):
         self.paths = filtered_paths
         return
 
-    def write_to_files(self, dest: Path) -> bool:
+    def generate_output(self, dest: Path) -> bool:
         """Export execution paths to dot files.
 
         The execution paths are highlighted in the dot representation
@@ -487,7 +538,6 @@ class ExecutionPaths(Output):
         os.makedirs(dest, exist_ok=True)
 
         for idx, path in enumerate(self.paths, start=1):
-
             short = self._short_notation(path)
             print(f"\n\t\t path: {short}")
 

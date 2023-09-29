@@ -23,3 +23,4 @@ from tealer.detectors.can_close_asset import CanCloseAsset
 from tealer.detectors.fee_check import MissingFeeCheck
 from tealer.detectors.anyone_can_update import AnyoneCanUpdate
 from tealer.detectors.anyone_can_delete import AnyoneCanDelete
+from tealer.detectors.optimizations.constant_gtxn import ConstantGtxn

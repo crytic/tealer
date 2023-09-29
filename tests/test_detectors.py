@@ -4,7 +4,7 @@ import pytest
 from tealer.teal.basic_blocks import BasicBlock
 from tealer.detectors.abstract_detector import AbstractDetector
 from tealer.utils.command_line.common import init_tealer_from_single_contract
-from tealer.utils.output import ExecutionPaths
+from tealer.utils.output import ExecutionPaths, InstructionsOutput
 
 from tests.detectors.groupsize import missing_group_size_tests
 from tests.detectors.fee_check import missing_fee_check_tests, new_missing_fee_tests
@@ -12,6 +12,7 @@ from tests.detectors.can_close_account import can_close_account_tests, new_can_c
 from tests.detectors.can_close_asset import can_close_asset_tests, new_can_close_asset_tests
 from tests.detectors.can_delete import can_delete_tests, new_can_delete_tests
 from tests.detectors.can_update import can_update_tests, new_can_update_tests
+from tests.detectors.optimizations.constant_gtxn import constant_gtxn
 from tests.detectors.rekeyto import missing_rekeyto_tests, new_missing_rekeyto_tests
 from tests.detectors.subroutine_patterns import subroutine_patterns_tests
 
@@ -73,6 +74,40 @@ def test_just_detectors(test: Tuple[str, Type[AbstractDetector], List[List[int]]
             assert len(path) == len(expected_path)
             for bi, expected_idx in zip(path, expected_path):
                 assert bi.idx == expected_idx
+
+    else:
+        # Not implemented yet
+        assert False
+
+
+# This test is for the detectors using InstructionsOutput
+# This type return only a list of instructions
+# So we compare the expected lines of the source code
+# source code -> detector -> lust(expected lines)
+TESTS_INSTRUCTIONS_OUTPUT: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
+    *constant_gtxn
+]
+
+
+@pytest.mark.parametrize("test", TESTS_INSTRUCTIONS_OUTPUT)  # type: ignore
+def test_instructions_output_detectors(
+    test: Tuple[str, Type[AbstractDetector], List[List[int]]]
+) -> None:
+    code, detector, expected_instruction_lines = test
+    tealer = init_tealer_from_single_contract(code.strip(), "test")
+    tealer.register_detector(detector)
+    result = tealer.run_detectors()[0][0]
+
+    if isinstance(result, InstructionsOutput):
+        print(
+            f"count: result = {len(result.instructions)}, expected = {len(expected_instruction_lines)}"
+        )
+
+        actual_instruction_lines = [
+            [ins.line for ins in instructions] for instructions in result.instructions
+        ]
+
+        assert actual_instruction_lines == expected_instruction_lines
 
     else:
         # Not implemented yet

@@ -186,7 +186,10 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
                 f"WIKI_DESCRIPTION is not initialized {self.__class__.__name__}"
             )
 
-        if not self.WIKI_EXPLOIT_SCENARIO:
+        if not self.WIKI_EXPLOIT_SCENARIO and self.IMPACT not in [
+            DetectorClassification.INFORMATIONAL,
+            DetectorClassification.OPTIMIZATION,
+        ]:
             raise IncorrectDetectorInitialization(
                 f"WIKI_EXPLOIT_SCENARIO is not initialized {self.__class__.__name__}"
             )
