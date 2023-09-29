@@ -1,4 +1,4 @@
-"""Detector for finding execution paths missing Fee check."""
+"""Detector for finding unoptimized usage of constant GTXN."""
 
 from typing import TYPE_CHECKING, List
 
