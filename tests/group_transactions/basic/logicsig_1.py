@@ -433,7 +433,8 @@ case 37:
 Expected:
     Not Vulnerable
 """
-
+# pylint: disable=undefined-variable
+# type: ignore[name-defined]
 from pyteal import *
 from pathlib import Path
 
