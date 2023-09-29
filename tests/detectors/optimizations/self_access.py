@@ -4,6 +4,7 @@ GTXN = """
 #pragma version 3
 txn GroupIndex
 gtxns CloseRemainderTo
+int 1
 """
 
 self_access = [(GTXN, SelfAccess, [[2, 3]])]

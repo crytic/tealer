@@ -57,16 +57,17 @@ class SelfAccess(AbstractDetector):  # pylint: disable=too-few-public-methods
                         first = block.instructions[i]
                         second = block.instructions[i + 1]
 
-                    # Note: first / second are always assigned, as we check for len(block.instructions) first
-                    # pylint: disable=undefined-loop-variable
-                    if (
-                        isinstance(first, Txn)
-                        and isinstance(first.field, GroupIndex)
-                        and isinstance(second, (Gtxns, Gtxnsa, Gtxnsas))
-                    ):
+                        # Note: first / second are always assigned, as we check for len(block.instructions) first
                         # pylint: disable=undefined-loop-variable
-                        all_findings.append([first, second])
+                        if (
+                            isinstance(first, Txn)
+                            and isinstance(first.field, GroupIndex)
+                            and isinstance(second, (Gtxns, Gtxnsa, Gtxnsas))
+                        ):
+                            # pylint: disable=undefined-loop-variable
+                            all_findings.append([first, second])
 
-            detector_output.append(InstructionsOutput(contract, self, all_findings))
+            if all_findings:
+                detector_output.append(InstructionsOutput(contract, self, all_findings))
 
         return detector_output

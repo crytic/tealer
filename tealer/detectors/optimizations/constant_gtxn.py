@@ -58,14 +58,15 @@ class ConstantGtxn(AbstractDetector):  # pylint: disable=too-few-public-methods
                         first = block.instructions[i]
                         second = block.instructions[i + 1]
 
-                    # Note: first / second are always assigned, as we check for len(block.instructions) first
-                    # pylint: disable=undefined-loop-variable
-                    first_ins_is_int, _ = is_int_push_ins(first)
-                    # pylint: disable=undefined-loop-variable
-                    if first_ins_is_int and isinstance(second, Gtxns):
+                        # Note: first / second are always assigned, as we check for len(block.instructions) first
                         # pylint: disable=undefined-loop-variable
-                        all_findings.append([first, second])
+                        first_ins_is_int, _ = is_int_push_ins(first)
+                        # pylint: disable=undefined-loop-variable
+                        if first_ins_is_int and isinstance(second, Gtxns):
+                            # pylint: disable=undefined-loop-variable
+                            all_findings.append([first, second])
 
-            detector_output.append(InstructionsOutput(contract, self, all_findings))
+            if all_findings:
+                detector_output.append(InstructionsOutput(contract, self, all_findings))
 
         return detector_output
