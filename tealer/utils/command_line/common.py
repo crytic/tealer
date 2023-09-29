@@ -49,7 +49,8 @@ Output updated group-config file
 """
 
 import sys
-from pathlib import Path
+
+# from pathlib import Path
 import inspect
 import argparse
 
@@ -63,14 +64,16 @@ from tealer.printers.abstract_printer import AbstractPrinter
 from tealer.detectors import all_detectors
 from tealer.printers import all_printers
 from tealer.exceptions import TealerException
-from tealer.utils.command_line.group_config import (
-    read_config_from_file,
-)
+
+# from tealer.utils.command_line.group_config import (
+#     read_config_from_file,
+# )
 from tealer.teal.parse_teal import parse_teal
 from tealer.teal.parse_functions import construct_function
 from tealer.utils.teal_enums import ContractType, contract_type_from_txt
 from tealer.tealer import Tealer
-from tealer.utils.output import subroutine_to_dot
+
+# from tealer.utils.output import subroutine_to_dot
 from tealer.execution_context.transactions import Transaction, GroupTransaction
 
 if TYPE_CHECKING:
@@ -219,15 +222,18 @@ def validate_command_line_options(args: argparse.Namespace) -> None:
             )
 
 
-def handle_detect(args: argparse.Namespace) -> None:
-    group_config = read_config_from_file(Path(args.group_config))
-    tealer = init_tealer_from_config(group_config)
+# def handle_detect(args: argparse.Namespace) -> None:
+# group_config = read_config_from_file(Path(args.group_config))
+# tealer = init_tealer_from_config(group_config)
 
-    for contract_name, contract in tealer.contracts.items():
-        for function_name, function in contract.functions.items():
-            dot_file_name = f"{contract_name}_{function_name}.dot"
-            with open(dot_file_name, "w", encoding="utf-8") as f:
-                f.write(subroutine_to_dot(function.main))
+# for contract_name, contract in tealer.contracts.items():
+#     for function_name, function in contract.functions.items():
+#         print("None")
+# dot_file_name = f"{contract_name}_{function_name}.dot"
+# with open(dot_file_name, "w", encoding="utf-8") as f:
+#     f.write(subroutine_to_dot(function.main))
+
+# output = tealer
 
 
 # def list_contract_files(directory: Path) -> List[Path]:
@@ -271,8 +277,9 @@ def init_tealer_from_config(config: "GroupConfig") -> "Tealer":
     group_objs_list: List[GroupTransaction] = []
     for txn_config in config.groups:
         txn_id_to_obj: Dict[str, "Transaction"] = {}
-        for txn in txn_config:
+        for txn in txn_config.transactions:
             txn_obj = Transaction()
+            txn_obj.transacton_id = txn.txn_id
             if txn.has_logic_sig is not None:
                 txn_obj.has_logic_sig = txn.has_logic_sig
             txn_obj.absoulte_index = txn.absolute_index
@@ -292,15 +299,17 @@ def init_tealer_from_config(config: "GroupConfig") -> "Tealer":
                         f"{txn.logic_sig.contract} is an application but is given as a logic-sig."
                     )
                 txn_obj.logic_sig = logic_sig_function
+                txn_obj.has_logic_sig = True
 
             if txn.txn_id in txn_id_to_obj:
                 raise TealerException(f"{txn.txn_id} is repeated in the same group.")
             txn_id_to_obj[txn.txn_id] = txn_obj
 
         group_obj = GroupTransaction()
+        group_obj.operation_name = txn_config.operation
         group_obj.transactions = list(txn_id_to_obj.values())
 
-        for txn in txn_config:
+        for txn in txn_config.transactions:
             txn_obj = txn_id_to_obj[txn.txn_id]
             txn_obj.group_transaction = group_obj
             if txn.relative_indexes is not None:
@@ -317,7 +326,7 @@ def init_tealer_from_config(config: "GroupConfig") -> "Tealer":
 
         group_objs_list.append(group_obj)
 
-    return Tealer(contracts, group_objs_list)
+    return Tealer(contracts, group_objs_list, output_group=True)
 
 
 def init_tealer_from_single_contract(contract_src: str, contract_name: str) -> "Tealer":
@@ -329,6 +338,7 @@ def init_tealer_from_single_contract(contract_src: str, contract_name: str) -> "
 
     txn_obj = Transaction()
     if teal.contract_type == ContractType.LogicSig:
+        txn_obj.transacton_id = contract_name
         txn_obj.has_logic_sig = True
         txn_obj.logic_sig = contract_functions[contract_name]
     else:
@@ -336,6 +346,7 @@ def init_tealer_from_single_contract(contract_src: str, contract_name: str) -> "
         txn_obj.application = contract_functions[contract_name]
 
     group_obj = GroupTransaction()
+    group_obj.operation_name = contract_name
     group_obj.transactions = [txn_obj]
     group_objs_list = [group_obj]
 

@@ -2,6 +2,8 @@ import logging
 from typing import List, TYPE_CHECKING, Callable, Tuple, Optional
 
 from tealer.utils.analyses import next_blocks_global, leaf_block_global
+from tealer.detectors.abstract_detector import DetectorType
+from tealer.utils.output import GroupTransactionOutput
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -10,6 +12,7 @@ if TYPE_CHECKING:
     from tealer.teal.functions import Function
     from tealer.teal.subroutine import Subroutine
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
+    from tealer.detectors.abstract_detector import AbstractDetector
 
 logger_detectors = logging.getLogger("Detectors")
 logging.basicConfig(level=logging.DEBUG)
@@ -19,6 +22,7 @@ def validated_in_block(
     block: "BasicBlock",
     function: "Function",
     checks_field: Callable[["BlockTransactionContext"], bool],
+    absolute_index: Optional[int] = None,
 ) -> bool:
     """
     A transaction field can be validated by accessing using instructions
@@ -36,10 +40,10 @@ def validated_in_block(
         function: The function
         checks_field: A function which given a block context, should return True if the target field
             cannot have the vulnerable value or else False.
-
-        e.g: For is_updatable detector, vulnerable value is `UpdateApplication`.
-        if `block_ctx.transaction_types` can have `UpdateApplication`, this method will
-        return false or else returns True.
+            e.g: For is_updatable detector, vulnerable value is `UpdateApplication`.
+            if `block_ctx.transaction_types` can have `UpdateApplication`, this method will
+            return false or else returns True.
+        absolute_index: The index of the transaction (given in group config or computed)
 
     Returns:
         returns True if the field(s) is validated in this block or else False
@@ -48,6 +52,11 @@ def validated_in_block(
 
     if checks_field(function.transaction_context(block)):
         return True
+    # if absolute index is given, check if field was checked by accessing it using gtxn(s) instructions`
+    if absolute_index is not None:
+        if checks_field(function.transaction_context(block).gtxn_context(absolute_index)):
+            return True
+        return False
     # for each possible {index} the transaction can have, check if field is checked using `gtxn {index} {field}`
     for i in function.transaction_context(block).group_indices:
         if not checks_field(function.transaction_context(block).gtxn_context(i)):
@@ -299,4 +308,102 @@ def detect_missing_tx_field_validations_group(
                 )
                 contract = txn.application.contract
                 output.append((contract, vulnerable_paths))
+    return output
+
+
+def contract_checks_its_field(
+    function: "Function",
+    checks_field: Callable[["BlockTransactionContext"], bool],
+    absolute_index: Optional[int],
+) -> bool:
+    """
+    Return True if the contract checks its transaction field using `txn {field}` or `gtxn(s) {fields}` by accessing it using the index.
+
+    Args:
+        function: The function being checked
+        checks_field: A function which returns True if function validates the vulnerable transaction "field".
+        absolute_index: The absolute index of the transaction given by the user in the config.
+
+    Returns:
+        Returns True if the contracts checks its own transaction field.
+    """
+    leaf_blocks = [block for block in function.blocks if leaf_block_global(block)]
+    for block in leaf_blocks:
+        # checking the leaf blocks is enough to confirm the vulnerability
+        if not validated_in_block(block, function, checks_field, absolute_index):
+            # is vulnerable
+            return False
+    # contract checks its fields
+    return True
+
+
+# def get_leaf_blocks(function: "Function") -> List["BasicBlock"]:
+#     for
+# change to a better name
+def detect_missing_tx_field_validations_group_complete(
+    tealer: "Tealer",
+    detector: "AbstractDetector",
+    checks_field: Callable[["BlockTransactionContext"], bool],
+) -> List[GroupTransactionOutput]:
+    """
+    `tealer.analyses.dataflow` calculates possible values a transaction field can have to successfully complete execution.
+    Information is computed at block level. Each block's context(`BlockTransactionContext`)
+    will have information on possible values for a transaction field such that
+        - Execution reaches to the first instruction of block `B`
+        - Execution reaches exit instruction of block `B` without failing.
+
+    The goal of current detectors is to find if a given transaction field(s) can have a certain vulnerable value(s).
+    e.g: is_updatable detector checks if the transaction can be UpdateApplication type transaction. Here, the vulnerable value for
+    transaction type is "UpdateApplication". if "UpdateApplication" is a possible value then the contract is considered vulnerable and is reported.
+
+    In order to find whether the given contract is vulnerable, it is sufficient to check the leaf blocks: whether transaction field can
+    have target value and execution reaches end of a leaf block.
+    - Only LogicSigs are vulnerable to Stateless detectors.
+    - If a transaction does not have LogicSig then it is considered to be not vulnerable by Stateless detectors.
+
+    Args:
+        tealer: the tealer object
+        detector: The detector
+        checks_field:  A function which given a block context, should return True if the target field
+            cannot have the vulnerable value or else False.
+
+    Returns:
+        Found vulnerable operations/groups
+    """
+    output = []
+    for group_txn in tealer.groups:
+        is_vulnerable = False
+        vulnerable_transactions = {}
+        for txn in group_txn.transactions:
+            if detector.TYPE == DetectorType.STATELESS:
+                if not txn.has_logic_sig:
+                    continue
+
+                # print(txn.logic_sig.blocks)
+                # for block in txn.logic_sig.blocks:
+                #     print(block)
+                #     print(leaf_block_global(block))
+                #     print(txn.logic_sig.transaction_context(block).rekeyto)
+                # the contract has logic sig
+                # check if the contracts executed in the txn check the field.
+                # logic sig contract is given
+                if txn.logic_sig is not None and contract_checks_its_field(
+                    txn.logic_sig, checks_field, txn.absoulte_index
+                ):
+                    # the logic sig checks its field, not vulnerable
+                    continue
+                if txn.application is not None and contract_checks_its_field(
+                    txn.application, checks_field, txn.absoulte_index
+                ):
+                    # the application checks the field. The logic sig is not vulnerable
+                    # continue to next transaction
+                    continue
+                # the logic contract is vulnerable. mark the operation/group as vulnerable
+                is_vulnerable = True
+                if txn.logic_sig is not None:
+                    vulnerable_transactions[txn] = [txn.logic_sig]
+                else:
+                    vulnerable_transactions[txn] = []
+        if is_vulnerable:
+            output.append(GroupTransactionOutput(detector, group_txn, vulnerable_transactions))
     return output

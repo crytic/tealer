@@ -31,9 +31,12 @@ from tealer.teal.instructions.instructions import BZ, BNZ, Callsub, Retsub
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
     from tealer.teal.subroutine import Subroutine
+    from tealer.teal.functions import Function
     from tealer.teal.teal import Teal
     from tealer.teal.instructions.instructions import Instruction
     from tealer.detectors.abstract_detector import AbstractDetector
+    from tealer.execution_context.transactions import GroupTransaction, Transaction
+
 
 ROOT_OUTPUT_DIRECTORY = Path("tealer-export")
 
@@ -478,7 +481,7 @@ class ExecutionPaths(Output):
 
     @property
     def detector(self) -> "AbstractDetector":
-        return self.detector
+        return self._detector
 
     def _filename(self, path_index: int) -> Path:
         return Path(f"{self.detector.NAME}-{path_index}.dot")
@@ -588,6 +591,84 @@ class ExecutionPaths(Output):
 
         result["paths"] = paths
         return result
+
+
+class GroupTransactionOutput(Output):
+    def __init__(
+        self,
+        detector: "AbstractDetector",
+        group: "GroupTransaction",
+        transactions: Dict["Transaction", List["Function"]],
+    ) -> None:
+        self._detector = detector
+        self._group = group
+        self._transactions = transactions
+
+    @property
+    def detector(self) -> "AbstractDetector":
+        return self._detector
+
+    @property
+    def group_transaction(self) -> "GroupTransaction":
+        return self._group
+
+    @property
+    def transactions(self) -> Dict["Transaction", List["Function"]]:
+        return self._transactions
+
+    def filter_paths(self, filter_regex: str) -> None:
+        pass
+
+    def to_json(self) -> Dict:
+        transactions = {}
+        for txn in self._transactions:
+            contracts = []
+            for function in self._transactions[txn]:
+                contracts.append(
+                    {
+                        "contract": function.contract.contract_name,
+                        "function": function.function_name,
+                    }
+                )
+            transactions[txn.transacton_id] = contracts
+
+        result = {
+            "type": "GroupTransactionOutput",
+            "description": detector_terminal_description(self.detector),
+            "check": self.detector.NAME,
+            "impact": str(self.detector.IMPACT),
+            "confidence": str(self.detector.CONFIDENCE),
+            "help": self.detector.WIKI_RECOMMENDATION.strip(),
+            "operation": self._group.operation_name,
+            "transactions": transactions,
+        }
+        return result
+
+    def generate_output(self, dest: Path) -> bool:
+        """
+        Generate the output
+
+        Args:
+            dest: Not used, no files are generated for GroupTransactionOutput
+
+        Returns:
+            Returns true if something was generated - False if there is nothing to be written.
+        """
+        print(detector_terminal_description(self.detector))
+        print(
+            f"\tFollowing transactions of the operation {self._group.operation_name} are vulnerable:\n"
+        )
+
+        for txn in self._transactions:
+            print(f"\tTransaction {txn.transacton_id}")
+            if self._transactions[txn]:
+                # contract was given by the user.
+                for function in self._transactions[txn]:
+                    print(f"\t\tContract: {function.contract.contract_name}")
+                    print(f"\t\tFunction: {function.function_name}")
+                    print("\n")
+
+        return True
 
 
 ListOutput = List[Output]

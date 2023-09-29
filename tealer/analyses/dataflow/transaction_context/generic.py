@@ -241,6 +241,7 @@ from tealer.teal.instructions.instructions import (
     And,
     Or,
     Not,
+    TealerCustomErrInstruction,
 )
 from tealer.utils.analyses import (
     is_int_push_ins,
@@ -492,7 +493,7 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
                     self._block_contexts[key][block] = self._intersection(
                         key, present_values, true_values
                     )
-            elif isinstance(ins, Err):
+            elif isinstance(ins, (Err, TealerCustomErrInstruction)):
                 # if err, set possible values to NullSet()
                 for key in analysis_keys:
                     self._block_contexts[key][block] = self._null_set(key)

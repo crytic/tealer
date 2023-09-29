@@ -1,0 +1,408 @@
+#pragma version 7
+txn OnCompletion
+int NoOp
+==
+assert
+int 0
+txnas ApplicationArgs
+btoi
+int 1
+==
+bnz main_l74
+int 0
+txnas ApplicationArgs
+btoi
+int 2
+==
+bnz main_l73
+int 0
+txnas ApplicationArgs
+btoi
+int 3
+==
+bnz main_l72
+int 0
+txnas ApplicationArgs
+btoi
+int 4
+==
+bnz main_l71
+int 0
+txnas ApplicationArgs
+btoi
+int 5
+==
+bnz main_l70
+int 0
+txnas ApplicationArgs
+btoi
+int 6
+==
+bnz main_l69
+int 0
+txnas ApplicationArgs
+btoi
+int 7
+==
+bnz main_l68
+int 0
+txnas ApplicationArgs
+btoi
+int 8
+==
+bnz main_l67
+int 0
+txnas ApplicationArgs
+btoi
+int 9
+==
+bnz main_l66
+int 0
+txnas ApplicationArgs
+btoi
+int 10
+==
+bnz main_l65
+int 0
+txnas ApplicationArgs
+btoi
+int 11
+==
+bnz main_l64
+int 0
+txnas ApplicationArgs
+btoi
+int 12
+==
+bnz main_l63
+int 0
+txnas ApplicationArgs
+btoi
+int 13
+==
+bnz main_l62
+int 0
+txnas ApplicationArgs
+btoi
+int 14
+==
+bnz main_l61
+int 0
+txnas ApplicationArgs
+btoi
+int 15
+==
+bnz main_l60
+int 0
+txnas ApplicationArgs
+btoi
+int 16
+==
+bnz main_l59
+int 0
+txnas ApplicationArgs
+btoi
+int 17
+==
+bnz main_l58
+int 0
+txnas ApplicationArgs
+btoi
+int 18
+==
+bnz main_l57
+int 0
+txnas ApplicationArgs
+btoi
+int 19
+==
+bnz main_l56
+int 0
+txnas ApplicationArgs
+btoi
+int 20
+==
+bnz main_l55
+int 0
+txnas ApplicationArgs
+btoi
+int 21
+==
+bnz main_l54
+int 0
+txnas ApplicationArgs
+btoi
+int 22
+==
+bnz main_l53
+int 0
+txnas ApplicationArgs
+btoi
+int 23
+==
+bnz main_l52
+int 0
+txnas ApplicationArgs
+btoi
+int 24
+==
+bnz main_l51
+int 0
+txnas ApplicationArgs
+btoi
+int 25
+==
+bnz main_l50
+int 0
+txnas ApplicationArgs
+btoi
+int 26
+==
+bnz main_l49
+int 0
+txnas ApplicationArgs
+btoi
+int 27
+==
+bnz main_l48
+int 0
+txnas ApplicationArgs
+btoi
+int 28
+==
+bnz main_l47
+int 0
+txnas ApplicationArgs
+btoi
+int 29
+==
+bnz main_l46
+int 0
+txnas ApplicationArgs
+btoi
+int 30
+==
+bnz main_l45
+int 0
+txnas ApplicationArgs
+btoi
+int 31
+==
+bnz main_l44
+int 0
+txnas ApplicationArgs
+btoi
+int 32
+==
+bnz main_l43
+int 0
+txnas ApplicationArgs
+btoi
+int 33
+==
+bnz main_l42
+int 0
+txnas ApplicationArgs
+btoi
+int 34
+==
+bnz main_l41
+int 0
+txnas ApplicationArgs
+btoi
+int 35
+==
+bnz main_l40
+int 0
+txnas ApplicationArgs
+btoi
+int 36
+==
+bnz main_l39
+int 0
+txnas ApplicationArgs
+btoi
+int 37
+==
+bnz main_l38
+err
+main_l38:
+int 1
+return
+main_l39:
+gtxn 4 RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l40:
+int 1
+return
+main_l41:
+int 1
+return
+main_l42:
+int 1
+return
+main_l43:
+int 1
+return
+main_l44:
+int 1
+return
+main_l45:
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l46:
+int 1
+return
+main_l47:
+txn GroupIndex
+int 5
++
+gtxns RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l48:
+int 1
+return
+main_l49:
+int 1
+return
+main_l50:
+int 1
+return
+main_l51:
+int 1
+return
+main_l52:
+int 1
+return
+main_l53:
+int 1
+return
+main_l54:
+txn GroupIndex
+int 2
++
+gtxns RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l55:
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l56:
+txn GroupIndex
+int 4
++
+gtxns RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l57:
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+txn GroupIndex
+int 4
++
+gtxns RekeyTo
+global ZeroAddress
+==
+&&
+assert
+int 1
+return
+main_l58:
+int 1
+return
+main_l59:
+int 1
+return
+main_l60:
+int 1
+return
+main_l61:
+int 1
+return
+main_l62:
+int 1
+return
+main_l63:
+int 1
+return
+main_l64:
+int 1
+return
+main_l65:
+int 1
+return
+main_l66:
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l67:
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l68:
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+&&
+assert
+int 1
+return
+main_l69:
+txn GroupIndex
+gtxns RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l70:
+txn RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l71:
+int 1
+return
+main_l72:
+int 1
+return
+main_l73:
+int 1
+return
+main_l74:
+int 1
+return
