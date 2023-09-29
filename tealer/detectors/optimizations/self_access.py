@@ -1,4 +1,4 @@
-"""Detector for finding execution paths missing Fee check."""
+"""Detector for finding unoptimized self access"""
 
 from typing import TYPE_CHECKING, List
 
@@ -7,7 +7,7 @@ from tealer.detectors.abstract_detector import (
     DetectorClassification,
     DetectorType,
 )
-from tealer.teal.instructions.instructions import Gtxns, Instruction, Txn
+from tealer.teal.instructions.instructions import Gtxns, Instruction, Txn, Gtxnsa, Gtxnsas
 from tealer.teal.instructions.transaction_field import GroupIndex
 from tealer.utils.output import InstructionsOutput
 
@@ -62,7 +62,7 @@ class SelfAccess(AbstractDetector):  # pylint: disable=too-few-public-methods
                     if (
                         isinstance(first, Txn)
                         and isinstance(first.field, GroupIndex)
-                        and isinstance(second, Gtxns)
+                        and isinstance(second, (Gtxns, Gtxnsa, Gtxnsas))
                     ):
                         # pylint: disable=undefined-loop-variable
                         all_findings.append([first, second])
