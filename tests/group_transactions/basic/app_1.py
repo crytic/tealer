@@ -29,6 +29,8 @@ def app1_case_5() -> Expr:
                     Txn.fee() < Int(10000),
                     Txn.close_remainder_to() == Global.zero_address(),
                     Txn.asset_close_to() == Global.zero_address(),
+                    Txn.on_completion() != OnComplete.UpdateApplication,
+                    Txn.on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -45,6 +47,8 @@ def app1_case_6() -> Expr:
                     Gtxn[Txn.group_index()].fee() < Int(10000),
                     Gtxn[Txn.group_index()].close_remainder_to() == Global.zero_address(),
                     Gtxn[Txn.group_index()].asset_close_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index()].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index()].on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -65,6 +69,10 @@ def app1_case_7() -> Expr:
                     Gtxn[1].close_remainder_to() == Global.zero_address(),
                     Gtxn[Int(0)].asset_close_to() == Global.zero_address(),
                     Gtxn[1].asset_close_to() == Global.zero_address(),
+                    Gtxn[0].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[0].on_completion() != OnComplete.DeleteApplication,
+                    Gtxn[Int(1)].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[Int(1)].on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -83,6 +91,12 @@ def app1_case_8() -> Expr:
                     Gtxn[0].asset_close_to() == Global.zero_address(),
                 )
             ),
+            Assert(
+                And(
+                    Gtxn[0].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[0].on_completion() != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -97,6 +111,12 @@ def app1_case_9() -> Expr:
                     Gtxn[1].fee() < Int(10000),
                     Gtxn[1].close_remainder_to() == Global.zero_address(),
                     Gtxn[1].asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Assert(
+                And(
+                    Gtxn[1].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[1].on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -151,6 +171,16 @@ def app1_case_18() -> Expr:
                     Gtxn[Txn.group_index() + Int(4)].asset_close_to() == Global.zero_address(),
                 )
             ),
+            Assert(
+                And(
+                    Gtxn[0].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[0].on_completion() != OnComplete.DeleteApplication,
+                    Gtxn[Txn.group_index() + Int(4)].on_completion()
+                    != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index() + Int(4)].on_completion()
+                    != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -163,6 +193,14 @@ def app1_case_19() -> Expr:
             Assert(Gtxn[Txn.group_index() + Int(4)].fee() < Int(10000)),
             Assert(Gtxn[Txn.group_index() + Int(4)].asset_close_to() == Global.zero_address()),
             Assert(Gtxn[Txn.group_index() + Int(4)].close_remainder_to() == Global.zero_address()),
+            Assert(
+                And(
+                    Gtxn[Txn.group_index() + Int(4)].on_completion()
+                    != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index() + Int(4)].on_completion()
+                    != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -175,6 +213,12 @@ def app1_case_20() -> Expr:
             Assert(Gtxn[1].fee() < Int(10000)),
             Assert(Gtxn[1].asset_close_to() == Global.zero_address()),
             Assert(Gtxn[1].close_remainder_to() == Global.zero_address()),
+            Assert(
+                And(
+                    Gtxn[1].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[1].on_completion() != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -187,6 +231,14 @@ def app1_case_21() -> Expr:
             Assert(Gtxn[Txn.group_index() + Int(2)].fee() < Int(10000)),
             Assert(Gtxn[Txn.group_index() + Int(2)].asset_close_to() == Global.zero_address()),
             Assert(Gtxn[Txn.group_index() + Int(2)].close_remainder_to() == Global.zero_address()),
+            Assert(
+                And(
+                    Gtxn[Txn.group_index() + Int(2)].on_completion()
+                    != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index() + Int(2)].on_completion()
+                    != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -223,6 +275,14 @@ def app1_case_28() -> Expr:
             Assert(Gtxn[Txn.group_index() + Int(5)].fee() < Int(10000)),
             Assert(Gtxn[Txn.group_index() + Int(5)].asset_close_to() == Global.zero_address()),
             Assert(Gtxn[Txn.group_index() + Int(5)].close_remainder_to() == Global.zero_address()),
+            Assert(
+                And(
+                    Gtxn[Txn.group_index() + Int(5)].on_completion()
+                    != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index() + Int(5)].on_completion()
+                    != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -241,6 +301,8 @@ def app1_case_30() -> Expr:
                     Gtxn[0].fee() < Int(10000),
                     Gtxn[0].close_remainder_to() == Global.zero_address(),
                     Gtxn[0].asset_close_to() == Global.zero_address(),
+                    Gtxn[0].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[0].on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -277,6 +339,8 @@ def app1_case_36() -> Expr:
                     Gtxn[4].fee() < Int(10000),
                     Gtxn[4].close_remainder_to() == Global.zero_address(),
                     Gtxn[4].asset_close_to() == Global.zero_address(),
+                    Gtxn[4].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[4].on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -292,7 +356,6 @@ def approval_program() -> Expr:
     test_case = Btoi(Txn.application_args[Int(0)])
     return Seq(
         [
-            Assert(Txn.on_completion() == OnComplete.NoOp),
             Cond(
                 [test_case == Int(1), app1_case_1()],
                 [test_case == Int(2), app1_case_2()],

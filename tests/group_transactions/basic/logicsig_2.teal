@@ -180,6 +180,20 @@ gtxns AssetCloseTo
 global ZeroAddress
 ==
 assert
+txn GroupIndex
+int 5
++
+gtxns OnCompletion
+int UpdateApplication
+!=
+txn GroupIndex
+int 5
++
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
+assert
 int 1
 return
 main_l33:
@@ -211,6 +225,20 @@ gtxns AssetCloseTo
 global ZeroAddress
 ==
 assert
+txn GroupIndex
+int 4
+-
+gtxns OnCompletion
+int UpdateApplication
+!=
+txn GroupIndex
+int 4
+-
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
+assert
 int 1
 return
 main_l34:
@@ -241,6 +269,20 @@ int 4
 gtxns AssetCloseTo
 global ZeroAddress
 ==
+assert
+txn GroupIndex
+int 4
+-
+gtxns OnCompletion
+int UpdateApplication
+!=
+txn GroupIndex
+int 4
+-
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
 assert
 int 1
 return
@@ -279,6 +321,20 @@ gtxns AssetCloseTo
 global ZeroAddress
 ==
 assert
+txn GroupIndex
+int 4
+-
+gtxns OnCompletion
+int UpdateApplication
+!=
+txn GroupIndex
+int 4
+-
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
+assert
 int 1
 return
 main_l38:
@@ -305,6 +361,14 @@ global ZeroAddress
 txn AssetCloseTo
 global ZeroAddress
 ==
+&&
+txn OnCompletion
+int UpdateApplication
+!=
+&&
+txn OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1
@@ -337,6 +401,20 @@ gtxns AssetCloseTo
 global ZeroAddress
 ==
 &&
+txn GroupIndex
+int 1
+-
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+txn GroupIndex
+int 1
+-
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
 txn RekeyTo
 global ZeroAddress
 ==
@@ -352,6 +430,14 @@ global ZeroAddress
 txn AssetCloseTo
 global ZeroAddress
 ==
+&&
+txn OnCompletion
+int UpdateApplication
+!=
+&&
+txn OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1
@@ -384,6 +470,20 @@ gtxns AssetCloseTo
 global ZeroAddress
 ==
 &&
+txn GroupIndex
+int 1
+-
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+txn GroupIndex
+int 1
+-
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
 txn RekeyTo
 global ZeroAddress
 ==
@@ -399,6 +499,14 @@ global ZeroAddress
 txn AssetCloseTo
 global ZeroAddress
 ==
+&&
+txn OnCompletion
+int UpdateApplication
+!=
+&&
+txn OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1
@@ -435,6 +543,20 @@ gtxns AssetCloseTo
 global ZeroAddress
 ==
 assert
+txn GroupIndex
+int 5
++
+gtxns OnCompletion
+int UpdateApplication
+!=
+txn GroupIndex
+int 5
++
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
+assert
 int 1
 return
 main_l46:
@@ -466,6 +588,20 @@ gtxns AssetCloseTo
 global ZeroAddress
 ==
 assert
+txn GroupIndex
+int 4
+-
+gtxns OnCompletion
+int UpdateApplication
+!=
+txn GroupIndex
+int 4
+-
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
+assert
 int 1
 return
 main_l47:
@@ -489,6 +625,14 @@ global ZeroAddress
 txn AssetCloseTo
 global ZeroAddress
 ==
+&&
+txn OnCompletion
+int UpdateApplication
+!=
+&&
+txn OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1
@@ -517,6 +661,14 @@ global ZeroAddress
 gtxn 1 AssetCloseTo
 global ZeroAddress
 ==
+&&
+assert
+gtxn 1 OnCompletion
+int UpdateApplication
+!=
+gtxn 1 OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1
@@ -556,6 +708,24 @@ gtxn 1 AssetCloseTo
 global ZeroAddress
 ==
 &&
+gtxn 0 OnCompletion
+int UpdateApplication
+!=
+&&
+gtxn 0 OnCompletion
+int DeleteApplication
+!=
+&&
+int 1
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+int 1
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
 assert
 int 1
 return
@@ -594,6 +764,24 @@ gtxn 1 AssetCloseTo
 global ZeroAddress
 ==
 &&
+gtxn 0 OnCompletion
+int UpdateApplication
+!=
+&&
+gtxn 0 OnCompletion
+int DeleteApplication
+!=
+&&
+int 1
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+int 1
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
 assert
 int 1
 return
@@ -615,6 +803,14 @@ global ZeroAddress
 txn AssetCloseTo
 global ZeroAddress
 ==
+&&
+txn OnCompletion
+int UpdateApplication
+!=
+&&
+txn OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1

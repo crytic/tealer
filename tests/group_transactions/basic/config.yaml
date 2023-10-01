@@ -319,7 +319,7 @@ groups:
           contract: LogicSig_2
           function: lsig2_case_9
         absolute_index: 1
-      
+
   - operation: case_10
     transactions:
       - txn_id: T1
