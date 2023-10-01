@@ -146,9 +146,21 @@ int 37
 bnz main_l30
 err
 main_l30:
+gtxn 1 Fee
+int 10000
+<
 gtxn 1 RekeyTo
 global ZeroAddress
 ==
+&&
+gtxn 1 CloseRemainderTo
+global ZeroAddress
+==
+&&
+gtxn 1 AssetCloseTo
+global ZeroAddress
+==
+&&
 assert
 int 1
 return
@@ -170,6 +182,27 @@ int 3
 gtxns RekeyTo
 global ZeroAddress
 ==
+txn GroupIndex
+int 3
++
+gtxns Fee
+int 10000
+<
+&&
+txn GroupIndex
+int 3
++
+gtxns CloseRemainderTo
+global ZeroAddress
+==
+&&
+txn GroupIndex
+int 3
++
+gtxns AssetCloseTo
+global ZeroAddress
+==
+&&
 txn ApplicationID
 int 1337
 ==
@@ -188,6 +221,27 @@ int 2
 gtxns RekeyTo
 global ZeroAddress
 ==
+txn GroupIndex
+int 2
++
+gtxns Fee
+int 10000
+<
+&&
+txn GroupIndex
+int 2
++
+gtxns CloseRemainderTo
+global ZeroAddress
+==
+&&
+txn GroupIndex
+int 2
++
+gtxns AssetCloseTo
+global ZeroAddress
+==
+&&
 txn ApplicationID
 int 1337
 ==
@@ -203,6 +257,18 @@ main_l34:
 gtxn 1 RekeyTo
 global ZeroAddress
 ==
+gtxn 1 Fee
+int 10000
+<
+&&
+gtxn 1 CloseRemainderTo
+global ZeroAddress
+==
+&&
+gtxn 1 AssetCloseTo
+global ZeroAddress
+==
+&&
 txn ApplicationID
 int 1337
 ==
@@ -229,6 +295,27 @@ gtxns RekeyTo
 global ZeroAddress
 ==
 &&
+txn GroupIndex
+int 5
++
+gtxns Fee
+int 10000
+<
+&&
+txn GroupIndex
+int 5
++
+gtxns CloseRemainderTo
+global ZeroAddress
+==
+&&
+txn GroupIndex
+int 5
++
+gtxns AssetCloseTo
+global ZeroAddress
+==
+&&
 assert
 int 1
 return
@@ -244,6 +331,27 @@ txn GroupIndex
 int 4
 +
 gtxns RekeyTo
+global ZeroAddress
+==
+&&
+txn GroupIndex
+int 4
++
+gtxns Fee
+int 10000
+<
+&&
+txn GroupIndex
+int 4
++
+gtxns AssetCloseTo
+global ZeroAddress
+==
+&&
+txn GroupIndex
+int 4
++
+gtxns CloseRemainderTo
 global ZeroAddress
 ==
 &&
@@ -265,6 +373,27 @@ gtxns RekeyTo
 global ZeroAddress
 ==
 &&
+txn GroupIndex
+int 4
++
+gtxns Fee
+int 10000
+<
+&&
+txn GroupIndex
+int 4
++
+gtxns AssetCloseTo
+global ZeroAddress
+==
+&&
+txn GroupIndex
+int 4
++
+gtxns CloseRemainderTo
+global ZeroAddress
+==
+&&
 assert
 int 1
 return
@@ -275,6 +404,27 @@ int 3
 gtxns RekeyTo
 global ZeroAddress
 ==
+txn GroupIndex
+int 3
++
+gtxns Fee
+int 10000
+<
+&&
+txn GroupIndex
+int 3
++
+gtxns CloseRemainderTo
+global ZeroAddress
+==
+&&
+txn GroupIndex
+int 3
++
+gtxns AssetCloseTo
+global ZeroAddress
+==
+&&
 assert
 int 1
 return
@@ -297,6 +447,39 @@ txn GroupIndex
 int 1
 +
 gtxns RekeyTo
+global ZeroAddress
+==
+&&
+txn Fee
+int 10000
+<
+&&
+txn GroupIndex
+int 1
++
+gtxns Fee
+int 10000
+<
+&&
+txn CloseRemainderTo
+global ZeroAddress
+==
+&&
+txn GroupIndex
+int 1
++
+gtxns CloseRemainderTo
+global ZeroAddress
+==
+&&
+txn AssetCloseTo
+global ZeroAddress
+==
+&&
+txn GroupIndex
+int 1
++
+gtxns AssetCloseTo
 global ZeroAddress
 ==
 &&
@@ -366,10 +549,34 @@ gtxn 1 RekeyTo
 global ZeroAddress
 ==
 assert
+gtxn 1 Fee
+int 10000
+<
+assert
+gtxn 1 CloseRemainderTo
+global ZeroAddress
+==
+assert
+gtxn 1 AssetCloseTo
+global ZeroAddress
+==
+assert
 int 1
 return
 main_l48:
 gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+gtxn 0 Fee
+int 10000
+<
+assert
+gtxn 0 CloseRemainderTo
+global ZeroAddress
+==
+assert
+gtxn 0 AssetCloseTo
 global ZeroAddress
 ==
 assert
@@ -381,6 +588,33 @@ gtxns RekeyTo
 global ZeroAddress
 ==
 gtxn 1 RekeyTo
+global ZeroAddress
+==
+&&
+int 0
+gtxns Fee
+int 100000
+<
+&&
+gtxn 1 Fee
+int 1000
+<
+&&
+int 0
+gtxns CloseRemainderTo
+global ZeroAddress
+==
+&&
+gtxn 1 CloseRemainderTo
+global ZeroAddress
+==
+&&
+int 0
+gtxns AssetCloseTo
+global ZeroAddress
+==
+&&
+gtxn 1 AssetCloseTo
 global ZeroAddress
 ==
 &&
@@ -463,6 +697,18 @@ main_l58:
 txn RekeyTo
 global ZeroAddress
 ==
+txn Fee
+int 10000
+<
+&&
+txn CloseRemainderTo
+global ZeroAddress
+==
+&&
+txn AssetCloseTo
+global ZeroAddress
+==
+&&
 assert
 int 1
 return

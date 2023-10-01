@@ -79,6 +79,8 @@ from tealer.execution_context.transactions import (
     GroupTransaction,
     fill_group_relative_indexes,
 )
+from tealer.utils.command_line.group_config import USER_CONFIG_TRANSACTION_TYPES
+
 
 if TYPE_CHECKING:
     from tealer.teal.functions import Function
@@ -284,6 +286,7 @@ def init_tealer_from_config(config: "GroupConfig") -> "Tealer":
         for txn in txn_config.transactions:
             txn_obj = Transaction()
             txn_obj.transacton_id = txn.txn_id
+            txn_obj.type = USER_CONFIG_TRANSACTION_TYPES[txn.txn_type]
             if txn.has_logic_sig is not None:
                 txn_obj.has_logic_sig = txn.has_logic_sig
             txn_obj.absoulte_index = txn.absolute_index

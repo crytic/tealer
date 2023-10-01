@@ -21,12 +21,34 @@ def app1_case_4() -> Expr:
 
 
 def app1_case_5() -> Expr:
-    return Seq([Assert(Txn.rekey_to() == Global.zero_address()), Return(Int(1))])
+    return Seq(
+        [
+            Assert(
+                And(
+                    Txn.rekey_to() == Global.zero_address(),
+                    Txn.fee() < Int(10000),
+                    Txn.close_remainder_to() == Global.zero_address(),
+                    Txn.asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Return(Int(1)),
+        ]
+    )
 
 
 def app1_case_6() -> Expr:
     return Seq(
-        [Assert(Gtxn[Txn.group_index()].rekey_to() == Global.zero_address()), Return(Int(1))]
+        [
+            Assert(
+                And(
+                    Gtxn[Txn.group_index()].rekey_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index()].fee() < Int(10000),
+                    Gtxn[Txn.group_index()].close_remainder_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index()].asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Return(Int(1)),
+        ]
     )
 
 
@@ -37,6 +59,12 @@ def app1_case_7() -> Expr:
                 And(
                     Gtxn[0].rekey_to() == Global.zero_address(),
                     Gtxn[1].rekey_to() == Global.zero_address(),
+                    Gtxn[Int(0)].fee() < Int(100000),
+                    Gtxn[1].fee() < Int(1000),
+                    Gtxn[Int(0)].close_remainder_to() == Global.zero_address(),
+                    Gtxn[1].close_remainder_to() == Global.zero_address(),
+                    Gtxn[Int(0)].asset_close_to() == Global.zero_address(),
+                    Gtxn[1].asset_close_to() == Global.zero_address(),
                 )
             ),
             Return(Int(1)),
@@ -45,11 +73,35 @@ def app1_case_7() -> Expr:
 
 
 def app1_case_8() -> Expr:
-    return Seq([Assert(Gtxn[0].rekey_to() == Global.zero_address()), Return(Int(1))])
+    return Seq(
+        [
+            Assert(
+                And(
+                    Gtxn[0].rekey_to() == Global.zero_address(),
+                    Gtxn[0].fee() < Int(10000),
+                    Gtxn[0].close_remainder_to() == Global.zero_address(),
+                    Gtxn[0].asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Return(Int(1)),
+        ]
+    )
 
 
 def app1_case_9() -> Expr:
-    return Seq([Assert(Gtxn[1].rekey_to() == Global.zero_address()), Return(Int(1))])
+    return Seq(
+        [
+            Assert(
+                And(
+                    Gtxn[1].rekey_to() == Global.zero_address(),
+                    Gtxn[1].fee() < Int(10000),
+                    Gtxn[1].close_remainder_to() == Global.zero_address(),
+                    Gtxn[1].asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Return(Int(1)),
+        ]
+    )
 
 
 def app1_case_10() -> Expr:
@@ -91,6 +143,12 @@ def app1_case_18() -> Expr:
                 And(
                     Gtxn[0].rekey_to() == Global.zero_address(),
                     Gtxn[Txn.group_index() + Int(4)].rekey_to() == Global.zero_address(),
+                    Gtxn[0].fee() < Int(10000),
+                    Gtxn[Txn.group_index() + Int(4)].fee() < Int(10000),
+                    Gtxn[0].close_remainder_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(4)].close_remainder_to() == Global.zero_address(),
+                    Gtxn[0].asset_close_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(4)].asset_close_to() == Global.zero_address(),
                 )
             ),
             Return(Int(1)),
@@ -102,6 +160,9 @@ def app1_case_19() -> Expr:
     return Seq(
         [
             Assert(Gtxn[Txn.group_index() + Int(4)].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() + Int(4)].fee() < Int(10000)),
+            Assert(Gtxn[Txn.group_index() + Int(4)].asset_close_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() + Int(4)].close_remainder_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
@@ -111,6 +172,9 @@ def app1_case_20() -> Expr:
     return Seq(
         [
             Assert(Gtxn[1].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[1].fee() < Int(10000)),
+            Assert(Gtxn[1].asset_close_to() == Global.zero_address()),
+            Assert(Gtxn[1].close_remainder_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
@@ -120,6 +184,9 @@ def app1_case_21() -> Expr:
     return Seq(
         [
             Assert(Gtxn[Txn.group_index() + Int(2)].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() + Int(2)].fee() < Int(10000)),
+            Assert(Gtxn[Txn.group_index() + Int(2)].asset_close_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() + Int(2)].close_remainder_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
@@ -153,6 +220,9 @@ def app1_case_28() -> Expr:
     return Seq(
         [
             Assert(Gtxn[Txn.group_index() + Int(5)].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() + Int(5)].fee() < Int(10000)),
+            Assert(Gtxn[Txn.group_index() + Int(5)].asset_close_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() + Int(5)].close_remainder_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
@@ -163,7 +233,19 @@ def app1_case_29() -> Expr:
 
 
 def app1_case_30() -> Expr:
-    return Seq([Assert(Gtxn[0].rekey_to() == Global.zero_address()), Return(Int(1))])
+    return Seq(
+        [
+            Assert(
+                And(
+                    Gtxn[0].rekey_to() == Global.zero_address(),
+                    Gtxn[0].fee() < Int(10000),
+                    Gtxn[0].close_remainder_to() == Global.zero_address(),
+                    Gtxn[0].asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Return(Int(1)),
+        ]
+    )
 
 
 def app1_case_31() -> Expr:
@@ -187,7 +269,19 @@ def app1_case_35() -> Expr:
 
 
 def app1_case_36() -> Expr:
-    return Seq([Assert(Gtxn[4].rekey_to() == Global.zero_address()), Return(Int(1))])
+    return Seq(
+        [
+            Assert(
+                And(
+                    Gtxn[4].rekey_to() == Global.zero_address(),
+                    Gtxn[4].fee() < Int(10000),
+                    Gtxn[4].close_remainder_to() == Global.zero_address(),
+                    Gtxn[4].asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Return(Int(1)),
+        ]
+    )
 
 
 def app1_case_37() -> Expr:

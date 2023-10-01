@@ -2,8 +2,9 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-
 import yaml
+
+from tealer.utils.teal_enums import TransactionType
 
 
 GROUP_CONFIG_CONTRACT_TYPES = [
@@ -12,7 +13,15 @@ GROUP_CONFIG_CONTRACT_TYPES = [
     "ClearStateProgram",
 ]
 
-USER_CONFIG_TRANSACTION_TYPES = ["pay", "keyreg", "acfg", "axfer", "afrz", "appl", "txn"]
+USER_CONFIG_TRANSACTION_TYPES = {
+    "pay": TransactionType.Pay,
+    "keyreg": TransactionType.KeyReg,
+    "acfg": TransactionType.Acfg,
+    "axfer": TransactionType.Axfer,
+    "afrz": TransactionType.Afrz,
+    "appl": TransactionType.Appl,
+    "txn": TransactionType.Any,
+}
 
 
 class InvalidGroupConfiguration(Exception):
@@ -160,6 +169,10 @@ class GroupConfigTransaction:
 
         txn_id = transaction["txn_id"]
         txn_type = transaction["txn_type"]
+        if txn_type not in USER_CONFIG_TRANSACTION_TYPES:
+            raise InvalidGroupConfiguration(
+                f"Transaction: Unknown transaction type {txn_type} of transaction {txn_id}"
+            )
         application = transaction.get("application")
         has_logic_sig = transaction.get("has_logic_sig")
         logic_sig = transaction.get("logic_sig")

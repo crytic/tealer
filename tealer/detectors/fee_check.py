@@ -7,7 +7,10 @@ from tealer.detectors.abstract_detector import (
     DetectorClassification,
     DetectorType,
 )
-from tealer.detectors.utils import detect_missing_tx_field_validations_group
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations_group,
+    detect_missing_tx_field_validations_group_complete,
+)
 from tealer.utils.algorand_constants import MAX_TRANSACTION_COST
 from tealer.utils.output import ExecutionPaths
 
@@ -89,6 +92,14 @@ Validate `Fee` field in the LogicSig.
             # returns True if fee is bounded by some unknown value
             # or is bounded by some known value less than maximum transaction cost.
             return block_ctx.max_fee_unknown or block_ctx.max_fee <= MAX_TRANSACTION_COST
+
+        # there should be a better to decide which function to call ??
+        if self.tealer.output_group:
+            # mypy complains if the value is returned directly. Uesd the second suggestion mentioned here:
+            # https://mypy.readthedocs.io/en/stable/common_issues.html#variance
+            return list(
+                detect_missing_tx_field_validations_group_complete(self.tealer, self, checks_field)
+            )
 
         output: List[
             Tuple["Teal", List[List["BasicBlock"]]]

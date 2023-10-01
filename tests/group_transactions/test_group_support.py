@@ -4,7 +4,12 @@ import pytest
 
 
 from tealer.detectors.abstract_detector import AbstractDetector
-from tealer.detectors.all_detectors import MissingRekeyTo
+from tealer.detectors.all_detectors import (
+    MissingRekeyTo,
+    MissingFeeCheck,
+    CanCloseAccount,
+    CanCloseAsset,
+)
 from tealer.utils.command_line.group_config import read_config_from_file
 from tealer.utils.command_line.common import init_tealer_from_config
 from tealer.utils.output import GroupTransactionOutput
@@ -18,7 +23,22 @@ ALL_TESTS: List[Tuple[Path, Type[AbstractDetector], Path]] = [
         Path("tests/group_transactions/basic/config.yaml"),
         MissingRekeyTo,
         Path("tests/group_transactions/basic/expected_output.yaml"),
-    )
+    ),
+    (
+        Path("tests/group_transactions/basic/config.yaml"),
+        MissingFeeCheck,
+        Path("tests/group_transactions/basic/expected_output.yaml"),
+    ),
+    (
+        Path("tests/group_transactions/basic/config.yaml"),
+        CanCloseAccount,
+        Path("tests/group_transactions/basic/expected_output_close_to.yaml"),
+    ),
+    (
+        Path("tests/group_transactions/basic/config.yaml"),
+        CanCloseAsset,
+        Path("tests/group_transactions/basic/expected_output_asset_close_to.yaml"),
+    ),
 ]
 
 
