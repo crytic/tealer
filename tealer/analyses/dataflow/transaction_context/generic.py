@@ -231,6 +231,8 @@ from collections import defaultdict
 
 from tealer.analyses.dataflow.transaction_context.utils.key_helpers import (
     get_gtxn_at_index_key,
+    get_absolute_index_key,
+    get_relative_index_key,
 )
 from tealer.teal.instructions.instructions import (
     Assert,
@@ -783,6 +785,12 @@ class DataflowTransactionContext(ABC):  # pylint: disable=too-few-public-methods
         for key in self.KEYS_WITH_GTXN:
             for ind in range(MAX_GROUP_SIZE):
                 gtx_keys.append(get_gtxn_at_index_key(ind, key))
+                gtx_keys.append(get_absolute_index_key(ind, key))
+
+            for offset in range(-(MAX_GROUP_SIZE - 1), MAX_GROUP_SIZE):
+                if offset == 0:
+                    continue
+                gtx_keys.append(get_relative_index_key(offset, key))
 
         all_keys = self.BASE_KEYS + gtx_keys
 

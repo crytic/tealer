@@ -337,10 +337,62 @@ def contract_checks_its_field(
     return True
 
 
+def contract_checks_txn_at_absolute_index(
+    function: "Function",
+    checks_field: Callable[["BlockTransactionContext"], bool],
+    absolute_index: int,
+) -> bool:
+    """
+    Returns True if the Function checks the field of the transaction at `absolute_index` else False
+
+    Args:
+        function: The function
+        checks_field: A function which returns True if the context information has the vulnerable value.
+        absolute_index: The absolute index of the other transaction
+
+    Returns:
+        Returns True if the function checks the field of Gtxn[absolute_index] else False
+    """
+    leaf_blocks = [block for block in function.blocks if leaf_block_global(block)]
+    for block in leaf_blocks:
+        if not checks_field(function.transaction_context(block).absolute_context(absolute_index)):
+            # There is an execution path from entry to this leaf block in which the transaction field can have the
+            # vulnerable value.
+            return False
+    # The transaction field of Gtxn[absolute_index] is checked in all paths.
+    return True
+
+
+def contract_checks_using_relative_index(
+    function: "Function",
+    checks_field: Callable[["BlockTransactionContext"], bool],
+    offset: int,
+) -> bool:
+    """
+    Returns True if the Function checks the field of the transaction at `offset` from the function else False
+
+    Args:
+        function: The function
+        checks_field: A function which returns True if the context information has the vulnerable value.
+        offset: The offset of the other transaction from this function
+
+    Returns:
+        Returns True if the function checks the field of Gtxn[Txn.group_index() + offset] else False
+    """
+    leaf_blocks = [block for block in function.blocks if leaf_block_global(block)]
+    for block in leaf_blocks:
+        if not checks_field(function.transaction_context(block).relative_context(offset)):
+            # There is an execution path from entry to this leaf block in which the transaction field can have the
+            # vulnerable value.
+            return False
+    # The transaction field of Gtxn[absolute_index] is checked in all paths.
+    return True
+
+
 # def get_leaf_blocks(function: "Function") -> List["BasicBlock"]:
 #     for
 # change to a better name
-def detect_missing_tx_field_validations_group_complete(
+def detect_missing_tx_field_validations_group_complete(  # pylint: disable=too-many-branches
     tealer: "Tealer",
     detector: "AbstractDetector",
     checks_field: Callable[["BlockTransactionContext"], bool],
@@ -375,31 +427,73 @@ def detect_missing_tx_field_validations_group_complete(
         is_vulnerable = False
         vulnerable_transactions = {}
         for txn in group_txn.transactions:
-            if detector.TYPE == DetectorType.STATELESS:
-                if not txn.has_logic_sig:
+            if detector.TYPE == DetectorType.STATELESS and not txn.has_logic_sig:
+                continue
+
+            # print(txn.logic_sig.blocks)
+            # for block in txn.logic_sig.blocks:
+            #     print(block)
+            #     print(leaf_block_global(block))
+            #     print(txn.logic_sig.transaction_context(block).rekeyto)
+            # the contract has logic sig
+            # check if the contracts executed in the txn check the field.
+            # logic sig contract is given
+            if txn.logic_sig is not None and contract_checks_its_field(
+                txn.logic_sig, checks_field, txn.absoulte_index
+            ):
+                # the logic sig checks its field, not vulnerable
+                continue
+            if txn.application is not None and contract_checks_its_field(
+                txn.application, checks_field, txn.absoulte_index
+            ):
+                # the application checks the field. The transaction is not vulnerable
+                # continue to next transaction
+                continue
+            # check if any other transaction checks this transaction's field using absolute index
+            if txn.absoulte_index is not None:
+                checked = False
+                for other_txn in group_txn.transactions:
+                    if other_txn.logic_sig is not None and contract_checks_txn_at_absolute_index(
+                        other_txn.logic_sig, checks_field, txn.absoulte_index
+                    ):
+                        # The logic sig of some transaction in the group checks this transaction index using the absolute index
+                        checked = True
+                        break
+                    if other_txn.application is not None and contract_checks_txn_at_absolute_index(
+                        other_txn.application, checks_field, txn.absoulte_index
+                    ):
+                        checked = True
+                        break
+
+                if checked:
                     continue
 
-                # print(txn.logic_sig.blocks)
-                # for block in txn.logic_sig.blocks:
-                #     print(block)
-                #     print(leaf_block_global(block))
-                #     print(txn.logic_sig.transaction_context(block).rekeyto)
-                # the contract has logic sig
-                # check if the contracts executed in the txn check the field.
-                # logic sig contract is given
-                if txn.logic_sig is not None and contract_checks_its_field(
-                    txn.logic_sig, checks_field, txn.absoulte_index
+            # check if any other transaction in the group checks this transaction's field using relative index
+            # group_txn.group_relative_indexes[t1][t2] = -1 => t1.group_index() == t2.group_index() - 1
+            # txn_relative_indexes =  group_txn.group_relative_indexes[txn]
+            checked = False
+            for (other_txn, offset) in group_txn.group_relative_indexes[txn].items():
+                # offset of this txn from other_txn. other_txn would have used this offset to access the field and validate it.
+                if other_txn.logic_sig is not None and contract_checks_using_relative_index(
+                    other_txn.logic_sig, checks_field, offset
                 ):
-                    # the logic sig checks its field, not vulnerable
-                    continue
-                if txn.application is not None and contract_checks_its_field(
-                    txn.application, checks_field, txn.absoulte_index
+                    # The logic sig of some other transaction in the group checks this transaction usiing the relative index.
+                    checked = True
+                    break
+
+                if other_txn.application is not None and contract_checks_using_relative_index(
+                    other_txn.application, checks_field, offset
                 ):
-                    # the application checks the field. The logic sig is not vulnerable
-                    # continue to next transaction
-                    continue
-                # the logic contract is vulnerable. mark the operation/group as vulnerable
-                is_vulnerable = True
+                    checked = True
+                    break
+
+            if checked:
+                continue
+
+            # the logic contract is vulnerable. mark the operation/group as vulnerable
+            is_vulnerable = True
+
+            if detector.TYPE == DetectorType.STATELESS:
                 if txn.logic_sig is not None:
                     vulnerable_transactions[txn] = [txn.logic_sig]
                 else:

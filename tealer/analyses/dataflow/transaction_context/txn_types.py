@@ -5,6 +5,8 @@ from tealer.analyses.dataflow.transaction_context.utils.key_helpers import (
     get_gtxn_at_index_key,
     get_ind_base_for_gtxn_type_keys,
     is_value_matches_key,
+    get_absolute_index_key,
+    get_relative_index_key,
 )
 from tealer.teal.instructions.instructions import (
     Eq,
@@ -25,6 +27,7 @@ from tealer.utils.teal_enums import (
 from tealer.utils.teal_enums import oncompletion_to_tealer_type, transaction_type_to_tealer_type
 from tealer.utils.analyses import is_int_push_ins
 from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStackValue
+from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
@@ -194,10 +197,27 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
                 transaction_type_context[block]
             )
 
-            for idx in range(16):
+            for idx in range(MAX_GROUP_SIZE):
                 values = self._block_contexts[
                     get_gtxn_at_index_key(idx, self.TRANSACTION_TYPE_KEY)
                 ][block]
                 self._function.transaction_context(block).gtxn_context(
                     idx
                 ).transaction_types = list(values)
+
+                abs_values = self._block_contexts[
+                    get_absolute_index_key(idx, self.TRANSACTION_TYPE_KEY)
+                ][block]
+                self._function.transaction_context(block).absolute_context(
+                    idx
+                ).transaction_types = list(abs_values)
+
+            for offset in range(-(MAX_GROUP_SIZE - 1), MAX_GROUP_SIZE):
+                if offset == 0:
+                    continue
+                rel_values = self._block_contexts[
+                    get_relative_index_key(offset, self.TRANSACTION_TYPE_KEY)
+                ][block]
+                self._function.transaction_context(block).relative_context(
+                    offset
+                ).transaction_types = list(rel_values)

@@ -4,6 +4,8 @@ from tealer.analyses.dataflow.transaction_context.generic import DataflowTransac
 from tealer.analyses.dataflow.transaction_context.utils.key_helpers import (
     get_gtxn_at_index_key,
     is_value_matches_key,
+    get_absolute_index_key,
+    get_relative_index_key,
 )
 from tealer.teal.instructions.instructions import (
     Eq,
@@ -14,6 +16,7 @@ from tealer.teal.instructions.instructions import (
 from tealer.teal.global_field import ZeroAddress, CreatorAddress
 from tealer.utils.algorand_constants import ZERO_ADDRESS
 from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStackValue
+from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
@@ -207,4 +210,25 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
                     self._set_addr_values(
                         addr_field_obj(self._function.transaction_context(block).gtxn_context(idx)),
                         addr_values,
+                    )
+
+                    abs_addr_values = self._block_contexts[get_absolute_index_key(idx, key)][block]
+                    self._set_addr_values(
+                        addr_field_obj(
+                            self._function.transaction_context(block).absolute_context(idx)
+                        ),
+                        abs_addr_values,
+                    )
+
+                for offset in range(-(MAX_GROUP_SIZE - 1), MAX_GROUP_SIZE):
+                    if offset == 0:
+                        continue
+                    rel_addr_values = self._block_contexts[get_relative_index_key(offset, key)][
+                        block
+                    ]
+                    self._set_addr_values(
+                        addr_field_obj(
+                            self._function.transaction_context(block).relative_context(offset)
+                        ),
+                        rel_addr_values,
                     )

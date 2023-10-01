@@ -5,6 +5,8 @@ from tealer.analyses.dataflow.transaction_context.generic import DataflowTransac
 from tealer.analyses.dataflow.transaction_context.utils.key_helpers import (
     get_gtxn_at_index_key,
     is_value_matches_key,
+    get_absolute_index_key,
+    get_relative_index_key,
 )
 from tealer.teal.instructions.instructions import (
     Eq,
@@ -207,3 +209,28 @@ class FeeField(DataflowTransactionContext):
                     self._function.transaction_context(block).gtxn_context(
                         idx
                     ).max_fee = max_fee.value
+
+                abs_max_fee = self._block_contexts[get_absolute_index_key(idx, FEE_KEY)][block]
+                assert isinstance(abs_max_fee, FeeValue)
+                if abs_max_fee.is_unknown:
+                    self._function.transaction_context(block).absolute_context(
+                        idx
+                    ).max_fee_unknown = True
+                else:
+                    self._function.transaction_context(block).absolute_context(
+                        idx
+                    ).max_fee = abs_max_fee.value
+
+            for offset in range(-(MAX_GROUP_SIZE - 1), MAX_GROUP_SIZE):
+                if offset == 0:
+                    continue
+                rel_max_fee = self._block_contexts[get_relative_index_key(offset, FEE_KEY)][block]
+                assert isinstance(rel_max_fee, FeeValue)
+                if rel_max_fee.is_unknown:
+                    self._function.transaction_context(block).relative_context(
+                        offset
+                    ).max_fee_unknown = True
+                else:
+                    self._function.transaction_context(block).relative_context(
+                        offset
+                    ).max_fee = rel_max_fee.value
