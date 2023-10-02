@@ -1,4 +1,4 @@
-"""Detector for finding unoptimized usage of constant GTXN."""
+"""Detector for finding unoptimized self access"""
 
 from typing import TYPE_CHECKING, List
 
@@ -7,36 +7,35 @@ from tealer.detectors.abstract_detector import (
     DetectorClassification,
     DetectorType,
 )
-from tealer.teal.instructions.instructions import Gtxns, Instruction
-from tealer.utils.analyses import is_int_push_ins
+from tealer.teal.instructions.instructions import Gtxns, Instruction, Txn, Gtxnsa, Gtxnsas
+from tealer.teal.instructions.transaction_field import GroupIndex
 from tealer.utils.output import InstructionsOutput
 
 if TYPE_CHECKING:
     from tealer.utils.output import ListOutput
 
 
-class ConstantGtxn(AbstractDetector):  # pylint: disable=too-few-public-methods
-    """Detector to find unoptimized usage of constant GTXN"""
+class SelfAccess(AbstractDetector):  # pylint: disable=too-few-public-methods
+    """Detector to find unoptimized self access"""
 
-    NAME = "constant-gtxn"
-    DESCRIPTION = "Unoptimized Gtxn"
+    NAME = "self-access"
+    DESCRIPTION = "Unoptimized self access"
     TYPE = DetectorType.STATELESS
 
     IMPACT = DetectorClassification.OPTIMIZATION
     CONFIDENCE = DetectorClassification.HIGH
 
-    WIKI_URL = "https://github.com/crytic/tealer/wiki/Detector-Documentation#Unoptimized-Gtxn"
-    WIKI_TITLE = "Unoptimized Gtxn"
-    WIKI_DESCRIPTION = (
-        "- Gtxn[Int(1)].field() produces instructions int 1; gtxns field"
-        "- Gtxn[1].field() produces only one instruction: gtxn 1 field"
+    WIKI_URL = (
+        "https://github.com/crytic/tealer/wiki/Detector-Documentation#Unoptimized-self-access"
     )
+    WIKI_TITLE = "Unoptimized self access"
+    WIKI_DESCRIPTION = "Gtxn[Txn.group_index()].field can be replaced by Txn.field"
     WIKI_EXPLOIT_SCENARIO = """"""
 
-    WIKI_RECOMMENDATION = """Use Gtxn[idx].field()."""
+    WIKI_RECOMMENDATION = """Use Txn.field."""
 
     def detect(self) -> "ListOutput":
-        """Detector to find unoptimized usage of constant GTXN
+        """Detector to find unoptimized usage of self access
 
         Returns:
               The two instructions to optimized
@@ -60,9 +59,11 @@ class ConstantGtxn(AbstractDetector):  # pylint: disable=too-few-public-methods
 
                         # Note: first / second are always assigned, as we check for len(block.instructions) first
                         # pylint: disable=undefined-loop-variable
-                        first_ins_is_int, _ = is_int_push_ins(first)
-                        # pylint: disable=undefined-loop-variable
-                        if first_ins_is_int and isinstance(second, Gtxns):
+                        if (
+                            isinstance(first, Txn)
+                            and isinstance(first.field, GroupIndex)
+                            and isinstance(second, (Gtxns, Gtxnsa, Gtxnsas))
+                        ):
                             # pylint: disable=undefined-loop-variable
                             all_findings.append([first, second])
 
