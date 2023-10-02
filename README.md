@@ -5,7 +5,7 @@ Tealer is a static analyzer for [Teal](https://developer.algorand.org/docs/featu
 - [Features](#features)
   - [Detectors](#detectors): Vulnerabilities detectors
   - [Printers](#printers): Visual information
-  - [Regex](#regex): Regular expression engine 
+  - [Regular expression](#Regular expression): Regular expression engine
 - [How to install](#how-to-install)
 - [Group configuration](#group-configuration)
 
@@ -57,18 +57,18 @@ For more information, see
 Printers output [`dot`](https://graphviz.org/) files.
 Use `xdot` to open the files  (`sudo apt install xdot`).
 
-### Regex
+### Regular expression
 
 Tealer can detect if there is a path between a given label and a set of instruction using the `--regex` flag: `tealer --contract file.teal --regex regex.txt`.
 
-The regex file must be on the form:
-```
+The Regular expression file must be on the form:
+```txt
 label =>
   ins1
   ins2
 ```
 
-If there is a match, tealer will generate a DOT file with the graph. 
+If there is a match, tealer will generate a DOT file with the graph.
 
 For an example, run `tealer --contract tests/regex/vote_approval.teal --regex tests/regex/regex.txt`, with:
 - [tests/regex/regex.txt](./tests/regex/regex.txt)
@@ -90,9 +90,9 @@ We recommend to install the tool in a [virtualenv](https://virtualenvwrapper.rea
 
 ## Group configuration
 
-To help tealer reasons about applications that are meant to be run in a group of transaction, the user can provide the group information through a configuration file: 
+To help tealer reasons about applications that are meant to be run in a group of transaction, the user can provide the group information through a configuration file:
 - See the [ANS configuration](tests/group_transactions/ans/ans_config.yaml) example
-- See [Lightweight group information specification](https://forum.algorand.org/t/lightweight-group-information-specification/9735) discussion. 
+- See [Lightweight group information specification](https://forum.algorand.org/t/lightweight-group-information-specification/9735) discussion.
 
 The file format is still in development, and it is likely to evolve in the future
 
