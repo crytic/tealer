@@ -156,7 +156,7 @@ def match_regex(contract: Teal, regex: Regex) -> Tuple[List[List[Instruction]], 
     matches: List[List[Instruction]] = []
     covered: Set[Instruction] = set()
 
-    assert _find_instructions(label, regex.instructions, set(), matches, covered)
+    _find_instructions(label, regex.instructions, set(), matches, covered)
 
     return matches, covered
 
@@ -193,9 +193,15 @@ def run_regex(teal: Teal, regex_Path: Path, export_path: Path) -> None:
         regex = parse_regex(f_regex.read())
 
     matches, covered = match_regex(teal, regex)
+
+    if not matches:
+        print("Not match was found")
+        return
     # Ensure the CFG generation does not crash
     config = CFGDotConfig()
     update_config(config, matches, covered)
 
     with open(export_path, "w", encoding="utf8") as fp:
         full_cfg_to_dot(teal, config, Path(fp.name))
+
+    print(f"Result generated in {export_path}")
