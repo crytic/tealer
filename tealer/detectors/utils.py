@@ -4,6 +4,7 @@ from typing import List, TYPE_CHECKING, Callable, Tuple, Optional
 from tealer.utils.analyses import next_blocks_global, leaf_block_global
 from tealer.detectors.abstract_detector import DetectorType
 from tealer.utils.output import GroupTransactionOutput
+from tealer.utils.teal_enums import TransactionType
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -396,6 +397,7 @@ def detect_missing_tx_field_validations_group_complete(  # pylint: disable=too-m
     tealer: "Tealer",
     detector: "AbstractDetector",
     checks_field: Callable[["BlockTransactionContext"], bool],
+    vulnerable_transaction_types: Optional[List[TransactionType]] = None,
 ) -> List[GroupTransactionOutput]:
     """
     `tealer.analyses.dataflow` calculates possible values a transaction field can have to successfully complete execution.
@@ -418,6 +420,9 @@ def detect_missing_tx_field_validations_group_complete(  # pylint: disable=too-m
         detector: The detector
         checks_field:  A function which given a block context, should return True if the target field
             cannot have the vulnerable value or else False.
+        vulnerable_transaction_types: The contracts are vulnerable when it is executed in only some of the transaction types. This list is that list of
+            transaction types. If this list is given, the transactions whose transaction type is not in the list will be skipped and are considered not
+            vulnerable to the detector.
 
     Returns:
         Found vulnerable operations/groups
@@ -430,6 +435,11 @@ def detect_missing_tx_field_validations_group_complete(  # pylint: disable=too-m
             if detector.TYPE == DetectorType.STATELESS and not txn.has_logic_sig:
                 continue
 
+            if (
+                vulnerable_transaction_types is not None
+                and txn.type not in vulnerable_transaction_types
+            ):
+                continue
             # print(txn.logic_sig.blocks)
             # for block in txn.logic_sig.blocks:
             #     print(block)

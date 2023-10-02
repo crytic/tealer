@@ -296,7 +296,7 @@ groups:
           function: lsig1_case_8
         absolute_index: 0
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_8
@@ -364,7 +364,7 @@ groups:
         has_logic_sig: true
         absolute_index: 0
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_12
@@ -397,7 +397,7 @@ groups:
           function: lsig1_case_14
         absolute_index: 0
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_14
@@ -415,7 +415,7 @@ groups:
           function: lsig1_case_15
         absolute_index: 0
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_15
@@ -433,7 +433,7 @@ groups:
           function: lsig1_case_16
         absolute_index: 0
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_16
@@ -472,7 +472,7 @@ groups:
           - other_txn_id: T2
             offset: 4
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_18
@@ -552,7 +552,7 @@ groups:
           contract: LogicSig_1
           function: lsig1_case_22
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_22
@@ -602,7 +602,7 @@ groups:
           contract: App_1
           function: app1_case_25
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_25
@@ -665,7 +665,7 @@ groups:
           - other_txn_id: T2
             offset: 5
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_28
@@ -724,7 +724,7 @@ groups:
           - other_txn_id: T2
             offset: 4
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_31
@@ -749,7 +749,7 @@ groups:
           - other_txn_id: T2
             offset: 5
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_32
@@ -808,7 +808,7 @@ groups:
           - other_txn_id: T2
             offset: 3
       - txn_id: T2
-        txn_type: pay
+        txn_type: axfer
         logic_sig:
           contract: LogicSig_2
           function: lsig2_case_35

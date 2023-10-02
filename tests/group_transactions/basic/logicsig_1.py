@@ -9,6 +9,9 @@ case 1:
 
 Expected:
     - The detector should not report it as vulnerable.
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not < Int(10000)t Vulnerable - AssetCloseTo
 
 
 case 2:
@@ -17,7 +20,10 @@ case 2:
 
 Expected:
     - The detector should report it as vulnerable
-
+    Vulnerable - RekeyTo
+    Vulnerable - Fee
+    Nor Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 3:
     - Single transaction.
@@ -27,7 +33,10 @@ case 3:
 Expected:
     The detector should report the operation as vulnerable. Even if the detector does not the logic sig being executed, the operation should be considered
     vulnerable because a logic sig will be vulnerable to Rekeying.
-
+    Vulnerable - RekeyTo
+    Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 4:
     - Single transaction.
@@ -36,7 +45,10 @@ case 4:
 
 Expected:
     The detector should report the operation as NOT VULNERABLE. Applications are not vulnerable to rekeying.
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 5:
     - Single transaction
@@ -44,7 +56,11 @@ case 5:
     - LogicSig checks that application is called
 
 Expected:
-    NOT VULNERABLE.
+    NOT VULNERABLE - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
+
 
 
 case 6:
@@ -53,8 +69,10 @@ case 6:
     - LogicSig checks the application is called.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 7:
     - Two transactions
@@ -65,20 +83,24 @@ case 7:
         - LogicSig does not check anything.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 8:
     - Two transactions
     - First transaction (appl)(index: 0):
         - Application checks the rekeyto field of 0th transaction using absolute index.
         - LogicSig checks the application id
-    - Second transaction (pay)(index: 1):
+    - Second transaction (axfer)(index: 1):
         - LogicSig checks it's rekeyto field.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 9:
     - Two transactions
@@ -89,9 +111,13 @@ case 9:
         - LogicSig does not check anything.
 
 Expected:
-    Vulnerable.
+    Vulnerable. - RekeyTo
     The first transaction is vulnerable. The second transaction should not be reported
 
+    Vulnerable - Fee
+    The first transaction is vulnerable. The second transaction should not be reported
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 10:
     - Two transactions
@@ -102,8 +128,10 @@ case 10:
         - LogicSig checks the fields of both transactions using absolute indices.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 11:
     - Two transactions
@@ -114,21 +142,27 @@ case 11:
         - LogicSig checks the fields of both transactions using absolute indices
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 12:
     - Two transactions
     - First transaction (appl)(index: 0):
         - Application does not check anything.
         - has_logic_sig is True.
-    - Second transaction (pay)(index: 1):
+    - Second transaction (axfer)(index: 1):
         - LogicSig checks the fields of its own transaction field.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo
     Only the first transaction is reported as vulnerable.
 
+    Vulnerable - Fee
+    Only the first transaction is reported as vulnerable.
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 13:
     - Two transactions
@@ -138,46 +172,63 @@ case 13:
         - LogicSig does not check anything.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo
     Second transaction is reported as vulnerable
 
+    Vulnerable - Fee
+    Second transaction is reported as vulnerable
+
+    Vulnerable - CloseRemainderTo
+    Second transaction is reported as vulnerable
+
+    Not Vulnerable - AssetCloseTo
 
 case 14:
     - Two transactions
     - First transaction (appl)(index: 0):
         - Application does not check anything.
         - LogicSig does not check anything.
-    - Second transaction (pay)(index: 1):
+    - Second transaction (axfer)(index: 1):
         - LogicSig does not check anything.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo
     Both First and Second transactions are reported as vulnerable.
 
+    Vulnerable - Fee
+    Both First and Second transactions are reported as vulnerable.
+
+    Not Vulnerable - CloseRemainderTo
+    Vulnerable - AssetCloseTo
+    Second transaction is reported as vulnerable
 
 case 15:
     - Two transactions
     - First transaction (appl)(index: 0):
         - Application does not check anything.
         - LogicSig checks the rekeyto field of 0th transaction and 1st transaction using absolute indices
-    - Second transaction (pay)(index: 1):
+    - Second transaction (axfer)(index: 1):
         - LogicSig does not check anything.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 16:
     - Two transactions
     - First transaction (appl)(index: 0):
         - Application does not check anything.
         - LogicSig checks the rekeyto field of 0th transaction using absolute index.
-    - Second transaction (pay)(index: 1):
+    - Second transaction (axfer)(index: 1):
         - LogicSig checks it's rekeyto field.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 17:
     - Two transactions
@@ -188,21 +239,28 @@ case 17:
         - LogicSig does not check anything.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo
     The first transaction is vulnerable. The second transaction should not be reported
 
+    Vulnerable - Fee
+    The first transaction is vulnerable. The second transaction should not be reported
+
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 18:
     - Two transactions
     - First transaction (appl)(index: 0):
         - Application checks the rekeyto field of 0th transaction using absolute index and 1st transaction using relative index(+4).
         - LogicSig checks the application id
-    - Second transaction (pay):
+    - Second transaction (axfer):
         - LogicSig does not check anything.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 19:
     - Two transactions
@@ -213,8 +271,10 @@ case 19:
         - LogicSig checks rekey field of the previous transaction using (-4) relative index.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 20:
     - Two transactions
@@ -225,8 +285,10 @@ case 20:
         - LogicSig checks rekey field of the first transaction using (+5) relative index.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 21:
     - Two transactions
@@ -237,21 +299,28 @@ case 21:
         - LogicSig does not check anything.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo
     The first transaction is vulnerable. The second transaction should not be reported
 
+    Vulnerable - Fee
+    The first transaction is vulnerable. The second transaction should not be reported
+
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 22:
     - Two transactions
     - First transaction (appl):
         - Application does not check anything.
         - LogicSig checks the application id
-    - Second transaction (pay):
+    - Second transaction (axfer):
         - LogicSig checks the field of previous transaction using relative index(-1) and its own field directly.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 23:
     - Two transactions
@@ -262,8 +331,10 @@ case 23:
         - LogicSig checks the field of previous transaction using relative index(-1) and its own field directly.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 24:
     - Two transactions
@@ -274,20 +345,32 @@ case 24:
         - LogicSig checks the fields of its own transaction field.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo.
     Only the first transaction is reported as vulnerable.
 
+    Vulnerable - Fee.
+    Only the first transaction is reported as vulnerable.
+
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 25:
     - Two transactions
     - First transaction (appl):
         - Application does not check anything.
-    - Second transaction (pay):
+    - Second transaction (axfer):
         - LogicSig does not check anything.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo.
     Second transaction is reported as vulnerable
+
+    Vulnerable - Fee.
+    Second transaction is reported as vulnerable
+
+    Not Vulnerable - CloseRemainderTo
+    Vulnerable - AssetCloseTo
+    Second transaction is reported
 
 
 case 26:
@@ -299,9 +382,16 @@ case 26:
         - LogicSig does not check anything.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo.
     Both First and Second transactions are reported as vulnerable.
 
+    Vulnerable - Fee.
+    Both First and Second transactions are reported as vulnerable.
+
+    Vulnerable - CloseRemainderTo
+    Second transaction is reported as vulnerable
+
+    Not Vulnerable - AssetCloseTo
 
 case 27:
     - Two transactions
@@ -312,21 +402,27 @@ case 27:
         - LogicSig does not check anything.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 28:
     - Two transactions
     - First transaction (appl):
         - Application checks the rekeyto field of 1st transaction using relative index(+5).
         - LogicSig checks the application id
-    - Second transaction (pay):
+    - Second transaction (axfer):
         - LogicSig checks rekey field of the previous transaction using (-4) relative index.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo.
     Second transaction uses the wrong index. First contract will be vulnerable.
 
+    Vulnerable - Fee
+    Second transaction uses the wrong index. First contract will be vulnerable.
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 29:
     - Two transactions
@@ -337,9 +433,13 @@ case 29:
         - LogicSig does not check anything.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo.
     The first transaction is vulnerable. The second transaction should not be reported
 
+    Vulnerable - Fee.
+    The first transaction is vulnerable. The second transaction should not be reported
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 30:
     - Two transactions
@@ -350,19 +450,24 @@ case 30:
         - LogicSig does not check anything.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 31:
     - Two transactions
     - First transaction (appl):
         - Application does not check anything.
         - LogicSig checks the rekeyto field of 1st transaction using relative index(+4).
-    - Second transaction (pay):
+    - Second transaction (axfer):
         - LogicSig checks rekey field of the previous transaction using (-4) relative index.
 
 Expected:
-    Not Vulnerable
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 
 case 32:
@@ -370,13 +475,17 @@ case 32:
     - First transaction (appl):
         - Application does not check anything.
         - LogicSig checks the rekeyto field of 1st transaction using relative index(+5)
-    - Second transaction (pay):
+    - Second transaction (axfer):
         - LogicSig checks rekey field of the previous transaction using (-4) relative index.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo.
     Second transaction uses the wrong index. First contract will be vulnerable.
 
+    Vulnerable - Fee.
+    Second transaction uses the wrong index. First contract will be vulnerable.
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 33:
     - Two transactions
@@ -387,8 +496,10 @@ case 33:
         - LogicSig checks rekey field of the 0th transaction using (+5) relative index.
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 34:
     - Two transactions
@@ -399,22 +510,30 @@ case 34:
         - LogicSig does not check anything.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo.
     The first transaction is vulnerable. The second transaction should not be reported
 
+    Vulnerable - Fee.
+    The first transaction is vulnerable. The second transaction should not be reported
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 35:
     - Two transactions
     - First transaction (appl)(index: 0):
         - Application does not check anything.
         - LogicSig checks the rekeyto field of 1st transaction using relative index(+3).
-    - Second transaction (pay):
+    - Second transaction (axfer):
         - LogicSig does not check anything.
 
 Expected:
-    Vulnerable.
+    Vulnerable - RekeyTo.
     The first transaction is vulnerable. The second transaction should not be reported
 
+    Vulnerable - Fee
+    The first transaction is vulnerable. The second transaction should not be reported
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 36:
     - Single transaction (index: 4).
@@ -423,8 +542,10 @@ case 36:
     - Absolute index is given in the config
 
 Expected:
-    Not Vulnerable
-
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 
 case 37:
     - Single transaction (index: 1)
@@ -433,14 +554,29 @@ case 37:
     - Absolute index is given in the config.
 
 Expected:
-    Not Vulnerable
+    Not Vulnerable - RekeyTo
+    Not Vulnerable - Fee
+    Not Vulnerable - CloseRemainderTo
+    Not Vulnerable - AssetCloseTo
 """
 from pathlib import Path
 from pyteal import *  # pylint: disable=wildcard-import, unused-wildcard-import
 
 
 def lsig1_case_1() -> Expr:
-    return Seq([Assert(Txn.rekey_to() == Global.zero_address()), Return(Int(1))])
+    return Seq(
+        [
+            Assert(
+                And(
+                    Txn.rekey_to() == Global.zero_address(),
+                    Txn.fee() < Int(10000),
+                    Txn.close_remainder_to() == Global.zero_address(),
+                    Txn.asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Return(Int(1)),
+        ]
+    )
 
 
 def lsig1_case_2() -> Expr:
@@ -493,6 +629,12 @@ def lsig1_case_15() -> Expr:
                     # int 0; gtxns RekeyTo
                     Gtxn[Int(0)].rekey_to() == Global.zero_address(),
                     Gtxn[1].rekey_to() == Global.zero_address(),
+                    Gtxn[Int(0)].fee() < Int(100000),
+                    Gtxn[1].fee() < Int(1000),
+                    Gtxn[Int(0)].close_remainder_to() == Global.zero_address(),
+                    Gtxn[1].close_remainder_to() == Global.zero_address(),
+                    Gtxn[Int(0)].asset_close_to() == Global.zero_address(),
+                    Gtxn[1].asset_close_to() == Global.zero_address(),
                 )
             ),
             Return(Int(1)),
@@ -504,6 +646,9 @@ def lsig1_case_16() -> Expr:
     return Seq(
         [
             Assert(Gtxn[0].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[0].fee() < Int(10000)),
+            Assert(Gtxn[0].close_remainder_to() == Global.zero_address()),
+            Assert(Gtxn[0].asset_close_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
@@ -513,6 +658,9 @@ def lsig1_case_17() -> Expr:
     return Seq(
         [
             Assert(Gtxn[1].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[1].fee() < Int(10000)),
+            Assert(Gtxn[1].close_remainder_to() == Global.zero_address()),
+            Assert(Gtxn[1].asset_close_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
@@ -559,6 +707,12 @@ def lsig1_case_27() -> Expr:
                 And(
                     Txn.rekey_to() == Global.zero_address(),
                     Gtxn[Txn.group_index() + Int(1)].rekey_to() == Global.zero_address(),
+                    Txn.fee() < Int(10000),
+                    Gtxn[Txn.group_index() + Int(1)].fee() < Int(10000),
+                    Txn.close_remainder_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(1)].close_remainder_to() == Global.zero_address(),
+                    Txn.asset_close_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(1)].asset_close_to() == Global.zero_address(),
                 )
             ),
             Return(Int(1)),
@@ -586,6 +740,9 @@ def lsig1_case_29() -> Expr:
             Assert(
                 And(
                     Gtxn[Txn.group_index() + Int(3)].rekey_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(3)].fee() < Int(10000),
+                    Gtxn[Txn.group_index() + Int(3)].close_remainder_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(3)].asset_close_to() == Global.zero_address(),
                 )
             ),
             Return(Int(1)),
@@ -601,6 +758,9 @@ def lsig1_case_30() -> Expr:
                     Txn.application_id() == Int(1337),
                     Txn.on_completion() == OnComplete.NoOp,
                     Gtxn[Txn.group_index() + Int(4)].rekey_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(4)].fee() < Int(10000),
+                    Gtxn[Txn.group_index() + Int(4)].asset_close_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(4)].close_remainder_to() == Global.zero_address(),
                 )
             ),
             Return(Int(1)),
@@ -620,6 +780,9 @@ def lsig1_case_32() -> Expr:
                     Txn.application_id() == Int(1337),
                     Txn.on_completion() == OnComplete.NoOp,
                     Gtxn[Txn.group_index() + Int(5)].rekey_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(5)].fee() < Int(10000),
+                    Gtxn[Txn.group_index() + Int(5)].close_remainder_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(5)].asset_close_to() == Global.zero_address(),
                 )
             ),
             Return(Int(1)),
@@ -633,6 +796,9 @@ def lsig1_case_33() -> Expr:
             Assert(
                 And(
                     Gtxn[1].rekey_to() == Global.zero_address(),
+                    Gtxn[1].fee() < Int(10000),
+                    Gtxn[1].close_remainder_to() == Global.zero_address(),
+                    Gtxn[1].asset_close_to() == Global.zero_address(),
                     Txn.application_id() == Int(1337),
                     Txn.on_completion() == OnComplete.NoOp,
                 )
@@ -648,6 +814,9 @@ def lsig1_case_34() -> Expr:
             Assert(
                 And(
                     Gtxn[Txn.group_index() + Int(2)].rekey_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(2)].fee() < Int(10000),
+                    Gtxn[Txn.group_index() + Int(2)].close_remainder_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(2)].asset_close_to() == Global.zero_address(),
                     Txn.application_id() == Int(1337),
                     Txn.on_completion() == OnComplete.NoOp,
                 )
@@ -663,6 +832,9 @@ def lsig1_case_35() -> Expr:
             Assert(
                 And(
                     Gtxn[Txn.group_index() + Int(3)].rekey_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(3)].fee() < Int(10000),
+                    Gtxn[Txn.group_index() + Int(3)].close_remainder_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() + Int(3)].asset_close_to() == Global.zero_address(),
                     Txn.application_id() == Int(1337),
                     Txn.on_completion() == OnComplete.NoOp,
                 )
@@ -687,7 +859,19 @@ def lsig1_case_36() -> Expr:
 
 
 def lsig1_case_37() -> Expr:
-    return Seq([Assert(Gtxn[1].rekey_to() == Global.zero_address()), Return(Int(1))])
+    return Seq(
+        [
+            Assert(
+                And(
+                    Gtxn[1].fee() < Int(10000),
+                    Gtxn[1].rekey_to() == Global.zero_address(),
+                    Gtxn[1].close_remainder_to() == Global.zero_address(),
+                    Gtxn[1].asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Return(Int(1)),
+        ]
+    )
 
 
 def logic_sig() -> Expr:

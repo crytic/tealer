@@ -9,7 +9,19 @@ def lsig2_case_7() -> Expr:
 
 
 def lsig2_case_8() -> Expr:
-    return Seq([Assert(Txn.rekey_to() == Global.zero_address()), Return(Int(1))])
+    return Seq(
+        [
+            Assert(
+                And(
+                    Txn.rekey_to() == Global.zero_address(),
+                    Txn.fee() < Int(10000),
+                    Txn.close_remainder_to() == Global.zero_address(),
+                    Txn.asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Return(Int(1)),
+        ]
+    )
 
 
 def lsig2_case_9() -> Expr:
@@ -23,6 +35,12 @@ def lsig2_case_10() -> Expr:
                 And(
                     Gtxn[0].rekey_to() == Global.zero_address(),
                     Gtxn[1].rekey_to() == Global.zero_address(),
+                    Gtxn[Int(0)].fee() < Int(100000),
+                    Gtxn[1].fee() < Int(1000),
+                    Gtxn[Int(0)].close_remainder_to() == Global.zero_address(),
+                    Gtxn[1].close_remainder_to() == Global.zero_address(),
+                    Gtxn[Int(0)].asset_close_to() == Global.zero_address(),
+                    Gtxn[1].asset_close_to() == Global.zero_address(),
                 )
             ),
             Return(Int(1)),
@@ -35,7 +53,19 @@ def lsig2_case_11() -> Expr:
 
 
 def lsig2_case_12() -> Expr:
-    return Seq([Assert(Gtxn[1].rekey_to() == Global.zero_address()), Return(Int(1))])
+    return Seq(
+        [
+            Assert(
+                And(
+                    Gtxn[1].rekey_to() == Global.zero_address(),
+                    Gtxn[1].fee() < Int(10000),
+                    Gtxn[1].close_remainder_to() == Global.zero_address(),
+                    Gtxn[1].asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Return(Int(1)),
+        ]
+    )
 
 
 def lsig2_case_13() -> Expr:
@@ -53,7 +83,14 @@ def lsig2_case_15() -> Expr:
 def lsig2_case_16() -> Expr:
     return Seq(
         [
-            Assert(Txn.rekey_to() == Global.zero_address()),
+            Assert(
+                And(
+                    Txn.rekey_to() == Global.zero_address(),
+                    Txn.fee() < Int(10000),
+                    Txn.close_remainder_to() == Global.zero_address(),
+                    Txn.asset_close_to() == Global.zero_address(),
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -71,6 +108,9 @@ def lsig2_case_19() -> Expr:
     return Seq(
         [
             Assert(Gtxn[Txn.group_index() - Int(4)].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() - Int(4)].fee() < Int(10000)),
+            Assert(Gtxn[Txn.group_index() - Int(4)].close_remainder_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() - Int(4)].asset_close_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
@@ -80,6 +120,9 @@ def lsig2_case_20() -> Expr:
     return Seq(
         [
             Assert(Gtxn[Txn.group_index() + Int(5)].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() + Int(5)].fee() < Int(10000)),
+            Assert(Gtxn[Txn.group_index() + Int(5)].close_remainder_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() + Int(5)].asset_close_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
@@ -95,7 +138,13 @@ def lsig2_case_22() -> Expr:
             Assert(
                 And(
                     Gtxn[Txn.group_index() - Int(1)].rekey_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() - Int(1)].fee() < Int(10000),
+                    Gtxn[Txn.group_index() - Int(1)].close_remainder_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() - Int(1)].asset_close_to() == Global.zero_address(),
                     Txn.rekey_to() == Global.zero_address(),
+                    Txn.fee() < Int(10000),
+                    Txn.close_remainder_to() == Global.zero_address(),
+                    Txn.asset_close_to() == Global.zero_address(),
                 )
             ),
             Return(Int(1)),
@@ -108,7 +157,19 @@ def lsig2_case_23() -> Expr:
 
 
 def lsig2_case_24() -> Expr:
-    return Seq([Assert(Txn.rekey_to() == Global.zero_address()), Return(Int(1))])
+    return Seq(
+        [
+            Assert(
+                And(
+                    Txn.rekey_to() == Global.zero_address(),
+                    Txn.fee() < Int(10000),
+                    Txn.close_remainder_to() == Global.zero_address(),
+                    Txn.asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Return(Int(1)),
+        ]
+    )
 
 
 def lsig2_case_25() -> Expr:
@@ -127,6 +188,9 @@ def lsig2_case_28() -> Expr:
     return Seq(
         [
             Assert(Gtxn[Txn.group_index() - Int(4)].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() - Int(4)].fee() < Int(10000)),
+            Assert(Gtxn[Txn.group_index() - Int(4)].close_remainder_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() - Int(4)].asset_close_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
@@ -144,6 +208,9 @@ def lsig2_case_31() -> Expr:
     return Seq(
         [
             Assert(Gtxn[Txn.group_index() - Int(4)].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() - Int(4)].fee() < Int(10000)),
+            Assert(Gtxn[Txn.group_index() - Int(4)].close_remainder_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() - Int(4)].asset_close_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
@@ -153,6 +220,9 @@ def lsig2_case_32() -> Expr:
     return Seq(
         [
             Assert(Gtxn[Txn.group_index() - Int(4)].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() - Int(4)].fee() < Int(10000)),
+            Assert(Gtxn[Txn.group_index() - Int(4)].close_remainder_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() - Int(4)].asset_close_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
@@ -162,6 +232,9 @@ def lsig2_case_33() -> Expr:
     return Seq(
         [
             Assert(Gtxn[Txn.group_index() + Int(5)].rekey_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() + Int(5)].fee() < Int(10000)),
+            Assert(Gtxn[Txn.group_index() + Int(5)].close_remainder_to() == Global.zero_address()),
+            Assert(Gtxn[Txn.group_index() + Int(5)].asset_close_to() == Global.zero_address()),
             Return(Int(1)),
         ]
     )
