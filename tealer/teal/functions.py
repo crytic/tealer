@@ -59,7 +59,7 @@ class Function:
                 bi.next[0] for bi in caller_blocks if len(bi.next) == 1
             ]
 
-        print(self._subroutine_caller_blocks)
+        # print(self._subroutine_caller_blocks)
 
         # TODO: add exit_blocks
 

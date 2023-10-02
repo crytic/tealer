@@ -91,8 +91,12 @@ from tealer.utils.command_line.command_output import (
 from tealer.utils.command_line.common import (
     get_detectors_and_printers,
     validate_command_line_options,
-    handle_detect,
+    # handle_detect,
     init_tealer_from_single_contract,
+    init_tealer_from_config,
+)
+from tealer.utils.command_line.group_config import (
+    read_config_from_file,
 )
 from tealer.utils.output import ROOT_OUTPUT_DIRECTORY, ExecutionPaths
 
@@ -104,7 +108,9 @@ if TYPE_CHECKING:
 
 # from slither: slither/__main__.py
 def choose_detectors(
-    args: argparse.Namespace, all_detector_classes: List[Type[AbstractDetector]], teal: "Teal"
+    args: argparse.Namespace,
+    all_detector_classes: List[Type[AbstractDetector]],
+    teal: Optional["Teal"] = None,
 ) -> List[Type[AbstractDetector]]:
     """Select detectors from available list based on command line arguments.
 
@@ -137,9 +143,9 @@ def choose_detectors(
         # IF there is no detectors provided:
         # - Stateful: run everything expect the stateless detectors
         # - Stateless: run only stateless and stateless & stateful
-        if teal.mode == ExecutionMode.STATEFUL:
+        if teal is not None and teal.mode == ExecutionMode.STATEFUL:
             detectors_to_run = [d for d in detectors_to_run if d.TYPE != DetectorType.STATELESS]
-        if teal.mode == ExecutionMode.STATELESS:
+        if teal is not None and teal.mode == ExecutionMode.STATELESS:
             detectors_to_run = [
                 d
                 for d in detectors_to_run
@@ -548,8 +554,19 @@ def main() -> None:
     error = None
     if args.detectors_to_run is not None and args.group_config is not None:
         # handle this case specially for now.
-        handle_detect(args)
+        # handle_detect(args)
+        # sys.exit(1)
+        group_config = read_config_from_file(Path(args.group_config))
+        tealer = init_tealer_from_config(group_config)
+        detector_classes = choose_detectors(args, detector_classes)
+        for detector in detector_classes:
+            tealer.register_detector(detector)
+        group_results = tealer.run_detectors()[0]
+        for output in group_results:
+            # dest is ignored
+            output.generate_output(Path("."))
         sys.exit(1)
+
     try:
         contract_source, contract_name = fetch_contract(args)
         tealer = init_tealer_from_single_contract(contract_source, contract_name)

@@ -1,0 +1,468 @@
+#pragma version 7
+arg 0
+btoi
+int 1
+==
+bnz main_l58
+arg 0
+btoi
+int 2
+==
+bnz main_l57
+arg 0
+btoi
+int 5
+==
+bnz main_l56
+arg 0
+btoi
+int 6
+==
+bnz main_l55
+arg 0
+btoi
+int 7
+==
+bnz main_l54
+arg 0
+btoi
+int 8
+==
+bnz main_l53
+arg 0
+btoi
+int 9
+==
+bnz main_l52
+arg 0
+btoi
+int 10
+==
+bnz main_l51
+arg 0
+btoi
+int 14
+==
+bnz main_l50
+arg 0
+btoi
+int 15
+==
+bnz main_l49
+arg 0
+btoi
+int 16
+==
+bnz main_l48
+arg 0
+btoi
+int 17
+==
+bnz main_l47
+arg 0
+btoi
+int 18
+==
+bnz main_l46
+arg 0
+btoi
+int 19
+==
+bnz main_l45
+arg 0
+btoi
+int 20
+==
+bnz main_l44
+arg 0
+btoi
+int 21
+==
+bnz main_l43
+arg 0
+btoi
+int 22
+==
+bnz main_l42
+arg 0
+btoi
+int 26
+==
+bnz main_l41
+arg 0
+btoi
+int 27
+==
+bnz main_l40
+arg 0
+btoi
+int 28
+==
+bnz main_l39
+arg 0
+btoi
+int 29
+==
+bnz main_l38
+arg 0
+btoi
+int 30
+==
+bnz main_l37
+arg 0
+btoi
+int 31
+==
+bnz main_l36
+arg 0
+btoi
+int 32
+==
+bnz main_l35
+arg 0
+btoi
+int 33
+==
+bnz main_l34
+arg 0
+btoi
+int 34
+==
+bnz main_l33
+arg 0
+btoi
+int 35
+==
+bnz main_l32
+arg 0
+btoi
+int 36
+==
+bnz main_l31
+arg 0
+btoi
+int 37
+==
+bnz main_l30
+err
+main_l30:
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l31:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l32:
+txn GroupIndex
+int 3
++
+gtxns RekeyTo
+global ZeroAddress
+==
+txn ApplicationID
+int 1337
+==
+&&
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l33:
+txn GroupIndex
+int 2
++
+gtxns RekeyTo
+global ZeroAddress
+==
+txn ApplicationID
+int 1337
+==
+&&
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l34:
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+txn ApplicationID
+int 1337
+==
+&&
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l35:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+txn GroupIndex
+int 5
++
+gtxns RekeyTo
+global ZeroAddress
+==
+&&
+assert
+int 1
+return
+main_l36:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+txn GroupIndex
+int 4
++
+gtxns RekeyTo
+global ZeroAddress
+==
+&&
+assert
+int 1
+return
+main_l37:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+txn GroupIndex
+int 4
++
+gtxns RekeyTo
+global ZeroAddress
+==
+&&
+assert
+int 1
+return
+main_l38:
+txn GroupIndex
+int 3
++
+gtxns RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l39:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l40:
+txn RekeyTo
+global ZeroAddress
+==
+txn GroupIndex
+int 1
++
+gtxns RekeyTo
+global ZeroAddress
+==
+&&
+assert
+int 1
+return
+main_l41:
+int 1
+return
+main_l42:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l43:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l44:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l45:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l46:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l47:
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l48:
+gtxn 0 RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
+main_l49:
+int 0
+gtxns RekeyTo
+global ZeroAddress
+==
+gtxn 1 RekeyTo
+global ZeroAddress
+==
+&&
+assert
+int 1
+return
+main_l50:
+int 1
+return
+main_l51:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l52:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l53:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l54:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l55:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l56:
+txn ApplicationID
+int 1337
+==
+txn OnCompletion
+int NoOp
+==
+&&
+assert
+int 1
+return
+main_l57:
+int 1
+return
+main_l58:
+txn RekeyTo
+global ZeroAddress
+==
+assert
+int 1
+return
