@@ -184,6 +184,7 @@ def validate_command_line_options(args: argparse.Namespace) -> None:
         int(args.init is True)
         + int(args.detectors_to_run is not None)
         + int(args.printers_to_run is not None)
+        + int(args.regex is not None)
     )
     if no_of_subcommands != 1:
         print('CommandLineError: "User must select only one of --init, --detect or --print"')
