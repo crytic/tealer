@@ -7,7 +7,10 @@ from tealer.detectors.abstract_detector import (
     DetectorClassification,
     DetectorType,
 )
-from tealer.detectors.utils import detect_missing_tx_field_validations_group
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations_group,
+    detect_missing_tx_field_validations_group_complete,
+)
 from tealer.utils.teal_enums import TealerTransactionType
 from tealer.utils.output import ExecutionPaths
 
@@ -74,6 +77,14 @@ Eve updates the application by calling `update_application` method and steals al
             return not (
                 TealerTransactionType.ApplUpdateApplication in block_ctx.transaction_types
                 and block_ctx.sender.any_addr
+            )
+
+        # there should be a better to decide which function to call ??
+        if self.tealer.output_group:
+            # mypy complains if the value is returned directly. Uesd the second suggestion mentioned here:
+            # https://mypy.readthedocs.io/en/stable/common_issues.html#variance
+            return list(
+                detect_missing_tx_field_validations_group_complete(self.tealer, self, checks_field)
             )
 
         output: List[

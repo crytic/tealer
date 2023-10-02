@@ -49,7 +49,7 @@ def validated_in_block(
     Returns:
         returns True if the field(s) is validated in this block or else False
     """
-    print(str(block), "\n", block, function.transaction_context(block).transaction_types)
+    # print(str(block), "\n", block, function.transaction_context(block).transaction_types)
     # if field is checked using `txn {field}`, return true
     if checks_field(function.transaction_context(block)):
         return True
@@ -453,13 +453,13 @@ def detect_missing_tx_field_validations_group_complete(  # pylint: disable=too-m
             # the contract has logic sig
             # check if the contracts executed in the txn check the field.
             # logic sig contract is given
-            print("A")
+            # print("A")
             if txn.logic_sig is not None and contract_checks_its_field(
                 txn.logic_sig, checks_field, txn.absoulte_index
             ):
                 # the logic sig checks its field, not vulnerable
                 continue
-            print("B")
+            # print("B")
             if txn.application is not None and contract_checks_its_field(
                 txn.application, checks_field, txn.absoulte_index
             ):
