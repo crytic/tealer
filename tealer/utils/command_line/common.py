@@ -74,7 +74,11 @@ from tealer.utils.teal_enums import ContractType, contract_type_from_txt
 from tealer.tealer import Tealer
 
 # from tealer.utils.output import subroutine_to_dot
-from tealer.execution_context.transactions import Transaction, GroupTransaction
+from tealer.execution_context.transactions import (
+    Transaction,
+    GroupTransaction,
+    fill_group_relative_indexes,
+)
 
 if TYPE_CHECKING:
     from tealer.teal.functions import Function
@@ -322,8 +326,13 @@ def init_tealer_from_config(config: "GroupConfig") -> "Tealer":
                     txn_obj.relative_indexes[offset] = txn_id_to_obj[other_txn_id]
 
             if txn_obj.absoulte_index is not None:
+                if txn_obj.absoulte_index in group_obj.absolute_indexes:
+                    raise TealerException(
+                        f"Two transactions have same absolute index {txn_obj.transacton_id}, {group_obj.absolute_indexes[txn_obj.absoulte_index].transacton_id}"
+                    )
                 group_obj.absolute_indexes[txn_obj.absoulte_index] = txn_obj
 
+        fill_group_relative_indexes(group_obj)
         group_objs_list.append(group_obj)
 
     return Tealer(contracts, group_objs_list, output_group=True)

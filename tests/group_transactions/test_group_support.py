@@ -36,14 +36,15 @@ def test_instructions_output_detectors(test: Tuple[Path, Type[AbstractDetector],
     for i in output:
         assert isinstance(i, GroupTransactionOutput)
         reported_output.append(i)
+        i.generate_output(Path("."))
 
     # expected output is also sorted by operation name
     reported_output = sorted(reported_output, key=lambda x: x.group_transaction.operation_name)
-
+    expected_output_operations = sorted(expected_output.operations, key=lambda x: x.operation)
     # same number of groups/operations are reported as vulnerable
-    assert len(reported_output) == len(expected_output.operations)
+    assert len(reported_output) == len(expected_output_operations)
 
-    for expected_operation, reported_operation in zip(expected_output.operations, reported_output):
+    for expected_operation, reported_operation in zip(expected_output_operations, reported_output):
         # reported same operation
         assert expected_operation.operation == reported_operation.group_transaction.operation_name
         # reported same transactions

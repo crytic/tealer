@@ -17,66 +17,66 @@ contracts:
         dispatch_path: ["B0", "B1", "B2", "B3", "B71"]
       - name: app1_case_5
         dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B70"]
-      # - name: app1_case_6
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B69"]
-      # - name: app1_case_7
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B68"]
-      # - name: app1_case_8
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B67"]
-      # - name: app1_case_9
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B66"]
-      # - name: app1_case_10
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B65"]
-      # - name: app1_case_11
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B64"]
-      # - name: app1_case_12
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B63"]
-      # - name: app1_case_13
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B62"]
-      # - name: app1_case_14
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B61"]
-      # - name: app1_case_15
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B60"]
-      # - name: app1_case_16
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B59"]
-      # - name: app1_case_17
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B58"]
-      # - name: app1_case_18
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B57"]
-      # - name: app1_case_19
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B56"]
-      # - name: app1_case_20
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B55"]
-      # - name: app1_case_21
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B54"]
-      # - name: app1_case_22
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B53"]
-      # - name: app1_case_23
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B52"]
-      # - name: app1_case_24
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B51"]
-      # - name: app1_case_25
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B50"]
-      # - name: app1_case_26
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B49"]
-      # - name: app1_case_27
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B48"]
-      # - name: app1_case_28
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B47"]
-      # - name: app1_case_29
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B46"]
-      # - name: app1_case_30
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B45"]
-      # - name: app1_case_31
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B44"]
-      # - name: app1_case_32
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B31", "B43"]
-      # - name: app1_case_33
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B31", "B32", "B42"]
-      # - name: app1_case_34
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B31", "B32", "B33", "B41"]
-      # - name: app1_case_35
-      #   dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B31", "B32", "B33", "B34", "B40"]
+      - name: app1_case_6
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B69"]
+      - name: app1_case_7
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B68"]
+      - name: app1_case_8
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B67"]
+      - name: app1_case_9
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B66"]
+      - name: app1_case_10
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B65"]
+      - name: app1_case_11
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B64"]
+      - name: app1_case_12
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B63"]
+      - name: app1_case_13
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B62"]
+      - name: app1_case_14
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B61"]
+      - name: app1_case_15
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B60"]
+      - name: app1_case_16
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B59"]
+      - name: app1_case_17
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B58"]
+      - name: app1_case_18
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B57"]
+      - name: app1_case_19
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B56"]
+      - name: app1_case_20
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B55"]
+      - name: app1_case_21
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B54"]
+      - name: app1_case_22
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B53"]
+      - name: app1_case_23
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B52"]
+      - name: app1_case_24
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B51"]
+      - name: app1_case_25
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B50"]
+      - name: app1_case_26
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B49"]
+      - name: app1_case_27
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B48"]
+      - name: app1_case_28
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B47"]
+      - name: app1_case_29
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B46"]
+      - name: app1_case_30
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B45"]
+      - name: app1_case_31
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B44"]
+      - name: app1_case_32
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B31", "B43"]
+      - name: app1_case_33
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B31", "B32", "B42"]
+      - name: app1_case_34
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B31", "B32", "B33", "B41"]
+      - name: app1_case_35
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B31", "B32", "B33", "B34", "B40"]
       - name: app1_case_36
         dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B29", "B30", "B31", "B32", "B33", "B34", "B35", "B39"]
       - name: app1_case_37
@@ -93,122 +93,122 @@ contracts:
         dispatch_path: ["B0", "B1", "B57"]
       - name: lsig1_case_5
         dispatch_path: ["B0", "B1", "B2", "B56"]
-  #     - name: lsig1_case_6
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B55"]
-  #     - name: lsig1_case_7
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B54"]
-  #     - name: lsig1_case_8
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B53"]
-  #     - name: lsig1_case_9
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B52"]
-  #     - name: lsig1_case_10
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B51"]
-  #     - name: lsig1_case_14
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B50"]
-  #     - name: lsig1_case_15
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B49"]
-  #     - name: lsig1_case_16
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B48"]
-  #     - name: lsig1_case_17
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B47"]
-  #     - name: lsig1_case_18
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B46"]
-  #     - name: lsig1_case_19
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B45"]
-  #     - name: lsig1_case_20
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B44"]
-  #     - name: lsig1_case_21
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B43"]
-  #     - name: lsig1_case_22
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B42"]
-  #     - name: lsig1_case_26
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B41"]
-  #     - name: lsig1_case_27
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B40"]
-  #     - name: lsig1_case_28
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B39"]
-  #     - name: lsig1_case_29
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B38"]
-  #     - name: lsig1_case_30
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B37"]
-  #     - name: lsig1_case_31
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B36"]
-  #     - name: lsig1_case_32
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B35"]
-  #     - name: lsig1_case_33
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B34"]
-  #     - name: lsig1_case_34
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B33"]
-  #     - name: lsig1_case_35
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B32"]
+      - name: lsig1_case_6
+        dispatch_path: ["B0", "B1", "B2", "B3", "B55"]
+      - name: lsig1_case_7
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B54"]
+      - name: lsig1_case_8
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B53"]
+      - name: lsig1_case_9
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B52"]
+      - name: lsig1_case_10
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B51"]
+      - name: lsig1_case_14
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B50"]
+      - name: lsig1_case_15
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B49"]
+      - name: lsig1_case_16
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B48"]
+      - name: lsig1_case_17
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B47"]
+      - name: lsig1_case_18
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B46"]
+      - name: lsig1_case_19
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B45"]
+      - name: lsig1_case_20
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B44"]
+      - name: lsig1_case_21
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B43"]
+      - name: lsig1_case_22
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B42"]
+      - name: lsig1_case_26
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B41"]
+      - name: lsig1_case_27
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B40"]
+      - name: lsig1_case_28
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B39"]
+      - name: lsig1_case_29
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B38"]
+      - name: lsig1_case_30
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B37"]
+      - name: lsig1_case_31
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B36"]
+      - name: lsig1_case_32
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B35"]
+      - name: lsig1_case_33
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B34"]
+      - name: lsig1_case_34
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B33"]
+      - name: lsig1_case_35
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B32"]
       - name: lsig1_case_36
         dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B31"]
       - name: lsig1_case_37
         dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B30"]
-  # - name: LogicSig_2
-  #   file_path: logicsig_2.teal
-  #   type: LogicSig
-  #   version: 7
-  #   subroutines: []
-  #   functions:
-  #     - name: lsig2_case_7
-  #       dispatch_path: ["B0", "B58"]
-  #     - name: lsig2_case_8
-  #       dispatch_path: ["B0", "B1", "B57"]
-  #     - name: lsig2_case_9
-  #       dispatch_path: ["B0", "B1", "B2", "B56"]
-  #     - name: lsig2_case_10
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B55"]
-  #     - name: lsig2_case_11
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B54"]
-  #     - name: lsig2_case_12
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B53"]
-  #     - name: lsig2_case_13
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B52"]
-  #     - name: lsig2_case_14
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B51"]
-  #     - name: lsig2_case_15
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B50"]
-  #     - name: lsig2_case_16
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B49"]
-  #     - name: lsig2_case_17
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B48"]
-  #     - name: lsig2_case_18
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B47"]
-  #     - name: lsig2_case_19
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B46"]
-  #     - name: lsig2_case_20
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B45"]
-  #     - name: lsig2_case_21
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B44"]
-  #     - name: lsig2_case_22
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B43"]
-  #     - name: lsig2_case_23
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B42"]
-  #     - name: lsig2_case_24
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B41"]
-  #     - name: lsig2_case_25
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B40"]
-  #     - name: lsig2_case_26
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B39"]
-  #     - name: lsig2_case_27
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B38"]
-  #     - name: lsig2_case_28
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B37"]
-  #     - name: lsig2_case_29
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B36"]
-  #     - name: lsig2_case_30
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B35"]
-  #     - name: lsig2_case_31
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B34"]
-  #     - name: lsig2_case_32
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B33"]
-  #     - name: lsig2_case_33
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B32"]
-  #     - name: lsig2_case_34
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B31"]
-  #     - name: lsig2_case_35
-  #       dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B30"]
+  - name: LogicSig_2
+    file_path: logicsig_2.teal
+    type: LogicSig
+    version: 7
+    subroutines: []
+    functions:
+      - name: lsig2_case_7
+        dispatch_path: ["B0", "B58"]
+      - name: lsig2_case_8
+        dispatch_path: ["B0", "B1", "B57"]
+      - name: lsig2_case_9
+        dispatch_path: ["B0", "B1", "B2", "B56"]
+      - name: lsig2_case_10
+        dispatch_path: ["B0", "B1", "B2", "B3", "B55"]
+      - name: lsig2_case_11
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B54"]
+      - name: lsig2_case_12
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B53"]
+      - name: lsig2_case_13
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B52"]
+      - name: lsig2_case_14
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B51"]
+      - name: lsig2_case_15
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B50"]
+      - name: lsig2_case_16
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B49"]
+      - name: lsig2_case_17
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B48"]
+      - name: lsig2_case_18
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B47"]
+      - name: lsig2_case_19
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B46"]
+      - name: lsig2_case_20
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B45"]
+      - name: lsig2_case_21
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B44"]
+      - name: lsig2_case_22
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B43"]
+      - name: lsig2_case_23
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B42"]
+      - name: lsig2_case_24
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B41"]
+      - name: lsig2_case_25
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B40"]
+      - name: lsig2_case_26
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B39"]
+      - name: lsig2_case_27
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B38"]
+      - name: lsig2_case_28
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B37"]
+      - name: lsig2_case_29
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B36"]
+      - name: lsig2_case_30
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B35"]
+      - name: lsig2_case_31
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B34"]
+      - name: lsig2_case_32
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B33"]
+      - name: lsig2_case_33
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B32"]
+      - name: lsig2_case_34
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B31"]
+      - name: lsig2_case_35
+        dispatch_path: ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23", "B24", "B25", "B26", "B27", "B28", "B30"]
 # group configurations
 groups:
   - operation: case_1
@@ -257,546 +257,561 @@ groups:
         logic_sig:
           contract: LogicSig_1
           function: lsig1_case_5
-  # - operation: case_6
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_6
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_6
-  # - operation: case_7
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_7
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_7
-  #       absolute_index: 0
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_7
-  #       absolute_index: 1
-  # - operation: case_8
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_8
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_8
-  #       absolute_index: 0
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_8
-  #       absolute_index: 1
+  - operation: case_6
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_6
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_6
+  - operation: case_7
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_7
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_7
+        absolute_index: 0
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_7
+        absolute_index: 1
+  - operation: case_8
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_8
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_8
+        absolute_index: 0
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_8
+        absolute_index: 1
 
-  # - operation: case_9
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_9
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_9
-  #       absolute_index: 0
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_9
-  #       absolute_index: 1
+  - operation: case_9
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_9
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_9
+        absolute_index: 0
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_9
+        absolute_index: 1
       
-  # - operation: case_10
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_10
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_10
-  #       absolute_index: 0
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_10
-  #       absolute_index: 1      
+  - operation: case_10
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_10
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_10
+        absolute_index: 0
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_10
+        absolute_index: 1      
 
-  # - operation: case_11
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_11
-  #       has_logic_sig: true
-  #       absolute_index: 0
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_11
-  #       absolute_index: 1      
+  - operation: case_11
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_11
+        has_logic_sig: true
+        absolute_index: 0
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_11
+        absolute_index: 1      
 
-  # - operation: case_12
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_12
-  #       has_logic_sig: true
-  #       absolute_index: 0
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_12
-  #       absolute_index: 1      
+  - operation: case_12
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_12
+        has_logic_sig: true
+        absolute_index: 0
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_12
+        absolute_index: 1      
 
-  # - operation: case_13
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_13
-  #       absolute_index: 0
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_13
-  #       absolute_index: 1      
+  - operation: case_13
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_13
+        absolute_index: 0
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_13
+        absolute_index: 1      
 
-  # - operation: case_14
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_14
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_14
-  #       absolute_index: 0
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_14
-  #       absolute_index: 1
+  - operation: case_14
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_14
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_14
+        absolute_index: 0
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_14
+        absolute_index: 1
 
-  # - operation: case_15
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_15
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_15
-  #       absolute_index: 0
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_15
-  #       absolute_index: 1
+  - operation: case_15
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_15
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_15
+        absolute_index: 0
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_15
+        absolute_index: 1
 
-  # - operation: case_16
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_16
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_16
-  #       absolute_index: 0
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_16
-  #       absolute_index: 1
+  - operation: case_16
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_16
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_16
+        absolute_index: 0
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_16
+        absolute_index: 1
 
-  # - operation: case_17
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_17
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_17
-  #       absolute_index: 0
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_17
-  #       absolute_index: 1
+  - operation: case_17
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_17
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_17
+        absolute_index: 0
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_17
+        absolute_index: 1
 
-  # - operation: case_18
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_18
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_18
-  #       absolute_index: 0
-  #       relative_indexes:
-  #         - other_txn_id: T2
-  #           offset: 4
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_18
+  - operation: case_18
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_18
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_18
+        absolute_index: 0
+        relative_indexes:
+          - other_txn_id: T2
+            offset: 4
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_18
 
-  # - operation: case_19
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_19
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_19
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_19
-  #       relative_indexes:
-  #         - other_txn_id: T1
-  #           offset: -4
+  - operation: case_19
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_19
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_19
+        relative_indexes:
+          - other_txn_id: T2
+            offset: 4
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_19
+        # The user should not be required to give this offset.
+        # TODO: Tealer should compute maximum information about the indexes
+        # from the limited information given by the user.
+        relative_indexes:
+          - other_txn_id: T1
+            offset: -4
 
-  # - operation: case_20
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_20
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_20
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_20
-  #       absolute_index: 1
-  #       relative_indexes:
-  #         - other_txn_id: T1
-  #           offset: 5
+  - operation: case_20
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_20
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_20
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_20
+        absolute_index: 1
+        relative_indexes:
+          - other_txn_id: T1
+            offset: 5
         
-  # - operation: case_21
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_21
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_21
-  #       relative_indexes:
-  #         - other_txn_id: T2
-  #           offset: 2
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_21
+  - operation: case_21
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_21
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_21
+        relative_indexes:
+          - other_txn_id: T2
+            offset: 2
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_21
 
-  # - operation: case_22
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_22
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_22
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_22
-  #       relative_indexes:
-  #         - other_txn_id: T1
-  #           offset: -1
+  - operation: case_22
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_22
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_22
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_22
+        relative_indexes:
+          - other_txn_id: T1
+            offset: -1
 
-  # - operation: case_23
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_23
-  #       has_logic_sig: true
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_23
-  #       relative_indexes:
-  #         - other_txn_id: T1
-  #           offset: -1
+  - operation: case_23
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_23
+        has_logic_sig: true
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_23
+        relative_indexes:
+          - other_txn_id: T1
+            offset: -1
 
-  # - operation: case_24
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_24
-  #       has_logic_sig: true
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_24
-  #       relative_indexes:
-  #         - other_txn_id: T1
-  #           offset: -1
+  - operation: case_24
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_24
+        has_logic_sig: true
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_24
+        relative_indexes:
+          - other_txn_id: T1
+            offset: -1
 
-  # - operation: case_25
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_25
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_25
-  #       relative_indexes:
-  #         - other_txn_id: T1
-  #           offset: -1
+  - operation: case_25
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_25
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_25
+        relative_indexes:
+          - other_txn_id: T1
+            offset: -1
 
-  # - operation: case_26
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_26
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_26
-  #       relative_indexes:
-  #         - other_txn_id: T1
-  #           offset: -1
+  - operation: case_26
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_26
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_26
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_26
+        relative_indexes:
+          - other_txn_id: T1
+            offset: -1
 
-  # - operation: case_27
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_27
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_27
-  #       relative_indexes:
-  #         - other_txn_id: T2
-  #           offset: 1
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_27
-  #       relative_indexes:
-  #         - other_txn_id: T1
-  #           offset: -1
+  - operation: case_27
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_27
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_27
+        relative_indexes:
+          - other_txn_id: T2
+            offset: 1
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_27
+        relative_indexes:
+          - other_txn_id: T1
+            offset: -1
 
-  # - operation: case_28
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_28
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_28
-  #       relative_indexes:
-  #         - other_txn_id: T2
-  #           offset: 5
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_28
+  - operation: case_28
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_28
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_28
+        relative_indexes:
+          - other_txn_id: T2
+            offset: 5
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_28
 
-  # - operation: case_29
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_29
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_29
-  #       absolute_index: 0
-  #       relative_indexes:
-  #         - other_txn_id: T2
-  #           offset: 3
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_29
+  - operation: case_29
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_29
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_29
+        absolute_index: 0
+        relative_indexes:
+          - other_txn_id: T2
+            offset: 3
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_29
 
-  # - operation: case_30
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_30
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_30
-  #       absolute_index: 0
-  #       relative_indexes:
-  #         - other_txn_id: T2
-  #           offset: 4
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_30
+  - operation: case_30
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_30
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_30
+        absolute_index: 0
+        relative_indexes:
+          - other_txn_id: T2
+            offset: 4
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_30
 
-  # - operation: case_31
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_31
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_31
-  #       relative_indexes:
-  #         - other_txn_id: T2
-  #           offset: 4
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_31
+  - operation: case_31
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_31
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_31
+        relative_indexes:
+          - other_txn_id: T2
+            offset: 4
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_31
+        # The user should not be required to give this offset.
+        # TODO: Tealer should compute maximum information about the indexes
+        # from the limited information given by the user.
+        relative_indexes:
+          - other_txn_id: T1
+            offset: -4
 
-  # - operation: case_32
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_32
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_32
-  #       relative_indexes:
-  #         - other_txn_id: T2
-  #           offset: 5
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_32
+  - operation: case_32
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_32
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_32
+        relative_indexes:
+          - other_txn_id: T2
+            offset: 5
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_32
 
-  # - operation: case_33
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_33
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_33
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_33
-  #       absolute_index: 1
-  #       relative_indexes:
-  #         - other_txn_id: T1
-  #           offset: 5
+  - operation: case_33
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_33
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_33
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_33
+        absolute_index: 1
+        relative_indexes:
+          - other_txn_id: T1
+            offset: 5
 
-  # - operation: case_34
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_34
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_34
-  #       relative_indexes:
-  #         - other_txn_id: T2
-  #           offset: 2
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_34
+  - operation: case_34
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_34
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_34
+        relative_indexes:
+          - other_txn_id: T2
+            offset: 2
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_34
 
-  # - operation: case_35
-  #   transactions:
-  #     - txn_id: T1
-  #       txn_type: appl
-  #       application:
-  #         contract: App_1
-  #         function: app1_case_35
-  #       logic_sig:
-  #         contract: LogicSig_1
-  #         function: lsig1_case_35
-  #       absolute_index: 0
-  #       relative_indexes:
-  #         - other_txn_id: T2
-  #           offset: 3
-  #     - txn_id: T2
-  #       txn_type: pay
-  #       logic_sig:
-  #         contract: LogicSig_2
-  #         function: lsig2_case_35
+  - operation: case_35
+    transactions:
+      - txn_id: T1
+        txn_type: appl
+        application:
+          contract: App_1
+          function: app1_case_35
+        logic_sig:
+          contract: LogicSig_1
+          function: lsig1_case_35
+        absolute_index: 0
+        relative_indexes:
+          - other_txn_id: T2
+            offset: 3
+      - txn_id: T2
+        txn_type: pay
+        logic_sig:
+          contract: LogicSig_2
+          function: lsig2_case_35
 
   - operation: case_36
     transactions:

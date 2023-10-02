@@ -3,7 +3,9 @@ from typing import TYPE_CHECKING, List, Set, Tuple, Callable
 from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
 from tealer.analyses.dataflow.transaction_context.utils.key_helpers import (
     get_gtxn_at_index_key,
-    is_txn_or_gtxn,
+    is_value_matches_key,
+    get_absolute_index_key,
+    get_relative_index_key,
 )
 from tealer.teal.instructions.instructions import (
     Eq,
@@ -14,6 +16,7 @@ from tealer.teal.instructions.instructions import (
 from tealer.teal.global_field import ZeroAddress, CreatorAddress
 from tealer.utils.algorand_constants import ZERO_ADDRESS
 from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStackValue
+from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
@@ -153,24 +156,20 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
             return self._universal_set(), self._universal_set()
 
         if isinstance(arg1, UnknownStackValue):
-            if not isinstance(arg2, UnknownStackValue) and not is_txn_or_gtxn(
-                key, arg2.instruction
-            ):
+            if not isinstance(arg2, UnknownStackValue) and not is_value_matches_key(key, arg2):
                 # arg1 is unknown and arg2 is not related to "key"
                 return self._universal_set(), self._universal_set()
             # arg2 is related to "key" but arg1 is unknown
             asserted_addresses = set([SOME_ADDRESS])
         elif isinstance(arg2, UnknownStackValue):
-            if not isinstance(arg1, UnknownStackValue) and not is_txn_or_gtxn(
-                key, arg1.instruction
-            ):
+            if not isinstance(arg1, UnknownStackValue) and not is_value_matches_key(key, arg1):
                 # arg2 is unknown and arg1 is not related to "key"
                 return self._universal_set(), self._universal_set()
             # arg1 is related to "key" but arg2 is unknown
             asserted_addresses = set([SOME_ADDRESS])
-        elif is_txn_or_gtxn(key, arg1.instruction):
+        elif is_value_matches_key(key, arg1):
             asserted_addresses = self._get_asserted_address(arg2.instruction)
-        elif is_txn_or_gtxn(key, arg2.instruction):
+        elif is_value_matches_key(key, arg2):
             asserted_addresses = self._get_asserted_address(arg1.instruction)
 
         if asserted_addresses is None:
@@ -211,4 +210,25 @@ class AddrFields(DataflowTransactionContext):  # pylint: disable=too-few-public-
                     self._set_addr_values(
                         addr_field_obj(self._function.transaction_context(block).gtxn_context(idx)),
                         addr_values,
+                    )
+
+                    abs_addr_values = self._block_contexts[get_absolute_index_key(idx, key)][block]
+                    self._set_addr_values(
+                        addr_field_obj(
+                            self._function.transaction_context(block).absolute_context(idx)
+                        ),
+                        abs_addr_values,
+                    )
+
+                for offset in range(-(MAX_GROUP_SIZE - 1), MAX_GROUP_SIZE):
+                    if offset == 0:
+                        continue
+                    rel_addr_values = self._block_contexts[get_relative_index_key(offset, key)][
+                        block
+                    ]
+                    self._set_addr_values(
+                        addr_field_obj(
+                            self._function.transaction_context(block).relative_context(offset)
+                        ),
+                        rel_addr_values,
                     )
