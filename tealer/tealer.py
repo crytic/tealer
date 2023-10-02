@@ -49,12 +49,19 @@ def _check_common_things(
 class Tealer:
     """Base class for the tool"""
 
-    def __init__(self, contracts: Dict[str, "Teal"], groups: List["GroupTransaction"]):
+    def __init__(
+        self,
+        contracts: Dict[str, "Teal"],
+        groups: List["GroupTransaction"],
+        output_group: bool = False,
+    ):
         self._contracts = contracts
         self._groups = groups
 
         self._detectors: List[AbstractDetector] = []
         self._printers: List[AbstractPrinter] = []
+        # debug parameter to decide on the type of output reported by the detectors. TODO: Remove later.
+        self._output_group: bool = output_group
 
     @property
     def contracts(self) -> Dict[str, "Teal"]:
@@ -67,6 +74,10 @@ class Tealer:
     @property
     def groups(self) -> List["GroupTransaction"]:
         return self._groups
+
+    @property
+    def output_group(self) -> bool:
+        return self._output_group
 
     # from slither: Slither Class in slither/slither.py
     @property

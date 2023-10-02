@@ -2,8 +2,9 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-
 import yaml
+
+from tealer.utils.teal_enums import TransactionType
 
 
 GROUP_CONFIG_CONTRACT_TYPES = [
@@ -12,7 +13,15 @@ GROUP_CONFIG_CONTRACT_TYPES = [
     "ClearStateProgram",
 ]
 
-USER_CONFIG_TRANSACTION_TYPES = ["pay", "keyreg", "acfg", "axfer", "afrz", "appl", "txn"]
+USER_CONFIG_TRANSACTION_TYPES = {
+    "pay": TransactionType.Pay,
+    "keyreg": TransactionType.KeyReg,
+    "acfg": TransactionType.Acfg,
+    "axfer": TransactionType.Axfer,
+    "afrz": TransactionType.Afrz,
+    "appl": TransactionType.Appl,
+    "txn": TransactionType.Any,
+}
 
 
 class InvalidGroupConfiguration(Exception):
@@ -59,7 +68,7 @@ class GroupConfigFunction:
 @dataclass
 class GroupConfigContract:
     name: str
-    file_path: str
+    file_path: Path
     contract_type: str
     version: int
     subroutines: List[str]
@@ -81,7 +90,7 @@ class GroupConfigContract:
                 f'Contract name: {name}\n\nFollowing Required fields are absent: {", ".join(absent_fields)}'
             )
 
-        file_path: str = contract["file_path"]
+        file_path: Path = Path(contract["file_path"])
         contract_type: str = contract["type"]
         version: int = contract["version"]
         subroutines: List[str] = contract["subroutines"]
@@ -160,6 +169,10 @@ class GroupConfigTransaction:
 
         txn_id = transaction["txn_id"]
         txn_type = transaction["txn_type"]
+        if txn_type not in USER_CONFIG_TRANSACTION_TYPES:
+            raise InvalidGroupConfiguration(
+                f"Transaction: Unknown transaction type {txn_type} of transaction {txn_id}"
+            )
         application = transaction.get("application")
         has_logic_sig = transaction.get("has_logic_sig")
         logic_sig = transaction.get("logic_sig")
@@ -221,10 +234,37 @@ class GroupConfigTransaction:
 
 
 @dataclass
+class GroupConfigGroup:
+    operation: str
+    transactions: List[GroupConfigTransaction]
+
+    @staticmethod
+    def from_yaml(group: Dict[str, Any]) -> "GroupConfigGroup":
+        absent_fields = check_fields_are_present(["operation", "transactions"], group)
+        if absent_fields:
+            raise InvalidGroupConfiguration(
+                f'Group:\n\nFollowing Required fields are absent: {", ".join(absent_fields)}'
+            )
+
+        operation = group["operation"]
+        parsed_transactions = []
+        for transaction in group["transactions"]:
+            parsed_transactions.append(GroupConfigTransaction.from_yaml(transaction))
+
+        return GroupConfigGroup(operation, parsed_transactions)
+
+    def to_yaml(self) -> Dict[str, Any]:
+        return {
+            "operation": self.operation,
+            "transactions": [transaction.to_yaml() for transaction in self.transactions],
+        }
+
+
+@dataclass
 class GroupConfig:
     name: str
     contracts: List[GroupConfigContract]
-    groups: List[List[GroupConfigTransaction]]
+    groups: List[GroupConfigGroup]
 
     @staticmethod
     def from_yaml(config: Dict[str, Any]) -> "GroupConfig":
@@ -239,10 +279,7 @@ class GroupConfig:
             contracts.append(GroupConfigContract.from_yaml(contract))
         groups = []
         for group in config["groups"]:
-            parsed_group = []
-            for transaction in group:
-                parsed_group.append(GroupConfigTransaction.from_yaml(transaction))
-            groups.append(parsed_group)
+            groups.append(GroupConfigGroup.from_yaml(group))
 
         return GroupConfig(name, contracts, groups)
 
@@ -250,7 +287,7 @@ class GroupConfig:
         return {
             "name": self.name,
             "contracts": [contract.to_yaml() for contract in self.contracts],
-            "groups": [[transaction.to_yaml() for transaction in group] for group in self.groups],
+            "groups": [group.to_yaml() for group in self.groups],
         }
 
 
@@ -267,6 +304,9 @@ def read_config_from_file(file: Path) -> GroupConfig:
         d = yaml.safe_load(f.read())
     try:
         parsed_config = GroupConfig.from_yaml(d)
+        # given file_path is relative path of the contract from config file.
+        for contract in parsed_config.contracts:
+            contract.file_path = file.parent / contract.file_path
         return parsed_config
     except InvalidGroupConfiguration as err:
         print(f"\nInvalidGroupConfiguration:\n\n{err}")

@@ -4,7 +4,9 @@ from dataclasses import dataclass
 from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
 from tealer.analyses.dataflow.transaction_context.utils.key_helpers import (
     get_gtxn_at_index_key,
-    is_txn_or_gtxn,
+    is_value_matches_key,
+    get_absolute_index_key,
+    get_relative_index_key,
 )
 from tealer.teal.instructions.instructions import (
     Eq,
@@ -149,29 +151,25 @@ class FeeField(DataflowTransactionContext):
                 return FeeValue(), FeeValue()
 
             if isinstance(arg1, UnknownStackValue):
-                if not isinstance(arg2, UnknownStackValue) and not is_txn_or_gtxn(
-                    key, arg2.instruction
-                ):
+                if not isinstance(arg2, UnknownStackValue) and not is_value_matches_key(key, arg2):
                     # arg1 is unknown and arg2 is not related to "key"
                     return FeeValue(), FeeValue()
                 # arg2 is related to key and arg1 is some unknown value
                 compared_value = FeeValue(is_unknown=True)
             elif isinstance(arg2, UnknownStackValue):
-                if not isinstance(arg1, UnknownStackValue) and not is_txn_or_gtxn(
-                    key, arg1.instruction
-                ):
+                if not isinstance(arg1, UnknownStackValue) and not is_value_matches_key(key, arg1):
                     # arg2 is unknown and arg1 is not related to "key"
                     return FeeValue(), FeeValue()
                 # arg1 is related to "key" and arg2 is some unknown int value
                 compared_value = FeeValue(is_unknown=True)
-            elif is_txn_or_gtxn(key, arg1.instruction):
+            elif is_value_matches_key(key, arg1):
                 is_int, value = is_int_push_ins(arg2.instruction)
                 if is_int and isinstance(value, int):
                     compared_value = FeeValue(value=value)
                 else:
                     compared_value = FeeValue(is_unknown=True)
 
-            elif is_txn_or_gtxn(key, arg2.instruction):
+            elif is_value_matches_key(key, arg2):
                 is_int, value = is_int_push_ins(arg1.instruction)
                 if is_int and isinstance(value, int):
                     compared_value = FeeValue(value=value)
@@ -211,3 +209,28 @@ class FeeField(DataflowTransactionContext):
                     self._function.transaction_context(block).gtxn_context(
                         idx
                     ).max_fee = max_fee.value
+
+                abs_max_fee = self._block_contexts[get_absolute_index_key(idx, FEE_KEY)][block]
+                assert isinstance(abs_max_fee, FeeValue)
+                if abs_max_fee.is_unknown:
+                    self._function.transaction_context(block).absolute_context(
+                        idx
+                    ).max_fee_unknown = True
+                else:
+                    self._function.transaction_context(block).absolute_context(
+                        idx
+                    ).max_fee = abs_max_fee.value
+
+            for offset in range(-(MAX_GROUP_SIZE - 1), MAX_GROUP_SIZE):
+                if offset == 0:
+                    continue
+                rel_max_fee = self._block_contexts[get_relative_index_key(offset, FEE_KEY)][block]
+                assert isinstance(rel_max_fee, FeeValue)
+                if rel_max_fee.is_unknown:
+                    self._function.transaction_context(block).relative_context(
+                        offset
+                    ).max_fee_unknown = True
+                else:
+                    self._function.transaction_context(block).relative_context(
+                        offset
+                    ).max_fee = rel_max_fee.value

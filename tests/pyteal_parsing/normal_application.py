@@ -1,3 +1,4 @@
+# pylint: skip-file
 # pylint: disable=undefined-variable
 # type: ignore[name-defined]
 from pyteal import *  # pylint: disable=wildcard-import, unused-wildcard-import

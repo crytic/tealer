@@ -1,3 +1,4 @@
+# pylint: skip-file
 # pylint: disable=undefined-variable
 # type: ignore[name-defined]
 

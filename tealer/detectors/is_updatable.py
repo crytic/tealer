@@ -7,7 +7,10 @@ from tealer.detectors.abstract_detector import (
     DetectorClassification,
     DetectorType,
 )
-from tealer.detectors.utils import detect_missing_tx_field_validations_group
+from tealer.detectors.utils import (
+    detect_missing_tx_field_validations_group,
+    detect_missing_tx_field_validations_group_complete,
+)
 from tealer.utils.teal_enums import TealerTransactionType
 from tealer.utils.output import ExecutionPaths
 
@@ -72,6 +75,14 @@ Do not approve `UpdateApplication` type application calls.
             # return False if Txn Type can be UpdateApplication.
             # return True if Txn Type cannot be UpdateApplication.
             return not TealerTransactionType.ApplUpdateApplication in block_ctx.transaction_types
+
+        # there should be a better to decide which function to call ??
+        if self.tealer.output_group:
+            # mypy complains if the value is returned directly. Uesd the second suggestion mentioned here:
+            # https://mypy.readthedocs.io/en/stable/common_issues.html#variance
+            return list(
+                detect_missing_tx_field_validations_group_complete(self.tealer, self, checks_field)
+            )
 
         # paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
         #     self.teal, checks_field

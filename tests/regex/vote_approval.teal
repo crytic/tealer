@@ -1,0 +1,138 @@
+#pragma version 2
+txn ApplicationID
+int 0
+==
+bnz main_l18
+txn OnCompletion
+int DeleteApplication
+==
+bnz main_l17
+txn OnCompletion
+int UpdateApplication
+==
+bnz main_l16
+txn OnCompletion
+int CloseOut
+==
+bnz main_l13
+txn OnCompletion
+int OptIn
+==
+bnz main_l12
+txna ApplicationArgs 0
+byte "vote"
+==
+bnz main_l7
+err
+main_l7:
+global Round
+byte "VoteBegin"
+app_global_get
+>=
+global Round
+byte "VoteEnd"
+app_global_get
+<=
+&&
+bnz main_l9
+err
+main_l9:
+int 0
+global CurrentApplicationID
+byte "voted"
+app_local_get_ex
+store 1
+store 0
+load 1
+bnz main_l11
+txna ApplicationArgs 1
+txna ApplicationArgs 1
+app_global_get
+int 1
++
+app_global_put
+int 0
+byte "voted"
+txna ApplicationArgs 1
+app_local_put
+int 1
+return
+main_l11:
+int 0
+return
+main_l12:
+global Round
+byte "RegBegin"
+app_global_get
+>=
+global Round
+byte "RegEnd"
+app_global_get
+<=
+&&
+return
+main_l13:
+int 0
+global CurrentApplicationID
+byte "voted"
+app_local_get_ex
+store 1
+store 0
+global Round
+byte "VoteEnd"
+app_global_get
+<=
+load 1
+&&
+bnz main_l15
+main_l14:
+int 1
+return
+main_l15:
+load 0
+load 0
+app_global_get
+int 1
+-
+app_global_put
+b main_l14
+main_l16:
+txn Sender
+byte "Creator"
+app_global_get
+==
+return
+main_l17:
+txn Sender
+byte "Creator"
+app_global_get
+==
+return
+main_l18:
+byte "Creator"
+txn Sender
+app_global_put
+txn NumAppArgs
+int 4
+==
+bnz main_l20
+err
+main_l20:
+byte "RegBegin"
+txna ApplicationArgs 0
+btoi
+app_global_put
+byte "RegEnd"
+txna ApplicationArgs 1
+btoi
+app_global_put
+byte "VoteBegin"
+txna ApplicationArgs 2
+btoi
+app_global_put
+byte "VoteEnd"
+txna ApplicationArgs 3
+btoi
+app_global_put
+int 1
+return
