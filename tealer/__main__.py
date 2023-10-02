@@ -585,7 +585,6 @@ def main() -> None:
                 print("Regex works only for single contract")
                 return
             run_regex(tealer.contracts[contract_name], args.regex, default_path)
-            print(f"Result generated in {default_path}")
             return
 
         # TODO: decide on default classification for detectors in group transaction context.
