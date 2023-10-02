@@ -13,6 +13,7 @@ from tests.detectors.can_close_asset import can_close_asset_tests, new_can_close
 from tests.detectors.can_delete import can_delete_tests, new_can_delete_tests
 from tests.detectors.can_update import can_update_tests, new_can_update_tests
 from tests.detectors.optimizations.constant_gtxn import constant_gtxn
+from tests.detectors.optimizations.sender_access import sender_access
 from tests.detectors.optimizations.self_access import self_access
 from tests.detectors.rekeyto import missing_rekeyto_tests, new_missing_rekeyto_tests
 from tests.detectors.subroutine_patterns import subroutine_patterns_tests
@@ -87,6 +88,7 @@ def test_just_detectors(test: Tuple[str, Type[AbstractDetector], List[List[int]]
 # source code -> detector -> lust(expected lines)
 TESTS_INSTRUCTIONS_OUTPUT: List[Tuple[str, Type[AbstractDetector], List[List[int]]]] = [
     *constant_gtxn,
+    *sender_access,
     *self_access,
 ]
 

@@ -24,4 +24,5 @@ from tealer.detectors.fee_check import MissingFeeCheck
 from tealer.detectors.anyone_can_update import AnyoneCanUpdate
 from tealer.detectors.anyone_can_delete import AnyoneCanDelete
 from tealer.detectors.optimizations.constant_gtxn import ConstantGtxn
+from tealer.detectors.optimizations.sender_access import SenderAccess
 from tealer.detectors.optimizations.self_access import SelfAccess
