@@ -533,7 +533,7 @@ def fetch_contract(args: argparse.Namespace) -> Tuple[str, str]:
         raise TealerException from e
 
 
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals,too-many-branches
 def main() -> None:
     """Entry point of the tealer tool.
 
