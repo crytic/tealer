@@ -146,16 +146,18 @@ class TxnType(DataflowTransactionContext):  # pylint: disable=too-few-public-met
                 return set(U), set(U)
 
             true_values, false_values = None, None
-            if is_value_matches_key(key, arg1, ApplicationID):
+            if is_value_matches_key(key, arg1, ApplicationID) and value_3 is not None:
                 # TODO: ApplicationCreation transaction can be NoOp or OptIn
-                true_values, false_values = set([TealerTransactionType.ApplCreation]), set(
-                    APPLICATION_TRANSACTION_TYPES
-                ) - set([TealerTransactionType.ApplCreation])
-            elif is_value_matches_key(key, arg2, ApplicationID):
+                if isinstance(value_3, int) and value_3 == 0:
+                    true_values, false_values = set([TealerTransactionType.ApplCreation]), set(
+                        APPLICATION_TRANSACTION_TYPES
+                    ) - set([TealerTransactionType.ApplCreation])
+            elif is_value_matches_key(key, arg2, ApplicationID) and value_2 is not None:
                 # TODO: ApplicationCreation transaction can be NoOp or OptIn
-                true_values, false_values = set([TealerTransactionType.ApplCreation]), set(
-                    APPLICATION_TRANSACTION_TYPES
-                ) - set([TealerTransactionType.ApplCreation])
+                if isinstance(value_2, int) and value_2 == 0:
+                    true_values, false_values = set([TealerTransactionType.ApplCreation]), set(
+                        APPLICATION_TRANSACTION_TYPES
+                    ) - set([TealerTransactionType.ApplCreation])
 
             if is_value_matches_key(key, arg1, TypeEnum) and value_3 is not None:
                 compared_type = transaction_type_to_tealer_type(value_3)

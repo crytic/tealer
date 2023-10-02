@@ -17,6 +17,8 @@ def lsig2_case_8() -> Expr:
                     Txn.fee() < Int(10000),
                     Txn.close_remainder_to() == Global.zero_address(),
                     Txn.asset_close_to() == Global.zero_address(),
+                    Txn.on_completion() != OnComplete.UpdateApplication,
+                    Txn.on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -41,6 +43,10 @@ def lsig2_case_10() -> Expr:
                     Gtxn[1].close_remainder_to() == Global.zero_address(),
                     Gtxn[Int(0)].asset_close_to() == Global.zero_address(),
                     Gtxn[1].asset_close_to() == Global.zero_address(),
+                    Gtxn[0].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[0].on_completion() != OnComplete.DeleteApplication,
+                    Gtxn[Int(1)].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[Int(1)].on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -61,6 +67,12 @@ def lsig2_case_12() -> Expr:
                     Gtxn[1].fee() < Int(10000),
                     Gtxn[1].close_remainder_to() == Global.zero_address(),
                     Gtxn[1].asset_close_to() == Global.zero_address(),
+                )
+            ),
+            Assert(
+                And(
+                    Gtxn[1].on_completion() != OnComplete.UpdateApplication,
+                    Gtxn[1].on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -89,6 +101,8 @@ def lsig2_case_16() -> Expr:
                     Txn.fee() < Int(10000),
                     Txn.close_remainder_to() == Global.zero_address(),
                     Txn.asset_close_to() == Global.zero_address(),
+                    Txn.on_completion() != OnComplete.UpdateApplication,
+                    Txn.on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -111,6 +125,14 @@ def lsig2_case_19() -> Expr:
             Assert(Gtxn[Txn.group_index() - Int(4)].fee() < Int(10000)),
             Assert(Gtxn[Txn.group_index() - Int(4)].close_remainder_to() == Global.zero_address()),
             Assert(Gtxn[Txn.group_index() - Int(4)].asset_close_to() == Global.zero_address()),
+            Assert(
+                And(
+                    Gtxn[Txn.group_index() - Int(4)].on_completion()
+                    != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index() - Int(4)].on_completion()
+                    != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -123,6 +145,14 @@ def lsig2_case_20() -> Expr:
             Assert(Gtxn[Txn.group_index() + Int(5)].fee() < Int(10000)),
             Assert(Gtxn[Txn.group_index() + Int(5)].close_remainder_to() == Global.zero_address()),
             Assert(Gtxn[Txn.group_index() + Int(5)].asset_close_to() == Global.zero_address()),
+            Assert(
+                And(
+                    Gtxn[Txn.group_index() + Int(5)].on_completion()
+                    != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index() + Int(5)].on_completion()
+                    != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -141,10 +171,16 @@ def lsig2_case_22() -> Expr:
                     Gtxn[Txn.group_index() - Int(1)].fee() < Int(10000),
                     Gtxn[Txn.group_index() - Int(1)].close_remainder_to() == Global.zero_address(),
                     Gtxn[Txn.group_index() - Int(1)].asset_close_to() == Global.zero_address(),
+                    Gtxn[Txn.group_index() - Int(1)].on_completion()
+                    != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index() - Int(1)].on_completion()
+                    != OnComplete.DeleteApplication,
                     Txn.rekey_to() == Global.zero_address(),
                     Txn.fee() < Int(10000),
                     Txn.close_remainder_to() == Global.zero_address(),
                     Txn.asset_close_to() == Global.zero_address(),
+                    Txn.on_completion() != OnComplete.UpdateApplication,
+                    Txn.on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -165,6 +201,8 @@ def lsig2_case_24() -> Expr:
                     Txn.fee() < Int(10000),
                     Txn.close_remainder_to() == Global.zero_address(),
                     Txn.asset_close_to() == Global.zero_address(),
+                    Txn.on_completion() != OnComplete.UpdateApplication,
+                    Txn.on_completion() != OnComplete.DeleteApplication,
                 )
             ),
             Return(Int(1)),
@@ -191,6 +229,14 @@ def lsig2_case_28() -> Expr:
             Assert(Gtxn[Txn.group_index() - Int(4)].fee() < Int(10000)),
             Assert(Gtxn[Txn.group_index() - Int(4)].close_remainder_to() == Global.zero_address()),
             Assert(Gtxn[Txn.group_index() - Int(4)].asset_close_to() == Global.zero_address()),
+            Assert(
+                And(
+                    Gtxn[Txn.group_index() - Int(4)].on_completion()
+                    != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index() - Int(4)].on_completion()
+                    != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -211,6 +257,14 @@ def lsig2_case_31() -> Expr:
             Assert(Gtxn[Txn.group_index() - Int(4)].fee() < Int(10000)),
             Assert(Gtxn[Txn.group_index() - Int(4)].close_remainder_to() == Global.zero_address()),
             Assert(Gtxn[Txn.group_index() - Int(4)].asset_close_to() == Global.zero_address()),
+            Assert(
+                And(
+                    Gtxn[Txn.group_index() - Int(4)].on_completion()
+                    != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index() - Int(4)].on_completion()
+                    != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -223,6 +277,14 @@ def lsig2_case_32() -> Expr:
             Assert(Gtxn[Txn.group_index() - Int(4)].fee() < Int(10000)),
             Assert(Gtxn[Txn.group_index() - Int(4)].close_remainder_to() == Global.zero_address()),
             Assert(Gtxn[Txn.group_index() - Int(4)].asset_close_to() == Global.zero_address()),
+            Assert(
+                And(
+                    Gtxn[Txn.group_index() - Int(4)].on_completion()
+                    != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index() - Int(4)].on_completion()
+                    != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )
@@ -235,6 +297,14 @@ def lsig2_case_33() -> Expr:
             Assert(Gtxn[Txn.group_index() + Int(5)].fee() < Int(10000)),
             Assert(Gtxn[Txn.group_index() + Int(5)].close_remainder_to() == Global.zero_address()),
             Assert(Gtxn[Txn.group_index() + Int(5)].asset_close_to() == Global.zero_address()),
+            Assert(
+                And(
+                    Gtxn[Txn.group_index() + Int(5)].on_completion()
+                    != OnComplete.UpdateApplication,
+                    Gtxn[Txn.group_index() + Int(5)].on_completion()
+                    != OnComplete.DeleteApplication,
+                )
+            ),
             Return(Int(1)),
         ]
     )

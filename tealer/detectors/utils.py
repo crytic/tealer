@@ -49,8 +49,8 @@ def validated_in_block(
     Returns:
         returns True if the field(s) is validated in this block or else False
     """
+    # print(str(block), "\n", block, function.transaction_context(block).transaction_types)
     # if field is checked using `txn {field}`, return true
-
     if checks_field(function.transaction_context(block)):
         return True
     # if absolute index is given, check if field was checked by accessing it using gtxn(s) instructions`
@@ -411,7 +411,8 @@ def detect_missing_tx_field_validations_group_complete(  # pylint: disable=too-m
     transaction type is "UpdateApplication". if "UpdateApplication" is a possible value then the contract is considered vulnerable and is reported.
 
     In order to find whether the given contract is vulnerable, it is sufficient to check the leaf blocks: whether transaction field can
-    have target value and execution reaches end of a leaf block.
+    have target value and execution reaches end of a leaf block. Note, this is not always true for AnyoneCanUpdate and AnyoneCanDelete dectectors. These
+    detectors depend on two fields that are tracked by independent keys. However, the current implementation is sufficient for the common patterns.
     - Only LogicSigs are vulnerable to Stateless detectors.
     - If a transaction does not have LogicSig then it is considered to be not vulnerable by Stateless detectors.
 
@@ -435,6 +436,10 @@ def detect_missing_tx_field_validations_group_complete(  # pylint: disable=too-m
             if detector.TYPE == DetectorType.STATELESS and not txn.has_logic_sig:
                 continue
 
+            if detector.TYPE == DetectorType.STATEFULL and txn.application is None:
+                # check for the application transaction type???
+                continue
+
             if (
                 vulnerable_transaction_types is not None
                 and txn.type not in vulnerable_transaction_types
@@ -448,11 +453,13 @@ def detect_missing_tx_field_validations_group_complete(  # pylint: disable=too-m
             # the contract has logic sig
             # check if the contracts executed in the txn check the field.
             # logic sig contract is given
+            # print("A")
             if txn.logic_sig is not None and contract_checks_its_field(
                 txn.logic_sig, checks_field, txn.absoulte_index
             ):
                 # the logic sig checks its field, not vulnerable
                 continue
+            # print("B")
             if txn.application is not None and contract_checks_its_field(
                 txn.application, checks_field, txn.absoulte_index
             ):
@@ -500,7 +507,7 @@ def detect_missing_tx_field_validations_group_complete(  # pylint: disable=too-m
             if checked:
                 continue
 
-            # the logic contract is vulnerable. mark the operation/group as vulnerable
+            # the contract is vulnerable. mark the operation/group as vulnerable
             is_vulnerable = True
 
             if detector.TYPE == DetectorType.STATELESS:
@@ -508,6 +515,12 @@ def detect_missing_tx_field_validations_group_complete(  # pylint: disable=too-m
                     vulnerable_transactions[txn] = [txn.logic_sig]
                 else:
                     vulnerable_transactions[txn] = []
+            elif detector.TYPE == DetectorType.STATEFULL:
+                if txn.application is not None:
+                    vulnerable_transactions[txn] = [txn.application]
+                else:
+                    vulnerable_transactions[txn] = []
+
         if is_vulnerable:
             output.append(GroupTransactionOutput(detector, group_txn, vulnerable_transactions))
     return output

@@ -161,6 +161,14 @@ gtxn 1 AssetCloseTo
 global ZeroAddress
 ==
 &&
+gtxn 1 OnCompletion
+int UpdateApplication
+!=
+&&
+gtxn 1 OnCompletion
+int DeleteApplication
+!=
+&&
 assert
 int 1
 return
@@ -168,10 +176,6 @@ main_l31:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -207,9 +211,19 @@ txn ApplicationID
 int 1337
 ==
 &&
-txn OnCompletion
-int NoOp
-==
+txn GroupIndex
+int 3
++
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+txn GroupIndex
+int 3
++
+gtxns OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1
@@ -246,9 +260,19 @@ txn ApplicationID
 int 1337
 ==
 &&
-txn OnCompletion
-int NoOp
-==
+txn GroupIndex
+int 2
++
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+txn GroupIndex
+int 2
++
+gtxns OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1
@@ -273,9 +297,13 @@ txn ApplicationID
 int 1337
 ==
 &&
-txn OnCompletion
-int NoOp
-==
+gtxn 1 OnCompletion
+int UpdateApplication
+!=
+&&
+gtxn 1 OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1
@@ -284,10 +312,6 @@ main_l35:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 txn GroupIndex
 int 5
 +
@@ -315,6 +339,20 @@ int 5
 gtxns AssetCloseTo
 global ZeroAddress
 ==
+&&
+txn GroupIndex
+int 5
++
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+txn GroupIndex
+int 5
++
+gtxns OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1
@@ -323,10 +361,6 @@ main_l36:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 txn GroupIndex
 int 4
 +
@@ -354,6 +388,20 @@ int 4
 gtxns CloseRemainderTo
 global ZeroAddress
 ==
+&&
+txn GroupIndex
+int 4
++
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+txn GroupIndex
+int 4
++
+gtxns OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1
@@ -362,10 +410,6 @@ main_l37:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 txn GroupIndex
 int 4
 +
@@ -393,6 +437,20 @@ int 4
 gtxns CloseRemainderTo
 global ZeroAddress
 ==
+&&
+txn GroupIndex
+int 4
++
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+txn GroupIndex
+int 4
++
+gtxns OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1
@@ -425,6 +483,20 @@ gtxns AssetCloseTo
 global ZeroAddress
 ==
 &&
+txn GroupIndex
+int 3
++
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+txn GroupIndex
+int 3
++
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
 assert
 int 1
 return
@@ -432,10 +504,6 @@ main_l39:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -483,6 +551,28 @@ gtxns AssetCloseTo
 global ZeroAddress
 ==
 &&
+txn OnCompletion
+int UpdateApplication
+!=
+&&
+txn OnCompletion
+int DeleteApplication
+!=
+&&
+txn GroupIndex
+int 1
++
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+txn GroupIndex
+int 1
++
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
 assert
 int 1
 return
@@ -493,10 +583,6 @@ main_l42:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -504,10 +590,6 @@ main_l43:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -515,10 +597,6 @@ main_l44:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -526,10 +604,6 @@ main_l45:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -537,10 +611,6 @@ main_l46:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -561,6 +631,14 @@ gtxn 1 AssetCloseTo
 global ZeroAddress
 ==
 assert
+gtxn 1 OnCompletion
+int UpdateApplication
+!=
+gtxn 1 OnCompletion
+int DeleteApplication
+!=
+&&
+assert
 int 1
 return
 main_l48:
@@ -579,6 +657,14 @@ assert
 gtxn 0 AssetCloseTo
 global ZeroAddress
 ==
+assert
+gtxn 0 OnCompletion
+int UpdateApplication
+!=
+gtxn 0 OnCompletion
+int DeleteApplication
+!=
+&&
 assert
 int 1
 return
@@ -618,6 +704,24 @@ gtxn 1 AssetCloseTo
 global ZeroAddress
 ==
 &&
+gtxn 0 OnCompletion
+int UpdateApplication
+!=
+&&
+gtxn 0 OnCompletion
+int DeleteApplication
+!=
+&&
+int 1
+gtxns OnCompletion
+int UpdateApplication
+!=
+&&
+int 1
+gtxns OnCompletion
+int DeleteApplication
+!=
+&&
 assert
 int 1
 return
@@ -628,10 +732,6 @@ main_l51:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -639,10 +739,6 @@ main_l52:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -650,10 +746,6 @@ main_l53:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -661,10 +753,6 @@ main_l54:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -672,10 +760,6 @@ main_l55:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -683,10 +767,6 @@ main_l56:
 txn ApplicationID
 int 1337
 ==
-txn OnCompletion
-int NoOp
-==
-&&
 assert
 int 1
 return
@@ -708,6 +788,14 @@ global ZeroAddress
 txn AssetCloseTo
 global ZeroAddress
 ==
+&&
+txn OnCompletion
+int UpdateApplication
+!=
+&&
+txn OnCompletion
+int DeleteApplication
+!=
 &&
 assert
 int 1

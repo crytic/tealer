@@ -9,6 +9,10 @@ from tealer.detectors.all_detectors import (
     MissingFeeCheck,
     CanCloseAccount,
     CanCloseAsset,
+    IsUpdatable,
+    IsDeletable,
+    AnyoneCanDelete,
+    AnyoneCanUpdate,
 )
 from tealer.utils.command_line.group_config import read_config_from_file
 from tealer.utils.command_line.common import init_tealer_from_config
@@ -38,6 +42,26 @@ ALL_TESTS: List[Tuple[Path, Type[AbstractDetector], Path]] = [
         Path("tests/group_transactions/basic/config.yaml"),
         CanCloseAsset,
         Path("tests/group_transactions/basic/expected_output_asset_close_to.yaml"),
+    ),
+    (
+        Path("tests/group_transactions/basic/config.yaml"),
+        IsUpdatable,
+        Path("tests/group_transactions/basic/expected_output_update_delete.yaml"),
+    ),
+    (
+        Path("tests/group_transactions/basic/config.yaml"),
+        IsDeletable,
+        Path("tests/group_transactions/basic/expected_output_update_delete.yaml"),
+    ),
+    (
+        Path("tests/group_transactions/basic/config.yaml"),
+        AnyoneCanUpdate,
+        Path("tests/group_transactions/basic/expected_output_update_delete.yaml"),
+    ),
+    (
+        Path("tests/group_transactions/basic/config.yaml"),
+        AnyoneCanDelete,
+        Path("tests/group_transactions/basic/expected_output_update_delete.yaml"),
     ),
 ]
 
