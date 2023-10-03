@@ -212,10 +212,7 @@ def generic_options(parser: argparse.ArgumentParser) -> None:
     Add the generic cli flags options
 
     Args:
-        parser:
-
-    Returns:
-
+        parser: the parser to update
     """
 
     parser.add_argument(
@@ -264,12 +261,14 @@ def parse_args(
     group_detector = subparsers.add_parser("detect", help="Run the detectors")
     generic_options(group_detector)
 
+    available_printers = ", ".join(p.NAME for p in printer_classes)
     group_printer = subparsers.add_parser("print", help="Use a printer")
+    group_printer.add_argument("printers_to_run", action="store", help=f"Comma-separated list of printers to use, defaults to None. Available printers: {available_printers}")
     generic_options(group_printer)
 
     group_regex = subparsers.add_parser("regex", help="Use the regex engine")
-    generic_options(group_regex)
     group_regex.add_argument("regex_file", action="store", help="Regular expression file")
+    generic_options(group_regex)
 
     group_misc = parser.add_argument_group("Additional options")
 
@@ -327,17 +326,6 @@ def parse_args(
         action=ListDetectors,
         nargs=0,
         default=False,
-    )
-
-    available_printers = ", ".join(p.NAME for p in printer_classes)
-
-    group_printer.add_argument(
-        "--printer",
-        help="Comma-separated list of printers to use, defaults to None,"
-        f" available printers: {available_printers}",
-        action="store",
-        dest="printers_to_run",
-        default=None,
     )
 
     group_misc.add_argument(

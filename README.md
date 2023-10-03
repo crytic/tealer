@@ -23,7 +23,7 @@ To run a printer
 tealer print --contracts file.teal --printers printer_name
 ```
 
-To run the regex engine
+To run the regular expression engine
 
 ```bash
 tealer regex regex.txt --contracts file.teal

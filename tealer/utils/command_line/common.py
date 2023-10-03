@@ -183,6 +183,7 @@ def validate_command_line_options(args: argparse.Namespace) -> None:
     if not args.subcommand:
         print_and_exit("Use one of these subcommand: detect | print  | regex")
 
+
     if args.subcommand == "detect":
         if args.contracts is None and args.group_config is None:
             print_and_exit("--detect requires one of --contracts or --group-config")
