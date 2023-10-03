@@ -1,6 +1,4 @@
-#pragma version 8
-
-
+#pragma version 8 // B0
 int 1
 int 2
 int 3
@@ -10,22 +8,30 @@ dupn 1
 pushbytess b32(AA) base64 AA 0x00 "00"
 pushints 1 2 3 4 0x5
 callsub label1
-proto 1 2
+
+proto 1 2   // B1
 frame_dig 1
 frame_bury 1
 switch label2 label3
-match label2 label3
-box_create
+
+match label2 label3     // B2
+
+box_create              // B3
 box_extract
 box_replace
 box_del
 box_len
 box_get
 box_put
-label1:
+int 1
+return
+
+label1:                 // B4
 int 1
 retsub
-label2:
+
+label2:                 // B5
 int 2
-label3:
+
+label3:                 // B6
 int 3

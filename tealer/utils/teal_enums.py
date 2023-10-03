@@ -25,7 +25,7 @@ class TealerTransactionType(ComparableEnum):
         return self.name
 
 
-class TransactionTypeEnum(ComparableEnum):
+class TransactionType(ComparableEnum):
     Invalid = 0x0
     Pay = 0x1
     KeyReg = 0x02
@@ -33,6 +33,21 @@ class TransactionTypeEnum(ComparableEnum):
     Axfer = 0x4
     Afrz = 0x5
     Appl = 0x6
+
+    Any = 0x7
+    Unknown = 0x8
+
+
+def transaction_type_from_txt(txn_type: str) -> TransactionType:
+    return {
+        "pay": TransactionType.Pay,
+        "keyreg": TransactionType.KeyReg,
+        "acfg": TransactionType.Acfg,
+        "axfer": TransactionType.Axfer,
+        "afrz": TransactionType.Afrz,
+        "appl": TransactionType.Appl,
+        "txn": TransactionType.Any,
+    }[txn_type]
 
 
 class TransactionOnCompletion(ComparableEnum):
@@ -124,3 +139,49 @@ def transaction_type_to_tealer_type(value: Union[str, int]) -> "TealerTransactio
         value = ENUM_NAMES_TO_INT[value]
 
     return INT_TO_TYPE[value]
+
+
+class ExecutionMode(ComparableEnum):
+    """Execution mode of the instruction/function/contract.
+
+    Stateless: Contract do not have access to persistent storage, block information, etc.
+        All stateless contracts are LogicSigs.
+    Stateful: Contracts have access to persistent storage and are referred to as Applications.
+        A stateful contract can be an ApprovalProgram or a ClearStateProgram.
+    Any: Contract can be executed in any mode, either stateless or stateful.
+    """
+
+    STATELESS = 0
+    STATEFUL = 1
+    ANY = 2
+
+    def __str__(self) -> str:
+        return self.name.title()
+
+
+class ContractType(ComparableEnum):
+    """Type of the contract.
+
+    LogicSig: Contract is used to sign the transactions.
+    ApprovalProgram: Contract is deployed onto the chain and will be executed for calls with
+        on-complete value of NoOp, OptIn, CloseOut, UpdateApplication and DeleteApplication.
+    ClearStateProgram: Contract is deployed onto the chain and will be executed for calls with
+        on-complete value of ClearState.
+    """
+
+    LogicSig = 0
+    ApprovalProgram = 1
+    ClearStateProgram = 2
+
+    Unknown = 99
+
+    def __str__(self) -> str:
+        return self.name
+
+
+def contract_type_from_txt(contract_type: str) -> ContractType:
+    return {
+        "ApprovalProgram": ContractType.ApprovalProgram,
+        "ClearStateProgram": ContractType.ClearStateProgram,
+        "LogicSig": ContractType.LogicSig,
+    }[contract_type]

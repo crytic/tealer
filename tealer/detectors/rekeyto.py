@@ -1,25 +1,27 @@
 """Detector for finding execution paths missing RekeyTo check."""
 
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Tuple
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
     DetectorClassification,
     DetectorType,
 )
-from tealer.teal.basic_blocks import BasicBlock
 from tealer.detectors.utils import (
-    detect_missing_tx_field_validations,
-    detector_terminal_description,
+    detect_missing_tx_field_validations_group,
+    detect_missing_tx_field_validations_group_complete,
 )
+from tealer.utils.output import ExecutionPaths
 
 
 if TYPE_CHECKING:
-    from tealer.utils.output import SupportedOutput
+    from tealer.teal.basic_blocks import BasicBlock
+    from tealer.utils.output import ListOutput, GroupTransactionOutput
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
+    from tealer.teal.teal import Teal
 
 
-class MissingRekeyTo(AbstractDetector):
+class MissingRekeyTo(AbstractDetector):  # pylint: disable=too-few-public-methods
     """Detector to find execution paths missing RekeyTo check.
 
     TEAL, from version 2 onwards supports rekeying of accounts.
@@ -80,7 +82,7 @@ Alice signs the logic-sig to allow recurring payments to Bob.\
 Validate `RekeyTo` field in the LogicSig.
 """
 
-    def detect(self) -> "SupportedOutput":
+    def detect(self) -> "ListOutput":
         """Detect execution paths with missing CloseRemainderTo check.
 
         Returns:
@@ -89,27 +91,24 @@ Validate `RekeyTo` field in the LogicSig.
             information.
         """
 
-        paths_without_check: List[List[BasicBlock]] = []
-
         def checks_field(block_ctx: "BlockTransactionContext") -> bool:
             # return False if RekeyTo field can have any address.
             # return True if RekeyTo should have some address or zero address
             return not block_ctx.rekeyto.any_addr
 
-        paths_without_check += detect_missing_tx_field_validations(self.teal.bbs[0], checks_field)
+        # there should be a better to decide which function to call ??
+        if self.tealer.output_group:
+            # mypy complains if the value is returned directly. Uesd the second suggestion mentioned here:
+            # https://mypy.readthedocs.io/en/stable/common_issues.html#variance
+            return list(
+                detect_missing_tx_field_validations_group_complete(self.tealer, self, checks_field)
+            )
 
-        # paths might repeat as cfg traversed twice, once for each check
-        paths_without_check_unique = []
-        added_paths = []
-        for path in paths_without_check:
-            short = " -> ".join(map(str, [bb.idx for bb in path]))
-            if short in added_paths:
-                continue
-            paths_without_check_unique.append(path)
-            added_paths.append(short)
+        output: List[
+            Tuple["Teal", List[List["BasicBlock"]]]
+        ] = detect_missing_tx_field_validations_group(self.tealer, checks_field)
+        detector_output: "ListOutput" = []
+        for contract, vulnerable_paths in output:
+            detector_output.append(ExecutionPaths(contract, self, vulnerable_paths))
 
-        description = detector_terminal_description(self)
-
-        filename = "missing_rekeyto_check"
-
-        return self.generate_result(paths_without_check_unique, description, filename)
+        return detector_output

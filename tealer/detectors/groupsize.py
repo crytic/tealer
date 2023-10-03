@@ -1,6 +1,6 @@
 """Detector for finding execution paths missing GroupSize check."""
 
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Tuple
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
@@ -16,16 +16,19 @@ from tealer.teal.instructions.instructions import (
     Gtxnsa,
     Gtxnsas,
 )
-from tealer.teal.teal import Teal
 
 from tealer.utils.algorand_constants import MAX_GROUP_SIZE
 from tealer.utils.analyses import is_int_push_ins
 from tealer.analyses.utils.stack_ast_builder import construct_stack_ast, UnknownStackValue
-from tealer.detectors.utils import detector_terminal_description
+from tealer.detectors.utils import detect_missing_tx_field_validations_group
+from tealer.utils.output import ExecutionPaths
+
 
 if TYPE_CHECKING:
-    from tealer.utils.output import SupportedOutput
+    from tealer.teal.teal import Teal
+    from tealer.utils.output import ListOutput
     from tealer.teal.instructions.instructions import Instruction
+    from tealer.teal.context.block_transaction_context import BlockTransactionContext
 
 
 class MissingGroupSize(AbstractDetector):  # pylint: disable=too-few-public-methods
@@ -79,10 +82,6 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
 - Favor using ARC-4 ABI and relative indexes for group transactions.
 """
 
-    def __init__(self, teal: Teal):
-        super().__init__(teal)
-        self.results_number = 0
-
     @staticmethod
     def _accessed_using_absolute_index(bb: BasicBlock) -> bool:
         """Return True if a instruction in bb access a field using absolute index
@@ -97,6 +96,13 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
         `gtxns f` and `gtxnsa f i` take only one argument and it is the transaction index.
         `gtxnsas f` takes two arguments and transaction index is the first argument.
         Return True if the transaction index is pushed by an int instruction.
+
+        Args:
+            bb: A basic block of the CFG
+
+        Returns:
+            Returns True if a instruction in bb access a field of group transaction using
+            an absolute index. returns False otherwise.
         """
         stack_gtxns_ins: List["Instruction"] = []
         for ins in bb.instructions:
@@ -116,54 +122,7 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
                 return True
         return False
 
-    def _check_groupsize(
-        self,
-        bb: BasicBlock,
-        current_path: List[BasicBlock],
-        paths_without_check: List[List[BasicBlock]],
-        used_abs_index: bool,
-    ) -> None:
-        """Find execution paths with missing GroupSize check.
-
-        This function recursively explores the Control Flow Graph(CFG) of the
-        contract and reports execution paths with missing GroupSize
-        check.
-
-        This function is "in place", modifies arguments with the data it is
-        supposed to return.
-
-        Args:
-            bb: Current basic block being checked(whose execution is simulated.)
-            current_path: Current execution path being explored.
-            paths_without_check:
-                Execution paths with missing GroupSize check. This is a
-                "in place" argument. Vulnerable paths found by this function are
-                appended to this list.
-            used_abs_index: Should be True if absolute index in `current_path`.
-        """
-
-        # check for loops
-        if bb in current_path:
-            return
-
-        if MAX_GROUP_SIZE not in bb.transaction_context.group_sizes:
-            # GroupSize is checked
-            return
-
-        if not used_abs_index:
-            used_abs_index = self._accessed_using_absolute_index(bb)
-
-        current_path = current_path + [bb]
-        if not bb.next:
-            # leaf block
-            if used_abs_index:
-                # accessed a field using absolute index in this path.
-                paths_without_check.append(current_path)
-            return
-        for next_bb in bb.next:
-            self._check_groupsize(next_bb, current_path, paths_without_check, used_abs_index)
-
-    def detect(self) -> "SupportedOutput":
+    def detect(self) -> "ListOutput":
         """Detect execution paths with missing GroupSize check.
 
         Returns:
@@ -172,12 +131,30 @@ Eve receives 15 million wrapped-algos instead of 1 million wrapped-algos.\
             information.
         """
 
-        paths_without_check: List[List[BasicBlock]] = []
-        self._check_groupsize(self.teal.bbs[0], [], paths_without_check, False)
+        def checks_group_size(block_ctx: "BlockTransactionContext") -> bool:
+            # return True if group-size is checked in the path
+            # otherwise return False
+            if block_ctx.is_gtxn_context:
+                # gtxn_contexts have group-sizes, group-indices set to 0.
+                return False
+            return MAX_GROUP_SIZE not in block_ctx.group_sizes
 
-        description = detector_terminal_description(self)
-        filename = "missing_group_size"
+        def satisfies_report_condition(path: List["BasicBlock"]) -> bool:
 
-        results = self.generate_result(paths_without_check, description, filename)
+            for block in path:
+                if self._accessed_using_absolute_index(block):
+                    return True
+            return False
+
+        output: List[
+            Tuple["Teal", List[List["BasicBlock"]]]
+        ] = detect_missing_tx_field_validations_group(
+            self.tealer, checks_group_size, satisfies_report_condition
+        )
         construct_stack_ast.cache_clear()
-        return results
+
+        detector_output: "ListOutput" = []
+        for contract, vulnerable_paths in output:
+            detector_output.append(ExecutionPaths(contract, self, vulnerable_paths))
+
+        return detector_output

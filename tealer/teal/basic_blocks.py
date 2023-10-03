@@ -15,15 +15,15 @@ Classes:
 
 from typing import List, Optional, TYPE_CHECKING
 
-from tealer.teal.instructions.instructions import Instruction
-from tealer.teal.context.block_transaction_context import BlockTransactionContext
-
+from tealer.teal.instructions.instructions import Instruction, Callsub, Retsub
+from tealer.exceptions import TealerException
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
+    from tealer.teal.subroutine import Subroutine
 
 
-class BasicBlock:  # pylint: disable=too-many-instance-attributes
+class BasicBlock:  # pylint: disable=too-many-instance-attributes,too-many-public-methods
     """Class to represent basic blocks of the teal contract.
 
     A basic block is a sequence of instructions with a single entry
@@ -39,10 +39,8 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes
         self._next: List[BasicBlock] = []
         self._idx: int = 0
         self._teal: Optional["Teal"] = None
-        self._transaction_context = BlockTransactionContext()
-        self._callsub_block: Optional[BasicBlock] = None
-        self._sub_return_point: Optional[BasicBlock] = None
         self._tealer_comments: List[str] = []
+        self._subroutine: Optional["Subroutine"] = None
 
     def add_instruction(self, instruction: Instruction) -> None:
         """Append instruction to this basic block.
@@ -55,17 +53,29 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes
 
     @property
     def instructions(self) -> List[Instruction]:
-        """List of instructions part of this basic block."""
+        """List of instructions part of this basic block.
+
+        Returns:
+            list of basic block instructions.
+        """
         return self._instructions
 
     @property
     def entry_instr(self) -> Instruction:
-        """Entry(first) instruction of this basic block."""
+        """Entry(first) instruction of this basic block.
+
+        Returns:
+            The entry instruction of the basic block.
+        """
         return self._instructions[0]
 
     @property
     def exit_instr(self) -> Instruction:
-        """Exit(Last) instruction of this basic block."""
+        """Exit(Last) instruction of this basic block.
+
+        Returns:
+            The exit instruction of the basic block.
+        """
         return self._instructions[-1]
 
     def add_prev(self, prev_bb: "BasicBlock") -> None:
@@ -102,17 +112,29 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes
 
     @property
     def prev(self) -> List["BasicBlock"]:
-        """List of previous basic blocks to this basic block."""
+        """List of previous basic blocks to this basic block.
+
+        Returns:
+            list of previous instructions that might have been executed before this block.
+        """
         return self._prev
 
     @property
     def next(self) -> List["BasicBlock"]:
-        """List of next basic blocks to this basic block."""
+        """List of next basic blocks to this basic block.
+
+        Returns:
+            list of next basic blocks that might be executed after this block.
+        """
         return self._next
 
     @property
     def idx(self) -> int:
-        """Index of this basic block when ordered by line number of entry instruction."""
+        """Index of this basic block when ordered by line number of entry instruction.
+
+        Returns:
+            index of this basic block in list of all basic blocks.
+        """
         return self._idx
 
     @idx.setter
@@ -120,35 +142,21 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes
         self._idx = i
 
     @property
-    def callsub_block(self) -> Optional["BasicBlock"]:
-        """If this block is the return point of a subroutine, `callsub_block` is the block
-        that called the subroutine.
-        """
-        return self._callsub_block
-
-    @callsub_block.setter
-    def callsub_block(self, b: "BasicBlock") -> None:
-        self._callsub_block = b
-
-    @property
-    def sub_return_point(self) -> Optional["BasicBlock"]:
-        """If a subroutine is executed after this block i.e exit instruction is callsub.
-        then, sub_return_point will be basic block that will be executed after the subroutine.
-        """
-        return self._sub_return_point
-
-    @sub_return_point.setter
-    def sub_return_point(self, b: "BasicBlock") -> None:
-        self._sub_return_point = b
-
-    @property
     def cost(self) -> int:
-        """cost of executing all instructions in this basic block"""
+        """cost of executing all instructions in this basic block
+
+        Returns:
+            Returns the OpcodeCost of executing all instructions in the block.
+        """
         return sum(ins.cost for ins in self.instructions)
 
     @property
     def teal(self) -> Optional["Teal"]:
-        """Teal instance of the contract this basic block belongs to."""
+        """Teal instance of the contract this basic block belongs to.
+
+        Returns:
+            Returns the contract of this basic block.
+        """
         return self._teal
 
     @teal.setter
@@ -156,12 +164,103 @@ class BasicBlock:  # pylint: disable=too-many-instance-attributes
         self._teal = teal_instance
 
     @property
-    def transaction_context(self) -> "BlockTransactionContext":
-        return self._transaction_context
+    def subroutine(self) -> "Subroutine":
+        """Subroutine instrance of the subroutine this basic block belongs to.
+
+        Returns:
+            Returns the subroutine this block belongs to.
+
+        Raises:
+            TealerException: raises error if subroutine is not set during parsing.
+        """
+        if self._subroutine is None:
+            raise TealerException(f"subroutine of B{self._idx} is not initialized")
+        return self._subroutine
+
+    @subroutine.setter
+    def subroutine(self, subroutine_instance: "Subroutine") -> None:
+        self._subroutine = subroutine_instance
+
+    @property
+    def is_callsub_block(self) -> bool:
+        """Return True if the block calls a subroutine.
+
+        Returns:
+            Returns True if this block has a callsub instruction.
+        """
+        return isinstance(self.exit_instr, Callsub)
+
+    @property
+    def called_subroutine(self) -> "Subroutine":
+        """Return the subroutine called by this subroutine.
+
+        Returns:
+            Returns the subroutine called by the callsub instruction in this block.
+
+        Raises:
+            TealerException: if this block is not a callsub_block.
+        """
+        if not isinstance(self.exit_instr, Callsub):
+            raise TealerException("called subroutine of a non callsub block is accessed")
+        return self.exit_instr.called_subroutine
+
+    @property
+    def sub_return_point(self) -> Optional["BasicBlock"]:
+        """Return the return point block of this block.
+
+        Returns:
+            The subroutine return_point block of this(callsub) block.
+            Returns None if this callsub block does not have a return point block. This happens when
+            callsub instruction is the last instruction in the contract and The called subroutine always exits
+            the program.
+
+        Raises:
+            TealerException: if this block is not a callsub_block.
+        """
+        if not self.is_callsub_block:
+            raise TealerException("sub_return_point block of a non callsub block is accessed")
+        return self.next[0] if self.next else None
+
+    @property
+    def is_sub_return_point(self) -> bool:
+        """Return True if this block is executed after the subroutine i.e next block of callsub_block
+
+        Returns:
+            Returns True if this block is executed a subroutine: The next block of a block with callsub
+            instruction. Otherwise, returns False.
+        """
+        for bi in self.prev:
+            if bi.is_callsub_block:
+                return True
+        return False
+
+    @property
+    def callsub_block(self) -> "BasicBlock":
+        """Return the callsub_block which calls the subroutine. This block is the return point block.
+
+        Returns:
+            Return the callsub_block which calls the subroutine that returns the execution to this
+            basic block.
+
+        Raises:
+            TealerException: if this block is not a sub_return_point block.
+        """
+        for bi in self.prev:
+            if bi.is_callsub_block:
+                return bi
+        raise TealerException("callsub_block of a non sub_return_point block is accessed")
+
+    @property
+    def is_retsub_block(self) -> bool:
+        return isinstance(self.exit_instr, Retsub)
 
     @property
     def tealer_comments(self) -> List[str]:
-        """Additional comments added by tealer for each basic block in the output CFG."""
+        """Additional comments added by tealer for each basic block in the output CFG.
+
+        Returns:
+            Returns the additional comments added by tealer for this basic block.
+        """
         return self._tealer_comments
 
     @tealer_comments.setter

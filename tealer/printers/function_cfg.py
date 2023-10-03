@@ -13,11 +13,11 @@ Classes:
         in the contract. The CFGs will be saved in dot format.
 """
 
+import os
 from pathlib import Path
-from typing import Optional
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.utils.output import all_subroutines_to_dot
+from tealer.utils.output import all_subroutines_to_dot, ROOT_OUTPUT_DIRECTORY
 
 
 class PrinterFunctionCFG(AbstractPrinter):  # pylint: disable=too-few-public-methods
@@ -33,14 +33,10 @@ class PrinterFunctionCFG(AbstractPrinter):  # pylint: disable=too-few-public-met
     HELP = "Export the CFG of each subroutine"
     WIKI_URL = "https://github.com/crytic/tealer/wiki/Printer-documentation#subroutine-cfg"
 
-    def print(self, dest: Optional[Path] = None) -> None:
-        """Export CFG of each subroutine defined in the contract.
-
-        Args:
-            dest (Optional[Path]): directory to save the generated dot files. Uses current directory
-            by default.
-        """
-        if dest is None:
-            dest = Path(".")
+    def print(self) -> None:
+        """Export CFG of each subroutine defined in the contract."""
+        # outputs multiple files: set the dir to {ROOT_DIRECTORY}/{CONTRACT_NAME}/{"print-"PRINTER_NAME}
+        dest = ROOT_OUTPUT_DIRECTORY / Path(self.teal.contract_name) / Path(f"print-{self.NAME}")
+        os.makedirs(dest, exist_ok=True)
 
         all_subroutines_to_dot(self.teal, dest)

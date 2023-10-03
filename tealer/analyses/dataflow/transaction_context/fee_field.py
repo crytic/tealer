@@ -1,7 +1,13 @@
 from typing import TYPE_CHECKING, List, Tuple, Optional
 from dataclasses import dataclass
 
-from tealer.analyses.dataflow.generic import DataflowTransactionContext
+from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
+from tealer.analyses.dataflow.transaction_context.utils.key_helpers import (
+    get_gtxn_at_index_key,
+    is_value_matches_key,
+    get_absolute_index_key,
+    get_relative_index_key,
+)
 from tealer.teal.instructions.instructions import (
     Eq,
     Neq,
@@ -16,7 +22,7 @@ from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStac
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
-
+    from tealer.teal.basic_blocks import BasicBlock
 
 # It's not always possible to know the integer value used to compare Fee.
 # All the unknown values are represented using FeeValue(is_unknown=True).
@@ -100,8 +106,9 @@ class FeeField(DataflowTransactionContext):
         Args:
             comparison_ins: Comparison operator.
             compared_value: fee value being compared with.
+
         Returns:
-            Tuple[int, int]: Max possible value that will make the comparison instruction return True and
+            Max possible value that will make the comparison instruction return True and
                 Max possible value that will make the comparison False.
         """
         # U = max_possible_value  # universal set
@@ -144,29 +151,25 @@ class FeeField(DataflowTransactionContext):
                 return FeeValue(), FeeValue()
 
             if isinstance(arg1, UnknownStackValue):
-                if not isinstance(arg2, UnknownStackValue) and not self._is_txn_or_gtxn(
-                    key, arg2.instruction
-                ):
+                if not isinstance(arg2, UnknownStackValue) and not is_value_matches_key(key, arg2):
                     # arg1 is unknown and arg2 is not related to "key"
                     return FeeValue(), FeeValue()
                 # arg2 is related to key and arg1 is some unknown value
                 compared_value = FeeValue(is_unknown=True)
             elif isinstance(arg2, UnknownStackValue):
-                if not isinstance(arg1, UnknownStackValue) and not self._is_txn_or_gtxn(
-                    key, arg1.instruction
-                ):
+                if not isinstance(arg1, UnknownStackValue) and not is_value_matches_key(key, arg1):
                     # arg2 is unknown and arg1 is not related to "key"
                     return FeeValue(), FeeValue()
                 # arg1 is related to "key" and arg2 is some unknown int value
                 compared_value = FeeValue(is_unknown=True)
-            elif self._is_txn_or_gtxn(key, arg1.instruction):
+            elif is_value_matches_key(key, arg1):
                 is_int, value = is_int_push_ins(arg2.instruction)
                 if is_int and isinstance(value, int):
                     compared_value = FeeValue(value=value)
                 else:
                     compared_value = FeeValue(is_unknown=True)
 
-            elif self._is_txn_or_gtxn(key, arg2.instruction):
+            elif is_value_matches_key(key, arg2):
                 is_int, value = is_int_push_ins(arg1.instruction)
                 if is_int and isinstance(value, int):
                     compared_value = FeeValue(value=value)
@@ -188,17 +191,46 @@ class FeeField(DataflowTransactionContext):
         return res
 
     def _store_results(self) -> None:
-        for b in self._teal.bbs:
-            max_fee = self._block_contexts[FEE_KEY][b]
+        for block in self._function.blocks:
+            max_fee = self._block_contexts[FEE_KEY][block]
             assert isinstance(max_fee, FeeValue)
             if max_fee.is_unknown:
-                b.transaction_context.max_fee_unknown = True
+                self._function.transaction_context(block).max_fee_unknown = True
             else:
-                b.transaction_context.max_fee = max_fee.value
+                self._function.transaction_context(block).max_fee = max_fee.value
             for idx in range(MAX_GROUP_SIZE):
-                max_fee = self._block_contexts[self.gtx_key(idx, FEE_KEY)][b]
+                max_fee = self._block_contexts[get_gtxn_at_index_key(idx, FEE_KEY)][block]
                 assert isinstance(max_fee, FeeValue)
                 if max_fee.is_unknown:
-                    b.transaction_context.gtxn_context(idx).max_fee_unknown = True
+                    self._function.transaction_context(block).gtxn_context(
+                        idx
+                    ).max_fee_unknown = True
                 else:
-                    b.transaction_context.gtxn_context(idx).max_fee = max_fee.value
+                    self._function.transaction_context(block).gtxn_context(
+                        idx
+                    ).max_fee = max_fee.value
+
+                abs_max_fee = self._block_contexts[get_absolute_index_key(idx, FEE_KEY)][block]
+                assert isinstance(abs_max_fee, FeeValue)
+                if abs_max_fee.is_unknown:
+                    self._function.transaction_context(block).absolute_context(
+                        idx
+                    ).max_fee_unknown = True
+                else:
+                    self._function.transaction_context(block).absolute_context(
+                        idx
+                    ).max_fee = abs_max_fee.value
+
+            for offset in range(-(MAX_GROUP_SIZE - 1), MAX_GROUP_SIZE):
+                if offset == 0:
+                    continue
+                rel_max_fee = self._block_contexts[get_relative_index_key(offset, FEE_KEY)][block]
+                assert isinstance(rel_max_fee, FeeValue)
+                if rel_max_fee.is_unknown:
+                    self._function.transaction_context(block).relative_context(
+                        offset
+                    ).max_fee_unknown = True
+                else:
+                    self._function.transaction_context(block).relative_context(
+                        offset
+                    ).max_fee = rel_max_fee.value

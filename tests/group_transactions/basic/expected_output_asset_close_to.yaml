@@ -1,0 +1,15 @@
+name: BasicRekeyTo
+operations:
+  - operation: case_14
+    vulnerable_transactions:
+      - txn_id: T2
+        contracts:
+          - contract: LogicSig_2
+            function: lsig2_case_14
+  - operation: case_25
+    vulnerable_transactions:
+      - txn_id: T2
+        contracts:
+          - contract: LogicSig_2
+            function: lsig2_case_25
+  

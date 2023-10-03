@@ -1,22 +1,25 @@
 """Detector for finding execution paths missing AssetCloseTo check."""
 
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Tuple
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
     DetectorClassification,
     DetectorType,
 )
-from tealer.teal.basic_blocks import BasicBlock
 from tealer.detectors.utils import (
-    detect_missing_tx_field_validations,
-    detector_terminal_description,
+    detect_missing_tx_field_validations_group,
+    detect_missing_tx_field_validations_group_complete,
 )
 from tealer.utils.teal_enums import TealerTransactionType
+from tealer.utils.output import ExecutionPaths
+from tealer.utils.teal_enums import TransactionType
 
 if TYPE_CHECKING:
-    from tealer.utils.output import SupportedOutput
+    from tealer.teal.basic_blocks import BasicBlock
+    from tealer.utils.output import ListOutput
     from tealer.teal.context.block_transaction_context import BlockTransactionContext
+    from tealer.teal.teal import Teal
 
 
 class CanCloseAsset(AbstractDetector):  # pylint: disable=too-few-public-methods
@@ -76,7 +79,7 @@ Alice signs the logic-sig to allow recurring payments to Bob in USDC.\
 Validate `AssetCloseTo` field in the LogicSig.
 """
 
-    def detect(self) -> "SupportedOutput":
+    def detect(self) -> "ListOutput":
         """Detect execution paths with missing AssetCloseTo check.
 
         Returns:
@@ -94,12 +97,24 @@ Validate `AssetCloseTo` field in the LogicSig.
                 and TealerTransactionType.Axfer in block_ctx.transaction_types
             )
 
-        paths_without_check: List[List[BasicBlock]] = detect_missing_tx_field_validations(
-            self.teal.bbs[0], checks_field
-        )
+        # there should be a better to decide which function to call ??
+        if self.tealer.output_group:
+            # mypy complains if the value is returned directly. Uesd the second suggestion mentioned here:
+            # https://mypy.readthedocs.io/en/stable/common_issues.html#variance
+            return list(
+                detect_missing_tx_field_validations_group_complete(
+                    self.tealer,
+                    self,
+                    checks_field,
+                    [TransactionType.Any, TransactionType.Unknown, TransactionType.Axfer],
+                )
+            )
 
-        description = detector_terminal_description(self)
+        output: List[
+            Tuple["Teal", List[List["BasicBlock"]]]
+        ] = detect_missing_tx_field_validations_group(self.tealer, checks_field)
+        detector_output: "ListOutput" = []
+        for contract, vulnerable_paths in output:
+            detector_output.append(ExecutionPaths(contract, self, vulnerable_paths))
 
-        filename = "can_close_asset"
-
-        return self.generate_result(paths_without_check, description, filename)
+        return detector_output

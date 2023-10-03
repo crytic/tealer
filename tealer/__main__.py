@@ -63,11 +63,11 @@ To choose printers to run from the available list:
 """
 
 import argparse
-import re
-import os
-import sys
 import json
 import logging
+import os
+import re
+import sys
 from pathlib import Path
 from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional, Union, Sequence
 
@@ -76,29 +76,42 @@ from pkg_resources import require  # type: ignore
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.exceptions import TealerException
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.teal.instructions.instructions import ContractType
-from tealer.teal.parse_teal import parse_teal
 from tealer.utils.algoexplorer import (
     get_application_using_app_id,
     logic_sig_from_contract_account,
     logic_sig_from_txn_id,
 )
-from tealer.utils.command_line import (
-    get_detectors_and_printers,
+from tealer.utils.command_line.command_output import (
     output_detectors,
     output_printers,
     output_to_markdown,
     output_wiki,
 )
+from tealer.utils.command_line.common import (
+    get_detectors_and_printers,
+    validate_command_line_options,
+    # handle_detect,
+    init_tealer_from_single_contract,
+    init_tealer_from_config,
+)
+from tealer.utils.command_line.group_config import (
+    read_config_from_file,
+)
+from tealer.utils.output import ROOT_OUTPUT_DIRECTORY, ExecutionPaths
+from tealer.utils.regex.regex import run_regex
+from tealer.utils.teal_enums import ExecutionMode
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
-    from tealer.utils.output import SupportedOutput
+    from tealer.tealer import Tealer
+    from tealer.utils.output import ListOutput
 
 
 # from slither: slither/__main__.py
 def choose_detectors(
-    args: argparse.Namespace, all_detector_classes: List[Type[AbstractDetector]], teal: "Teal"
+    args: argparse.Namespace,
+    all_detector_classes: List[Type[AbstractDetector]],
+    teal: Optional["Teal"] = None,
 ) -> List[Type[AbstractDetector]]:
     """Select detectors from available list based on command line arguments.
 
@@ -111,6 +124,7 @@ def choose_detectors(
         args: Namespace object representing the command line arguments selected
             by the user.
         all_detector_classes: list of all available detectors.
+        teal: The Teal contract.
 
     Returns:
         list of chosen detectors from the available list using the tealer
@@ -130,9 +144,9 @@ def choose_detectors(
         # IF there is no detectors provided:
         # - Stateful: run everything expect the stateless detectors
         # - Stateless: run only stateless and stateless & stateful
-        if teal.mode == ContractType.STATEFULL:
+        if teal is not None and teal.mode == ExecutionMode.STATEFUL:
             detectors_to_run = [d for d in detectors_to_run if d.TYPE != DetectorType.STATELESS]
-        if teal.mode == ContractType.STATELESS:
+        if teal is not None and teal.mode == ExecutionMode.STATELESS:
             detectors_to_run = [
                 d
                 for d in detectors_to_run
@@ -169,7 +183,7 @@ def choose_printers(
     Args:
         args: Namespace object representing the command line arguments selected
             by the user.
-        all_detector_classes: list of all available printers.
+        all_printer_classes: list of all available printers.
 
     Returns:
         list of chosen printers from the available list based on tealer
@@ -211,10 +225,8 @@ def parse_args(
 
     parser = argparse.ArgumentParser(
         description="TealAnalyzer",
-        usage="tealer program.teal [flag]",
+        usage="tealer [--init | --detect | --print ] --contracts ...",
     )
-
-    parser.add_argument("program", help="program.teal")
 
     parser.add_argument(
         "--version",
@@ -224,15 +236,42 @@ def parse_args(
     )
 
     parser.add_argument(
+        "--contracts",
+        help="List of files/directories to search for .teal files",
+        action="store",
+        nargs="+",
+    )
+
+    parser.add_argument(
+        "--group-config",
+        help="The group configuration file",
+        action="store",
+    )
+
+    parser.add_argument(
         "--network",
         help='Algorand network to fetch the contract from, ("mainnet" or "testnet"). defaults to "mainnet".',
         action="store",
         default="mainnet",
     )
 
+    parser.add_argument(
+        "--regex",
+        help="Provide the regex file",
+        action="store",
+    )
+
+    group_init = parser.add_argument_group("Initialize")
     group_detector = parser.add_argument_group("Detectors")
     group_printer = parser.add_argument_group("Printers")
     group_misc = parser.add_argument_group("Additional options")
+
+    group_init.add_argument(
+        "--init",
+        help="Initializes group-config.yaml file given the contracts",
+        action="store_true",
+        default=False,
+    )
 
     group_detector.add_argument(
         "--list-detectors",
@@ -275,13 +314,6 @@ def parse_args(
     )
 
     group_detector.add_argument(
-        "--all-paths-in-one",
-        help="highlights all the vunerable paths in a single file.",
-        action="store_true",
-        default=False,
-    )
-
-    group_detector.add_argument(
         "--filter-paths",
         help="Excludes execution paths matching the regex from detector's output.",
         action="store",
@@ -312,13 +344,6 @@ def parse_args(
         help='Export the results as a JSON file ("--json -" to export to stdout)',
         action="store",
         default=None,
-    )
-
-    group_misc.add_argument(
-        "--dest",
-        help="destination to save the output files, defaults to current directory",
-        action="store",
-        default=".",
     )
 
     parser.add_argument("--debug", help=argparse.SUPPRESS, action="store_true", default=False)
@@ -400,17 +425,14 @@ class OutputWiki(argparse.Action):  # pylint: disable=too-few-public-methods
 
 
 def handle_detectors_and_printers(
-    args: argparse.Namespace,
-    teal: "Teal",
+    tealer: "Tealer",
     detectors: List[Type[AbstractDetector]],
     printers: List[Type[AbstractPrinter]],
-) -> Tuple[List["SupportedOutput"], List]:
+) -> Tuple[List["ListOutput"], List]:
     """Util function to register and run detectors, printers.
 
     Args:
-        args: Namespace object representing the command line arguments selected
-            by the user.
-        teal: Teal object representing the contract being analyzed.
+        tealer: Teal object representing the contract being analyzed.
         detectors: Detector classes to register and run.
         printers: Printer classes to register and run.
 
@@ -419,18 +441,19 @@ def handle_detectors_and_printers(
     """
 
     for detector_cls in detectors:
-        teal.register_detector(detector_cls)
+        tealer.register_detector(detector_cls)
 
     for printer_cls in printers:
-        teal.register_printer(printer_cls)
+        tealer.register_printer(printer_cls)
 
-    return teal.run_detectors(), teal.run_printers(Path(args.dest))
+    return tealer.run_detectors(), tealer.run_printers()
 
 
 def handle_output(
     args: argparse.Namespace,
-    detector_results: List["SupportedOutput"],
+    detector_results: List["ListOutput"],
     _printer_results: List,
+    teal: "Teal",
     error: Optional[str],
 ) -> None:
     """Util function to output tealer results.
@@ -443,18 +466,30 @@ def handle_output(
             by the user.
         detector_results: results of running the selected detectors.
         _printer_results: results of running the selected printers.
+        teal: The contract.
+        error: Error string if any detector or printer resulted in an error.
     """
+    expanded_detector_results: "ListOutput" = []
+    for result in detector_results:
+        expanded_detector_results.extend(result)
 
+    output_directory = ROOT_OUTPUT_DIRECTORY / Path(teal.contract_name)
+    os.makedirs(output_directory, exist_ok=True)
     if args.json is None:
 
         if error is not None:
             print(f"Error: {error}")
             sys.exit(-1)
 
-        for output in detector_results:
-            output.write_to_files(args.dest, args.all_paths_in_one)
+        detectors_with_0_results: List["AbstractDetector"] = []
+        for output in expanded_detector_results:
+            if not output.generate_output(output_directory):
+                detectors_with_0_results.append(output.detector)
+        if detectors_with_0_results:
+            detectors_with_0_results_str = ", ".join(d.NAME for d in detectors_with_0_results)
+            print(f"\n 0 results found for {detectors_with_0_results_str}.")
     else:
-        json_results = [output.to_json() for output in detector_results]
+        json_results = [output.to_json() for output in expanded_detector_results]
 
         json_output = {
             "success": error is not None,
@@ -465,37 +500,40 @@ def handle_output(
         if args.json == "-":
             print(json.dumps(json_output, indent=2))
         else:
-            filename = Path(args.dest) / Path(args.json)
+            filename = output_directory / Path(args.json)
             print(f"json output is written to {filename}")
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(json.dumps(json_output, indent=2))
 
 
-def fetch_contract(args: argparse.Namespace) -> str:
-    program: str = args.program
+def fetch_contract(args: argparse.Namespace) -> Tuple[str, str]:
+    program: str = args.contracts[0]
     network: str = args.network
     b32_regex = "[A-Z2-7]+"
     if program.isdigit():
         # is a number so a app id
         print(f'Fetching application using id "{program}"')
-        return get_application_using_app_id(network, int(program))
+        return get_application_using_app_id(network, int(program)), f"app-{program}"
     if len(program) == 52 and re.fullmatch(b32_regex, program) is not None:
         # is a txn id: base32 encoded. length after encoding == 52
         print(f'Fetching logic-sig contract that signed the transaction "{program}"')
-        return logic_sig_from_txn_id(network, program)
+        return logic_sig_from_txn_id(network, program), f"txn-{program[:8].lower()}"
     if len(program) == 58 and re.fullmatch(b32_regex, program) is not None:
         # is a address. base32 encoded. length after encoding == 58
         print(f'Fetching logic-sig of contract account "{program}"')
-        return logic_sig_from_contract_account(network, program)
+        return logic_sig_from_contract_account(network, program), f"lsig-acc-{program[:8].lower()}"
     # file path
     print(f'Reading contract from file: "{program}"')
     try:
+        contract_name = program[: -len(".teal")] if program.endswith(".teal") else program
+        contract_name = contract_name.lower()
         with open(program, encoding="utf-8") as f:
-            return f.read()
+            return f.read(), contract_name
     except FileNotFoundError as e:
         raise TealerException from e
 
 
+# pylint: disable=too-many-locals,too-many-branches
 def main() -> None:
     """Entry point of the tealer tool.
 
@@ -506,29 +544,51 @@ def main() -> None:
 
     detector_classes, printer_classes = get_detectors_and_printers()
     args = parse_args(detector_classes, printer_classes)
+    validate_command_line_options(args)
 
     default_log = logging.INFO if not args.debug else logging.DEBUG
     for (logger_name, logger_level) in [
         ("Detectors", default_log),
         ("TransactionCtxAnalysis", default_log),
         ("Parsing", default_log),
+        ("Tealer", default_log),
     ]:
         logger = logging.getLogger(logger_name)
         logger.setLevel(logger_level)
 
-    if args.dest != ".":
-        # if output destination directory is not current directory.
-        # create dest directory if is not present
-        os.makedirs(args.dest, exist_ok=True)
-
-    results_detectors: List["SupportedOutput"] = []
+    results_detectors: List["ListOutput"] = []
     _results_printers: List = []
     error = None
-    try:
-        contract_source = fetch_contract(args)
-        teal = parse_teal(contract_source)
+    if args.detectors_to_run is not None and args.group_config is not None:
+        # handle this case specially for now.
+        # handle_detect(args)
+        # sys.exit(1)
+        group_config = read_config_from_file(Path(args.group_config))
+        tealer = init_tealer_from_config(group_config)
+        detector_classes = choose_detectors(args, detector_classes)
+        for detector in detector_classes:
+            tealer.register_detector(detector)
+        group_results = tealer.run_detectors()[0]
+        for output in group_results:
+            # dest is ignored
+            output.generate_output(Path("."))
+        sys.exit(1)
 
-        detector_classes = choose_detectors(args, detector_classes, teal)
+    try:
+        contract_source, contract_name = fetch_contract(args)
+        tealer = init_tealer_from_single_contract(contract_source, contract_name)
+
+        # TODO: handle this as a subcommand instead of a flag
+        if args.regex:
+            default_path = Path("regex_result.dot")
+            if len(tealer.contracts) != 1:
+                print("Regex works only for single contract")
+                return
+            run_regex(tealer.contracts[contract_name], args.regex, default_path)
+            return
+
+        # TODO: decide on default classification for detectors in group transaction context.
+        detector_classes = choose_detectors(args, detector_classes, tealer.contracts[contract_name])
         printer_classes = choose_printers(args, printer_classes)
 
         # if a printer is ran using --print ... don't run all detectors.
@@ -543,7 +603,7 @@ def main() -> None:
             detector_classes = []
 
         results_detectors, _results_printers = handle_detectors_and_printers(
-            args, teal, detector_classes, printer_classes
+            tealer, detector_classes, printer_classes
         )
 
     except TealerException as e:
@@ -551,8 +611,14 @@ def main() -> None:
 
     if args.filter_paths is not None:
         for detector_result in results_detectors:
-            detector_result.filter_paths(args.filter_paths)
-    handle_output(args, results_detectors, _results_printers, error)
+            if isinstance(detector_result, ExecutionPaths):
+                detector_result.filter_paths(args.filter_paths)
+            else:
+                for result in detector_result:
+                    result.filter_paths(args.filter_paths)
+    handle_output(
+        args, results_detectors, _results_printers, tealer.contracts[contract_name], error
+    )
 
 
 if __name__ == "__main__":

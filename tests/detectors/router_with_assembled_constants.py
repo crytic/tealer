@@ -55,6 +55,13 @@ def echo(input: abi.Uint64, *, output: abi.Uint64) -> Expr:
         !=
         &&
         assert            // Assert(NoOp, CALL)
+
+    Args:
+        input: Input argument
+        output: Return value of the echo method.
+
+    Returns:
+        Body of the echo method as PyTeal expr.
     """
     return output.set(input.get())
 

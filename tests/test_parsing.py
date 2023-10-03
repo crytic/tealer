@@ -9,10 +9,19 @@ from tealer.teal.instructions.instructions import (
     BytecInstruction,
 )
 from tealer.teal.instructions import transaction_field
+from tealer.teal.global_field import GlobalField
+from tealer.teal.instructions.transaction_field import TransactionField
+from tealer.teal.instructions.acct_params_field import AcctParamsField
+from tealer.teal.instructions.app_params_field import AppParamsField
+from tealer.teal.instructions.asset_holding_field import AssetHoldingField
+from tealer.teal.instructions.asset_params_field import AssetParamsField
 from tealer.teal.instructions.parse_instruction import parse_line, ParseError
 from tealer.teal.parse_teal import parse_teal
+from tealer.teal.parse_functions import copy_main_cfg
 from tealer.utils.analyses import is_int_push_ins, is_byte_push_ins
+from tealer.exceptions import TealerException
 
+from tests.utils import cmp_cfg
 
 TARGETS = [
     "tests/parsing/teal1-instructions.teal",
@@ -109,9 +118,58 @@ def test_parsing(target: str) -> None:
     with open(target, encoding="utf-8") as f:
         teal = parse_teal(f.read())
     # print instruction to trigger __str__ on each ins
+    # print stack pop/push to trigger the function on each ins
     for i in teal.instructions:
         assert not isinstance(i, instructions.UnsupportedInstruction), f'ins "{i}" is not supported'
         print(i, i.cost)
+        print(i, i.stack_pop_size)
+        print(i, i.stack_push_size)
+
+
+# pylint: disable=too-many-locals
+@pytest.mark.parametrize("target", TARGETS)  # type: ignore
+def test_copy_main_cfg(target: str) -> None:
+    with open(target, encoding="utf-8") as f:
+        teal = parse_teal(f.read())
+    copied_main = copy_main_cfg(teal)
+
+    assert cmp_cfg(copied_main, teal.main.blocks)
+    copied_blocks = sorted(copied_main, key=lambda bi: bi.idx)
+    original_blocks = sorted(teal.main.blocks, key=lambda bi: bi.idx)
+    copied_instructions = [ins for bi in copied_blocks for ins in bi.instructions]
+    # original_instructions = [ins for bi in original_blocks for ins in bi.instructions]
+
+    print(vars(copied_blocks[0]).keys())
+    print(vars(copied_instructions[0]).keys())
+
+    ignore_block_fields = ["_instructions", "_prev", "_next", "_transaction_context", "_subroutine"]
+    ignore_instruction_fields = ["_prev", "_next", "_bb"]
+    for bb_copy, bb_orig in zip(copied_blocks, original_blocks):
+        for key in vars(bb_copy):
+            if key in ignore_block_fields:
+                continue
+            print(key)
+            assert vars(bb_copy)[key] == vars(bb_orig)[key]
+        for ins_copy, ins_orig in zip(bb_copy.instructions, bb_orig.instructions):
+            ins_copy_vars = vars(ins_copy)
+            ins_orig_vars = vars(ins_orig)
+            for key in ins_copy_vars:
+                if key in ignore_instruction_fields:
+                    continue
+                if isinstance(
+                    ins_copy_vars[key],
+                    (
+                        TransactionField,
+                        GlobalField,
+                        AppParamsField,
+                        AcctParamsField,
+                        AssetParamsField,
+                        AssetHoldingField,
+                    ),
+                ):
+                    continue
+                print(key)
+                assert ins_copy_vars[key] == ins_orig_vars[key]
 
 
 def _cmp_instructions(
@@ -257,14 +315,6 @@ def test_instruction_properties() -> None:
     assert ins2.next == []
     assert ins1.comment == "// comment"
 
-    # cannot set return point of callsub instruction multiple times
-    ins = parse_line("callsub main")
-    assert isinstance(ins, instructions.Callsub) and ins.return_point is None
-
-    ins.return_point = parse_line("int 1")
-    with pytest.raises(Exception):
-        ins.return_point = parse_line("int 1")  # cannot set multiple times
-
     # accessing replace instruction start_position fails if it is None i.e if there's no immediate argument.
     # it should be checked that whether given replace instruction is semantically equivalent to replace2 or replace3.
     ins = parse_line("replace 1")
@@ -305,7 +355,7 @@ def test_cost_values() -> None:
     for line in CURRENT_TEST_CODE.strip().splitlines():
         # when cost parameter accessed, it checks that instruction object's BasicBlock is not none. if it is none, then
         # cost property raises exception. These tests are included to cover those brances.
-        with pytest.raises(ValueError):
+        with pytest.raises(TealerException):
             print(line)
             # pylint: disable=expression-not-assigned
             parse_line(line).cost  # type: ignore

@@ -44,15 +44,13 @@ Classes:
 """
 
 import abc
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from tealer.utils.comparable_enum import ComparableEnum
-from tealer.utils.output import ExecutionPaths
 
 if TYPE_CHECKING:
-    from tealer.teal.teal import Teal
-    from tealer.teal.basic_blocks import BasicBlock
-    from tealer.utils.output import SupportedOutput
+    from tealer.tealer import Tealer
+    from tealer.utils.output import ListOutput
 
 
 class IncorrectDetectorInitialization(Exception):
@@ -160,8 +158,8 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
     WIKI_EXPLOIT_SCENARIO = ""
     WIKI_RECOMMENDATION = ""
 
-    def __init__(self, teal: "Teal"):
-        self.teal = teal
+    def __init__(self, tealer: "Tealer"):
+        self.tealer = tealer
 
         if not self.NAME:
             raise IncorrectDetectorInitialization(
@@ -188,7 +186,10 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
                 f"WIKI_DESCRIPTION is not initialized {self.__class__.__name__}"
             )
 
-        if not self.WIKI_EXPLOIT_SCENARIO:
+        if not self.WIKI_EXPLOIT_SCENARIO and self.IMPACT not in [
+            DetectorClassification.INFORMATIONAL,
+            DetectorClassification.OPTIMIZATION,
+        ]:
             raise IncorrectDetectorInitialization(
                 f"WIKI_EXPLOIT_SCENARIO is not initialized {self.__class__.__name__}"
             )
@@ -223,41 +224,8 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
                 f"CONFIDENCE is not initialized {self.__class__.__name__}"
             )
 
-    def generate_result(
-        self, paths: List[List["BasicBlock"]], description: str, filename: str
-    ) -> ExecutionPaths:
-        """Helper method to construct ExecutionPaths result.
-
-        This function constructs and fills up the detector information of
-        ExecutionPaths object. ExecutionPaths is used to store output of
-        detector's that represent issues/vulnerabilities as execution paths.
-
-        Args:
-            paths: List of execution paths. Each execution path is represented
-                by a list of basic blocks.
-            description: Description of the issue/vulns.
-            filename: The execution paths are saved in dot files. :filename: is
-                used as the filename prefix for that dot files.
-
-        Returns:
-            ExecutionPaths object populated with the given args and detector
-            specific information.
-        """
-
-        output = ExecutionPaths(self.teal.bbs, description, filename)
-
-        for path in paths:
-            output.add_path(path)
-
-        output.check = self.NAME
-        output.impact = classification_txt[self.IMPACT]
-        output.confidence = classification_txt[self.CONFIDENCE]
-        output.help = self.WIKI_RECOMMENDATION.strip()
-
-        return output
-
     @abc.abstractmethod
-    def detect(self) -> "SupportedOutput":
+    def detect(self) -> "ListOutput":
         """Entry method of detector.
 
         All detectors must override this method with the functionality specific
@@ -265,10 +233,10 @@ class AbstractDetector(metaclass=abc.ABCMeta):  # pylint: disable=too-few-public
         called to execute it.
 
         Returns:
-            detector results represented in one of the supported types. Currently,
+            Detector results represented in one of the supported types. Currently,
             all detectors work on Control Flow Graph(CFG) of the contract and represent
             the issues in the form of execution path in the CFG. ExecutionPaths class
-            is used to represent them. It is the only type supported currently and
-            AbstractDetector comes with a helper method to construct the result object
-            given the vulnerable execution paths, description and filenames.
+            is used to represent them.
+
+        # noqa: DAR202
         """

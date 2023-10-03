@@ -46,7 +46,18 @@ from tealer.exceptions import TealerException
 
 
 def disassemble_using_algo_explorer(code: str) -> str:
-    """Disassemble the AVM bytecode to teal using Algorand node v2 api."""
+    """Disassemble the AVM bytecode to teal using Algorand node v2 api.
+
+    Args:
+        code: Compiled bytecode of the contract.
+
+    Returns:
+        Returns disassemble Teal code of :code:.
+
+    Raises:
+        TealerException: Raises error if the api returned any status code other than the
+            success code (200).
+    """
     base = "https://node.algoexplorerapi.io/"
     url = "v2/teal/disassemble"
     headers = {"Content-Type": "application/x-binary"}
@@ -79,7 +90,19 @@ def get_indexer(network: str) -> IndexerClient:
 
 
 def get_application_using_app_id(network: str, app_id: int) -> str:
-    """Downloads approval program using the application id"""
+    """Downloads approval program using the application id
+
+    Args:
+        network: Algorand network identifier.
+        app_id: Application Id.
+
+    Returns:
+        Returns disassembled Teal code of the :app_id: application fetched from the :network:.
+
+    Raises:
+        TealerException: Raises error if the function cannot find the application :app_id: in the
+            :network:.
+    """
     try:
         response = get_indexer(network).applications(application_id=app_id)  # type: ignore
     except IndexerHTTPError as e:
@@ -97,6 +120,19 @@ def logic_sig_from_contract_account(network: str, account_address: str) -> str:
 
     In order to find the logic sig, find a transaction from the contract account and
     get the logic sig from that.
+
+    Args:
+        network: Algorand network identifier.
+        account_address: An Algorand account address derived from a LogicSig.
+
+    Returns:
+        Returns disassembled Teal code of the contract controlling the contract account :account_address:.
+        Contract is searched in the :network:.
+
+    Raises:
+        TealerException: Raises error if the function cannot find a transaction from the :account_address: in the
+            :network:. Happens if the account_address is invalid, account has not made any transactions or the
+            search has timed out.
     """
     try:
         results = get_indexer(network).search_transactions(  # type: ignore
@@ -126,7 +162,20 @@ def logic_sig_from_contract_account(network: str, account_address: str) -> str:
 
 
 def logic_sig_from_txn_id(network: str, txn_id: str) -> str:
-    """Fetch logic-sig used to sign `txn_id` transaction"""
+    """Fetch logic-sig used to sign `txn_id` transaction
+
+    Args:
+        network: Algorand network identifier.
+        txn_id: Transaction id of a transaction on :network:, the transaction is signed by a logic-sig.
+
+    Returns:
+        Returns disassembled Teal code of the contract that signed the transaction :txn_id:.
+        The transaction is searched in the :network:.
+
+    Raises:
+        TealerException: Raises error if the function cannot find the transaction :txn_id: in the
+            :network:
+    """
     try:
         txn_info = get_indexer(network).transaction(txn_id)  # type: ignore
     except IndexerHTTPError as e:

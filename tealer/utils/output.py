@@ -5,7 +5,7 @@ and display different types of output formats used by tealer detectors
 and printers.
 
 Functions:
-    full_cfg_to_dot(bbs: List[BasicBlock], config: Optional[CFGDotConfig]=None, filename: Optional[Path]=None) -> None:
+    full_cfg_to_dot(teal: "Teal", config: Optional[CFGDotConfig]=None, filename: Optional[Path]=None) -> None:
         Exports dot representation of CFG represented by :bbs: in
         dot format to given filename.
 
@@ -18,20 +18,27 @@ Types:
         For now, it is an alias for ExecutionPaths.
 
 """
-
+import abc
 import html
 import re
+import os
 from pathlib import Path
 from typing import List, TYPE_CHECKING, Dict, Callable, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from tealer.teal.instructions.instructions import BZ, BNZ, Callsub, Retsub
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
     from tealer.teal.subroutine import Subroutine
+    from tealer.teal.functions import Function
     from tealer.teal.teal import Teal
     from tealer.teal.instructions.instructions import Instruction
+    from tealer.detectors.abstract_detector import AbstractDetector
+    from tealer.execution_context.transactions import GroupTransaction, Transaction
+
+
+ROOT_OUTPUT_DIRECTORY = Path("tealer-export")
 
 
 @dataclass
@@ -49,6 +56,7 @@ class CFGDotConfig:  # pylint: disable=too-many-instance-attributes
     remaining_edges_color: str = "BLACK"
     comments_cell_border_size: int = 2  # size of basic block comments cell
     bb_border_color: Callable[["BasicBlock"], str] = lambda _x: "BLACK"
+    custom_background_color: Dict["Instruction", str] = field(default_factory=dict)
 
 
 def _instruction_to_dot(ins: "Instruction", config: CFGDotConfig) -> str:
@@ -106,9 +114,11 @@ def _instruction_to_dot(ins: "Instruction", config: CFGDotConfig) -> str:
         source_code_comments = "<BR/>".join(f"{comment}" for comment in sanitized_comments)
         source_code_comments += "<BR/>"
 
+    color = config.custom_background_color.get(ins, "BLACK")
+
     cell_i = (
         "<TR>"
-        '<TD ALIGN="LEFT" BALIGN="LEFT" COLOR="BLACK">'
+        f'<TD ALIGN="LEFT" BALIGN="LEFT" COLOR="{color}">'
         f"{tealer_comments}"
         f"{source_code_comments}"
         f"{ins.line}. {ins_str}"
@@ -166,7 +176,7 @@ def _bb_to_dot(bb: "BasicBlock", config: CFGDotConfig) -> str:
         table_rows.append(_instruction_to_dot(ins, config))
 
     graph_edges: List[str] = []
-    if config.color_edges and isinstance(bb.exit_instr, (BZ, BNZ, Callsub)):
+    if config.color_edges and isinstance(bb.exit_instr, (BZ, BNZ)):
         if isinstance(bb.exit_instr, (BZ, BNZ)):
             # color graph edges if exit instruction is BZ or BNZ.
             if len(bb.next) == 1:
@@ -180,10 +190,6 @@ def _bb_to_dot(bb: "BasicBlock", config: CFGDotConfig) -> str:
             if default_branch is not None:
                 graph_edges.append(graph_edge_str(bb, default_branch, config.default_branch_color))
             graph_edges.append(graph_edge_str(bb, jump_branch, config.jump_branch_color))
-        elif isinstance(bb.exit_instr, Callsub):
-            # make callsub instruction -> subroutine edge orange.
-            callsub_branch = bb.next[0]
-            graph_edges.append(graph_edge_str(bb, callsub_branch, config.callsub_edge_color))
     else:
         for next_bb in bb.next:
             graph_edges.append(graph_edge_str(bb, next_bb, config.remaining_edges_color))
@@ -200,42 +206,41 @@ def _bb_to_dot(bb: "BasicBlock", config: CFGDotConfig) -> str:
 def subroutine_to_dot(subroutine: "Subroutine", config: Optional[CFGDotConfig] = None) -> str:
     if config is None:
         config = CFGDotConfig()
-    # ignore edges from callsub and retsub.
+    # ignore edges from callsub to the return point block because we place an empty node to represent
+    # the called subroutine in between the callsub block and the return point.
     # replacing the ignore_edge function directly should be ok (?) for now
-    config.ignore_edge = lambda bi, _: isinstance(bi.exit_instr, (Callsub, Retsub))
+    config.ignore_edge = lambda bi, _: isinstance(bi.exit_instr, (Callsub))
 
-    def empty_subroutine_box(
-        callsub_block: "BasicBlock",
-        return_point_block: "BasicBlock",
-        called_subroutine: "Subroutine",
-    ) -> str:
+    def empty_subroutine_box(callsub_block: "BasicBlock") -> str:
         # Include a empty box between callsub and it's return point. Empty box represents
         # the subroutine called by `callsub`.
+        called_subroutine = callsub_block.called_subroutine
+        return_point_block = callsub_block.sub_return_point
+        if return_point_block is None:
+            # happens when callsub is the last instruction in the CFG and subroutine always exits the program.
+            return_point_block_idx = "none"
+        else:
+            return_point_block_idx = str(return_point_block.idx)
         content = (
             f'"Subroutine {called_subroutine.name}"'  # TODO: add other information in the future
         )
-        node_name = f"x{callsub_block.idx}_{return_point_block.idx}"
+        node_name = f"x{callsub_block.idx}_{return_point_block_idx}"
         edge1 = f"{callsub_block.idx}:s -> {node_name}:n;\n"  # callsub to empty box
-        # empty box to return point block
-        edge2 = (
-            f"{node_name}:s -> {return_point_block.idx}:{return_point_block.entry_instr.line}:n;\n"
-        )
+        edge2 = ""
+        if return_point_block is not None:
+            # edge from empty box to return point block
+            edge2 = f"{node_name}:s -> {return_point_block.idx}:{return_point_block.entry_instr.line}:n;\n"
+
         return f"{node_name}[label={content},style=dashed,shape=box,fontname=bold] {edge1}{edge2}"
 
     nodes_dot: List[str] = []
     for bi in subroutine.blocks:
         nodes_dot.append(_bb_to_dot(bi, config))
-        if isinstance(bi.exit_instr, Callsub):
+        if bi.is_callsub_block:
             # add empty box to represent the graph of called subroutine
             # add edge from callsub to that box and box to callsub return point.
             # ignoring recursion here. adds empty box even if callsub calls the same subroutine.
-            return_point_ins = bi.exit_instr.return_point
-            assert return_point_ins is not None
-            return_point_bb = return_point_ins.bb
-            assert return_point_bb is not None
-            called_subroutine = subroutine.contract.subroutine(bi.exit_instr.label)
-            assert called_subroutine is not None
-            nodes_dot.append(empty_subroutine_box(bi, return_point_bb, called_subroutine))
+            nodes_dot.append(empty_subroutine_box(bi))
 
     nodes_str = "\n".join(nodes_dot)
 
@@ -255,26 +260,28 @@ def all_subroutines_to_dot(
     Args:
         teal: contract instance
         dest: destination directory to save the dot files.
+        config: CFGDotConfig to use for generating the dot files. if None, function uses
+            default settings.
         filename_prefix: prefix to add before each filename to distinguish files generated
             by multiple calls to this function.
     """
     if filename_prefix:  # not empty string
         filename_prefix = f"{filename_prefix}_"
-    main_entry_sub_filename = f"{teal.contract_name}_{filename_prefix}contract_shortened_cfg.dot"
+    main_entry_sub_filename = f"{filename_prefix}contract_shortened_cfg.dot"
 
     with open(dest / Path(main_entry_sub_filename), "w", encoding="utf-8") as f:
         f.write(subroutine_to_dot(teal.main, config))
         print(f"Exported contract's shortened cfg to: {dest / Path(main_entry_sub_filename)}")
 
     for sub_name, subroutine in teal.subroutines.items():
-        filename = f"{teal.contract_name}_{filename_prefix}subroutine_{sub_name}_cfg.dot"
+        filename = f"{filename_prefix}subroutine_{sub_name}_cfg.dot"
         with open(dest / Path(filename), "w", encoding="utf-8") as f:
             f.write(subroutine_to_dot(subroutine, config))
             print(f'Exported cfg of "{sub_name}" subroutine to: {dest / Path(filename)}')
 
 
 def full_cfg_to_dot(  # pylint: disable=too-many-locals
-    bbs: List["BasicBlock"], config: Optional[CFGDotConfig] = None, filename: Optional[Path] = None
+    teal: "Teal", config: Optional[CFGDotConfig] = None, filename: Optional[Path] = None
 ) -> Optional[str]:
     """Export control flow graph to a dot file.
 
@@ -283,16 +290,17 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
     as rows.
 
     Args:
-        bbs: list of basic blocks representing the control
-            flow graph.
+        teal: The contract.
         config: optional configuration for dot output.
         filename: name of the file to save the dot representation
             of control flow graph in.
 
+    Returns:
+        Returns dot representation of the CFG if filename is not given. If filename is given,
+        writes the dot representation to the file.
     """
 
-    teal = bbs[0].teal
-    assert teal is not None
+    bbs = teal.bbs
     subroutine_block_idx = set(bb.idx for bb in teal.bbs if bb in teal.main.blocks)
     # responsible for "box" around each subroutine.
     subroutine_clusters: List[str] = []
@@ -310,6 +318,10 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
         """
         subroutine_clusters.append(subgraph_dot)
 
+    # format: `{source_node}:s -> {dest_node}{dest_port}:n [color=""];`
+    def graph_edge_str(src_bb: "BasicBlock", dest_bb: "BasicBlock", edge_color: str) -> str:
+        return f'{src_bb.idx}:s -> {dest_bb.idx}:{dest_bb.entry_instr.line}:n [color="{edge_color}"];\n'
+
     # default config
     if not config:
         config = CFGDotConfig()
@@ -321,9 +333,25 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
             else subroutine_blocks_border_color
         )
 
+    # ignore callsub block to return point edges. Add edges from callsub blocks to subroutine entry and retsubs to return points
+    config.ignore_edge = lambda bi, _: isinstance(bi.exit_instr, (Callsub))
+
     bb_nodes_dot: List[str] = []
     for bb in bbs:
         bb_nodes_dot.append(_bb_to_dot(bb, config))
+        if bb.is_callsub_block:
+            # add edge from callsub block to subroutine entry
+            bb_nodes_dot.append(
+                graph_edge_str(bb, bb.called_subroutine.entry, config.callsub_edge_color)
+            )
+            # add edge from retsub blocks to return point
+            return_point_block = bb.sub_return_point
+            if return_point_block is None:
+                continue
+            for src_bb in bb.called_subroutine.retsub_blocks:
+                bb_nodes_dot.append(
+                    graph_edge_str(src_bb, return_point_block, config.remaining_edges_color)
+                )
 
     subroutine_clusters_str = "\n".join(subroutine_clusters)
     bb_nodes_str = "\n".join(bb_nodes_dot)
@@ -343,105 +371,150 @@ def full_cfg_to_dot(  # pylint: disable=too-many-locals
     return None
 
 
-class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
-    """Detector output class to store list of execution paths.
+def detector_terminal_description(detector: "AbstractDetector") -> str:
+    """Return description for the detector that is printed to terminal before listing vulnerable paths.
 
     Args:
-        cfg: Control Flow Graph of the teal contract.
-        description: Description of the execution path detected by
-            the detector.
-        filename: The dot representation of execution paths will be
-            saved in the filenames starting with :filename: prefix.
+        detector: A detector object.
+
+    Returns:
+        Returns description for the :detector: that can be printed on the terminal or used as general description
+        for the detector.
     """
+    return (
+        f'\nCheck: "{detector.NAME}", Impact: {detector.IMPACT}, Confidence: {detector.CONFIDENCE}\n'
+        f"Description: {detector.DESCRIPTION}\n\n"
+        f"Wiki: {detector.WIKI_URL}\n"
+    )
 
-    def __init__(self, cfg: List["BasicBlock"], description: str, filename: str):
-        self._cfg = cfg
-        self._description = description
-        self._filename = filename
-        self._paths: List[List["BasicBlock"]] = []
-        self._check: str = ""
-        self._impact: str = ""
-        self._confidence: str = ""
-        self._help: str = ""
 
-    def add_path(self, path: List["BasicBlock"]) -> None:
-        """Add given execution path to current list of execution paths.
+def detector_ouptut_dir(destination: Path, detector: "AbstractDetector") -> Path:
+    return destination / Path(detector.NAME)
+
+
+class Output(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def detector(self) -> "AbstractDetector":
+        pass
+
+    @abc.abstractmethod
+    def filter_paths(self, filter_regex: str) -> None:
+        pass
+
+    @abc.abstractmethod
+    def to_json(self) -> Dict:
+        pass
+
+    @abc.abstractmethod
+    def generate_output(self, dest: Path) -> bool:
+        """
+        Generate the output
+
 
         Args:
-            path: new execution path detected by the detector which
-                will be added to the list of execution paths.
+            dest: The files will be saved in the given :dest: destination directory.
+
+        Returns:
+            Returns true if something was generated - False if there is nothing to be written
         """
 
-        self._paths.append(path)
+        return False  # this statement is needed for darglint
+
+
+class InstructionsOutput(Output):
+    def __init__(
+        self, teal: "Teal", detector: "AbstractDetector", instructions: List[List["Instruction"]]
+    ):
+        self._teal = teal
+        self._detector = detector
+        self.instructions: List[List["Instruction"]] = instructions
 
     @property
-    def paths(self) -> List[List["BasicBlock"]]:
-        """List of execution paths stored in the result."""
-        return self._paths
+    def detector(self) -> "AbstractDetector":
+        return self._detector
+
+    def filter_paths(self, filter_regex: str) -> None:
+        pass
+
+    def to_json(self) -> Dict:
+        result = {
+            "type": "InstructionsOutput",
+            "count": len(self.instructions),
+            "description": detector_terminal_description(self.detector),
+            "check": self.detector.NAME,
+            "impact": str(self.detector.IMPACT),
+            "confidence": str(self.detector.CONFIDENCE),
+            "help": self.detector.WIKI_RECOMMENDATION.strip(),
+            "paths": [str(ins) for ins in self.instructions],
+        }
+        return result
+
+    def generate_output(self, dest: Path) -> bool:
+        """
+        Generate the output
+
+
+        Args:
+            dest: Not use (no files are generated for InstructionsOutput)
+
+        Returns:
+            Returns true if something was generated - False if there is nothing to be written
+        """
+
+        if not self.instructions:
+            return False
+
+        print(detector_terminal_description(self.detector))
+        print("\tFollowing are the unoptimized instructions found:")
+
+        for ins in self.instructions:
+            print(ins)
+
+        return True
+
+
+class ExecutionPaths(Output):
+    """Detector output class to represent vulnerable execution paths."""
+
+    def __init__(self, teal: "Teal", detector: "AbstractDetector", paths: List[List["BasicBlock"]]):
+        self._teal = teal
+        self._detector = detector
+        self.paths: List[List["BasicBlock"]] = paths
 
     @property
-    def cfg(self) -> List["BasicBlock"]:
-        """Control Flow of the teal contract."""
-        return self._cfg
+    def detector(self) -> "AbstractDetector":
+        return self._detector
 
-    @property
-    def description(self) -> str:
-        """Description of execution paths stored in this result"""
-        return self._description
-
-    @property
-    def check(self) -> str:
-        """Name of the detector whose result is being represented."""
-        return self._check
-
-    @check.setter
-    def check(self, c: str) -> None:
-        self._check = c
-
-    @property
-    def impact(self) -> str:
-        """Impact of the detector whose result is being represented."""
-        return self._impact
-
-    @impact.setter
-    def impact(self, i: str) -> None:
-        self._impact = i
-
-    @property
-    def confidence(self) -> str:
-        """Confidence of the detector whose result is being represented."""
-        return self._confidence
-
-    @confidence.setter
-    def confidence(self, c: str) -> None:
-        self._confidence = c
-
-    @property
-    def help(self) -> str:
-        """Help message to remove detected issues from the contract."""
-        return self._help
-
-    @help.setter
-    def help(self, h: str) -> None:
-        self._help = h
+    def _filename(self, path_index: int) -> Path:
+        return Path(f"{self.detector.NAME}-{path_index}.dot")
 
     @staticmethod
     def _short_notation(path_bbs: List["BasicBlock"]) -> str:
-        """Return short notation representation of path"""
+        """Return short notation representation of path
+
+        Args:
+            path_bbs: List of basic blocks in the path from the contract's entry.
+
+        Returns:
+            Returns short notation representation of the path.
+            if path has [B0, B2, B3, B5] then short notation is "0 -> 2 -> 3 -> 5"
+        """
+        # TODO: Change notation from "0 -> 2 -> 3 -> 5" to "B0 -> B2 -> B3 -> B5"
         return " -> ".join(map(str, [bb.idx for bb in path_bbs]))
 
     def filter_paths(self, filter_regex: str) -> None:
         if filter_regex == "":
             return
         filtered_paths: List[List["BasicBlock"]] = []
-        for path in self._paths:
+        for path in self.paths:
             if re.search(filter_regex, self._short_notation(path)) is None:
                 # short notation does not contain string matching the regex
                 filtered_paths.append(path)
-        self._paths = filtered_paths
+        self.paths = filtered_paths
         return
 
-    def write_to_files(self, dest: Path, all_paths_in_one: bool = False) -> None:
+    def generate_output(self, dest: Path) -> bool:
         """Export execution paths to dot files.
 
         The execution paths are highlighted in the dot representation
@@ -451,53 +524,41 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         Args:
             dest: The dot files will be saved in the given :dest: destination
                 directory.
-            all_paths_in_one: if this is set to True, all the execution
-                paths will be highlighted in a single file. if this is
-                False, each execution path is saved in a different file.
-                Default False.
+
+        Returns:
+            Returns true if something was written - False if there is nothing to be written
         """
 
-        print(self.description)
-        if len(self.paths) == 0:
-            print("\tDetector didn't find any vulnerable paths.")
-            print("-" * 100)
-            return
+        if not self.paths:
+            return False
+
+        print(detector_terminal_description(self.detector))
+
         # cfg_to_dot config
         config = CFGDotConfig()
         config.color_edges = False
         print("\tFollowing are the vulnerable paths found:")
-        if not all_paths_in_one:
 
-            for idx, path in enumerate(self._paths, start=1):
+        dest = detector_ouptut_dir(dest, self.detector)
+        # create output directory if not present
+        os.makedirs(dest, exist_ok=True)
 
-                short = self._short_notation(path)
-                print(f"\n\t\t path: {short}")
+        for idx, path in enumerate(self.paths, start=1):
+            short = self._short_notation(path)
+            print(f"\n\t\t path: {short}")
 
-                filename = dest / Path(f"{self._filename}_{idx}.dot")
-                print(f"\t\t check file: {filename}")
-
-                config.bb_border_color = (
-                    lambda bb: "BLACK"
-                    if bb not in path  # pylint: disable=cell-var-from-loop
-                    else "RED"
-                )
-                full_cfg_to_dot(self.cfg, config, filename)
-            print("-" * 100)
-        else:
-            bbs_to_highlight = []
-
-            for path in self._paths:
-                short = self._short_notation(path)
-                print(f"\t\t path: {short}")
-                for bb in path:
-                    if bb not in bbs_to_highlight:
-                        bbs_to_highlight.append(bb)
-
-            filename = dest / Path(f"{self._filename}.dot")
+            filename = dest / self._filename(idx)
             print(f"\t\t check file: {filename}")
 
-            config.bb_border_color = lambda bb: "BLACK" if bb not in bbs_to_highlight else "RED"
-            full_cfg_to_dot(self.cfg, config, filename)
+            config.bb_border_color = (
+                lambda bb: "BLACK"
+                if bb not in path  # pylint: disable=cell-var-from-loop
+                else "RED"
+            )
+            full_cfg_to_dot(self._teal, config, filename)
+        print("-" * 100)
+
+        return True
 
     def to_json(self) -> Dict:
         """Return json representation of detector result.
@@ -513,11 +574,11 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         result = {
             "type": "ExecutionPaths",
             "count": len(self.paths),
-            "description": self.description,
-            "check": self.check,
-            "impact": self.impact,
-            "confidence": self.confidence,
-            "help": self.help,
+            "description": detector_terminal_description(self.detector),
+            "check": self.detector.NAME,
+            "impact": str(self.detector.IMPACT),
+            "confidence": str(self.detector.CONFIDENCE),
+            "help": self.detector.WIKI_RECOMMENDATION.strip(),
         }
         paths = []
         for path in self.paths:
@@ -535,4 +596,82 @@ class ExecutionPaths:  # pylint: disable=too-many-instance-attributes
         return result
 
 
-SupportedOutput = ExecutionPaths
+class GroupTransactionOutput(Output):
+    def __init__(
+        self,
+        detector: "AbstractDetector",
+        group: "GroupTransaction",
+        transactions: Dict["Transaction", List["Function"]],
+    ) -> None:
+        self._detector = detector
+        self._group = group
+        self._transactions = transactions
+
+    @property
+    def detector(self) -> "AbstractDetector":
+        return self._detector
+
+    @property
+    def group_transaction(self) -> "GroupTransaction":
+        return self._group
+
+    @property
+    def transactions(self) -> Dict["Transaction", List["Function"]]:
+        return self._transactions
+
+    def filter_paths(self, filter_regex: str) -> None:
+        pass
+
+    def to_json(self) -> Dict:
+        transactions = {}
+        for txn in self._transactions:
+            contracts = []
+            for function in self._transactions[txn]:
+                contracts.append(
+                    {
+                        "contract": function.contract.contract_name,
+                        "function": function.function_name,
+                    }
+                )
+            transactions[txn.transacton_id] = contracts
+
+        result = {
+            "type": "GroupTransactionOutput",
+            "description": detector_terminal_description(self.detector),
+            "check": self.detector.NAME,
+            "impact": str(self.detector.IMPACT),
+            "confidence": str(self.detector.CONFIDENCE),
+            "help": self.detector.WIKI_RECOMMENDATION.strip(),
+            "operation": self._group.operation_name,
+            "transactions": transactions,
+        }
+        return result
+
+    def generate_output(self, dest: Path) -> bool:
+        """
+        Generate the output
+
+        Args:
+            dest: Not used, no files are generated for GroupTransactionOutput
+
+        Returns:
+            Returns true if something was generated - False if there is nothing to be written.
+        """
+        print(detector_terminal_description(self.detector))
+        print(
+            f"\tFollowing transactions of the operation {self._group.operation_name} are vulnerable:\n"
+        )
+
+        for txn in self._transactions:
+            print(f"\tTransaction {txn.transacton_id}")
+            if self._transactions[txn]:
+                # contract was given by the user.
+                for function in self._transactions[txn]:
+                    print(f"\t\tContract: {function.contract.contract_name}")
+                    print(f"\t\tFunction: {function.function_name}")
+                    print("\n")
+
+        return True
+
+
+ListOutput = List[Output]

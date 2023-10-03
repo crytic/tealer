@@ -1,0 +1,97 @@
+name: BasicRekeyTo
+operations:
+  - operation: case_2
+    vulnerable_transactions:
+      - txn_id: T1
+        contracts:
+          - contract: LogicSig_1
+            function: lsig1_case_2
+  - operation: case_3
+    vulnerable_transactions:
+      - txn_id: T1
+  - operation: case_9
+    vulnerable_transactions:
+      - txn_id: T1
+        contracts:
+          - contract: LogicSig_1
+            function: lsig1_case_9
+  - operation: case_12
+    vulnerable_transactions:
+      - txn_id: T1
+  - operation: case_13
+    vulnerable_transactions:
+      - txn_id: T2
+        contracts:
+          - contract: LogicSig_2
+            function: lsig2_case_13
+  - operation: case_14
+    vulnerable_transactions:
+      - txn_id: T1
+        contracts:
+          - contract: LogicSig_1
+            function: lsig1_case_14  
+      - txn_id: T2
+        contracts:
+          - contract: LogicSig_2
+            function: lsig2_case_14
+  - operation: case_17
+    vulnerable_transactions:
+      - txn_id: T1
+        contracts:
+          - contract: LogicSig_1
+            function: lsig1_case_17
+  - operation: case_21
+    vulnerable_transactions:
+      - txn_id: T1
+        contracts:
+          - contract: LogicSig_1
+            function: lsig1_case_21
+  - operation: case_24
+    vulnerable_transactions:
+      - txn_id: T1
+  - operation: case_25
+    vulnerable_transactions:
+      - txn_id: T2
+        contracts:
+          - contract: LogicSig_2
+            function: lsig2_case_25
+  - operation: case_26
+    vulnerable_transactions:
+      - txn_id: T1
+        contracts:
+          - contract: LogicSig_1
+            function: lsig1_case_26
+      - txn_id: T2
+        contracts:
+          - contract: LogicSig_2
+            function: lsig2_case_26
+  - operation: case_28
+    vulnerable_transactions:
+      - txn_id: T1
+        contracts:
+          - contract: LogicSig_1
+            function: lsig1_case_28
+  - operation: case_29
+    vulnerable_transactions:
+      - txn_id: T1
+        contracts:
+          - contract: LogicSig_1
+            function: lsig1_case_29
+  - operation: case_32
+    vulnerable_transactions:
+      - txn_id: T1
+        contracts:
+          - contract: LogicSig_1
+            function: lsig1_case_32
+  - operation: case_34
+    vulnerable_transactions:
+      - txn_id: T1
+        contracts:
+          - contract: LogicSig_1
+            function: lsig1_case_34
+  - operation: case_35
+    vulnerable_transactions:
+      - txn_id: T1
+        contracts:
+          - contract: LogicSig_1
+            function: lsig1_case_35

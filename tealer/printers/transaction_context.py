@@ -1,10 +1,16 @@
 """Printer to output information about transaction fields in the CFG."""
 
+import os
 from pathlib import Path
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from tealer.printers.abstract_printer import AbstractPrinter
-from tealer.utils.output import CFGDotConfig, full_cfg_to_dot, all_subroutines_to_dot
+from tealer.utils.output import (
+    CFGDotConfig,
+    full_cfg_to_dot,
+    all_subroutines_to_dot,
+    ROOT_OUTPUT_DIRECTORY,
+)
 
 if TYPE_CHECKING:
     from tealer.teal.basic_blocks import BasicBlock
@@ -35,6 +41,12 @@ class PrinterTransactionContext(AbstractPrinter):  # pylint: disable=too-few-pub
 
             1 2 3 5 6 7 8 9 11 13 14 15 16
            => 1 2 3 5..9 11 13..16
+
+        Args:
+            values: Sorted list of integers. smaller value is first.
+
+        Returns:
+            Returns short string representation of the :values:
         """
         values = sorted(values)
         sequences: List[List[int]] = [[]]
@@ -53,29 +65,26 @@ class PrinterTransactionContext(AbstractPrinter):  # pylint: disable=too-few-pub
                 str_seqs.append(" ".join(str(i) for i in seq))
         return " ".join(str_seqs)
 
-    def print(self, dest: Optional["Path"] = None) -> None:
-        """
-        Args:
-            dest (Optional[Path]): destination directory to save output files in. files will be saved in
-            the current directory if it is None.
-        """
-
+    def print(self) -> None:
         filename = Path("transaction-context.dot")
-        if dest is None:
-            # TODO: Change default directory to `tealer-export`
-            dest = Path(".")
+
+        # outputs multiple files: set the dir to {ROOT_DIRECTORY}/{CONTRACT_NAME}/{"print-"PRINTER_NAME}
+        dest = ROOT_OUTPUT_DIRECTORY / Path(self.teal.contract_name) / Path(f"print-{self.NAME}")
+        os.makedirs(dest, exist_ok=True)
 
         filename = dest / filename
+        function = list(self.teal.functions.values())[0]
 
         def get_info(bb: "BasicBlock") -> List[str]:
-            group_indices_str = self._repr_num_list(bb.transaction_context.group_indices)
-            group_sizes_str = self._repr_num_list(bb.transaction_context.group_sizes)
+            # NOTE: use the first function for now as `init_tealer_from_single_contract` uses entire contract as single function.
+            group_indices_str = self._repr_num_list(function.transaction_context(bb).group_indices)
+            group_sizes_str = self._repr_num_list(function.transaction_context(bb).group_sizes)
             return [f"GroupIndex: {group_indices_str}", f"GroupSize: {group_sizes_str}"]
 
         config = CFGDotConfig()
         config.bb_additional_comments = get_info
         # generate a Full CFG with all group-size, group-index comments
-        full_cfg_to_dot(self.teal.bbs, config, filename)
+        full_cfg_to_dot(self.teal, config, filename)
         # Also generate shortened CFGs with group-size and group-index comments.
         all_subroutines_to_dot(
             self.teal, dest, config, "txn_ctx"

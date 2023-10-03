@@ -3,8 +3,11 @@
 Tealer is a static analyzer for [Teal](https://developer.algorand.org/docs/features/asc1/) code. It parses the Teal program, and builds its CFG. The analyzer comes with a set of vulnerabilities detectors and printers allowing to quickly review the contracts.
 
 - [Features](#features)
+  - [Detectors](#detectors): Vulnerabilities detectors
+  - [Printers](#printers): Visual information
+  - [Regular expression](#Regular expression): Regular expression engine
 - [How to install](#how-to-install)
-- [How to run](#how-to-run)
+- [Group configuration](#group-configuration)
 
 ## Features
 
@@ -14,21 +17,25 @@ Run Tealer on a Teal contract:
 tealer program.teal
 ```
 
+
 For additional configuration, see the [Usage](https://github.com/crytic/tealer/wiki/Usage) documentation.
 
 ### Detectors
 
-Num | Detectors | What it Detects | Applies To | Impact | Confidence |
---- | --- | --- | --- | --- | --- |
-1 | `is-deletable` | [Deletable Applications](https://github.com/crytic/tealer/wiki/Detector-Documentation#deletable-application) | Stateful | High | High
-2 | `is-updatable` | [Upgradable Applications](https://github.com/crytic/tealer/wiki/Detector-Documentation#upgradable-application) | Stateful | High | High
-3 | `unprotected-deletable` | [Unprotected Deletable Applications](https://github.com/crytic/tealer/wiki/Detector-Documentation#unprotected-deletable-application) | Stateful | High | High
-4 | `unprotected-updatable` | [Unprotected Upgradable Applications](https://github.com/crytic/tealer/wiki/Detector-Documentation#unprotected-updatable-application) | Stateful | High | High
-5 | `group-size-check` | [Usage of absolute indexes without validating GroupSize](https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-groupsize-validation) | Stateless, Stateful | High | High
-6 | `can-close-account` | [Missing CloseRemainderTo field Validation](https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-closeremainderto-field-validation) | Stateless | High | High
-7 | `can-close-asset` | [Missing AssetCloseTo Field Validation](https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-assetcloseto-field-validation) | Stateless | High | High
-8 | `missing-fee-check` | [Missing Fee Field Validation](https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-fee-field-validation) | Stateless | High | High
-9 | `rekey-to` | [Rekeyable Logic Signatures](https://github.com/crytic/tealer/wiki/Detector-Documentation#rekeyable-logicsig) | Stateless | High | High
+| Num | Detector                | What it detects                                                                                                                                     | Applies To          | Impact       | Confidence |
+|-----|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|---------------------|--------------|------------|
+| 1   | `is-deletable`          | [Deletable Applications](https://github.com/crytic/tealer/wiki/Detector-Documentation#deletable-application)                                        | Stateful            | High         | High       |
+| 2   | `is-updatable`          | [Upgradable Applications](https://github.com/crytic/tealer/wiki/Detector-Documentation#upgradable-application)                                      | Stateful            | High         | High       |
+| 3   | `unprotected-deletable` | [Unprotected Deletable Applications](https://github.com/crytic/tealer/wiki/Detector-Documentation#unprotected-deletable-application)                | Stateful            | High         | High       |
+| 4   | `unprotected-updatable` | [Unprotected Upgradable Applications](https://github.com/crytic/tealer/wiki/Detector-Documentation#unprotected-updatable-application)               | Stateful            | High         | High       |
+| 5   | `group-size-check`      | [Usage of absolute indexes without validating GroupSize](https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-groupsize-validation) | Stateless, Stateful | High         | High       |
+| 6   | `can-close-account`     | [Missing CloseRemainderTo field Validation](https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-closeremainderto-field-validation) | Stateless           | High         | High       |
+| 7   | `can-close-asset`       | [Missing AssetCloseTo Field Validation](https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-assetcloseto-field-validation)         | Stateless           | High         | High       |
+| 8   | `missing-fee-check`     | [Missing Fee Field Validation](https://github.com/crytic/tealer/wiki/Detector-Documentation#missing-fee-field-validation)                           | Stateless           | High         | High       |
+| 9   | `rekey-to`              | [Rekeyable Logic Signatures](https://github.com/crytic/tealer/wiki/Detector-Documentation#rekeyable-logicsig)                                       | Stateless           | High         | High       |
+| 10  | `constant-gtxn`         | [Unoptimized Gtxn](https://github.com/crytic/tealer/wiki/Detector-Documentation#Unoptimized-Gtxn)                                                   | Stateless           | Optimization | High       |
+| 11  | `self-access`           | [Unoptimized self access](https://github.com/crytic/tealer/wiki/Detector-Documentation#Unoptimized-self-access)                                     | Stateless           | Optimization | High       |
+| 12  | `sender-access`         | [Unoptimized Gtxn](https://github.com/crytic/tealer/wiki/Detector-Documentation#Unoptimized-sender-access)                                          | Stateless           | Optimization | High       |
 
 
 For more information, see
@@ -38,13 +45,36 @@ For more information, see
 
 ### Printers
 
-- Print CFG (`--print-cfg`): Export the CFG of the contract to a dot file.
-- `human-summary`: Print a human-readable summary of the contract.
-- `function-cfg`: Export the CFG of each subroutine in the contract, works for contracts written in version 4 or greater.
-- `call-graph`: Export the call-graph of the contract to a dot file, works for contracts written in version 4 or greater.
+| Num | Printer               | What it prints                                    |
+|-----|-----------------------|---------------------------------------------------|
+| 1   | `call-graph`          | Export the call graph of contract to a dot file   |
+| 2   | `cfg`                 | Export the CFG of entire contract                 |
+| 3   | `human-summary`       | Print a human-readable summary of the contract    |
+| 4   | `subroutine-cfg`      | Export the CFG of each subroutine                 |
+| 5   | `transaction-context` | Output possible values of GroupIndices, GroupSize |
+
 
 Printers output [`dot`](https://graphviz.org/) files.
 Use `xdot` to open the files  (`sudo apt install xdot`).
+
+### Regular expression
+
+Tealer can detect if there is a path between a given label and a set of instruction using the `--regex` flag: `tealer --contract file.teal --regex regex.txt`.
+
+The Regular expression file must be on the form:
+```txt
+label =>
+  ins1
+  ins2
+```
+
+If there is a match, tealer will generate a DOT file with the graph.
+
+For an example, run `tealer --contract tests/regex/vote_approval.teal --regex tests/regex/regex.txt`, with:
+- [tests/regex/regex.txt](./tests/regex/regex.txt)
+- [tests/regex/vote_approval.teal](./tests/regex/vote_approval.teal)
+
+Which will generate `regex_result.dot`.
 
 ## How to install
 
@@ -58,4 +88,14 @@ python3 setup.py install
 We recommend to install the tool in a [virtualenv](https://virtualenvwrapper.readthedocs.io/en/latest/).
 
 
-## TODO: Add License
+## Group configuration
+
+To help tealer reasons about applications that are meant to be run in a group of transaction, the user can provide the group information through a configuration file:
+- See the [ANS configuration](tests/group_transactions/ans/ans_config.yaml) example
+- See [Lightweight group information specification](https://forum.algorand.org/t/lightweight-group-information-specification/9735) discussion.
+
+The file format is still in development, and it is likely to evolve in the future
+
+## License
+
+Slither is licensed and distributed under the AGPLv3 license. [Contact us](opensource@trailofbits.com) if you're looking for an exception to the terms.

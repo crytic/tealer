@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List, Set, Tuple, Dict
 
-from tealer.analyses.dataflow.generic import DataflowTransactionContext
+from tealer.analyses.dataflow.transaction_context.generic import DataflowTransactionContext
 from tealer.teal.instructions.instructions import (
     Global,
     Eq,
@@ -21,6 +21,7 @@ from tealer.analyses.utils.stack_ast_builder import KnownStackValue, UnknownStac
 
 if TYPE_CHECKING:
     from tealer.teal.instructions.instructions import Instruction
+    from tealer.teal.basic_blocks import BasicBlock
 
 # TODO: Change GroupSize, GroupIndex values representation to something similar of FeeValue.
 group_size_key = "GroupSize"
@@ -103,7 +104,7 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
         [ == | != | < | <= | > | >=]
 
         Args:
-            ins_stack: list of instructions that are executed up until the comparison instruction (including the comparison instruction).
+            ins_stack_value: The stack value. This value represents the result of the group-size check.
 
         Returns:
             set of groupsize values that will make the comparison true, set of groupsize values that will make the comparison false.
@@ -150,7 +151,7 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
         [ == | != | < | <= | > | >=]
 
         Args:
-            ins_stack: list of instructions that are executed up until the comparison instruction (including the comparison instruction).
+            ins_stack_value: The stack value. This value represents the result of the group index check.
 
         Returns:
             List of groupindex values that will make the comparison true.
@@ -193,15 +194,19 @@ class GroupIndices(DataflowTransactionContext):  # pylint: disable=too-few-publi
         # use group_sizes to update group_indices
         group_sizes_context = self._block_contexts[self.GROUP_SIZE_KEY]
         group_indices_context = self._block_contexts[self.GROUP_INDEX_KEY]
-        for bi in self._teal.bbs:
+        for bi in self._function.blocks:
             group_indices_context[bi] = group_indices_context[bi] & set(
                 range(0, max(group_sizes_context[bi], default=0))
             )
 
         group_size_block_context = self._block_contexts[self.GROUP_SIZE_KEY]
-        for block in self._teal.bbs:
-            block.transaction_context.group_sizes = list(group_size_block_context[block])
+        for block in self._function.blocks:
+            self._function.transaction_context(block).group_sizes = list(
+                group_size_block_context[block]
+            )
 
         group_index_block_context = self._block_contexts[self.GROUP_INDEX_KEY]
-        for block in self._teal.bbs:
-            block.transaction_context.group_indices = list(group_index_block_context[block])
+        for block in self._function.blocks:
+            self._function.transaction_context(block).group_indices = list(
+                group_index_block_context[block]
+            )
