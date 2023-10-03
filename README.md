@@ -20,13 +20,13 @@ tealer detect --contracts file.teal
 To run a printer
 
 ```bash
-tealer print --contracts file.teal --printers printer_name
+tealer print <printer_name> --contracts file.teal
 ```
 
 To run the regular expression engine
 
 ```bash
-tealer regex regex.txt --contracts file.teal
+tealer regex <regex_file.txt> --contracts file.teal
 ```
 
 
