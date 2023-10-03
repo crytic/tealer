@@ -180,29 +180,17 @@ def validate_command_line_options(args: argparse.Namespace) -> None:
         print(f"CommandLineError: {message}")
         sys.exit(1)
 
-    no_of_subcommands = (
-        int(args.init is True)
-        + int(args.detectors_to_run is not None)
-        + int(args.printers_to_run is not None)
-        + int(args.regex is not None)
-    )
-    if no_of_subcommands != 1:
-        print('CommandLineError: "User must select only one of --init, --detect or --print"')
-        sys.exit(1)
+    if not args.subcommand:
+        print_and_exit("Use one of these subcommand: detect | print  | regex")
 
-    if args.init:
-        if args.contracts is None:
-            print_and_exit(
-                "--contracts is required for --init. Use optional --group-config option to add new contracts to existing configuration"
-            )
-    elif args.detectors_to_run is not None:
+    if args.subcommand == "detect":
         if args.contracts is None and args.group_config is None:
             print_and_exit("--detect requires one of --contracts or --group-config")
         if args.contracts is not None and args.group_config is not None:
             print_and_exit(
                 "--detect takes only one of --contracts or --group-config. Use --group-config with --init to add new contracts to existing configuration."
             )
-    elif args.printers_to_run is not None:
+    elif args.subcommand == "print" and args.printers_to_run is not None:
         if args.contracts is None and args.group_config is None:
             print_and_exit("--print requires one of --contracts or --group-config")
         if args.contracts is not None and args.group_config is not None:
@@ -217,7 +205,7 @@ def validate_command_line_options(args: argparse.Namespace) -> None:
     # if args.network is not None and args.contracts is None:
     #     print_and_exit("--network is not supported when --contracts is not supplied.")
 
-    if args.detectors_to_run is None:
+    if args.subcommand == "detect" and args.detectors_to_run is None:
         if (
             args.detectors_to_exclude is not None
             or args.exclude_stateless
