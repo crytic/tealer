@@ -263,7 +263,11 @@ def parse_args(
 
     available_printers = ", ".join(p.NAME for p in printer_classes)
     group_printer = subparsers.add_parser("print", help="Use a printer")
-    group_printer.add_argument("printers_to_run", action="store", help=f"Comma-separated list of printers to use, defaults to None. Available printers: {available_printers}")
+    group_printer.add_argument(
+        "printers_to_run",
+        action="store",
+        help=f"Comma-separated list of printers to use, defaults to None. Available printers: {available_printers}",
+    )
     generic_options(group_printer)
 
     group_regex = subparsers.add_parser("regex", help="Use the regex engine")
