@@ -103,7 +103,6 @@ from tealer.utils.teal_enums import ExecutionMode
 
 if TYPE_CHECKING:
     from tealer.teal.teal import Teal
-    from tealer.tealer import Tealer
     from tealer.utils.output import ListOutput
 
 
@@ -208,32 +207,13 @@ def choose_printers(
     return printers_to_run
 
 
-def parse_args(
-    detector_classes: List[Type[AbstractDetector]], printer_classes: List[Type[AbstractPrinter]]
-) -> argparse.Namespace:
-    """parse command line arguments of tealer.
+def generic_options(parser: argparse.ArgumentParser) -> None:
+    """
+    Add the generic cli flags options
 
     Args:
-        detector_classes: list of detectors available to tealer. Used to display
-            available detectors in tealer command help message.
-        printer_classes: list of printers available to tealer. Used to display
-            available printers in tealer command help message.
-
-    Returns:
-        Namespace object representing the parsed command line arguments.
+        parser: the parser to update
     """
-
-    parser = argparse.ArgumentParser(
-        description="TealAnalyzer",
-        usage="tealer [--init | --detect | --print ] --contracts ...",
-    )
-
-    parser.add_argument(
-        "--version",
-        help="displays the current version",
-        version=require("tealer")[0].version,
-        action="version",
-    )
 
     parser.add_argument(
         "--contracts",
@@ -255,35 +235,58 @@ def parse_args(
         default="mainnet",
     )
 
-    parser.add_argument(
-        "--regex",
-        help="Provide the regex file",
-        action="store",
+
+def parse_args(
+    detector_classes: List[Type[AbstractDetector]], printer_classes: List[Type[AbstractPrinter]]
+) -> argparse.Namespace:
+    """parse command line arguments of tealer.
+
+    Args:
+        detector_classes: list of detectors available to tealer. Used to display
+            available detectors in tealer command help message.
+        printer_classes: list of printers available to tealer. Used to display
+            available printers in tealer command help message.
+
+    Returns:
+        Namespace object representing the parsed command line arguments.
+    """
+
+    parser = argparse.ArgumentParser(
+        description="TealAnalyzer",
+        usage="tealer [detect | print | regex ] --contracts ...",
     )
 
-    group_init = parser.add_argument_group("Initialize")
-    group_detector = parser.add_argument_group("Detectors")
-    group_printer = parser.add_argument_group("Printers")
+    subparsers = parser.add_subparsers(dest="subcommand")
+
+    group_detector = subparsers.add_parser("detect", help="Run the detectors")
+    generic_options(group_detector)
+
+    available_printers = ", ".join(p.NAME for p in printer_classes)
+    group_printer = subparsers.add_parser("print", help="Use a printer")
+    group_printer.add_argument(
+        "printers_to_run",
+        action="store",
+        help=f"Comma-separated list of printers to use, defaults to None. Available printers: {available_printers}",
+    )
+    generic_options(group_printer)
+
+    group_regex = subparsers.add_parser("regex", help="Use the regex engine")
+    group_regex.add_argument("regex_file", action="store", help="Regular expression file")
+    generic_options(group_regex)
+
     group_misc = parser.add_argument_group("Additional options")
 
-    group_init.add_argument(
-        "--init",
-        help="Initializes group-config.yaml file given the contracts",
-        action="store_true",
-        default=False,
-    )
-
-    group_detector.add_argument(
-        "--list-detectors",
-        help="List available detectors",
-        action=ListDetectors,
-        nargs=0,
-        default=False,
+    parser.add_argument(
+        "--version",
+        help="displays the current version",
+        version=require("tealer")[0].version,
+        action="version",
     )
 
     available_detectors = ", ".join(d.NAME for d in detector_classes)
+
     group_detector.add_argument(
-        "--detect",
+        "--detectors",
         help="Comma-separated list of detectors, defaults to all, "
         f"available detectors: {available_detectors}",
         action="store",
@@ -321,22 +324,12 @@ def parse_args(
         default=None,
     )
 
-    group_printer.add_argument(
-        "--list-printers",
-        help="List available printers",
-        action=ListPrinters,
+    group_detector.add_argument(
+        "--list-detectors",
+        help="List available detectors",
+        action=ListDetectors,
         nargs=0,
         default=False,
-    )
-
-    available_printers = ", ".join(p.NAME for p in printer_classes)
-    group_printer.add_argument(
-        "--print",
-        help="Comma-separated list of printers, defaults to None,"
-        f" available printers: {available_printers}",
-        action="store",
-        dest="printers_to_run",
-        default=None,
     )
 
     group_misc.add_argument(
@@ -344,6 +337,14 @@ def parse_args(
         help='Export the results as a JSON file ("--json -" to export to stdout)',
         action="store",
         default=None,
+    )
+
+    group_printer.add_argument(
+        "--list-printers",
+        help="List available printers",
+        action=ListPrinters,
+        nargs=0,
+        default=False,
     )
 
     parser.add_argument("--debug", help=argparse.SUPPRESS, action="store_true", default=False)
@@ -424,35 +425,9 @@ class OutputWiki(argparse.Action):  # pylint: disable=too-few-public-methods
         parser.exit()
 
 
-def handle_detectors_and_printers(
-    tealer: "Tealer",
-    detectors: List[Type[AbstractDetector]],
-    printers: List[Type[AbstractPrinter]],
-) -> Tuple[List["ListOutput"], List]:
-    """Util function to register and run detectors, printers.
-
-    Args:
-        tealer: Teal object representing the contract being analyzed.
-        detectors: Detector classes to register and run.
-        printers: Printer classes to register and run.
-
-    Returns:
-        returns list of detector results and list of printer results.
-    """
-
-    for detector_cls in detectors:
-        tealer.register_detector(detector_cls)
-
-    for printer_cls in printers:
-        tealer.register_printer(printer_cls)
-
-    return tealer.run_detectors(), tealer.run_printers()
-
-
 def handle_output(
     args: argparse.Namespace,
     detector_results: List["ListOutput"],
-    _printer_results: List,
     teal: "Teal",
     error: Optional[str],
 ) -> None:
@@ -465,7 +440,6 @@ def handle_output(
         args: Namespace object representing the command line arguments selected
             by the user.
         detector_results: results of running the selected detectors.
-        _printer_results: results of running the selected printers.
         teal: The contract.
         error: Error string if any detector or printer resulted in an error.
     """
@@ -557,9 +531,13 @@ def main() -> None:
         logger.setLevel(logger_level)
 
     results_detectors: List["ListOutput"] = []
-    _results_printers: List = []
     error = None
-    if args.detectors_to_run is not None and args.group_config is not None:
+
+    if (
+        args.subcommand == "detect"
+        and args.detectors_to_run is not None
+        and args.group_config is not None
+    ):
         # handle this case specially for now.
         # handle_detect(args)
         # sys.exit(1)
@@ -574,51 +552,60 @@ def main() -> None:
             output.generate_output(Path("."))
         sys.exit(1)
 
-    try:
+    try:  # pylint: disable=too-many-nested-blocks
         contract_source, contract_name = fetch_contract(args)
         tealer = init_tealer_from_single_contract(contract_source, contract_name)
 
         # TODO: handle this as a subcommand instead of a flag
-        if args.regex:
+        if args.subcommand == "regex":
             default_path = Path("regex_result.dot")
             if len(tealer.contracts) != 1:
                 print("Regex works only for single contract")
                 return
-            run_regex(tealer.contracts[contract_name], args.regex, default_path)
+            run_regex(tealer.contracts[contract_name], args.regex_file, default_path)
             return
 
         # TODO: decide on default classification for detectors in group transaction context.
-        detector_classes = choose_detectors(args, detector_classes, tealer.contracts[contract_name])
-        printer_classes = choose_printers(args, printer_classes)
 
-        # if a printer is ran using --print ... don't run all detectors.
-        # e.g tealer .. --print x,y
-        # => printers are selected and none of the detectors are selected explicitly.
-        # In above don't run any of the detectors.
-        # if detectors are selected explicitly, run those detectors only.
-        # e.g tealer .. --detect a,b --print x,y
-        # => run a,b detectors and printers x, y
-        if args.printers_to_run is not None and args.detectors_to_run is None:
-            # --print is used and --detect is not used.
-            detector_classes = []
+        if args.subcommand == "print":
+            printer_classes = choose_printers(args, printer_classes)
 
-        results_detectors, _results_printers = handle_detectors_and_printers(
-            tealer, detector_classes, printer_classes
-        )
+            for printer_cls in printer_classes:
+                tealer.register_printer(printer_cls)
+
+            _results_printers = tealer.run_printers()
+            return
+
+        if args.subcommand == "detect":
+            detector_classes = choose_detectors(
+                args, detector_classes, tealer.contracts[contract_name]
+            )
+            for detector_cls in detector_classes:
+                tealer.register_detector(detector_cls)
+
+            results_detectors = tealer.run_detectors()
+
+            if args.filter_paths is not None:
+                for detector_result in results_detectors:
+                    if isinstance(detector_result, ExecutionPaths):
+                        detector_result.filter_paths(args.filter_paths)
+                    else:
+                        for result in detector_result:
+                            result.filter_paths(args.filter_paths)
+            # Current does not return
+            # This is to call handle_output, which also catch the error
+            # This should be refactored (TODO)
+
+        else:
+            print(f"{args.subcommand} not implemented")
+            return
 
     except TealerException as e:
         error = str(e)
 
-    if args.filter_paths is not None:
-        for detector_result in results_detectors:
-            if isinstance(detector_result, ExecutionPaths):
-                detector_result.filter_paths(args.filter_paths)
-            else:
-                for result in detector_result:
-                    result.filter_paths(args.filter_paths)
-    handle_output(
-        args, results_detectors, _results_printers, tealer.contracts[contract_name], error
-    )
+    # TODO: refactor this logic
+    if error or args.subcommand == "detect":
+        handle_output(args, results_detectors, tealer.contracts[contract_name], error)
 
 
 if __name__ == "__main__":
