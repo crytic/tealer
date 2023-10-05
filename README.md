@@ -2,19 +2,31 @@
 
 Tealer is a static analyzer for [Teal](https://developer.algorand.org/docs/features/asc1/) code. It parses the Teal program, and builds its CFG. The analyzer comes with a set of vulnerabilities detectors and printers allowing to quickly review the contracts.
 
-- [Features](#features)
+- [Usage](#Usage)
   - [Detectors](#detectors): Vulnerabilities detectors
   - [Printers](#printers): Visual information
   - [Regular expression](#Regular expression): Regular expression engine
 - [How to install](#how-to-install)
 - [Group configuration](#group-configuration)
 
-## Features
+## Usage
 
-Run Tealer on a Teal contract:
+To detect vulnerabilities
 
 ```bash
-tealer program.teal
+tealer detect --contracts file.teal
+```
+
+To run a printer
+
+```bash
+tealer print <printer_name> --contracts file.teal
+```
+
+To run the regular expression engine
+
+```bash
+tealer regex <regex_file.txt> --contracts file.teal
 ```
 
 
@@ -59,7 +71,7 @@ Use `xdot` to open the files  (`sudo apt install xdot`).
 
 ### Regular expression
 
-Tealer can detect if there is a path between a given label and a set of instruction using the `--regex` flag: `tealer --contract file.teal --regex regex.txt`.
+Tealer can detect if there is a path between a given label and a set of instruction using the `regex` subcommand: `tealer regex regex.txt --contracts file.teal`.
 
 The Regular expression file must be on the form:
 ```txt
@@ -70,7 +82,7 @@ label =>
 
 If there is a match, tealer will generate a DOT file with the graph.
 
-For an example, run `tealer --contract tests/regex/vote_approval.teal --regex tests/regex/regex.txt`, with:
+For an example, run `tealer regex tests/regex/regex.txt --contract tests/regex/vote_approval.teal`, with:
 - [tests/regex/regex.txt](./tests/regex/regex.txt)
 - [tests/regex/vote_approval.teal](./tests/regex/vote_approval.teal)
 
