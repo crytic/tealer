@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from tealer.execution_context.transactions import GroupTransaction, Transaction
 
 
-ROOT_OUTPUT_DIRECTORY = Path("tealer-export")
+ROOT_OUTPUT_DIRECTORY = Path(os.getenv('TEALER_ROOT_OUTPUT_DIR', 'tealer-export'))
 
 
 @dataclass
