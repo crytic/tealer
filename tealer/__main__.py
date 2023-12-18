@@ -300,6 +300,7 @@ def parse_args(
         help="Comma-separated list of detectors that should be excluded.",
         action="store",
         dest="detectors_to_exclude",
+        nargs="+",  # Allows multiple arguments
         default=None,
     )
 
