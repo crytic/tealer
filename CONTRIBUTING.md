@@ -14,10 +14,10 @@ Do something like this to clone the repository and install all development depen
 ```bash
 git clone https://github.com/crytic/tealer.git
 cd tealer
-python -m venv venv
-. ./venv/bin/activate
-pip install -e .[dev]
+make dev
 ```
+
+Update `tealer` by running `git pull` from the `tealer/` directory.
 
 
 ## Code
