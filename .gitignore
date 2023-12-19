@@ -5,3 +5,5 @@ build/
 dist/
 tealer.egg-info/
 __pycache__
+
+.venv/

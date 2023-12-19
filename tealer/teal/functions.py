@@ -80,7 +80,6 @@ class Function:
             List of caller callsub basic blocks. This blocks have "callsub {subroutine.name}"
             as exit instruction.
         """
-        print("name", subroutine.name)
         return self._subroutine_caller_blocks[subroutine]
 
     def return_point_blocks(self, subroutine: "Subroutine") -> List["BasicBlock"]:

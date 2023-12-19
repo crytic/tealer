@@ -153,10 +153,11 @@ def choose_detectors(
             ]
     else:
         for detector in args.detectors_to_run.split(","):
-            if detector in detectors:
-                detectors_to_run.append(detectors[detector])
+            detector_name = detector.strip()
+            if detector_name in detectors:
+                detectors_to_run.append(detectors[detector_name])
             else:
-                raise TealerException(f"Error: {detector} is not a detector")
+                raise TealerException(f"Error: {detector_name} is not a detector")
 
     if args.detectors_to_exclude:
         detectors_to_run = [d for d in detectors_to_run if d.NAME not in args.detectors_to_exclude]
@@ -291,7 +292,7 @@ def parse_args(
         f"available detectors: {available_detectors}",
         action="store",
         dest="detectors_to_run",
-        default=None,
+        default=available_detectors,
     )
 
     group_detector.add_argument(
@@ -299,6 +300,7 @@ def parse_args(
         help="Comma-separated list of detectors that should be excluded.",
         action="store",
         dest="detectors_to_exclude",
+        nargs="+",  # Allows multiple arguments
         default=None,
     )
 
