@@ -8,7 +8,7 @@ setup(
     description="Teal analyzer.",
     url="https://github.com/crytic/tealer",
     author="Trail of Bits",
-    version="0.0.2",
+    version="0.1.0",
     packages=find_packages(),
     python_requires=">=3.8",
     install_requires=[
@@ -21,5 +21,6 @@ setup(
     extras_require={"dev": ["pylint==2.13.4", "black==22.3.0", "mypy==0.942", "pytest-cov"]},
     license="AGPL-3.0",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     entry_points={"console_scripts": ["tealer = tealer.__main__:main"]},
 )

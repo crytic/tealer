@@ -92,6 +92,8 @@ Which will generate `regex_result.dot`.
 
 ## How to install
 
+`pip3 install tealer`
+
 ### Using Git
 
 ```bash
