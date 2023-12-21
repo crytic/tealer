@@ -2,12 +2,12 @@
 
 Tealer is a static analyzer for [Teal](https://developer.algorand.org/docs/features/asc1/) code.
 It parses the Teal program, and builds its CFG. The analyzer comes with a set of vulnerabilities detectors and printers allowing to quickly review the contracts.
-In addition, tealer allows for custom path discovery through [regular expression](#regular-expressio), and can be configured to follow the [group information](#group-configuration) of the application.
+In addition, tealer allows for custom path discovery through [regular expression](#regular-expression), and can be configured to follow the [group information](#group-configuration) of the application.
 
 - [Usage](#Usage)
   - [Detectors](#detectors): Vulnerabilities detectors
   - [Printers](#printers): Visual information
-  - [Regular expression](#regular-expressio): Regular expression engine
+  - [Regular expression](#regular-expression): Regular expression engine
 - [How to install](#how-to-install)
 - [Group configuration](#group-configuration)
 
@@ -112,4 +112,4 @@ The file format is still in development, and it is likely to evolve in the futur
 
 ## License
 
-Slither is licensed and distributed under the AGPLv3 license. [Contact us](opensource@trailofbits.com) if you're looking for an exception to the terms.
+Tealer is licensed and distributed under the AGPLv3 license. [Contact us](opensource@trailofbits.com) if you're looking for an exception to the terms.
