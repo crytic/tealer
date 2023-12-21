@@ -17,6 +17,7 @@ setup(
         "pycryptodomex",
         "requests",
         "pyyaml",
+        "setuptools"
     ],
     extras_require={"dev": ["pylint==2.13.4", "black==22.3.0", "mypy==0.942", "pytest-cov"]},
     license="AGPL-3.0",
