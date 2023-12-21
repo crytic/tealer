@@ -98,10 +98,8 @@ Which will generate `regex_result.dot`.
 
 ```bash
 git clone https://github.com/crytic/tealer.git && cd tealer
-python3 setup.py install
+make dev
 ```
-
-We recommend to install the tool in a [virtualenv](https://virtualenvwrapper.readthedocs.io/en/latest/).
 
 
 ## Group configuration
