@@ -33,7 +33,7 @@ jobs:
         # Used by ci_test.sh
     - name: Install dependencies in ${{ matrix.python }}
       run: |
-        python setup.py install
+        pip install .
         pip install pytest
         pip install pytest-cov
 

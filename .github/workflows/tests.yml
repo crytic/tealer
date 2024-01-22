@@ -29,7 +29,7 @@ jobs:
         # Used by ci_test.sh
     - name: Install dependencies
       run: |
-        python setup.py install
+        pip install .
     - name: Run Tests
       run: |
         bash scripts/test_algorand_contracts.sh
