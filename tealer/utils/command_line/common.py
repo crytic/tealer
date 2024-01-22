@@ -109,7 +109,7 @@ def collect_plugins() -> Tuple[List[Type[AbstractDetector]], List[Type[AbstractP
     """
     detector_classes: List[Type[AbstractDetector]] = []
     printer_classes: List[Type[AbstractPrinter]] = []
-    for entry_point in entry_points(group="teal_analyzer.plugin"):
+    for entry_point in entry_points().get("teal_analyzer.plugin", []):
         make_plugin = entry_point.load()
 
         plugin_detectors, plugin_printers = make_plugin()
