@@ -54,7 +54,7 @@ import sys
 import inspect
 import argparse
 
-from typing import List, Type, Tuple, TYPE_CHECKING, Dict, Union
+from typing import List, Type, Tuple, TYPE_CHECKING, Dict
 from importlib.metadata import entry_points
 
 from tealer.detectors.abstract_detector import (
@@ -93,10 +93,10 @@ if TYPE_CHECKING:
 def _get_entry_points(group: str):  # type: ignore
     # For Python 3.10 and later
     if sys.version_info >= (3, 10):
-        return entry_points(group=group)
+        return entry_points(group=group)  # type: ignore
 
     # For Python 3.9 (and 3.8)
-    all_entry_points = entry_points()
+    all_entry_points = entry_points()  # type: ignore
     return all_entry_points.get(group, [])
 
 
@@ -216,10 +216,10 @@ def validate_command_line_options(args: argparse.Namespace) -> None:
 
     if args.subcommand == "detect" and args.detectors_to_run is None:
         if (
-                args.detectors_to_exclude is not None
-                or args.exclude_stateless
-                or args.exclude_stateful
-                or args.filter_paths is not None
+            args.detectors_to_exclude is not None
+            or args.exclude_stateless
+            or args.exclude_stateful
+            or args.filter_paths is not None
         ):
             print_and_exit(
                 "--exclude, --exclude-stateless, --exclude-stateful and --filter-paths options are only available when --detect is selected."
@@ -249,7 +249,7 @@ def validate_command_line_options(args: argparse.Namespace) -> None:
 
 
 def _get_function_from_config(
-        function_call_config: "GroupConfigFunctionCall", contracts: Dict[str, "Teal"]
+    function_call_config: "GroupConfigFunctionCall", contracts: Dict[str, "Teal"]
 ) -> "Function":
     if function_call_config.contract not in contracts:
         raise TealerException(f"{function_call_config.contract} not found in listed contracts")
