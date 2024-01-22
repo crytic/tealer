@@ -1,4 +1,4 @@
-name: CI
+name: Pytest
 
 defaults:
   run:
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ${{fromJSON('["3.8", "3.9", "3.10", "3.11", "3.12"]') }}
+        python: ${{fromJSON('["3.9", "3.10", "3.11", "3.12"]') }}
 
 
     steps:

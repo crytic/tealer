@@ -10,7 +10,7 @@ description = "Teal analyzer."
 readme = "README.md"
 license = { "text" = "AGPL-3.0" }
 urls = { "Homepage" = "https://github.com/crytic/tealer" }
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "prettytable>=0.7.2",
     "py-algorand-sdk",
@@ -31,10 +31,10 @@ dev = [
 tealer = "tealer.__main__:main"
 
 [tool.setuptools.packages.find]
-include = ["tealer"]
+    where = ["."]
 
 [tool.black]
-target-version = ["py36"]
+target-version = ["py39"]
 line-length = 100
 [tool.pylint.messages_control]
 disable = """
