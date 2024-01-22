@@ -18,39 +18,43 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ${{fromJSON('["3.8", "3.9", "3.10", "3.11", "3.12"]') }}
+
 
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.8
+    - name: Set up Python ${{ matrix.python }}
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: ${{ matrix.python }}
 
         # Used by ci_test.sh
-    - name: Install dependencies
+    - name: Install dependencies in ${{ matrix.python }}
       run: |
         python setup.py install
         pip install pytest
         pip install pytest-cov
 
-    - name: Run Parsing tests
+    - name: Run Parsing tests in ${{ matrix.python }}
       run: |
         pytest tests/test_parsing.py tests/test_versions.py --cov=tealer/teal/instructions --cov-branch  --cov-fail-under=96
 
-    - name: Run string tests
+    - name: Run string tests in ${{ matrix.python }}
       run: |
         pytest tests/test_string_representation.py
 
-    - name: Run version tests
+    - name: Run version tests in ${{ matrix.python }}
       run: |
         pytest tests/test_versions.py
         pytest tests/test_mode_detector.py
 
-    - name: Run cfg recovery tests
+    - name: Run cfg recovery tests in ${{ matrix.python }}
       run: |
         pytest tests/test_cfg.py
 
-    - name: Run detectors tests
+    - name: Run detectors tests in ${{ matrix.python }}
       run: |
         pytest tests/test_detectors.py
     
