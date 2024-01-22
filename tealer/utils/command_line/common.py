@@ -55,7 +55,8 @@ import inspect
 import argparse
 
 from typing import List, Type, Tuple, TYPE_CHECKING, Dict
-from pkg_resources import iter_entry_points  # type: ignore
+from importlib.metadata import entry_points
+
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
@@ -108,7 +109,7 @@ def collect_plugins() -> Tuple[List[Type[AbstractDetector]], List[Type[AbstractP
     """
     detector_classes: List[Type[AbstractDetector]] = []
     printer_classes: List[Type[AbstractPrinter]] = []
-    for entry_point in iter_entry_points(group="teal_analyzer.plugin", name=None):
+    for entry_point in entry_points(group="teal_analyzer.plugin"):
         make_plugin = entry_point.load()
 
         plugin_detectors, plugin_printers = make_plugin()
