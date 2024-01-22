@@ -18,18 +18,21 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ${{fromJSON('["3.8", "3.9", "3.10", "3.11", "3.12"]') }}
 
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.8
+    - name: Set up Python ${{ matrix.python }}
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: ${{ matrix.python }}
 
         # Used by ci_test.sh
-    - name: Install dependencies
+    - name: Install dependencies in ${{ matrix.python }}
       run: |
         pip install .
-    - name: Run Tests
+    - name: Run Tests in ${{ matrix.python }}
       run: |
         bash scripts/test_algorand_contracts.sh
