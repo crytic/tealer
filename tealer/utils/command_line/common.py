@@ -54,9 +54,8 @@ import sys
 import inspect
 import argparse
 
-from typing import List, Type, Tuple, TYPE_CHECKING, Dict
-from importlib.metadata import entry_points
-
+from typing import List, Type, Tuple, TYPE_CHECKING, Dict, Union
+from importlib.metadata import entry_points, EntryPoints, SelectableGroups
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
@@ -92,6 +91,15 @@ if TYPE_CHECKING:
     )
 
 
+def _get_entry_points(group: str) -> Union[EntryPoints, SelectableGroups]:
+    # For Python 3.10 and later
+    if sys.version_info >= (3, 10):
+        return entry_points(group=group)
+
+    # For Python 3.9 (and 3.8)
+    all_entry_points = entry_points()
+    return all_entry_points.get(group, [])
+
 def collect_plugins() -> Tuple[List[Type[AbstractDetector]], List[Type[AbstractPrinter]]]:
     """collect detectors and printers installed in form of plugins.
 
@@ -109,7 +117,7 @@ def collect_plugins() -> Tuple[List[Type[AbstractDetector]], List[Type[AbstractP
     """
     detector_classes: List[Type[AbstractDetector]] = []
     printer_classes: List[Type[AbstractPrinter]] = []
-    for entry_point in entry_points().get("teal_analyzer.plugin", []):
+    for entry_point in _get_entry_points("teal_analyzer.plugin"):
         make_plugin = entry_point.load()
 
         plugin_detectors, plugin_printers = make_plugin()
