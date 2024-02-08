@@ -55,7 +55,7 @@ import inspect
 import argparse
 
 from typing import List, Type, Tuple, TYPE_CHECKING, Dict
-from importlib.metadata import entry_points, version
+from importlib.metadata import entry_points, version, PackageNotFoundError
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
@@ -92,11 +92,11 @@ if TYPE_CHECKING:
 
 def _get_entry_points(group: str):  # type: ignore
 
-    import_lib_version = version("importlib_metadata").split(".")
     try:
+        import_lib_version = version("importlib_metadata").split(".")
         importlib_major = import_lib_version[0]
         importlib_minor = import_lib_version[1]
-    except IndexError:
+    except (IndexError, PackageNotFoundError):
         importlib_major = "0"
         importlib_minor = "0"
 
