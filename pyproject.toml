@@ -1,5 +1,40 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tealer"
+version = "0.1.1"
+authors = [{ name = "Trail of Bits" }]
+description = "Teal analyzer."
+readme = "README.md"
+license = { "text" = "AGPL-3.0" }
+urls = { "Homepage" = "https://github.com/crytic/tealer" }
+requires-python = ">=3.9"
+dependencies = [
+    "prettytable>=0.7.2",
+    "py-algorand-sdk",
+    "pycryptodomex",
+    "requests",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pylint==2.13.4",
+    "black==22.3.0",
+    "mypy==0.942",
+    "pytest-cov",
+]
+
+[project.scripts]
+tealer = "tealer.__main__:main"
+
+[tool.setuptools.packages.find]
+    where = ["."]
+
 [tool.black]
-target-version = ["py36"]
+target-version = ["py39"]
 line-length = 100
 [tool.pylint.messages_control]
 disable = """

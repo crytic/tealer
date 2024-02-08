@@ -71,7 +71,7 @@ import sys
 from pathlib import Path
 from typing import List, Any, Type, Tuple, TYPE_CHECKING, Optional, Union, Sequence
 
-from pkg_resources import require  # type: ignore
+from importlib.metadata import version
 
 from tealer.detectors.abstract_detector import AbstractDetector, DetectorType
 from tealer.exceptions import TealerException
@@ -280,7 +280,7 @@ def parse_args(
     parser.add_argument(
         "--version",
         help="displays the current version",
-        version=require("tealer")[0].version,
+        version=version("tealer"),
         action="version",
     )
 

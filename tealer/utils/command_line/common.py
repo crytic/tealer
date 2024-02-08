@@ -55,7 +55,7 @@ import inspect
 import argparse
 
 from typing import List, Type, Tuple, TYPE_CHECKING, Dict
-from pkg_resources import iter_entry_points  # type: ignore
+from importlib.metadata import entry_points, version, PackageNotFoundError
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
@@ -81,7 +81,6 @@ from tealer.execution_context.transactions import (
 )
 from tealer.utils.command_line.group_config import USER_CONFIG_TRANSACTION_TYPES
 
-
 if TYPE_CHECKING:
     from tealer.teal.functions import Function
     from tealer.teal.teal import Teal
@@ -89,6 +88,26 @@ if TYPE_CHECKING:
         GroupConfig,
         GroupConfigFunctionCall,
     )
+
+
+def _get_entry_points(group: str):  # type: ignore
+
+    try:
+        import_lib_version = version("importlib_metadata").split(".")
+        importlib_major = import_lib_version[0]
+        importlib_minor = import_lib_version[1]
+    except (IndexError, PackageNotFoundError):
+        importlib_major = "0"
+        importlib_minor = "0"
+
+    # For Python 3.10 and later, or import lib >= 3.6
+    # See https://pypi.org/project/backports.entry-points-selectable/
+    if sys.version_info >= (3, 10) or (importlib_major >= "3" and importlib_minor >= "6"):
+        return entry_points(group=group)  # type: ignore
+
+    # For Python 3.9 (and 3.8)
+    all_entry_points = entry_points()  # type: ignore
+    return all_entry_points.get(group, [])
 
 
 def collect_plugins() -> Tuple[List[Type[AbstractDetector]], List[Type[AbstractPrinter]]]:
@@ -108,7 +127,7 @@ def collect_plugins() -> Tuple[List[Type[AbstractDetector]], List[Type[AbstractP
     """
     detector_classes: List[Type[AbstractDetector]] = []
     printer_classes: List[Type[AbstractPrinter]] = []
-    for entry_point in iter_entry_points(group="teal_analyzer.plugin", name=None):
+    for entry_point in _get_entry_points("teal_analyzer.plugin"):
         make_plugin = entry_point.load()
 
         plugin_detectors, plugin_printers = make_plugin()
