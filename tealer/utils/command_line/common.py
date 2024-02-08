@@ -55,7 +55,7 @@ import inspect
 import argparse
 
 from typing import List, Type, Tuple, TYPE_CHECKING, Dict
-from importlib.metadata import entry_points
+from importlib.metadata import entry_points, version
 
 from tealer.detectors.abstract_detector import (
     AbstractDetector,
@@ -91,8 +91,18 @@ if TYPE_CHECKING:
 
 
 def _get_entry_points(group: str):  # type: ignore
-    # For Python 3.10 and later
-    if sys.version_info >= (3, 10):
+
+    import_lib_version = version("importlib_metadata").split(".")
+    try:
+        importlib_major = import_lib_version[0]
+        importlib_minor = import_lib_version[1]
+    except IndexError:
+        importlib_major = "0"
+        importlib_minor = "0"
+
+    # For Python 3.10 and later, or import lib >= 3.6
+    # See https://pypi.org/project/backports.entry-points-selectable/
+    if sys.version_info >= (3, 10) or (importlib_major >= "3" and importlib_minor >= "6"):
         return entry_points(group=group)  # type: ignore
 
     # For Python 3.9 (and 3.8)
