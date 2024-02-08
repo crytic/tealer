@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tealer"
-version = "0.1.1"
+version = "0.1.2"
 authors = [{ name = "Trail of Bits" }]
 description = "Teal analyzer."
 readme = "README.md"
