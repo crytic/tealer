@@ -11,6 +11,7 @@ classes representing the fields must inherit from TransactionField class.
 # pylint: disable=too-few-public-methods
 
 # https://developer.algorand.org/docs/reference/teal/opcodes/#txn
+from typing import Any
 
 
 class TransactionField:
@@ -27,6 +28,13 @@ class TransactionField:
             Teal version the field is introduced in and supported from.
         """
         return self._version
+
+    def __eq__(self, other: Any) -> bool:
+        # pylint: disable=unidiomatic-typecheck
+        return type(other) == type(self)
+
+    def __hash__(self) -> int:
+        return hash(str(self))
 
     def __str__(self) -> str:
         return self.__class__.__qualname__

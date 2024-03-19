@@ -10,6 +10,9 @@ classes representing the fields must inherit from GlobalField class.
 """
 
 # pylint: disable=too-few-public-methods
+from typing import Any
+
+
 class GlobalField:
     """Base class representing a global field"""
 
@@ -25,8 +28,15 @@ class GlobalField:
         """
         return self._version
 
+    def __eq__(self, other: Any) -> bool:
+        # pylint: disable=unidiomatic-typecheck
+        return type(other) == type(self)
+
     def __str__(self) -> str:
         return self.__class__.__qualname__
+
+    def __hash__(self) -> int:
+        return hash(str(self))
 
 
 class GroupSize(GlobalField):
